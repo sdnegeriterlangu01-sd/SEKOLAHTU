@@ -92,8 +92,8 @@ const Router = {
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "siswa";
                 if (window.ModulPresensi) {
-                    ModulPresensi.init();
-                    ModulPresensi.switchTab("siswa");
+                    ModulPresensi.tab = "siswa";
+                    ModulPresensi.renderSiswa();
                 }
                 if (window.ModulVue) {
                     ModulVue.mountAbsensiTabs();
@@ -107,8 +107,8 @@ const Router = {
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "tendik";
                 if (window.ModulPresensi) {
-                    ModulPresensi.init();
-                    ModulPresensi.switchTab("tendik");
+                    ModulPresensi.tab = "tendik";
+                    ModulPresensi.renderTendik();
                 }
                 if (window.ModulVue) {
                     ModulVue.mountAbsensiTabs();
@@ -255,6 +255,9 @@ const Router = {
             }
             if (window.ModulVue) {
                 ModulVue.applyRoleNavVisibility();
+            }
+            if (window.Auth) {
+                Auth.applyUI();
             }
 
             // Eksekusi Lifecycle onMount

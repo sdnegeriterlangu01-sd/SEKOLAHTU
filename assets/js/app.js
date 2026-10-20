@@ -33,8 +33,7 @@ const App = {
         // Auto pull fresh data jika cloud mode aktif
         if (ApiClient.isCloudActive()) {
             Sync.pullAll().then(() => {
-                this.updateDashboardStats();
-                if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
+                this.refreshAll();
             }).catch(e => console.warn("Sync initial error:", e));
         }
 
@@ -85,9 +84,13 @@ const App = {
 
     refreshAll() {
         this.updateDashboardStats();
-        if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
-        else if (Router.currentRoute === "surat/cetak" && window.ModulCetak) ModulCetak.populateStudentSelect();
-        else if (Router.currentRoute.startsWith("presensi") && window.ModulPresensi) ModulPresensi.onShow();
+        if (window.Router) {
+            if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
+            else if (Router.currentRoute === "surat/srikandi" && window.ModulSurat) ModulSurat.init();
+            else if (Router.currentRoute === "surat/cetak" && window.ModulCetak) ModulCetak.populateStudentSelect();
+            else if (Router.currentRoute === "presensi/harian" && window.ModulAbsensi) ModulAbsensi.init();
+            else if (Router.currentRoute.startsWith("presensi") && window.ModulPresensi) ModulPresensi.onShow();
+        }
     },
 
     navigateTo(route, cb) {

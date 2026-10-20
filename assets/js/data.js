@@ -447,18 +447,21 @@ const DataStore = {
                 console.warn("Config migration check skipped", err);
             }
         }
-        // Mode cloud: jangan menyemai data contoh (data asli datang dari Google Sheets setelah login)
-        const cloud = this.isCloudConfigured();
-        const seed = (key, demo, empty = []) => {
-            if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(cloud ? empty : demo));
+        // Pastikan data awal selalu terisi jika localStorage belum ada atau masih kosong []
+        const seed = (key, demo) => {
+            const val = localStorage.getItem(key);
+            if (!val || val === "[]") {
+                localStorage.setItem(key, JSON.stringify(demo));
+            }
         };
         seed(this.KEYS.SISWA, SEED_SISWA);
         this.migratePeriodik();
         seed(this.KEYS.TENDIK, SEED_TENDIK);
         seed(this.KEYS.SURAT_KELUAR, SEED_SURAT_KELUAR);
         seed(this.KEYS.SURAT_MASUK, SEED_SURAT_MASUK);
-        if (!localStorage.getItem(this.KEYS.ABSENSI)) {
-            localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(cloud ? [] : generateSeedAbsensi()));
+        const curAbs = localStorage.getItem(this.KEYS.ABSENSI);
+        if (!curAbs || curAbs === "[]") {
+            localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(generateSeedAbsensi()));
         }
         seed(this.KEYS.HISTORI_BULANAN, SEED_HISTORI_BULANAN);
     },

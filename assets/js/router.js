@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: CLIENT-SIDE SPA HASH ROUTER
-   Mendukung routing modular: /menu/sub-menu tanpa reload halaman
+   Mendukung routing modular: #/menu/sub-menu tanpa reload halaman
    Fitur: Template Caching (<300ms), RBAC Route Guard, Auto-Lifecycle Mount
    ========================================================================== */
 
@@ -19,7 +19,6 @@ const Router = {
             menuId: "dashboard",
             onMount: () => {
                 App.updateDashboardStats();
-                App.renderRecentActivities();
             }
         },
         "berkas-siswa": {
@@ -156,10 +155,11 @@ const Router = {
 
     parseHash() {
         let hash = window.location.hash || "";
-        if (hash.startsWith("/")) hash = hash.substring(2);
-        else if (hash.startsWith("#")) hash = hash.substring(1);
+        // Bersihkan tanda '#' dan '/' di awal secara aman
+        // Contoh: "#/beranda" -> "beranda", "#beranda" -> "beranda", "/beranda" -> "beranda"
+        hash = hash.replace(/^[#/]+/, "");
 
-        // Pisahkan query parameter jika ada (misal: /berkas-siswa?kelas=5)
+        // Pisahkan query parameter jika ada (misal: berkas-siswa?kelas=5)
         const [pathPart, queryPart] = hash.split("?");
         const cleanPath = (pathPart || "").trim();
         const params = {};
@@ -175,7 +175,7 @@ const Router = {
     },
 
     resolveRoute(rawPath) {
-        let path = rawPath.trim();
+        let path = (rawPath || "").trim();
         if (this.aliases[path] !== undefined) {
             path = this.aliases[path];
         }
@@ -213,7 +213,7 @@ const Router = {
             }
 
             if (updateHash) {
-                const targetHash = "/" + resolvedPath;
+                const targetHash = "#/" + resolvedPath;
                 if (window.location.hash !== targetHash) {
                     window.location.hash = targetHash;
                 }

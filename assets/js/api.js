@@ -47,6 +47,20 @@ const ApiClient = {
                     return { success: false, code: "AUTH", message: "Backend Google Apps Script mewajibkan token Supabase. Konfigurasikan Supabase di config.js atau hapus Script Properties di Apps Script." };
                 }
             }
+            if (json && !json.success && json.message && json.message.includes("Aksi tidak dikenali")) {
+                console.warn(`[ApiClient] GAS Web App belum mendukung aksi '${action}'. Deployment Apps Script perlu diperbarui ke versi baru.`);
+                if (action === "deleteSuratKeluar" || action === "deleteSuratMasuk") {
+                    this.handleLocalFallback(action, payload);
+                    return {
+                        success: true,
+                        message: `Surat berhasil dihapus dari data lokal. PENTING: Harap update deployment Google Apps Script Anda (Manage deployments > New version > Deploy) agar aksi '${action}' juga terhapus permanen di Google Sheets.`
+                    };
+                }
+                return {
+                    success: false,
+                    message: `${json.message}. Harap Deploy versi baru Google Apps Script Anda (Manage deployments > Edit > New version > Deploy).`
+                };
+            }
             return Sec.cleanDeep(json);
         } catch (err) {
             console.warn(`[ApiClient] Gagal koneksi cloud (${action}):`, err);

@@ -7,9 +7,13 @@ const ModulCetak = {
     selectedStudent: null,
     generatedNomorSurat: "",
     currentTemplateType: "aktif", // "aktif", "mutasi", "rekomendasi", "kelakuan"
+    nomorMode: "terbit", // "terbit" | "baru" | "manual"
+    selectedNomorTerbit: "",
+    manualNomorSurat: "",
 
     init() {
         this.populateStudentSelect();
+        this.populateNomorTerbitSelect();
         this.bindEvents();
         this.selectDefaultStudent();
     },
@@ -51,6 +55,76 @@ const ModulCetak = {
                 this.generatePreview();
             });
         }
+    },
+
+    populateNomorTerbitSelect() {
+        const select = document.getElementById("cetak-select-nomor-terbit");
+        if (!select) return;
+
+        const list = DataStore.getSuratKeluar();
+        if (list.length === 0) {
+            select.innerHTML = `<option value="">Belum ada nomor di buku register (Pilih 'Nomor Baru')</option>`;
+            this.selectedNomorTerbit = "";
+            return;
+        }
+
+        select.innerHTML = list.map(s => `
+            <option value="${s.nomorSurat}">
+                ${s.nomorSurat} - [${s.tujuan || 'Tanpa Tujuan'}] (${s.perihal || 'Tanpa Perihal'})
+            </option>
+        `).join("");
+
+        if (!this.selectedNomorTerbit && list.length > 0) {
+            this.selectedNomorTerbit = list[0].nomorSurat;
+        }
+        select.value = this.selectedNomorTerbit;
+    },
+
+    setNomorMode(mode) {
+        this.nomorMode = mode;
+        const btnTerbit = document.getElementById("btn-mode-terbit");
+        const btnBaru = document.getElementById("btn-mode-baru");
+        const btnManual = document.getElementById("btn-mode-manual");
+
+        const boxTerbit = document.getElementById("cetak-box-terbit");
+        const boxBaru = document.getElementById("cetak-box-baru");
+        const boxManual = document.getElementById("cetak-box-manual");
+
+        [btnTerbit, btnBaru, btnManual].forEach(b => {
+            b?.classList.remove("bg-white", "text-blue-700", "shadow-xs");
+            b?.classList.add("text-slate-600");
+        });
+
+        boxTerbit?.classList.add("hidden");
+        boxBaru?.classList.add("hidden");
+        boxManual?.classList.add("hidden");
+
+        if (mode === "terbit") {
+            btnTerbit?.classList.add("bg-white", "text-blue-700", "shadow-xs");
+            btnTerbit?.classList.remove("text-slate-600");
+            boxTerbit?.classList.remove("hidden");
+            this.populateNomorTerbitSelect();
+        } else if (mode === "baru") {
+            btnBaru?.classList.add("bg-white", "text-blue-700", "shadow-xs");
+            btnBaru?.classList.remove("text-slate-600");
+            boxBaru?.classList.remove("hidden");
+        } else if (mode === "manual") {
+            btnManual?.classList.add("bg-white", "text-blue-700", "shadow-xs");
+            btnManual?.classList.remove("text-slate-600");
+            boxManual?.classList.remove("hidden");
+        }
+
+        this.generatePreview();
+    },
+
+    onSelectNomorTerbit(val) {
+        this.selectedNomorTerbit = val;
+        this.generatePreview();
+    },
+
+    onInputManualNomor(val) {
+        this.manualNomorSurat = val.trim();
+        this.generatePreview();
     },
 
     populateStudentSelect() {
@@ -128,9 +202,27 @@ const ModulCetak = {
         const withTtd = document.getElementById("cetak-toggle-ttd")?.checked ?? true;
         const withStempel = document.getElementById("cetak-toggle-stempel")?.checked ?? true;
 
-        // Auto Next Nomor Surat Keluar
-        const resNomor = await ApiClient.handleLocalFallback("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
-        this.generatedNomorSurat = resNomor.data.nomorSurat;
+        // Tentukan Nomor Surat Berdasarkan Mode
+        if (this.nomorMode === "terbit") {
+            const list = DataStore.getSuratKeluar();
+            if (this.selectedNomorTerbit) {
+                this.generatedNomorSurat = this.selectedNomorTerbit;
+            } else if (list.length > 0) {
+                this.selectedNomorTerbit = list[0].nomorSurat;
+                this.generatedNomorSurat = list[0].nomorSurat;
+            } else {
+                const resNomor = await ApiClient.handleLocalFallback("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
+                this.generatedNomorSurat = resNomor.data.nomorSurat;
+            }
+        } else if (this.nomorMode === "manual") {
+            this.generatedNomorSurat = this.manualNomorSurat || "421.2/001/SD/2026";
+        } else {
+            // Mode "baru" (otomatis increment)
+            const resNomor = await ApiClient.handleLocalFallback("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
+            this.generatedNomorSurat = resNomor.data.nomorSurat;
+            const previewEl = document.getElementById("cetak-preview-baru");
+            if (previewEl) previewEl.textContent = this.generatedNomorSurat;
+        }
 
         // Tanggal Format Indonesia
         const today = new Date();
@@ -338,24 +430,27 @@ const ModulCetak = {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan Dokumen...`;
 
-        // 1. Simpan otomatis nomor surat ke DB_SuratKeluar (Adopsi SRIKANDI)
+        // 1. Simpan ke DB_SuratKeluar jika mode baru atau manual
         const config = DataStore.getConfig();
         const student = this.selectedStudent;
         const judulSurat = document.getElementById("cetak-jenis-surat")?.selectedOptions[0]?.text || "Surat Keterangan";
 
-        await ApiClient.request("saveSuratKeluar", {
-            nomorSurat: this.generatedNomorSurat,
-            kodeKlasifikasi: "421.2",
-            tanggalSurat: new Date().toISOString().split('T')[0],
-            tujuan: `Orang Tua / Wali Siswa (${student.nama})`,
-            perihal: `${judulSurat} an. ${student.nama} (NISN: ${student.nisn})`,
-            pengonsep: "Staf TU (Sistem Mandiri)",
-            penandatangan: config.namaKepalaSekolah,
-            keterangan: "Diterbitkan instan via Modul Cetak Mandiri (< 5 Detik)"
-        });
-
-        // 2. Beri notifikasi feedback sukses
-        App.showToast(`Surat ${this.generatedNomorSurat} siap dicetak & nomor otomatis terarsip di SRIKANDI!`, "success");
+        if (this.nomorMode !== "terbit") {
+            await ApiClient.request("saveSuratKeluar", {
+                nomorSurat: this.generatedNomorSurat,
+                nomorSuratManual: this.nomorMode === "manual" ? this.generatedNomorSurat : null,
+                kodeKlasifikasi: "421.2",
+                tanggalSurat: new Date().toISOString().split('T')[0],
+                tujuan: `Orang Tua / Wali Siswa (${student.nama})`,
+                perihal: `${judulSurat} an. ${student.nama} (NISN: ${student.nisn})`,
+                pengonsep: "Staf TU (Sistem Mandiri)",
+                penandatangan: config.namaKepalaSekolah,
+                keterangan: `Diterbitkan instan via Modul Cetak Mandiri (${this.nomorMode === 'manual' ? 'Nomor Manual' : 'Nomor Baru'})`
+            });
+            App.showToast(`Surat ${this.generatedNomorSurat} siap dicetak & nomor terarsip di SRIKANDI!`, "success");
+        } else {
+            App.showToast(`Mencetak surat dengan Nomor Terbit: ${this.generatedNomorSurat}`, "success");
+        }
 
         // 3. Trigger Print Window (< 5 detik)
         setTimeout(() => {

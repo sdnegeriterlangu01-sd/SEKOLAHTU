@@ -342,27 +342,38 @@ const Auth = {
         if (modal) modal.classList.add("hidden");
     },
 
-    switchUserTab(tab) {
+    switchUserTab(tab, preselectedUser = null) {
         const btnAdd = document.getElementById("tab-btn-add-user");
         const btnList = document.getElementById("tab-btn-list-user");
+        const btnPw = document.getElementById("tab-btn-pw-user");
+
         const formAdd = document.getElementById("form-add-user");
         const boxList = document.getElementById("container-user-list");
+        const formPw = document.getElementById("form-change-password");
+
+        [btnAdd, btnList, btnPw].forEach(b => {
+            b?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
+            b?.classList.add("text-slate-500");
+        });
+
+        formAdd?.classList.add("hidden");
+        boxList?.classList.add("hidden");
+        formPw?.classList.add("hidden");
 
         if (tab === "add") {
             btnAdd?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
             btnAdd?.classList.remove("text-slate-500");
-            btnList?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
-            btnList?.classList.add("text-slate-500");
             formAdd?.classList.remove("hidden");
-            boxList?.classList.add("hidden");
-        } else {
+        } else if (tab === "list") {
             btnList?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
             btnList?.classList.remove("text-slate-500");
-            btnAdd?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
-            btnAdd?.classList.add("text-slate-500");
             boxList?.classList.remove("hidden");
-            formAdd?.classList.add("hidden");
             this.loadUsersList();
+        } else if (tab === "password") {
+            btnPw?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
+            btnPw?.classList.remove("text-slate-500");
+            formPw?.classList.remove("hidden");
+            this.populatePasswordUsers(preselectedUser);
         }
     },
 
@@ -441,7 +452,7 @@ const Auth = {
     async loadUsersList() {
         const tbody = document.getElementById("user-list-table-body");
         if (!tbody) return;
-        tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat daftar akun...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat daftar akun...</td></tr>`;
 
         try {
             if (this.usesSupabase()) {
@@ -449,7 +460,7 @@ const Auth = {
                 if (!res.ok) throw new Error("Gagal mengambil data profil.");
                 const list = await res.json();
                 if (!list || list.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-slate-400">Belum ada akun pengguna terdaftar.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-6 text-center text-slate-400">Belum ada akun pengguna terdaftar.</td></tr>`;
                     return;
                 }
                 tbody.innerHTML = list.map(u => `
@@ -472,6 +483,11 @@ const Auth = {
                                 <span class="w-1.5 h-1.5 rounded-full ${u.aktif ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
                                 ${u.aktif ? 'Aktif' : 'Nonaktif'}
                             </span>
+                        </td>
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                            <button type="button" onclick="Auth.promptChangePassword('${u.id}', '${Sec.esc(u.nama)}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-bold border border-amber-200 inline-flex items-center gap-1 transition">
+                                <i class="fa-solid fa-key text-[10px]"></i> Ganti Sandi
+                            </button>
                         </td>
                     </tr>
                 `).join("");
@@ -498,11 +514,139 @@ const Auth = {
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif (Demo)
                             </span>
                         </td>
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                            <button type="button" onclick="Auth.promptChangePassword('${usr}', '${Sec.esc(u.nama)}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-bold border border-amber-200 inline-flex items-center gap-1 transition">
+                                <i class="fa-solid fa-key text-[10px]"></i> Ganti Sandi
+                            </button>
+                        </td>
                     </tr>
                 `).join("");
             }
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-rose-500 text-xs">Error memuat daftar: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-rose-500 text-xs">Error memuat daftar: ${err.message}</td></tr>`;
+        }
+    },
+
+    async populatePasswordUsers(preselectedUser = null) {
+        const select = document.getElementById("pw-target-user");
+        if (!select) return;
+
+        select.innerHTML = `<option value="">-- Memuat Akun Pengguna... --</option>`;
+
+        try {
+            if (this.usesSupabase()) {
+                const res = await this.sb(`/rest/v1/profiles?select=*&order=nama.asc`, {}, this.session?.token);
+                if (!res.ok) throw new Error("Gagal mengambil daftar pengguna.");
+                const profiles = await res.json();
+                
+                if (!profiles || profiles.length === 0) {
+                    select.innerHTML = `<option value="">Tidak ada akun pengguna</option>`;
+                    return;
+                }
+
+                select.innerHTML = profiles.map(p => `
+                    <option value="${p.id}">${p.nama} (${ACL.ROLES[p.role] || p.role}) - ID: ${p.id.substring(0, 8)}...</option>
+                `).join("");
+            } else {
+                const entries = Object.entries(this.DEMO_USERS);
+                select.innerHTML = entries.map(([usr, u]) => `
+                    <option value="${usr}">${u.nama} (${ACL.ROLES[u.role] || u.role}) - [Akun Demo: ${usr}]</option>
+                `).join("");
+            }
+
+            if (preselectedUser) {
+                select.value = preselectedUser;
+            }
+        } catch (err) {
+            select.innerHTML = `<option value="">Gagal memuat pengguna (${err.message})</option>`;
+        }
+    },
+
+    promptChangePassword(userId, userName) {
+        this.switchUserTab("password", userId);
+        const inputPw = document.getElementById("pw-new-password");
+        if (inputPw) {
+            setTimeout(() => inputPw.focus(), 150);
+        }
+    },
+
+    async handleChangePassword(e) {
+        if (e && e.preventDefault) e.preventDefault();
+
+        const targetUserId = document.getElementById("pw-target-user")?.value;
+        const newPw = document.getElementById("pw-new-password")?.value;
+        const confirmPw = document.getElementById("pw-confirm-password")?.value;
+
+        if (!targetUserId) {
+            App.showToast("Silakan pilih akun pengguna terlebih dahulu!", "error");
+            return;
+        }
+
+        if (!newPw || newPw.length < 6) {
+            App.showToast("Kata sandi baru minimal 6 karakter!", "error");
+            return;
+        }
+
+        if (newPw !== confirmPw) {
+            App.showToast("Konfirmasi kata sandi tidak cocok!", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btn-save-password");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+        try {
+            if (this.usesSupabase()) {
+                // Jika user yang diubah adalah user yang sedang login sendiri:
+                if (this.session && this.session.user && this.session.user.id === targetUserId) {
+                    const res = await this.sb("/auth/v1/user", {
+                        method: "PUT",
+                        body: JSON.stringify({ password: newPw })
+                    }, this.session.token);
+
+                    if (!res.ok) {
+                        const j = await res.json().catch(() => ({}));
+                        throw new Error(j.msg || j.message || "Gagal mengubah kata sandi akun sendiri.");
+                    }
+                    App.showToast("Kata sandi akun Anda berhasil diperbarui!", "success");
+                } else {
+                    // Admin mengubah akun pengguna lain via RPC admin_change_password
+                    const res = await this.sb("/rest/v1/rpc/admin_change_password", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            target_user_id: targetUserId,
+                            new_password: newPw
+                        })
+                    }, this.session?.token);
+
+                    if (!res.ok) {
+                        const j = await res.json().catch(() => ({}));
+                        if (res.status === 404 || (j.message && j.message.includes("could not find"))) {
+                            throw new Error("Fungsi database 'admin_change_password' belum dijalankan di Supabase SQL Editor. Jalankan skrip di supabase/schema.sql terlebih dahulu.");
+                        }
+                        throw new Error(j.message || j.msg || "Gagal mengubah kata sandi pengguna.");
+                    }
+                    App.showToast("Kata sandi pengguna berhasil diperbarui oleh Administrator!", "success");
+                }
+            } else {
+                // Mode Demo
+                if (this.DEMO_USERS[targetUserId]) {
+                    this.DEMO_USERS[targetUserId].pw = newPw;
+                    App.showToast(`(Mode Demo) Kata sandi akun '${targetUserId}' berhasil diperbarui!`, "success");
+                } else {
+                    throw new Error("Akun demo tidak ditemukan.");
+                }
+            }
+
+            document.getElementById("form-change-password")?.reset();
+            this.switchUserTab("list");
+        } catch (err) {
+            console.error("handleChangePassword:", err);
+            App.showToast(`Gagal: ${err.message}`, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-key"></i> Simpan Kata Sandi Baru`;
         }
     }
 };

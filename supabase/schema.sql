@@ -83,6 +83,37 @@ create trigger on_auth_user_created
     after insert on auth.users
     for each row execute function public.handle_new_user();
 
+-- 5. Fungsi Ganti Kata Sandi Pengguna oleh Admin (RPC)
+create or replace function public.admin_change_password(target_user_id uuid, new_password text)
+returns json as $$
+begin
+    -- Validasi hak akses pemanggil: hanya peran admin yang boleh mereset kata sandi
+    if not (public.is_admin()) then
+        raise exception 'Akses ditolak: Hanya Administrator yang berwenang mengganti kata sandi pengguna lain.';
+    end if;
+
+    -- Validasi panjang kata sandi
+    if length(new_password) < 6 then
+        raise exception 'Kata sandi minimal 6 karakter.';
+    end if;
+
+    -- Update kata sandi pengguna di tabel auth.users
+    update auth.users
+    set encrypted_password = crypt(new_password, gen_salt('bf')),
+        updated_at = now()
+    where id = target_user_id;
+
+    if not found then
+        raise exception 'Pengguna dengan ID % tidak ditemukan.', target_user_id;
+    end if;
+
+    return json_build_object('success', true, 'message', 'Kata sandi berhasil diperbarui.');
+end;
+$$ language plpgsql security definer set search_path = public, extensions, auth;
+
+-- Beri izin eksekusi ke pengguna authenticated
+grant execute on function public.admin_change_password(uuid, text) to authenticated;
+
 -- ==========================================================================
 -- CARA MEMBUAT AKUN PENGGUNA PERTAMA KALI (ADMIN SEED):
 -- 1. Buka Supabase Dashboard > Authentication > Users > Add User
@@ -96,3 +127,4 @@ create trigger on_auth_user_created
 --    set role = 'admin', nama = 'Administrator Sekolah'
 --    where id = (select id from auth.users where email = 'admin@sekolah.sch.id');
 -- ==========================================================================
+

@@ -144,6 +144,10 @@ const ModulCetak = {
         const students = DataStore.getSiswa();
         select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
             students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.kelas})</option>`).join("");
+
+        if (!this.selectedStudent && students.length > 0) {
+            this.selectDefaultStudent();
+        }
     },
 
     selectDefaultStudent() {

@@ -21,18 +21,9 @@
         </div>
     </div>
 
-    <!-- Sub-tab Navigation Bar with Modular Vue 3 -->
+    <!-- Sub-tab Navigation Bar -->
     <div id="vue-absensi-tabs"
         class="bg-slate-200/80 p-1 rounded-xl flex items-center gap-1 overflow-x-auto shadow-inner">
-        <button v-for="tab in visibleTabs" 
-            :key="tab.id"
-            type="button" 
-            :data-abs-tab="tab.id"
-            @click="switchTab(tab.id)"
-            :class="['px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer', currentTab === tab.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900']">
-            <i :class="['fa-solid', tab.icon]"></i>
-            <span>{{ tab.label }}</span>
-        </button>
     </div>
 
     <!-- SUB-TAB 1: Presensi Harian (Konvensional) -->

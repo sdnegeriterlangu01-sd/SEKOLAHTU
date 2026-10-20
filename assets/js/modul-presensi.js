@@ -72,7 +72,6 @@ const ModulPresensi = {
     firstAllowedTab() { const t = this.TABS.find(x => Auth.canDo(x.need)); return t ? t.id : "harian"; },
 
     buildTabs() {
-        if (window.ModulVue && ModulVue.apps && ModulVue.apps.absensiTabs) return;
         const bar = document.getElementById("vue-absensi-tabs") || document.getElementById("abs-tabs");
         if (!bar) return;
         const isGuru = Auth.role() === "guru";
@@ -81,8 +80,8 @@ const ModulPresensi = {
             .filter(t => !isGuru || (t.id === "harian" || t.id === "tendik" || t.id === "siswa"))
             .map(t => `
             <button type="button" data-abs-tab="${t.id}" onclick="ModulPresensi.switchTab('${t.id}')"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 ${this.tab === t.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}">
-                <i class="fa-solid ${t.icon}"></i> ${t.id === "tendik" && isGuru ? "Presensi Saya" : t.label}
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${this.tab === t.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}">
+                <i class="fa-solid ${t.icon}"></i> <span>${t.id === "tendik" && isGuru ? "Presensi Saya" : t.label}</span>
             </button>`).join("");
     },
 
@@ -254,24 +253,24 @@ const ModulPresensi = {
     renderScanView() {
         const el = document.getElementById("view-scan-container");
         if (!el) return;
-        if (!el.dataset.built) {
-            el.dataset.built = "1";
+        if (!el.querySelector("#mscan-input")) {
             el.innerHTML = this.buildScannerHTML("mscan");
-            const inp = el.querySelector("#mscan-input");
-            if (inp) {
-                inp.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; this.handleCode(v, "mscan"); }
-                });
-            }
-            if (!this._clock) {
-                this._clock = setInterval(() => {
-                    const now = Util.nowTime();
-                    const c1 = document.getElementById("scan-clock");
-                    const c2 = document.getElementById("mscan-clock");
-                    if (c1) c1.textContent = now;
-                    if (c2) c2.textContent = now;
-                }, 1000);
-            }
+        }
+        const inp = el.querySelector("#mscan-input");
+        if (inp && !inp.dataset.bound) {
+            inp.dataset.bound = "1";
+            inp.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; this.handleCode(v, "mscan"); }
+            });
+        }
+        if (!this._clock) {
+            this._clock = setInterval(() => {
+                const now = Util.nowTime();
+                const c1 = document.getElementById("scan-clock");
+                const c2 = document.getElementById("mscan-clock");
+                if (c1) c1.textContent = now;
+                if (c2) c2.textContent = now;
+            }, 1000);
         }
         const lbl = document.getElementById("mscan-today-label");
         if (lbl) lbl.textContent = Util.today();

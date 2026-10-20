@@ -266,106 +266,18 @@ const ModulVue = {
     // 4. MODULAR SUB-TABS: MODUL PRESENSI & ABSENSI
     // -------------------------------------------------------------------------
     mountAbsensiTabs() {
-        const el = document.getElementById("vue-absensi-tabs");
-        if (!el) return;
-        if (this.apps.absensiTabs) {
-            try {
-                this.apps.absensiTabs.unmount();
-            } catch (e) {}
-            this.apps.absensiTabs = null;
+        if (window.ModulPresensi) {
+            ModulPresensi.buildTabs();
         }
-
-        const { createApp, computed } = Vue;
-        const store = this.store;
-
-        const app = createApp({
-            setup() {
-                const currentTab = computed(() => store.absensiTab);
-                const role = computed(() => store.role);
-
-                const allTabs = [
-                    { id: "harian", label: "Presensi Harian", icon: "fa-clipboard-check", need: "getAbsensi", route: "presensi/harian" },
-                    { id: "tendik", label: "Rekap Guru & Tendik", icon: "fa-table-list", need: "getAbsensiTendikBulan", route: "presensi/tendik" },
-                    { id: "siswa", label: "Rekap Siswa Bulanan", icon: "fa-table-cells", need: "getAbsensiSiswaBulan", route: "presensi/rekap" },
-                    { id: "qr", label: "Kartu ID QR", icon: "fa-id-card", need: "saveTendik" }
-                ];
-
-                const visibleTabs = computed(() => {
-                    const isGuru = role.value === "guru";
-                    return allTabs.filter(t => {
-                        if (!Auth.canDo(t.need)) return false;
-                        if (isGuru && t.id === "qr") return false;
-                        return true;
-                    }).map(t => {
-                        let label = t.label;
-                        if (isGuru && t.id === "tendik") label = "Presensi Saya";
-                        return { ...t, label };
-                    });
-                });
-
-                const switchTab = (tabId) => {
-                    store.absensiTab = tabId;
-                    if (tabId === "harian") {
-                        Router.navigate("presensi/harian");
-                    } else if (tabId === "tendik") {
-                        Router.navigate("presensi/tendik");
-                    } else if (tabId === "siswa") {
-                        Router.navigate("presensi/rekap");
-                    } else if (tabId === "qr") {
-                        if (window.ModulPresensi) ModulPresensi.switchTab("qr");
-                    }
-                };
-
-                return {
-                    currentTab,
-                    visibleTabs,
-                    switchTab
-                };
-            }
-        });
-
-        this.apps.absensiTabs = app.mount(el);
     },
 
     // -------------------------------------------------------------------------
     // 5. MODULAR SUB-TABS: MODUL SURAT SRIKANDI
     // -------------------------------------------------------------------------
     mountSuratTabs() {
-        const el = document.getElementById("vue-surat-tabs");
-        if (!el) return;
-        if (this.apps.suratTabs) {
-            try {
-                this.apps.suratTabs.unmount();
-            } catch (e) {}
-            this.apps.suratTabs = null;
+        if (window.ModulSurat) {
+            ModulSurat.renderSubTab();
         }
-
-        const { createApp, computed } = Vue;
-        const store = this.store;
-
-        const app = createApp({
-            setup() {
-                const activeTab = computed(() => store.suratSubTab);
-
-                const tabs = [
-                    { id: "keluar", label: "Surat Keluar", icon: "fa-paper-plane" },
-                    { id: "masuk", label: "Surat Masuk", icon: "fa-inbox" }
-                ];
-
-                const switchTab = (tabId) => {
-                    store.suratSubTab = tabId;
-                    if (window.ModulSurat) ModulSurat.switchSubTab(tabId);
-                };
-
-                return {
-                    activeTab,
-                    tabs,
-                    switchTab
-                };
-            }
-        });
-
-        this.apps.suratTabs = app.mount(el);
     },
 
     // -------------------------------------------------------------------------

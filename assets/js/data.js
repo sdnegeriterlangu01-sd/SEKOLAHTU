@@ -475,8 +475,19 @@ const DataStore = {
         } catch (e) { return false; }
     },
 
-    // Hapus cache data (kecuali pengaturan) - dipanggil saat logout di mode cloud
+    // Hapus cache data (kecuali pengaturan) - dipanggil saat logout
     clearCache() {
+        // Jika akun demo atau tanpa token, kembalikan ke master seed contoh
+        const isDemo = !window.Auth || !Auth.usesSupabase() || (Auth.session && Auth.session.demo);
+        if (isDemo) {
+            localStorage.setItem(this.KEYS.SISWA, JSON.stringify(SEED_SISWA));
+            localStorage.setItem(this.KEYS.TENDIK, JSON.stringify(SEED_TENDIK));
+            localStorage.setItem(this.KEYS.SURAT_KELUAR, JSON.stringify(SEED_SURAT_KELUAR));
+            localStorage.setItem(this.KEYS.SURAT_MASUK, JSON.stringify(SEED_SURAT_MASUK));
+            localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(generateSeedAbsensi()));
+            localStorage.setItem(this.KEYS.HISTORI_BULANAN, JSON.stringify(SEED_HISTORI_BULANAN));
+            return;
+        }
         Object.entries(this.KEYS).forEach(([name, key]) => {
             if (name === "CONFIG") return;
             localStorage.setItem(key, JSON.stringify(name === "HISTORI_BULANAN" ? SEED_HISTORI_BULANAN : []));
@@ -536,7 +547,21 @@ const DataStore = {
 
     // SEMUA tahun ajaran
     getSiswaAll() {
-        try { return JSON.parse(localStorage.getItem(this.KEYS.SISWA)) || []; } catch (e) { return []; }
+        try {
+            let list = JSON.parse(localStorage.getItem(this.KEYS.SISWA));
+            if (!Array.isArray(list) || list.length === 0) {
+                list = JSON.parse(JSON.stringify(SEED_SISWA));
+                const ta = this.getActiveTA();
+                list.forEach(s => {
+                    if (!s.tahunAjaran) s.tahunAjaran = ta;
+                    if (!s.rombel && s.kelas) s.rombel = String(s.kelas);
+                });
+                localStorage.setItem(this.KEYS.SISWA, JSON.stringify(list));
+            }
+            return list;
+        } catch (e) {
+            return JSON.parse(JSON.stringify(SEED_SISWA));
+        }
     },
 
     saveSiswaAll(list) {
@@ -546,7 +571,9 @@ const DataStore = {
     // Siswa pada tahun ajaran tertentu (default: TA aktif). Modul lama memakai ini tanpa perubahan.
     getSiswa(ta) {
         const target = ta || this.getActiveTA();
-        return this.getSiswaAll().filter(s => (s.tahunAjaran || target) === target);
+        const all = this.getSiswaAll();
+        const filtered = all.filter(s => (s.tahunAjaran || target) === target);
+        return filtered.length > 0 ? filtered : all;
     },
 
     // Simpan daftar siswa HANYA untuk TA tertentu; TA lain tidak tersentuh
@@ -572,7 +599,16 @@ const DataStore = {
     },
 
     getTendik() {
-        try { return JSON.parse(localStorage.getItem(this.KEYS.TENDIK)) || []; } catch (e) { return []; }
+        try {
+            let list = JSON.parse(localStorage.getItem(this.KEYS.TENDIK));
+            if (!Array.isArray(list) || list.length === 0) {
+                list = JSON.parse(JSON.stringify(SEED_TENDIK));
+                localStorage.setItem(this.KEYS.TENDIK, JSON.stringify(list));
+            }
+            return list;
+        } catch (e) {
+            return JSON.parse(JSON.stringify(SEED_TENDIK));
+        }
     },
 
     saveTendik(list) {
@@ -595,9 +631,17 @@ const DataStore = {
         localStorage.setItem(this.KEYS.ABSENSI_SISWA_BULAN, JSON.stringify(list));
     },
 
-
     getSuratKeluar() {
-        return JSON.parse(localStorage.getItem(this.KEYS.SURAT_KELUAR)) || [];
+        try {
+            let list = JSON.parse(localStorage.getItem(this.KEYS.SURAT_KELUAR));
+            if (!Array.isArray(list) || list.length === 0) {
+                list = JSON.parse(JSON.stringify(SEED_SURAT_KELUAR));
+                localStorage.setItem(this.KEYS.SURAT_KELUAR, JSON.stringify(list));
+            }
+            return list;
+        } catch (e) {
+            return JSON.parse(JSON.stringify(SEED_SURAT_KELUAR));
+        }
     },
 
     saveSuratKeluar(list) {
@@ -605,7 +649,16 @@ const DataStore = {
     },
 
     getSuratMasuk() {
-        return JSON.parse(localStorage.getItem(this.KEYS.SURAT_MASUK)) || [];
+        try {
+            let list = JSON.parse(localStorage.getItem(this.KEYS.SURAT_MASUK));
+            if (!Array.isArray(list) || list.length === 0) {
+                list = JSON.parse(JSON.stringify(SEED_SURAT_MASUK));
+                localStorage.setItem(this.KEYS.SURAT_MASUK, JSON.stringify(list));
+            }
+            return list;
+        } catch (e) {
+            return JSON.parse(JSON.stringify(SEED_SURAT_MASUK));
+        }
     },
 
     saveSuratMasuk(list) {
@@ -613,7 +666,16 @@ const DataStore = {
     },
 
     getAbsensi() {
-        return JSON.parse(localStorage.getItem(this.KEYS.ABSENSI)) || [];
+        try {
+            let list = JSON.parse(localStorage.getItem(this.KEYS.ABSENSI));
+            if (!Array.isArray(list) || list.length === 0) {
+                list = generateSeedAbsensi();
+                localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(list));
+            }
+            return list;
+        } catch (e) {
+            return generateSeedAbsensi();
+        }
     },
 
     saveAbsensi(list) {
@@ -621,7 +683,11 @@ const DataStore = {
     },
 
     getHistoriBulanan() {
-        return JSON.parse(localStorage.getItem(this.KEYS.HISTORI_BULANAN)) || SEED_HISTORI_BULANAN;
+        try {
+            return JSON.parse(localStorage.getItem(this.KEYS.HISTORI_BULANAN)) || SEED_HISTORI_BULANAN;
+        } catch (e) {
+            return SEED_HISTORI_BULANAN;
+        }
     },
 
     resetToDefault() {

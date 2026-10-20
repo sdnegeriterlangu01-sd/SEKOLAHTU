@@ -92,11 +92,8 @@ const Router = {
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "siswa";
                 if (window.ModulPresensi) {
-                    ModulPresensi.tab = "siswa";
-                    ModulPresensi.renderSiswa();
-                }
-                if (window.ModulVue) {
-                    ModulVue.mountAbsensiTabs();
+                    ModulPresensi.init();
+                    ModulPresensi.switchTab("siswa");
                 }
             }
         },
@@ -107,11 +104,8 @@ const Router = {
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "tendik";
                 if (window.ModulPresensi) {
-                    ModulPresensi.tab = "tendik";
-                    ModulPresensi.renderTendik();
-                }
-                if (window.ModulVue) {
-                    ModulVue.mountAbsensiTabs();
+                    ModulPresensi.init();
+                    ModulPresensi.switchTab("tendik");
                 }
             }
         },
@@ -121,6 +115,7 @@ const Router = {
             menuId: "scan-absensi",
             onMount: () => {
                 if (window.ModulPresensi) {
+                    ModulPresensi.init();
                     ModulPresensi.renderScanView();
                 }
             }

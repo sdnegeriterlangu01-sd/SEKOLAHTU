@@ -193,7 +193,9 @@ const App = {
                     return k === gInfo.kelas || (d1 && d2 && d1 === d2) || k.toLowerCase().includes(gInfo.kelas.toLowerCase());
                 });
             } else if (gInfo.isGuruMapel) {
-                kelasLabel = "Semua Kelas (Mapel)";
+                isFilteredKelas = false;
+                kelasLabel = gInfo.namaMapel ? `Mapel ${gInfo.namaMapel}` : "Semua Kelas (Mapel)";
+                targetStudents = students;
             }
         }
 
@@ -205,9 +207,21 @@ const App = {
         const statTotal = document.getElementById("stat-total-siswa");
         if (statTotal) statTotal.textContent = totalSiswa;
         const statTotalTitle = document.getElementById("stat-total-siswa-title");
-        if (statTotalTitle) statTotalTitle.textContent = isFilteredKelas ? `Siswa ${kelasLabel}` : "Total Siswa Terdaftar";
+        if (statTotalTitle) {
+            if (role === "guru") {
+                statTotalTitle.textContent = isFilteredKelas ? `Siswa ${kelasLabel}` : `Siswa (${kelasLabel})`;
+            } else {
+                statTotalTitle.textContent = "Total Siswa Terdaftar";
+            }
+        }
         const statTotalDesc = document.getElementById("stat-total-siswa-desc");
-        if (statTotalDesc) statTotalDesc.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> ${isFilteredKelas ? `Siswa binaan aktif ${kelasLabel}` : "Terindeks di database DB_Siswa"}`;
+        if (statTotalDesc) {
+            if (role === "guru") {
+                statTotalDesc.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> ${isFilteredKelas ? `Siswa binaan aktif ${kelasLabel}` : `Siswa aktif lintas kelas (${kelasLabel})`}`;
+            } else {
+                statTotalDesc.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> Terindeks di database DB_Siswa`;
+            }
+        }
 
         const statBerkasLengkap = document.getElementById("stat-berkas-lengkap");
         if (statBerkasLengkap) statBerkasLengkap.textContent = `${persenLengkap}%`;
@@ -256,7 +270,13 @@ const App = {
         const persenHadir = basisTotal > 0 ? ((countHadir / basisTotal) * 100).toFixed(1) : "0.0";
 
         const statPresensiTitle = document.getElementById("stat-presensi-title");
-        if (statPresensiTitle) statPresensiTitle.textContent = isFilteredKelas ? `Kehadiran ${kelasLabel} Hari Ini` : "Kehadiran Siswa Hari Ini";
+        if (statPresensiTitle) {
+            if (role === "guru") {
+                statPresensiTitle.textContent = isFilteredKelas ? `Kehadiran ${kelasLabel} Hari Ini` : `Kehadiran Siswa (${kelasLabel}) Hari Ini`;
+            } else {
+                statPresensiTitle.textContent = "Kehadiran Siswa Hari Ini";
+            }
+        }
 
         const statPresensiPersen = document.getElementById("stat-presensi-persen");
         if (statPresensiPersen) statPresensiPersen.textContent = `${persenHadir}%`;
@@ -283,7 +303,7 @@ const App = {
                 if (heroDesc) {
                     heroDesc.textContent = gInfo?.isGuruKelas 
                         ? `Kelola data kehadiran dan administrasi siswa binaan Anda pada ${kelasLabel} secara mudah, akurat, dan paperless.`
-                        : `Kelola data kehadiran dan administrasi siswa seluruh kelas yang Anda ajar secara terpadu dan otomatis.`;
+                        : `Kelola data kehadiran dan administrasi siswa seluruh kelas yang Anda ajar (${gInfo?.namaMapel ? 'Mata Pelajaran ' + gInfo.namaMapel : 'Lintas Kelas'}) secara terpadu dan otomatis.`;
                 }
             } else {
                 heroTitle.textContent = `Selamat Datang di SIM-TAS-SD`;

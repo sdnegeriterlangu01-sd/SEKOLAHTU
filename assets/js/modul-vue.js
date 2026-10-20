@@ -90,22 +90,32 @@ const ModulVue = {
                     { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-check", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
                 ];
 
+                const canAccessRoute = (route) => {
+                    const currentRole = role.value || (Auth.role && Auth.role()) || "admin";
+                    if (typeof ACL !== "undefined" && ACL.ROUTES && ACL.ROUTES[route]) {
+                        return ACL.check(ACL.ROUTES[route], currentRole);
+                    }
+                    return Auth.canRoute ? Auth.canRoute(route) : true;
+                };
+
                 const mainMenuItems = computed(() => {
-                    return allMenuItems.filter(item => item.section === "main" && Auth.canRoute(item.route));
+                    return allMenuItems.filter(item => item.section === "main" && canAccessRoute(item.route));
                 });
 
                 const settingsMenuItems = computed(() => {
                     return allMenuItems.filter(item => {
                         if (item.section !== "settings") return false;
                         if (item.isExternal) return true;
-                        return Auth.canRoute(item.route);
+                        return canAccessRoute(item.route);
                     });
                 });
 
                 const getMenuLabel = (item) => {
-                    if (item.route === "absensi" && role.value === "guru") {
-                        const g = guruInfo.value;
+                    const currentRole = role.value || (Auth.role && Auth.role());
+                    if (item.route === "absensi" && currentRole === "guru") {
+                        const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
                         if (g && g.isGuruKelas) return `Absensi Kelas ${g.kelas}`;
+                        if (g && g.isGuruMapel) return `Absensi Siswa (Mapel)`;
                     }
                     return item.label;
                 };

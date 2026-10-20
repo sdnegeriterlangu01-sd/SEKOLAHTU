@@ -133,5 +133,27 @@ Akun uji coba demo:
 
 ---
 
-## 5. Lisensi
+## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
+
+### 🚀 Versi 1.5.0 (20 Oktober 2026)
+* **Presensi & Rekap Guru/Tendik:**
+  - **Dual Lookup Matching:** Menambahkan pencocokan ganda berbasis NIP bersih dan Nama Bersih (otomatis mengabaikan gelar akademik) sehingga catatan scan barcode datang/pulang selalu terpetakan akurat ke tabel rekap bulanan.
+  - **Toggle Rekap Tendik Akun Guru:** Menambahkan tombol alih *"Tampilkan Semua Guru & Tendik"* di tab Presensi Saya agar guru dapat beralih antara melihat presensi mandiri dan rekap sekolah.
+* **Navigasi Modular Vue 3 (Sidebar Nav):**
+  - Mengatasi kendala menu samping kosong dengan menghubungkan filter `mainMenuItems` dan `settingsMenuItems` secara reaktif ke `store.role`.
+* **Dashboard & Manajemen Penugasan Guru Dinamis:**
+  - Deteksi cerdas guru kelas (Kelas 1–6) dan guru mata pelajaran (PJOK, PAI, dll.) dari master kepegawaian.
+  - Kartu statistik, target rombel, kehadiran harian, dan label profil samping menyesuaikan penugasan guru secara otomatis.
+  - Menambahkan fitur **"Edit Akun Pengguna"** pada modal Admin untuk memodifikasi peran, tipe guru, kelas mengajar, dan status keaktifan akun.
+* **Portal Verifikasi Keabsahan Dokumen & QR Surat Dinamis:**
+  - URL QR Code pada modul cetak surat kini memuat payload mandiri (`?d=...`) sehingga dokumen dapat diverifikasi secara independen dari perangkat manapun (termasuk smartphone luar jaringan lokal).
+  - Merombak [`verifikasi.html`](verifikasi.html) menjadi portal interaktif dinamis yang dilengkapi **Pemindai Kamera QR (HTML5-QRCode)** dan pencarian nomor surat manual.
+
+### 📌 Versi 1.4.1
+* Pembaruan skema RBAC Supabase dan optimasi modul pencadangan Google Apps Script.
+* Penambahan kartu ID QR otomatis dan perbaikan format cetak surat dinas standar SRIKANDI.
+
+---
+
+## 6. Lisensi
 Didistribusikan secara bebas & gratis untuk seluruh satuan pendidikan Sekolah Dasar di Indonesia.

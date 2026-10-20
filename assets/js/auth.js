@@ -41,29 +41,75 @@ const Auth = {
         return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("absensi") ? "absensi" : "scan-absensi");
     },
 
+    cleanPersonName(name) {
+        if (!name) return "";
+        return String(name)
+            .toLowerCase()
+            .replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr)\b/gi, "")
+            .replace(/[^a-z0-9]/gi, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    },
+
     // Deteksi apakah akun guru adalah Guru Kelas (spesifik kelas) atau Guru Mapel (semua kelas)
     getGuruInfo() {
         if (this.role() !== "guru") return null;
         const u = this.user() || {};
         let tendikList = [];
         try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
-        const t = tendikList.find(item => 
-            (u.nama && item.nama && item.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
-            (u.email && item.nip && item.nip.includes(u.email.split("@")[0]))
-        );
-        const jabatan = t?.jabatan || "";
+
+        const uClean = this.cleanPersonName(u.nama);
+        const uEmailPrefix = String(u.email || "").split("@")[0].toLowerCase();
+        const uNipClean = Util.cleanId(u.nip || uEmailPrefix);
+
+        // Cari tendik yang cocok dengan NIP atau Nama Bersih (mengabaikan gelar akademik)
+        const t = tendikList.find(item => {
+            const tNipClean = Util.cleanId(item.nip);
+            if (uNipClean && tNipClean && (tNipClean === uNipClean || tNipClean.includes(uNipClean) || uNipClean.includes(tNipClean))) return true;
+            const tClean = this.cleanPersonName(item.nama);
+            if (uClean && tClean && (uClean.includes(tClean) || tClean.includes(uClean))) return true;
+            if (u.nama && item.nama && (u.nama.toLowerCase().includes(item.nama.toLowerCase()) || item.nama.toLowerCase().includes(u.nama.toLowerCase()))) return true;
+            return false;
+        });
+
+        const jabatan = (t?.jabatan || "").trim();
         const m = jabatan.match(/kelas\s*(\d+[a-zA-Z]?)/i);
-        const isMapel = (u.tipeGuru === "mapel") || (jabatan.toLowerCase().includes("mapel") || jabatan.toLowerCase().includes("pjok") || jabatan.toLowerCase().includes("agama") || jabatan.toLowerCase().includes("inggris") || jabatan.toLowerCase().includes("seni"));
-        const rawKelas = u.kelasGuru || (m ? m[1] : "");
+
+        // Deteksi bidang mata pelajaran jika guru mapel
+        let namaMapel = "";
+        const jabLow = jabatan.toLowerCase();
+        if (jabLow.includes("pjok") || jabLow.includes("penjas") || jabLow.includes("olahraga")) namaMapel = "PJOK";
+        else if (jabLow.includes("pai") || jabLow.includes("agama") || jabLow.includes("budi pekerti")) namaMapel = "PAI & Budi Pekerti";
+        else if (jabLow.includes("inggris")) namaMapel = "Bahasa Inggris";
+        else if (jabLow.includes("seni") || jabLow.includes("sbk")) namaMapel = "Seni Budaya";
+        else if (jabLow.includes("mapel")) namaMapel = "Mata Pelajaran";
+
+        // Tentukan apakah guru mapel atau guru kelas
+        const isExplicitMapel = (u.tipeGuru === "mapel") || (u.kelasGuru === "Semua") || !!namaMapel || (jabLow.includes("mapel") && !m);
+        const isMapel = isExplicitMapel;
+
+        // Tentukan kelas yang diajar
+        let kelas = "";
+        if (isMapel) {
+            kelas = "Semua";
+        } else if (u.kelasGuru && u.kelasGuru !== "Semua") {
+            kelas = String(u.kelasGuru).replace(/\D/g, "") || u.kelasGuru;
+        } else if (m) {
+            kelas = m[1];
+        } else {
+            kelas = "1";
+        }
+
         const isKelas = !isMapel;
-        const kelas = rawKelas || (isKelas ? "1" : "");
 
         return {
-            isGuruKelas: isKelas && !!kelas,
-            isGuruMapel: isMapel || !kelas || kelas === "Semua",
-            kelas: kelas || "1",
+            isGuruKelas: isKelas,
+            isGuruMapel: isMapel,
+            kelas: isMapel ? "Semua" : (kelas || "1"),
             nama: u.nama || t?.nama || "Guru",
-            jabatan: jabatan || (isKelas ? `Guru Kelas ${kelas || '1'}` : "Guru Mata Pelajaran")
+            nip: t?.nip || u.nip || "",
+            namaMapel: namaMapel,
+            jabatan: jabatan || (isKelas ? `Guru Kelas ${kelas || '1'}` : `Guru Mapel (${namaMapel || 'PJOK/PAI'})`)
         };
     },
 
@@ -182,8 +228,8 @@ const Auth = {
         if (!ACL.ROLES[p.role]) throw new Error("Peran akun tidak valid. Hubungi administrator.");
         this.session.user.nama = Sec.clean(p.nama || this.session.user.email);
         this.session.user.role = p.role;
-        this.session.user.tipeGuru = p.tipe_guru || (p.role === "guru" ? "kelas" : "");
-        this.session.user.kelasGuru = p.kelas_guru || (p.role === "guru" ? "1" : "");
+        this.session.user.tipeGuru = p.tipe_guru || "";
+        this.session.user.kelasGuru = p.kelas_guru || "";
     },
 
     async ensureFresh() {
@@ -380,6 +426,10 @@ const Auth = {
         if (nm) nm.textContent = u.nama || u.email;
         if (rl) rl.textContent = ACL.ROLES[u.role] + (this.session.demo ? " • Demo" : "");
         if (av) av.textContent = String(u.nama || u.email || "?").trim().substring(0, 2).toUpperCase();
+
+        if (window.ModulVue && window.ModulVue.applyRoleNavVisibility) {
+            window.ModulVue.applyRoleNavVisibility();
+        }
     },
 
     // ------------------------------------------------ MANAJEMEN AKUN (ADMIN)
@@ -418,6 +468,7 @@ const Auth = {
         const formAdd = document.getElementById("form-add-user");
         const boxList = document.getElementById("container-user-list");
         const formPw = document.getElementById("form-change-password");
+        const formEdit = document.getElementById("form-edit-user");
 
         [btnAdd, btnList, btnPw].forEach(b => {
             b?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
@@ -427,6 +478,7 @@ const Auth = {
         formAdd?.classList.add("hidden");
         boxList?.classList.add("hidden");
         formPw?.classList.add("hidden");
+        formEdit?.classList.add("hidden");
 
         if (tab === "add") {
             btnAdd?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
@@ -442,11 +494,22 @@ const Auth = {
             btnPw?.classList.remove("text-slate-500");
             formPw?.classList.remove("hidden");
             this.populatePasswordUsers(preselectedUser);
+        } else if (tab === "edit") {
+            btnList?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
+            btnList?.classList.remove("text-slate-500");
+            formEdit?.classList.remove("hidden");
         }
     },
 
     onRoleChange(role) {
         const container = document.getElementById("guru-extra-container");
+        if (container) {
+            container.classList.toggle("hidden", role !== "guru");
+        }
+    },
+
+    onEditRoleChange(role) {
+        const container = document.getElementById("edit-guru-extra-container");
         if (container) {
             container.classList.toggle("hidden", role !== "guru");
         }
@@ -477,7 +540,7 @@ const Auth = {
                     body: JSON.stringify({
                         email,
                         password,
-                        data: { nama, role, tipeGuru, kelasGuru }
+                        data: { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru }
                     })
                 });
 
@@ -489,11 +552,11 @@ const Auth = {
                     throw new Error(j.msg || j.message || "Gagal membuat akun di Supabase.");
                 }
 
-                // Pastikan role dan nama terupdate di tabel profiles
+                // Pastikan role, nama, dan penugasan guru terupdate di tabel profiles
                 if (j.user && j.user.id) {
                     await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(j.user.id)}`, {
                         method: "PATCH",
-                        body: JSON.stringify({ nama, role, aktif: true })
+                        body: JSON.stringify({ nama, role, aktif: true, tipe_guru: tipeGuru, kelas_guru: kelasGuru })
                     }, this.session.token).catch(() => {});
                 }
 
@@ -503,7 +566,7 @@ const Auth = {
             } else {
                 // Mode Demo (Lokal)
                 const username = email.split("@")[0].toLowerCase().trim();
-                this.DEMO_USERS[username] = { pw: password, nama: nama, role: role };
+                this.DEMO_USERS[username] = { pw: password, nama: nama, role: role, tipeGuru: tipeGuru, kelasGuru: kelasGuru };
                 App.showToast(`(Mode Demo) Akun ${username} (${ACL.ROLES[role]}) berhasil ditambahkan!`, "success");
                 document.getElementById("form-add-user")?.reset();
                 this.switchUserTab("list");
@@ -514,6 +577,86 @@ const Auth = {
         } finally {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-user-plus"></i> Daftarkan Pengguna`;
+        }
+    },
+
+    promptEditUser(userObj) {
+        if (!userObj) return;
+        this.switchUserTab("edit");
+
+        document.getElementById("edit-user-id").value = userObj.id || userObj.usr || "";
+        document.getElementById("edit-user-nama").value = userObj.nama || "";
+        const roleSel = document.getElementById("edit-user-role");
+        if (roleSel) roleSel.value = userObj.role || "guru";
+        const aktifSel = document.getElementById("edit-user-aktif");
+        if (aktifSel) aktifSel.value = (userObj.aktif !== false) ? "true" : "false";
+
+        const tipeSel = document.getElementById("edit-user-guru-tipe");
+        if (tipeSel) tipeSel.value = userObj.tipe_guru || userObj.tipeGuru || (userObj.kelas_guru === "Semua" ? "mapel" : "kelas");
+        const kelasSel = document.getElementById("edit-user-guru-kelas");
+        if (kelasSel) kelasSel.value = userObj.kelas_guru || userObj.kelasGuru || "1";
+
+        this.onEditRoleChange(userObj.role || "guru");
+    },
+
+    async handleUpdateUser(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const id = document.getElementById("edit-user-id")?.value;
+        const nama = document.getElementById("edit-user-nama")?.value.trim();
+        const role = document.getElementById("edit-user-role")?.value;
+        const aktif = document.getElementById("edit-user-aktif")?.value === "true";
+        const tipeGuru = document.getElementById("edit-user-guru-tipe")?.value || "";
+        const kelasGuru = document.getElementById("edit-user-guru-kelas")?.value || "";
+
+        if (!id || !nama || !role) {
+            App.showToast("Semua data wajib terisi!", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btn-save-edit-user");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+        try {
+            if (this.usesSupabase()) {
+                const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(id)}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ nama, role, aktif, tipe_guru: tipeGuru, kelas_guru: kelasGuru })
+                }, this.session.token);
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || "Gagal memperbarui profil pengguna.");
+                }
+            } else {
+                // Mode Demo Update
+                if (this.DEMO_USERS[id]) {
+                    this.DEMO_USERS[id].nama = nama;
+                    this.DEMO_USERS[id].role = role;
+                    this.DEMO_USERS[id].tipeGuru = tipeGuru;
+                    this.DEMO_USERS[id].kelasGuru = kelasGuru;
+                }
+            }
+
+            // Jika mengedit akun yang sedang login saat ini, perbarui sesi dan tampilan seketika
+            if (this.session && this.session.user && (this.session.user.id === id || this.session.user.email?.includes(id))) {
+                this.session.user.nama = nama;
+                this.session.user.role = role;
+                this.session.user.tipeGuru = tipeGuru;
+                this.session.user.kelasGuru = kelasGuru;
+                this.saveSession();
+                if (window.VueStore && window.VueStore.refresh) window.VueStore.refresh();
+                if (App.updateDashboardStats) App.updateDashboardStats();
+            }
+
+            App.showToast(`Akun ${nama} berhasil diperbarui!`, "success");
+            this.switchUserTab("list");
+        } catch (err) {
+            console.error("handleUpdateUser:", err);
+            App.showToast(`Gagal: ${err.message}`, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Akun`;
         }
     },
 
@@ -531,7 +674,10 @@ const Auth = {
                     tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-6 text-center text-slate-400">Belum ada akun pengguna terdaftar.</td></tr>`;
                     return;
                 }
-                tbody.innerHTML = list.map(u => `
+                tbody.innerHTML = list.map(u => {
+                    const guruDetail = u.role === "guru" ? (u.tipe_guru === "mapel" || u.kelas_guru === "Semua" ? " • Mapel" : ` • Kls ${u.kelas_guru || '1'}`) : "";
+                    const uDataJson = Sec.esc(JSON.stringify(u));
+                    return `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-3 py-2.5">
                             <div class="font-bold text-slate-800">${Sec.esc(u.nama)}</div>
@@ -543,26 +689,34 @@ const Auth = {
                                 u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
                                 u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
                             }">
-                                ${ACL.ROLES[u.role] || u.role}
+                                ${(ACL.ROLES[u.role] || u.role) + guruDetail}
                             </span>
                         </td>
                         <td class="px-3 py-2.5 text-center">
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${u.aktif ? 'text-emerald-600' : 'text-slate-400'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${u.aktif ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
-                                ${u.aktif ? 'Aktif' : 'Nonaktif'}
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${u.aktif !== false ? 'text-emerald-600' : 'text-slate-400'}">
+                                <span class="w-1.5 h-1.5 rounded-full ${u.aktif !== false ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
+                                ${u.aktif !== false ? 'Aktif' : 'Nonaktif'}
                             </span>
                         </td>
-                        <td class="px-3 py-2.5 text-right whitespace-nowrap">
-                            <button type="button" onclick="Auth.promptChangePassword('${u.id}', '${Sec.esc(u.nama)}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-bold border border-amber-200 inline-flex items-center gap-1 transition">
-                                <i class="fa-solid fa-key text-[10px]"></i> Ganti Sandi
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap space-x-1">
+                            <button type="button" onclick='Auth.promptEditUser(${uDataJson})' class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[11px] font-bold border border-blue-200 inline-flex items-center gap-1 transition" title="Ubah Peran atau Penugasan Kelas">
+                                <i class="fa-solid fa-user-pen text-[10px]"></i> Edit
+                            </button>
+                            <button type="button" onclick="Auth.promptChangePassword('${u.id}', '${Sec.esc(u.nama)}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-bold border border-amber-200 inline-flex items-center gap-1 transition" title="Ganti Kata Sandi">
+                                <i class="fa-solid fa-key text-[10px]"></i> Sandi
                             </button>
                         </td>
                     </tr>
-                `).join("");
+                    `;
+                }).join("");
             } else {
                 // Mode Demo List
                 const entries = Object.entries(this.DEMO_USERS);
-                tbody.innerHTML = entries.map(([usr, u]) => `
+                tbody.innerHTML = entries.map(([usr, u]) => {
+                    const guruDetail = u.role === "guru" ? (u.tipeGuru === "mapel" || u.kelasGuru === "Semua" ? " • Mapel" : ` • Kls ${u.kelasGuru || '1'}`) : "";
+                    const demoObj = { id: usr, usr, nama: u.nama, role: u.role, tipe_guru: u.tipeGuru, kelas_guru: u.kelasGuru, aktif: true };
+                    const demoJson = Sec.esc(JSON.stringify(demoObj));
+                    return `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-3 py-2.5">
                             <div class="font-bold text-slate-800">${Sec.esc(u.nama)}</div>
@@ -574,7 +728,7 @@ const Auth = {
                                 u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
                                 u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
                             }">
-                                ${ACL.ROLES[u.role] || u.role}
+                                ${(ACL.ROLES[u.role] || u.role) + guruDetail}
                             </span>
                         </td>
                         <td class="px-3 py-2.5 text-center">
@@ -582,13 +736,17 @@ const Auth = {
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif (Demo)
                             </span>
                         </td>
-                        <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap space-x-1">
+                            <button type="button" onclick='Auth.promptEditUser(${demoJson})' class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[11px] font-bold border border-blue-200 inline-flex items-center gap-1 transition" title="Ubah Peran atau Penugasan Kelas">
+                                <i class="fa-solid fa-user-pen text-[10px]"></i> Edit
+                            </button>
                             <button type="button" onclick="Auth.promptChangePassword('${usr}', '${Sec.esc(u.nama)}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-[11px] font-bold border border-amber-200 inline-flex items-center gap-1 transition">
-                                <i class="fa-solid fa-key text-[10px]"></i> Ganti Sandi
+                                <i class="fa-solid fa-key text-[10px]"></i> Sandi
                             </button>
                         </td>
                     </tr>
-                `).join("");
+                    `;
+                }).join("");
             }
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center text-rose-500 text-xs">Error memuat daftar: ${err.message}</td></tr>`;

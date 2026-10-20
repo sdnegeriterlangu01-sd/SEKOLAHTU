@@ -247,8 +247,31 @@ const ModulCetak = {
             kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
         }
 
-        // URL Verifikasi Dokumen untuk QR Code
-        const verifyUrl = `${window.location.origin}${window.location.pathname.replace("index.html", "")}verifikasi.html?no=${encodeURIComponent(this.generatedNomorSurat)}&nisn=${student.nisn}`;
+        // URL Verifikasi Dokumen untuk QR Code (Mendukung file://, localhost, dan domain online)
+        let baseUrl = "verifikasi.html";
+        try {
+            baseUrl = new URL("verifikasi.html", window.location.href).href.split("?")[0].split("#")[0];
+        } catch (e) {
+            baseUrl = `${window.location.origin}${window.location.pathname.replace("index.html", "")}verifikasi.html`;
+        }
+
+        const verifyPayload = {
+            no: this.generatedNomorSurat,
+            nama: student.nama,
+            nisn: student.nisn,
+            nik: student.nik || "-",
+            kelas: student.rombel || student.kelas || "1",
+            jenis: judulSurat,
+            keperluan: keperluan || "-",
+            tgl: tglStr,
+            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+            npsn: config.npsn || "20326713",
+            kepsek: config.namaKepalaSekolah || "-",
+            nipKepsek: config.nipKepalaSekolah || "-"
+        };
+
+        const encodedData = encodeURIComponent(JSON.stringify(verifyPayload));
+        const verifyUrl = `${baseUrl}?d=${encodedData}&no=${encodeURIComponent(this.generatedNomorSurat)}&nisn=${encodeURIComponent(student.nisn)}`;
 
         // Format alamat dan kontak kop surat
         const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";

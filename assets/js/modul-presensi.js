@@ -497,10 +497,14 @@ const ModulPresensi = {
     },
 
     // ===================================================================== 2. REKAP GURU & TENDIK
+    _viewAllTendikMode: false,
+
     async renderTendik() {
         const el = document.getElementById("abs-tab-tendik");
         if (!el) return;
         const canEdit = Auth.canDo("saveAbsensiTendikManual");
+        const isGuru = Auth.role() === "guru";
+
         if (!el.dataset.built) {
             el.dataset.built = "1";
             el.innerHTML = `
@@ -508,6 +512,13 @@ const ModulPresensi = {
                     <div class="flex items-end gap-3 flex-wrap">
                         <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bulan</label>
                             <input type="month" id="rt-bulan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></div>
+                        ${isGuru ? `
+                        <div class="pb-1">
+                            <label class="inline-flex items-center gap-2 text-xs text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg cursor-pointer font-semibold transition">
+                                <input type="checkbox" id="rt-toggle-all" class="rounded text-blue-600 focus:ring-0">
+                                <span>Tampilkan Semua Guru & Tendik</span>
+                            </label>
+                        </div>` : ''}
                         <div class="text-[11px] text-slate-500 pb-1.5"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1"></span> Minggu / libur nasional
                             <span class="mx-2">•</span> <b>S</b>akit <b>I</b>zin <b>A</b>lpa, <b>JML</b> = S+I+A</div>
                     </div>
@@ -519,6 +530,16 @@ const ModulPresensi = {
                 <p id="rt-hint" class="text-[11px] text-slate-400 mt-2"></p>
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rt-grid" class="p-3"></div></div>`;
             el.querySelector("#rt-bulan").addEventListener("change", (e) => { if (e.target.value) { this.bulanTendik = e.target.value; this.renderTendik(); } });
+            
+            const toggleAll = el.querySelector("#rt-toggle-all");
+            if (toggleAll) {
+                toggleAll.checked = this._viewAllTendikMode;
+                toggleAll.addEventListener("change", (e) => {
+                    this._viewAllTendikMode = e.target.checked;
+                    const grid = document.getElementById("rt-grid");
+                    if (grid) grid.innerHTML = this.buildTendikTable(canEdit);
+                });
+            }
         }
         document.getElementById("rt-bulan").value = this.bulanTendik;
         document.getElementById("rt-hint").textContent = canEdit ? "Klik sel tanggal untuk koreksi manual (lupa scan, sakit, izin, alpa)." : "Mode lihat saja.";
@@ -538,21 +559,53 @@ const ModulPresensi = {
     buildTendikTable(interactive) {
         const hari = this.hariBulan(this.bulanTendik);
         let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
-        if (Auth.role() === "guru") {
-            const u = Auth.user();
-            const filtered = tendik.filter(t => 
-                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
-                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
-            );
-            if (filtered.length > 0) tendik = filtered;
-            else if (u) tendik = [{ nip: u.id || "GURU", nama: u.nama || u.email, jabatan: "Guru" }];
+        const isGuru = Auth.role() === "guru";
+        const u = Auth.user();
+
+        const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
+
+        if (isGuru && !this._viewAllTendikMode) {
+            const uNameClean = cleanName(u?.nama);
+            const uNipClean = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
+
+            let filtered = tendik.filter(t => {
+                const tNipClean = Util.cleanId(t.nip);
+                if (uNipClean && tNipClean && (tNipClean === uNipClean || tNipClean.includes(uNipClean) || uNipClean.includes(tNipClean))) return true;
+                const tNameClean = cleanName(t.nama);
+                if (uNameClean && tNameClean && (tNameClean.includes(uNameClean) || uNameClean.includes(tNameClean))) return true;
+                if (u?.nama && t.nama && (t.nama.toLowerCase().includes(u.nama.toLowerCase()) || u.nama.toLowerCase().includes(t.nama.toLowerCase()))) return true;
+                return false;
+            });
+
+            // Jika belum cocok langsung di tendik, cek apakah ada di riwayat rows atau session
+            if (filtered.length === 0 && this.tendikRows && this.tendikRows.length > 0) {
+                const matchRow = this.tendikRows.find(r => {
+                    const rNameClean = cleanName(r.nama);
+                    return (uNameClean && rNameClean && (rNameClean.includes(uNameClean) || uNameClean.includes(rNameClean)));
+                });
+                if (matchRow) {
+                    filtered = [{ nip: matchRow.nip, nama: matchRow.nama || u.nama, jabatan: "Guru" }];
+                }
+            }
+
+            if (filtered.length > 0) {
+                tendik = filtered;
+            } else if (u) {
+                tendik = [{ nip: u.nip || "GURU", nama: u.nama || u.email, jabatan: "Guru" }];
+            }
         }
+
+        // Siapkan lookup ganda: Berdasarkan NIP Bersih dan Nama Bersih
         const rowsBy = {};
         this.tendikRows.forEach(r => {
             const clean = Util.cleanId(r.nip);
+            const nameC = cleanName(r.nama);
             const tgl = String(r.tanggal || "").substring(0, 10);
             if (clean && tgl) {
                 rowsBy[`${clean}|${tgl}`] = r;
+            }
+            if (nameC && tgl) {
+                rowsBy[`NAME_${nameC}|${tgl}`] = r;
             }
         });
 
@@ -565,9 +618,13 @@ const ModulPresensi = {
 
         tendik.forEach((t, i) => {
             const nip = Util.cleanId(t.nip);
+            const tNameClean = cleanName(t.nama);
             let S = 0, I = 0, A = 0;
+
+            const getRecord = (tgl) => rowsBy[`${nip}|${tgl}`] || rowsBy[`NAME_${tNameClean}|${tgl}`];
+
             const cells = (kind) => hari.map(h => {
-                const r = rowsBy[`${nip}|${h.tgl}`];
+                const r = getRecord(h.tgl);
                 const attrs = interactive && !h.off ? ` class="cell${h.off ? " off" : ""}" data-nip="${Sec.esc(nip)}" data-tgl="${h.tgl}"` : (h.off ? ` class="off"` : "");
                 let inner = "", extra = "";
                 if (r && r.status && r.status !== "Hadir") {
@@ -588,7 +645,7 @@ const ModulPresensi = {
             }).join("");
 
             hari.forEach(h => {
-                const r = rowsBy[`${nip}|${h.tgl}`];
+                const r = getRecord(h.tgl);
                 if (r && !h.off) { if (r.status === "Sakit") S++; else if (r.status === "Izin") I++; else if (r.status === "Alpa") A++; }
             });
 

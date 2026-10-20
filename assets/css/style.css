@@ -1,0 +1,718 @@
+/* ==========================================================================
+   SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
+   Comprehensive Design System, Custom Tokens, Glassmorphism & Print Styles
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --primary: #1e3a8a;
+  /* Deep Navy */
+  --primary-light: #3b82f6;
+  /* Blue */
+  --primary-dark: #172554;
+  --secondary: #0d9488;
+  /* Emerald / Teal */
+  --secondary-light: #14b8a6;
+  --accent: #f59e0b;
+  /* Warm Amber */
+  --accent-gold: #d97706;
+  --surface: #ffffff;
+  --surface-ground: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-border: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0284c7;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.06);
+  --shadow-glow: 0 0 25px -5px rgba(30, 58, 138, 0.25);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--surface-ground);
+  color: var(--text-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Navigation & Active Link Animations */
+.nav-link {
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(13, 148, 136, 0.1));
+  color: var(--primary);
+  font-weight: 700;
+  border-left: 4px solid var(--primary);
+}
+
+.nav-link.active svg {
+  color: var(--primary);
+}
+
+/* Micro Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseSubtle {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s infinite ease-in-out;
+}
+
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge-hadir {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-sakit {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-izin {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-alpa {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.badge-complete {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-incomplete {
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+/* Modern Letterhead (Kop Surat) Styles */
+.kop-surat-preview {
+  font-family: 'Times New Roman', Times, serif;
+  color: #000000;
+  background-color: #ffffff;
+  padding: 2.2cm 2cm 2cm 2cm;
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.12);
+  position: relative;
+  line-height: 1.5;
+}
+
+.kop-header {
+  border-bottom: 3px double #000;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.kop-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.kop-teks {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.kop-teks h4,
+.kop-teks .instansi-1,
+.kop-teks .instansi-3 {
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 1px 0;
+  line-height: 1.25;
+}
+
+.kop-teks h3,
+.kop-teks .instansi-2 {
+  font-size: 13pt;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin: 0 0 1px 0;
+  line-height: 1.25;
+}
+
+.kop-teks h2,
+.kop-teks .sekolah-nama {
+  font-size: 16pt;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin: 2px 0 1px 0;
+  line-height: 1.25;
+}
+
+.kop-teks h5,
+.kop-teks .sekolah-kec {
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+}
+
+.kop-teks p {
+  font-size: 8.5pt;
+  font-style: italic;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.surat-title {
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 25px;
+}
+
+.surat-title h3 {
+  font-size: 13pt;
+  font-weight: bold;
+  text-decoration: underline;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.surat-title p {
+  font-size: 11pt;
+  margin: 0;
+}
+
+.surat-body {
+  font-size: 11pt;
+  text-align: justify;
+}
+
+.surat-table-data {
+  width: 100%;
+  margin: 12px 0 15px 0;
+  border-collapse: collapse;
+}
+
+.surat-table-data td {
+  padding: 4px 6px;
+  vertical-align: top;
+  font-size: 11pt;
+}
+
+.surat-ttd-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.surat-ttd-box {
+  width: 250px;
+  text-align: center;
+  position: relative;
+}
+
+.ttd-digital-stamp {
+  position: absolute;
+  top: 35px;
+  left: 20px;
+  width: 110px;
+  opacity: 0.82;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transform: rotate(-7deg);
+}
+
+.ttd-digital-sign {
+  width: 140px;
+  height: 60px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.qr-verification-badge {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.qr-verification-badge canvas,
+.qr-verification-badge img {
+  width: 60px;
+  height: 60px;
+}
+
+.qr-verification-badge .qr-text {
+  font-size: 8pt;
+  line-height: 1.25;
+  color: #334155;
+  text-align: left;
+}
+
+/* Toast Notifications Container */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  color: var(--text-main);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--surface-border);
+  min-width: 320px;
+  max-width: 440px;
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ==========================================================================
+   PRINT MEDIA OPTIMIZATION (Strict Official Standard - 1 Page A4)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 15mm 8mm 15mm;
+    /* Standar resmi dokumen kedinasan: atas & bawah 8-10mm, kiri & kanan 15mm */
+  }
+
+  /* Reset HTML & Body */
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* SEMBUNYIKAN SEMUA ELEMEN NON-SURAT SECARA MUTLAK */
+  .no-print,
+  .no-print *,
+  #app-top-header,
+  #app-top-header *,
+  header,
+  header *,
+  #main-sidebar,
+  #main-sidebar *,
+  aside,
+  aside *,
+  #app-footer,
+  #app-footer *,
+  footer,
+  footer *,
+  #sidebar-overlay,
+  #toast-container,
+  #view-cetak-header,
+  #view-cetak-controls,
+  #view-cetak>div:first-child,
+  #view-cetak .lg\:col-span-4,
+  #view-dashboard,
+  #view-berkas,
+  #view-surat,
+  #view-absensi,
+  #view-pengaturan,
+  .app-view.hidden,
+  [id^="modal-"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* PASTIKAN HANYA view-cetak YANG TERLIHAT */
+  #view-cetak {
+    display: block !important;
+    visibility: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Netralkan HANYA container spesifik menuju lembar kop surat */
+  body,
+  #app-root-wrapper,
+  #app-main-wrapper,
+  .flex.flex-grow.relative,
+  .lg\:pl-72,
+  main,
+  #view-cetak-grid,
+  #view-cetak-preview-wrapper,
+  .lg\:col-span-8 {
+    display: block !important;
+    position: static !important;
+    float: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  /* Area Kertas Cetak Kop Surat */
+  .kop-surat-preview,
+  #kop-surat-print-area {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    /* Padding kertas ditangani langsung oleh @page margin */
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Header Kop Surat */
+  .kop-header {
+    margin-top: 0 !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 3px double #000000 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+  }
+
+  .kop-logo {
+    width: 90px !important;
+    height: 90px !important;
+    max-width: 90px !important;
+    max-height: 90px !important;
+    object-fit: contain !important;
+    flex-shrink: 0 !important;
+  }
+
+  .kop-teks {
+    flex-grow: 1 !important;
+    text-align: center !important;
+  }
+
+  .kop-teks h4,
+  .kop-teks .instansi-1,
+  .kop-teks .instansi-3 {
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
+    margin: 0 0 1px 0 !important;
+    font-weight: 700 !important;
+  }
+
+  .kop-teks h3,
+  .kop-teks .instansi-2 {
+    font-size: 13pt !important;
+    line-height: 1.25 !important;
+    margin: 0 0 1px 0 !important;
+    font-weight: 800 !important;
+  }
+
+  .kop-teks h2,
+  .kop-teks .sekolah-nama {
+    font-size: 16pt !important;
+    line-height: 1.25 !important;
+    margin: 2px 0 1px 0 !important;
+    font-weight: 900 !important;
+  }
+
+  .kop-teks h5,
+  .kop-teks .sekolah-kec {
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
+    margin: 0 0 4px 0 !important;
+    font-weight: 700 !important;
+  }
+
+  .kop-teks p {
+    font-size: 8.5pt !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+
+  /* Judul dan Nomor Surat */
+  .surat-title {
+    margin-top: 8px !important;
+    margin-bottom: 10px !important;
+    text-align: center !important;
+  }
+
+  .surat-title h3 {
+    font-size: 12pt !important;
+    line-height: 1.25 !important;
+    margin-bottom: 1px !important;
+    text-decoration: underline !important;
+  }
+
+  .surat-title p {
+    font-size: 10.5pt !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+
+  /* Isi Surat & Paragraf */
+  .surat-body {
+    font-size: 10.5pt !important;
+    line-height: 1.4 !important;
+    text-align: justify !important;
+  }
+
+  .surat-paragraf {
+    margin-bottom: 6px !important;
+    line-height: 1.4 !important;
+    text-indent: 32px !important;
+  }
+
+  /* Tabel Data Siswa */
+  .surat-table-data {
+    width: 95% !important;
+    margin: 4px 0 8px 15px !important;
+    border-collapse: collapse !important;
+  }
+
+  .surat-table-data td {
+    padding: 1.5px 4px !important;
+    font-size: 10.5pt !important;
+    line-height: 1.3 !important;
+    vertical-align: top !important;
+  }
+
+  /* Tanda Tangan & QR Code */
+  .surat-ttd-container {
+    margin-top: 14px !important;
+    min-height: 125px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    position: relative !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .surat-ttd-box {
+    width: 240px !important;
+    text-align: center !important;
+  }
+
+  .surat-ttd-box p {
+    font-size: 10pt !important;
+    line-height: 1.25 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .surat-ttd-box>div {
+    height: 55px !important;
+  }
+
+  .ttd-digital-stamp {
+    width: 90px !important;
+    top: 20px !important;
+    left: 15px !important;
+  }
+
+  .ttd-digital-sign {
+    width: 125px !important;
+    height: 48px !important;
+  }
+
+  .qr-verification-badge {
+    position: absolute !important;
+    bottom: 0px !important;
+    left: 0px !important;
+    padding: 4px 8px !important;
+    gap: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    align-items: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .qr-verification-badge canvas,
+  .qr-verification-badge img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .qr-verification-badge .qr-text {
+    font-size: 7pt !important;
+    line-height: 1.2 !important;
+    color: #334155 !important;
+  }
+}

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Keabsahan Dokumen Resmi - SIM-TAS-SD</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans']">
+
+    <!-- Top Bar -->
+    <header class="bg-blue-900 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="assets/img/logo-brebes.svg" 
+                    onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
+                    alt="Logo Kabupaten Brebes" class="w-10 h-10 object-contain">
+                <div>
+                    <h1 class="text-sm font-bold tracking-wide">SIM-TAS-SD VERIFIKASI RESMI</h1>
+                    <p class="text-xs text-blue-200">Sistem Validasi Keaslian Dokumen & Surat Keterangan Sekolah</p>
+                </div>
+            </div>
+            <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition inline-flex items-center gap-1.5 border border-white/20">
+                <i class="fa-solid fa-arrow-left"></i> Masuk Aplikasi
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Verification Content -->
+    <main class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            
+            <!-- Verified Header Banner -->
+            <div id="verified-banner" class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white text-center">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <i class="fa-solid fa-shield-check text-3xl text-white"></i>
+                </div>
+                <h2 class="text-xl font-extrabold tracking-wide">DOKUMEN DINAS ASLI & TERVERIFIKASI</h2>
+                <p class="text-xs text-emerald-100 mt-1 max-w-lg mx-auto">
+                    Surat keterangan resmi ini diterbitkan secara sah oleh Tata Usaha Sekolah Dasar terdaftar melalui platform SIM-TAS-SD.
+                </p>
+            </div>
+
+            <!-- Verification Body Details -->
+            <div class="p-6 md:p-8 space-y-6">
+
+                <!-- Meta ID Card -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Nomor Registrasi Surat</span>
+                        <div id="val-nomor-surat" class="font-mono font-extrabold text-blue-900 text-base md:text-lg">421.2/045/SD/2026</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Status Keabsahan</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> SAH & AKTIF
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Detail Siswa -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Terkait
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white border border-slate-200 rounded-xl p-4">
+                        <div>
+                            <span class="text-xs text-slate-400 block">Nama Lengkap Siswa</span>
+                            <span id="val-nama-siswa" class="font-bold text-slate-800 text-sm">Ahmad Rayhan Pratama</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Nomor Induk Siswa Nasional (NISN)</span>
+                            <span id="val-nisn-siswa" class="font-mono font-bold text-slate-800 text-sm">0134567890</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Tingkat / Kelas</span>
+                            <span id="val-kelas-siswa" class="font-bold text-slate-800 text-sm">Kelas 5 (Sekolah Dasar)</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Status Terdaftar</span>
+                            <span class="font-semibold text-emerald-700 text-sm">Siswa Aktif T.A. 2025/2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Penerbit Satuan Pendidikan -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-school-flag text-blue-600"></i> Satuan Pendidikan Penerbit
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white border border-slate-200 rounded-xl p-4">
+                        <div>
+                            <span class="text-xs text-slate-400 block">Nama Satuan Pendidikan</span>
+                            <span id="val-nama-sekolah" class="font-bold text-slate-800 text-sm">SD NEGERI TERLANGU 01</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Nomor Pokok Sekolah Nasional (NPSN)</span>
+                            <span id="val-npsn-sekolah" class="font-mono font-bold text-slate-800 text-sm">20326713</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Pejabat Penandatangan</span>
+                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 text-sm">Drs. H. Mulyono Santoso, M.Pd.</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Nomor Induk Pegawai (NIP)</span>
+                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 text-sm">19680512 199303 1 004</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keamanan Informasi -->
+                <div class="p-4 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-blue-600 mt-0.5 text-base"></i>
+                    <div>
+                        <strong>Catatan Keaslian Dokumen:</strong>
+                        <p class="mt-0.5 text-slate-600 leading-relaxed">
+                            Data verifikasi ini diambil secara langsung dari basis data SIM-TAS-SD. Apabila informasi pada lembar cetak fisik berbeda dengan data di laman ini, maka dokumen fisik dinyatakan tidak sah atau telah dimodifikasi.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Action -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-400">Pemberitahuan Sistem Otomatis</span>
+                <button onclick="window.print()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-2 transition">
+                    <i class="fa-solid fa-print"></i> Cetak Bukti Verifikasi
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white">
+        &copy; 2026 SIM-TAS-SD • Sistem Informasi Manajemen Tata Usaha Sekolah Dasar Terpadu
+    </footer>
+
+    <!-- Logic Script -->
+    <script src="assets/js/data.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const nomor = params.get("no") || params.get("nomor") || "421.2/045/SD/2026";
+            const nisn = params.get("nisn") || "0134567890";
+
+            const config = DataStore.getConfig();
+            const students = DataStore.getSiswa();
+            const student = students.find(s => s.nisn === nisn) || students[0];
+
+            document.getElementById("val-nomor-surat").textContent = decodeURIComponent(nomor);
+            if (student) {
+                document.getElementById("val-nama-siswa").textContent = student.nama;
+                document.getElementById("val-nisn-siswa").textContent = student.nisn;
+                document.getElementById("val-kelas-siswa").textContent = `Kelas ${student.kelas} (Sekolah Dasar)`;
+            }
+
+            document.getElementById("val-nama-sekolah").textContent = config.namaSekolah;
+            document.getElementById("val-npsn-sekolah").textContent = config.npsn;
+            document.getElementById("val-kepsek-sekolah").textContent = config.namaKepalaSekolah;
+            document.getElementById("val-nip-sekolah").textContent = config.nipKepalaSekolah;
+        });
+    </script>
+</body>
+</html>

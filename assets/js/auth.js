@@ -164,7 +164,11 @@ const Auth = {
 
     async loadProfile() {
         const uid = this.session.user.id;
-        const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif,tipe_guru,kelas_guru`, {}, this.session.token);
+        let res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif,tipe_guru,kelas_guru`, {}, this.session.token);
+        if (!res.ok) {
+            // Fallback jika database Supabase belum menjalankan migrasi kolom tipe_guru & kelas_guru
+            res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif`, {}, this.session.token);
+        }
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             const detail = err.message || err.error || `HTTP ${res.status}`;

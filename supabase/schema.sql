@@ -9,9 +9,15 @@ create table if not exists public.profiles (
     nama text not null,
     role text not null check (role in ('admin', 'kepsek', 'tu', 'guru', 'kiosk')) default 'tu',
     aktif boolean not null default true,
+    tipe_guru text default 'kelas',
+    kelas_guru text default '1',
     created_at timestamptz default now(),
     updated_at timestamptz default now()
 );
+
+-- Migrasi aman (menambahkan kolom jika tabel sudah terlanjur dibuat di Supabase)
+alter table public.profiles add column if not exists tipe_guru text default 'kelas';
+alter table public.profiles add column if not exists kelas_guru text default '1';
 
 -- Komentar tabel
 comment on table public.profiles is 'Profil pengguna dan hak akses peran SIM-TAS-SD';
@@ -65,12 +71,14 @@ grant select on public.profiles to anon;
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-    insert into public.profiles (id, nama, role, aktif)
+    insert into public.profiles (id, nama, role, aktif, tipe_guru, kelas_guru)
     values (
         new.id,
         coalesce(new.raw_user_meta_data->>'nama', split_part(new.email, '@', 1)),
         coalesce(new.raw_user_meta_data->>'role', 'tu'),
-        true
+        true,
+        coalesce(new.raw_user_meta_data->>'tipe_guru', 'kelas'),
+        coalesce(new.raw_user_meta_data->>'kelas_guru', '1')
     )
     on conflict (id) do nothing;
     return new;

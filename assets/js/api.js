@@ -29,7 +29,7 @@ const ApiClient = {
     // -------- Pemanggilan ke Google Apps Script (membawa token) --------
     async cloudCall(action, payload = {}) {
         const token = await Auth.getToken();
-        if (!token && action !== "ping") {
+        if (Auth.usesSupabase() && !token && action !== "ping") {
             return { success: false, code: "AUTH", message: "Sesi login cloud tidak ditemukan. Silakan masuk kembali dengan akun Supabase." };
         }
         try {
@@ -40,7 +40,13 @@ const ApiClient = {
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const json = await response.json();
-            if (json && json.code === "AUTH") Auth.forceLogout("Sesi berakhir atau tidak valid. Silakan masuk kembali.");
+            if (json && json.code === "AUTH") {
+                if (Auth.usesSupabase()) {
+                    Auth.forceLogout("Sesi berakhir atau tidak valid. Silakan masuk kembali.");
+                } else {
+                    return { success: false, code: "AUTH", message: "Backend Google Apps Script mewajibkan token Supabase. Konfigurasikan Supabase di config.js atau hapus Script Properties di Apps Script." };
+                }
+            }
             return Sec.cleanDeep(json);
         } catch (err) {
             console.warn(`[ApiClient] Gagal koneksi cloud (${action}):`, err);

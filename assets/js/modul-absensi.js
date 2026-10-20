@@ -11,6 +11,7 @@ const ModulAbsensi = {
     activeChartDonut: null,
 
     init() {
+        this.populateKelasOptions();
         if (Auth.role() === "guru") {
             const u = Auth.user();
             const tendik = DataStore.getTendik().find(t => 
@@ -30,6 +31,35 @@ const ModulAbsensi = {
         this.setDefaultDate();
         this.renderPresensiInputTable();
         this.renderRekapitulasi();
+    },
+
+    populateKelasOptions() {
+        const sel = document.getElementById("absensi-kelas");
+        if (!sel) return;
+        const siswa = DataStore.getSiswa();
+        const set = new Set();
+        siswa.forEach(s => {
+            const k = String(s.kelas || s.rombel || "").trim();
+            if (k) set.add(k);
+        });
+        const dynamicList = Array.from(set).filter(Boolean).sort();
+        const standard = ["1", "2", "3", "4", "5", "6"];
+        const allClasses = Array.from(new Set([...standard, ...dynamicList])).sort();
+
+        const curVal = sel.value || this.selectedKelas || "Semua";
+        sel.innerHTML = `<option value="Semua">Semua Kelas</option>` +
+            allClasses.map(k => {
+                const label = k.toLowerCase().startsWith("kelas") ? k : `Kelas ${k}`;
+                return `<option value="${Sec.esc(k)}">${Sec.esc(label)}</option>`;
+            }).join("");
+
+        if (curVal && Array.from(sel.options).some(o => o.value === curVal)) {
+            sel.value = curVal;
+            this.selectedKelas = curVal;
+        } else {
+            sel.value = "Semua";
+            this.selectedKelas = "Semua";
+        }
     },
 
     bindEvents() {
@@ -97,12 +127,31 @@ const ModulAbsensi = {
             }));
         } else {
             const siswaList = DataStore.getSiswa();
-            const filtered = this.selectedKelas === "Semua" ? siswaList : siswaList.filter(s => s.kelas === this.selectedKelas);
+            const targetKelas = this.selectedKelas;
+            const filtered = (!targetKelas || targetKelas === "Semua") ? siswaList : siswaList.filter(s => {
+                const k1 = String(s.kelas || "").trim();
+                const k2 = String(s.rombel || "").trim();
+                const sel = String(targetKelas).trim();
+
+                if (k1 === sel || k2 === sel) return true;
+                if (k1.toLowerCase() === sel.toLowerCase() || k2.toLowerCase() === sel.toLowerCase()) return true;
+
+                const d1 = k1.replace(/\D/g, "");
+                const d2 = k2.replace(/\D/g, "");
+                const dSel = sel.replace(/\D/g, "");
+                if (dSel && (d1 === dSel || d2 === dSel)) return true;
+
+                if (k1 && sel && (k1.toLowerCase().includes(sel.toLowerCase()) || sel.toLowerCase().includes(k1.toLowerCase()))) return true;
+                if (k2 && sel && (k2.toLowerCase().includes(sel.toLowerCase()) || sel.toLowerCase().includes(k2.toLowerCase()))) return true;
+
+                return false;
+            });
+
             return filtered.map(s => ({
                 idTarget: s.nisn,
                 nama: s.nama,
-                identitas: `NISN: ${s.nisn} • Kelas ${s.kelas}`,
-                kelas: s.kelas
+                identitas: `NISN: ${s.nisn} • Kelas ${s.rombel || s.kelas || '-'}`,
+                kelas: s.rombel || s.kelas || "-"
             }));
         }
     },
@@ -187,8 +236,12 @@ const ModulAbsensi = {
         });
     },
 
-    markAllHadir() {
+    async markAllHadir() {
         const targets = this.getListTarget();
+        if (targets.length === 0) {
+            App.showToast("Tidak ada siswa/tendik pada kelas/filter ini.", "warning");
+            return;
+        }
         targets.forEach(t => {
             const cleanId = t.idTarget.replace(/\s+/g, '');
             const radioHadir = document.querySelector(`input[name="status_${cleanId}"][value="Hadir"]`);
@@ -197,7 +250,8 @@ const ModulAbsensi = {
                 this.updateRadioStyle(radioHadir);
             }
         });
-        App.showToast("Semua siswa/tendik ditandai 'Hadir' secara instan!", "info");
+        App.showToast("Menandai semua 'Hadir' dan menyinkronkan ke rekap...", "info");
+        await this.savePresensiBatch();
     },
 
     async savePresensiBatch() {
@@ -229,8 +283,55 @@ const ModulAbsensi = {
 
         const res = await ApiClient.request("saveAbsensiBatch", { records: records });
 
+        // Sinkronisasi otomatis ke Rekap Absen Siswa Bulanan
+        if (this.selectedKategori === "Siswa" && records.length > 0) {
+            try {
+                const ta = DataStore.getActiveTA();
+                const bulan = this.selectedDate.substring(0, 7);
+                const dd = this.selectedDate.substring(8, 10);
+
+                // Kelompokkan siswa berdasarkan kelas
+                const perKelas = {};
+                records.forEach(r => {
+                    const k = String(r.kelas || "Semua").replace(/^kelas\s*/i, '').trim();
+                    if (!perKelas[k]) perKelas[k] = [];
+                    perKelas[k].push(r);
+                });
+
+                for (const [kls, recs] of Object.entries(perKelas)) {
+                    const existingRes = await ApiClient.request("getAbsensiSiswaBulan", { tahunAjaran: ta, bulan: bulan, kelas: kls });
+                    const existingMap = {};
+                    (existingRes.success && Array.isArray(existingRes.data) ? existingRes.data : []).forEach(row => {
+                        existingMap[row.nisn] = row.marks || {};
+                    });
+
+                    const rowsToSave = recs.map(r => {
+                        const marks = existingMap[r.nisnNip] || {};
+                        if (r.status === "Sakit") marks[dd] = "S";
+                        else if (r.status === "Izin") marks[dd] = "I";
+                        else if (r.status === "Alpa") marks[dd] = "A";
+                        else marks[dd] = "H"; // Hadir
+                        return {
+                            nisn: r.nisnNip,
+                            nama: r.nama,
+                            marks: marks
+                        };
+                    });
+
+                    await ApiClient.request("saveAbsensiSiswaBulan", {
+                        tahunAjaran: ta,
+                        bulan: bulan,
+                        kelas: kls,
+                        rows: rowsToSave
+                    });
+                }
+            } catch (errSync) {
+                console.warn("[ModulAbsensi] Gagal sinkronisasi rekap bulanan siswa:", errSync);
+            }
+        }
+
         if (res.success) {
-            App.showToast(res.message, "success");
+            App.showToast("Presensi berhasil disimpan dan disinkronkan ke rekapitulasi!", "success");
             this.renderPresensiInputTable();
             this.renderRekapitulasi();
             App.updateDashboardStats();

@@ -94,6 +94,13 @@
                         <span class="ml-auto bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full">&lt;5 Detik</span>
                     </a>
 
+                    <!-- Scan QR / Barcode Presensi (Menu Cepat Mandiri) -->
+                    <a href="#scan-absensi" data-route="scan-absensi" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-qrcode text-sm w-5 text-center text-indigo-600"></i>
+                        <span>Scan Absensi (Datang/Pulang)</span>
+                        <span class="ml-auto bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Scan QR</span>
+                    </a>
+
                     <!-- Modul 4: Presensi -->
                     <a href="#absensi" data-route="absensi" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 transition">
                         <i class="fa-solid fa-clipboard-user text-sm w-5 text-center"></i>
@@ -189,6 +196,9 @@
                             </a>
                             <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                                 <i class="fa-solid fa-file-invoice text-teal-600 w-4"></i> Cetak Surat Keterangan
+                            </a>
+                            <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                                <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Absensi Datang/Pulang
                             </a>
                             <a href="#absensi" onclick="App.navigateTo('absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                                 <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Harian
@@ -687,6 +697,22 @@
                         </div>
 
                     </div>
+                </section>
+
+
+                <!-- ==============================================================
+                     VIEW: SCAN PRESENSI MANDIRI (QR & BARCODE)
+                     ============================================================== -->
+                <section id="view-scan-absensi" class="app-view hidden space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-qrcode text-indigo-600"></i> Scan Presensi Mandiri (QR & Barcode)
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Scan kartu barcode / QR untuk presensi datang dan pulang otomatis tanpa repot membuka sub-tab.</p>
+                        </div>
+                    </div>
+                    <div id="view-scan-container" class="space-y-4"></div>
                 </section>
 
 

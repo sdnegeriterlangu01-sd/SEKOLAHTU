@@ -357,6 +357,29 @@ const ApiClient = {
                 });
 
                 DataStore.saveAbsensi(Array.from(map.values()));
+
+                // Sinkronisasi otomatis ke DataStore.getAbsensiSiswaBulan() jika ada data siswa
+                const ta = DataStore.getActiveTA();
+                const listBulan = DataStore.getAbsensiSiswaBulan();
+                newRecords.forEach(rec => {
+                    if (rec.kategori === "Siswa") {
+                        const bulan = rec.tanggal.substring(0, 7);
+                        const dd = rec.tanggal.substring(8, 10);
+                        const key = `${ta}|${bulan}|${rec.nisnNip}`;
+                        let item = listBulan.find(r => r.key === key);
+                        if (!item) {
+                            item = { key, tahunAjaran: ta, bulan, kelas: rec.kelas || "", nisn: rec.nisnNip, nama: rec.nama, marks: {} };
+                            listBulan.push(item);
+                        }
+                        if (!item.marks) item.marks = {};
+                        if (rec.status === "Sakit") item.marks[dd] = "S";
+                        else if (rec.status === "Izin") item.marks[dd] = "I";
+                        else if (rec.status === "Alpa") item.marks[dd] = "A";
+                        else item.marks[dd] = "H"; // Hadir
+                    }
+                });
+                DataStore.saveAbsensiSiswaBulan(listBulan);
+
                 return { success: true, message: `Berhasil menyimpan presensi ${newRecords.length} orang!`, count: newRecords.length };
             }
 
@@ -410,30 +433,35 @@ const ApiClient = {
                 return { success: true, message: `(Mode Demo) ${(payload.files || []).length} QR dibuat. Aktifkan Mode Cloud untuk menyimpannya ke Google Drive.`, simulated: true };
 
             case "scanTendik": {
-                const m = String(payload.code || "").trim().match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
-                if (!m) return { success: false, message: "Kode QR tidak dikenali. Gunakan kartu ID resmi SIM-TAS-SD." };
+                let code = String(payload.code || "").trim();
+                let nip = String(payload.nip || "").trim();
+                if (!nip && code) {
+                    const m = code.match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
+                    nip = m ? m[1] : code;
+                }
+                const cleanNip = Util.cleanId(nip);
+                if (!cleanNip) return { success: false, message: "Kode QR / NIP tidak terbaca. Pastikan scanner membaca kartu ID dengan benar." };
 
-                const nip = m[1];
-                const tendik = DataStore.getTendik().find(t => Util.cleanId(t.nip) === nip && t.aktif !== false);
-                if (!tendik) return { success: false, message: "Data guru/tendik tidak ditemukan atau nonaktif." };
+                const tendik = DataStore.getTendik().find(t => Util.cleanId(t.nip) === cleanNip && t.aktif !== false);
+                if (!tendik) return { success: false, message: `Data guru/tendik dengan NIP/ID '${nip}' tidak ditemukan atau nonaktif.` };
 
                 const tanggal = Util.today();
                 const jam = Util.nowTime();
                 const list = DataStore.getAbsensiTendik();
-                let rec = list.find(r => r.tanggal === tanggal && r.nip === nip);
+                let rec = list.find(r => r.tanggal === tanggal && Util.cleanId(r.nip) === cleanNip);
                 if (!rec) {
-                    rec = { key: `${tanggal}|${nip}`, tanggal, nip, nama: tendik.nama, jamDatang: "", jamPulang: "", status: "", keterangan: "" };
+                    rec = { key: `${tanggal}|${cleanNip}`, tanggal, nip: cleanNip, nama: tendik.nama, jamDatang: "", jamPulang: "", status: "", keterangan: "" };
                     list.push(rec);
                 }
-                const tipe = this.applyScan(rec, jam, cfg.scanMinGapMenit || 30);
+                const tipe = this.applyScan(rec, jam, 1); // min gap 1 menit
                 DataStore.saveAbsensiTendik(list);
 
-                const pesan = tipe === "datang" ? `Selamat datang, ${tendik.nama}!`
-                    : tipe === "pulang" ? `Terima kasih, ${tendik.nama}. Hati-hati di jalan!`
-                        : `${tendik.nama} sudah tercatat pukul ${rec.jamPulang || rec.jamDatang}.`;
+                const pesan = tipe === "datang" ? `Selamat datang, ${tendik.nama}! Presensi datang tercatat pukul ${jam}.`
+                    : tipe === "pulang" ? `Terima kasih, ${tendik.nama}! Presensi pulang tercatat pukul ${jam}. Hati-hati di jalan!`
+                        : `${tendik.nama} sudah tercatat sebelumnya pada pukul ${rec.jamPulang || rec.jamDatang}.`;
                 return {
                     success: true, message: pesan,
-                    data: { tipe, nama: tendik.nama, jabatan: tendik.jabatan, tanggal, jam, jamDatang: rec.jamDatang, jamPulang: rec.jamPulang }
+                    data: { tipe, nip: cleanNip, nama: tendik.nama, jabatan: tendik.jabatan, tanggal, jam, jamDatang: rec.jamDatang, jamPulang: rec.jamPulang }
                 };
             }
 

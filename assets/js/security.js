@@ -68,7 +68,7 @@ const ACL = {
         getStudents: ["admin", "kepsek", "tu", "guru"],
         saveStudent: ["admin", "tu"],
         importStudents: ["admin", "tu"],
-        uploadStudentDoc: ["admin", "tu"],
+        uploadStudentDoc: ["admin", "tu", "guru"],
         // Surat
         getSuratKeluar: ["admin", "kepsek", "tu"],
         getNextNomorSuratKeluar: ["admin", "kepsek", "tu"],
@@ -102,6 +102,7 @@ const ACL = {
 
     ROUTES: {
         dashboard: ["admin", "kepsek", "tu"],
+        "scan-absensi": ["admin", "kepsek", "tu", "guru", "kiosk"],
         berkas: ["admin", "kepsek", "tu", "guru"],
         surat: ["admin", "kepsek", "tu"],
         cetak: ["admin", "kepsek", "tu"],

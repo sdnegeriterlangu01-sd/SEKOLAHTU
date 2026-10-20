@@ -35,7 +35,10 @@ const Auth = {
 
     canDo(action) { return !!this.role() && ACL.check(ACL.ACTIONS[action], this.role()); },
     canRoute(route) { return !!this.role() && ACL.check(ACL.ROUTES[route], this.role()); },
-    defaultRoute() { return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("berkas") ? "berkas" : "absensi"); },
+    defaultRoute() {
+        if (this.role() === "kiosk") return "scan-absensi";
+        return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("berkas") ? "berkas" : "scan-absensi");
+    },
 
     // ------------------------------------------------------------------ INIT
     async init() {

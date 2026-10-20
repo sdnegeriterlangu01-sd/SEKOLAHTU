@@ -41,6 +41,7 @@ const ModulPresensi = {
         .abs-grid td.mk-S{background:#fde68a;font-weight:700}
         .abs-grid td.mk-I{background:#bfdbfe;font-weight:700}
         .abs-grid td.mk-A{background:#fecaca;font-weight:700}
+        .abs-grid td.mk-H{background:#d1fae5;color:#047857;font-weight:700}
         .abs-grid td.ok{color:#047857;font-weight:700}
         .abs-grid tr.grp-end td{border-bottom:2px solid #111827}
     `,
@@ -189,88 +190,155 @@ const ModulPresensi = {
         } catch (e) { /* audio opsional */ }
     },
 
-    // ===================================================================== 1. SCAN QR
+    // ===================================================================== 1. SCAN QR & BARCODE
+    buildScannerHTML(prefix = "scan") {
+        return `
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-qrcode text-indigo-600"></i> Scan Kartu ID Guru / Tendik
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Scan pertama = jam <b>DATANG</b>, scan berikutnya = jam <b>PULANG</b>. Waktu kehadiran dicatat otomatis & akurat.</p>
+                        </div>
+                        <div id="${prefix}-reader" class="hidden rounded-xl overflow-hidden bg-slate-900 min-h-[240px]"></div>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-${prefix}-camera" onclick="ModulPresensi.toggleCamera('${prefix}')" class="flex-1 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition shadow-sm">
+                                <i class="fa-solid fa-camera"></i> Aktifkan Kamera
+                            </button>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Alat scan barcode USB / ketik NIP manual</label>
+                            <input type="text" id="${prefix}-input" autocomplete="off" placeholder="Arahkan scanner ke sini lalu scan… (Enter)"
+                                class="w-full px-3.5 py-2.5 text-sm border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
+                            <p class="text-[11px] text-slate-400 mt-1">Mendukung format QR <span class="font-mono text-indigo-600 font-bold">SIMTAS|T|&lt;NIP&gt;</span> atau langsung kode NIP</p>
+                        </div>
+                    </div>
+                    <div id="${prefix}-result" class="hidden rounded-2xl p-5 text-center border-2"></div>
+                </div>
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar-check text-indigo-600"></i> Kehadiran Hari Ini <span id="${prefix}-today-label" class="font-mono text-slate-500 font-bold ml-1"></span>
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] text-slate-400 hidden sm:inline">Waktu Sekarang:</span>
+                            <span id="${prefix}-clock" class="font-mono font-bold text-indigo-700 text-sm bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100 shadow-xs"></span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto flex-grow max-h-[460px]">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-100">
+                                <tr>
+                                    <th class="px-4 py-2 w-8">No</th>
+                                    <th class="px-2 py-2">Nama & NIP</th>
+                                    <th class="px-2 py-2 font-mono">Datang</th>
+                                    <th class="px-2 py-2 font-mono">Pulang</th>
+                                    <th class="px-2 py-2 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="${prefix}-today-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    renderScanView() {
+        const el = document.getElementById("view-scan-container");
+        if (!el) return;
+        if (!el.dataset.built) {
+            el.dataset.built = "1";
+            el.innerHTML = this.buildScannerHTML("mscan");
+            const inp = el.querySelector("#mscan-input");
+            if (inp) {
+                inp.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; this.handleCode(v, "mscan"); }
+                });
+            }
+            if (!this._clock) {
+                this._clock = setInterval(() => {
+                    const now = Util.nowTime();
+                    const c1 = document.getElementById("scan-clock");
+                    const c2 = document.getElementById("mscan-clock");
+                    if (c1) c1.textContent = now;
+                    if (c2) c2.textContent = now;
+                }, 1000);
+            }
+        }
+        const lbl = document.getElementById("mscan-today-label");
+        if (lbl) lbl.textContent = Util.today();
+        this.renderTodayLog("mscan");
+        setTimeout(() => { const i = document.getElementById("mscan-input"); if (i) i.focus(); }, 80);
+    },
+
     renderScan() {
         const el = document.getElementById("abs-tab-scan");
         if (!el) return;
         if (!el.dataset.built) {
             el.dataset.built = "1";
-            el.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
-                            <div>
-                                <h3 class="font-bold text-sm text-slate-900"><i class="fa-solid fa-qrcode text-indigo-600 mr-1"></i> Scan Kartu ID Guru / Tendik</h3>
-                                <p class="text-xs text-slate-400 mt-0.5">Scan pertama = jam DATANG, scan berikutnya = jam PULANG. Waktu dicatat otomatis.</p>
-                            </div>
-                            <div id="scan-reader" class="hidden rounded-xl overflow-hidden bg-slate-900 min-h-[240px]"></div>
-                            <div class="flex gap-2">
-                                <button type="button" id="btn-scan-camera" onclick="ModulPresensi.toggleCamera()" class="flex-1 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition">
-                                    <i class="fa-solid fa-camera"></i> Aktifkan Kamera
-                                </button>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Atau gunakan alat scan barcode USB / ketik kode</label>
-                                <input type="text" id="scan-input" autocomplete="off" placeholder="Arahkan scanner ke sini lalu scan… (Enter)"
-                                    class="w-full px-3.5 py-2.5 text-sm border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
-                                <p class="text-[11px] text-slate-400 mt-1">Barcode berbasis teks: <span class="font-mono">SIMTAS|T|&lt;NIP&gt;</span></p>
-                            </div>
-                        </div>
-                        <div id="scan-result" class="hidden rounded-2xl p-5 text-center border-2"></div>
-                    </div>
-                    <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-700"><i class="fa-regular fa-clock mr-1"></i> Kehadiran Hari Ini <span id="scan-today-label" class="font-mono text-slate-400"></span></span>
-                            <span id="scan-clock" class="font-mono font-bold text-indigo-700 text-sm"></span>
-                        </div>
-                        <div class="overflow-x-auto max-h-[460px]"><table class="w-full text-left"><tbody id="scan-today-body"></tbody></table></div>
-                    </div>
-                </div>`;
+            el.innerHTML = this.buildScannerHTML("scan");
 
             const inp = el.querySelector("#scan-input");
-            inp.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; this.handleCode(v); }
-            });
-            // jam digital
-            this._clock = setInterval(() => {
-                const c = document.getElementById("scan-clock");
-                if (c) c.textContent = Util.nowTime();
-            }, 1000);
+            if (inp) {
+                inp.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; this.handleCode(v, "scan"); }
+                });
+            }
+            if (!this._clock) {
+                this._clock = setInterval(() => {
+                    const now = Util.nowTime();
+                    const c1 = document.getElementById("scan-clock");
+                    const c2 = document.getElementById("mscan-clock");
+                    if (c1) c1.textContent = now;
+                    if (c2) c2.textContent = now;
+                }, 1000);
+            }
         }
-        document.getElementById("scan-today-label").textContent = Util.today();
-        this.renderTodayLog();
+        const lbl = document.getElementById("scan-today-label");
+        if (lbl) lbl.textContent = Util.today();
+        this.renderTodayLog("scan");
         setTimeout(() => { const i = document.getElementById("scan-input"); if (i) i.focus(); }, 80);
     },
 
-    async handleCode(raw) {
+    async handleCode(raw, prefix = "scan") {
         const code = String(raw || "").trim();
         if (!code) return;
         const now = Date.now();
-        if (code === this._lastCode && now - this._lastAt < 4000) return; // abaikan pembacaan ganda beruntun
+        if (code === this._lastCode && now - this._lastAt < 2500) return; // abaikan pembacaan ganda beruntun
         this._lastCode = code; this._lastAt = now;
 
-        const res = await ApiClient.request("scanTendik", { code });
-        this.showScanResult(res);
+        let nip = code;
+        const m = code.match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
+        if (m) nip = m[1];
+
+        const res = await ApiClient.request("scanTendik", { code, nip });
+        this.showScanResult(res, prefix);
         if (res.success && res.data) {
             this.sessionLog.unshift({ ...res.data });
             this.sessionLog = this.sessionLog.slice(0, 30);
         }
-        this.renderTodayLog();
-        const i = document.getElementById("scan-input"); if (i) i.focus();
+        await this.renderTodayLog(prefix);
+        if (prefix === "mscan") await this.renderTodayLog("scan");
+        else await this.renderTodayLog("mscan");
+
+        const i = document.getElementById(`${prefix}-input`) || document.getElementById("scan-input");
+        if (i) { i.value = ""; i.focus(); }
     },
 
-    showScanResult(res) {
-        const box = document.getElementById("scan-result");
+    showScanResult(res, prefix = "scan") {
+        const box = document.getElementById(`${prefix}-result`) || document.getElementById("scan-result");
         if (!box) return;
         let cls, icon, title, sub;
         if (!res.success) {
             cls = "bg-rose-50 border-rose-300 text-rose-800"; icon = "fa-circle-xmark text-rose-500"; title = "Gagal"; sub = Sec.esc(res.message);
             this.beep(false);
         } else if (res.data.tipe === "datang") {
-            cls = "bg-emerald-50 border-emerald-300 text-emerald-900"; icon = "fa-right-to-bracket text-emerald-600"; title = "DATANG"; sub = `${Sec.esc(res.data.nama)}<br><span class="text-xs">${Sec.esc(res.data.jabatan || "")}</span>`;
+            cls = "bg-emerald-50 border-emerald-300 text-emerald-900"; icon = "fa-right-to-bracket text-emerald-600"; title = "PRESENSI DATANG BERHASIL"; sub = `${Sec.esc(res.data.nama)}<br><span class="text-xs text-slate-600">${Sec.esc(res.data.jabatan || "")}</span>`;
             this.beep(true);
         } else if (res.data.tipe === "pulang") {
-            cls = "bg-blue-50 border-blue-300 text-blue-900"; icon = "fa-right-from-bracket text-blue-600"; title = "PULANG"; sub = `${Sec.esc(res.data.nama)}<br><span class="text-xs">${Sec.esc(res.data.jabatan || "")}</span>`;
+            cls = "bg-blue-50 border-blue-300 text-blue-900"; icon = "fa-right-from-bracket text-blue-600"; title = "PRESENSI PULANG BERHASIL"; sub = `${Sec.esc(res.data.nama)}<br><span class="text-xs text-slate-600">${Sec.esc(res.data.jabatan || "")}</span>`;
             this.beep(true);
         } else {
             cls = "bg-amber-50 border-amber-300 text-amber-900"; icon = "fa-hand text-amber-500"; title = "Sudah Tercatat"; sub = Sec.esc(res.message);
@@ -282,18 +350,39 @@ const ModulPresensi = {
             <i class="fa-solid ${icon} text-4xl mb-2"></i>
             <div class="text-lg font-black tracking-wide">${title}</div>
             <div class="text-sm font-semibold mt-1">${sub}</div>
-            ${jam ? `<div class="font-mono text-3xl font-black mt-2">${Sec.esc(String(jam).substring(0, 5))}</div>` : ""}`;
+            ${jam ? `<div class="font-mono text-3xl font-black mt-2 text-indigo-900">${Sec.esc(String(jam).substring(0, 5))} WIB</div>` : ""}`;
+        box.classList.remove("hidden");
         clearTimeout(this._resultTimer);
-        this._resultTimer = setTimeout(() => box.classList.add("hidden"), 7000);
+        this._resultTimer = setTimeout(() => box.classList.add("hidden"), 8000);
     },
 
-    async renderTodayLog() {
-        const body = document.getElementById("scan-today-body");
+    async renderTodayLog(prefix = "scan") {
+        const body = document.getElementById(`${prefix}-today-body`);
         if (!body) return;
 
-        if (Auth.canDo("getAbsensiTendikBulan")) {
-            const res = await ApiClient.request("getAbsensiTendikBulan", { bulan: Util.monthKey() });
+        try {
             const today = Util.today();
+            const res = await ApiClient.request("getAbsensiTendikBulan", { bulan: Util.monthKey() });
+            const rows = (res && res.success && Array.isArray(res.data) ? res.data : []).filter(x => x.tanggal === today);
+
+            // Gabungkan catatan dari sessionLog jika belum masuk ke rows
+            this.sessionLog.forEach(sl => {
+                const found = rows.find(r => Util.cleanId(r.nip) === Util.cleanId(sl.nip));
+                if (found) {
+                    if (sl.tipe === "datang" && !found.jamDatang) found.jamDatang = sl.jam;
+                    if (sl.tipe === "pulang") found.jamPulang = sl.jam;
+                } else {
+                    rows.push({
+                        nip: sl.nip,
+                        nama: sl.nama,
+                        tanggal: today,
+                        jamDatang: sl.tipe === "datang" ? sl.jam : (sl.jamDatang || ""),
+                        jamPulang: sl.tipe === "pulang" ? sl.jam : (sl.jamPulang || ""),
+                        status: "Hadir"
+                    });
+                }
+            });
+
             let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
             if (Auth.role() === "guru") {
                 const u = Auth.user();
@@ -303,23 +392,36 @@ const ModulPresensi = {
                 );
                 if (filtered.length > 0) tendik = filtered;
             }
+
+            if (tendik.length === 0 && rows.length > 0) {
+                tendik = rows.map(r => ({ nip: r.nip, nama: r.nama, jabatan: "Guru / Tendik" }));
+            }
+
             body.innerHTML = tendik.map((t, i) => {
-                const r = rows.find(x => x.nip === Util.cleanId(t.nip));
+                const r = rows.find(x => Util.cleanId(x.nip) === Util.cleanId(t.nip));
                 const st = r && r.status && r.status !== "Hadir" ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${Sec.esc(r.status)}</span>` : "";
-                return `<tr class="border-b border-slate-100">
+                const isSudahScan = r && (r.jamDatang || r.jamPulang);
+                return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                     <td class="px-4 py-2 text-xs text-slate-400 w-8">${i + 1}</td>
-                    <td class="px-2 py-2"><div class="text-xs font-bold text-slate-800">${Sec.esc(t.nama)}</div><div class="text-[10px] text-slate-400">${Sec.esc(t.jabatan || "")}</div></td>
-                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamDatang ? "text-emerald-700 font-bold" : "text-slate-300"}">${r && r.jamDatang ? "▶ " + Sec.esc(r.jamDatang.substring(0, 5)) : "—"}</td>
-                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamPulang ? "text-blue-700 font-bold" : "text-slate-300"}">${r && r.jamPulang ? "◀ " + Sec.esc(r.jamPulang.substring(0, 5)) : "—"}</td>
-                    <td class="px-2 py-2 text-right">${st}${!r ? `<span class="text-[10px] text-slate-300">Belum scan</span>` : ""}</td>
+                    <td class="px-2 py-2">
+                        <div class="text-xs font-bold text-slate-800">${Sec.esc(t.nama)}</div>
+                        <div class="text-[10px] text-slate-400">${Sec.esc(t.jabatan || "")} • NIP: ${Sec.esc(t.nip || "-")}</div>
+                    </td>
+                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamDatang ? "text-emerald-700 font-bold" : "text-slate-300"}">
+                        ${r && r.jamDatang ? "▶ " + Sec.esc(String(r.jamDatang).substring(0, 5)) : "—"}
+                    </td>
+                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamPulang ? "text-blue-700 font-bold" : "text-slate-300"}">
+                        ${r && r.jamPulang ? "◀ " + Sec.esc(String(r.jamPulang).substring(0, 5)) : "—"}
+                    </td>
+                    <td class="px-2 py-2 text-right">
+                        ${st}
+                        ${isSudahScan ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.jamPulang ? "bg-blue-100 text-blue-800 border border-blue-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"}"><i class="fa-solid fa-check mr-1"></i>${r.jamPulang ? "Sudah Pulang" : "Sudah Datang"}</span>` : (!st ? `<span class="text-[10px] text-slate-400 italic">Belum scan</span>` : "")}
+                    </td>
                 </tr>`;
-            }).join("") || `<tr><td class="p-6 text-center text-xs text-slate-400">Belum ada data guru/tendik.</td></tr>`;
-        } else {
-            body.innerHTML = this.sessionLog.map(l => `<tr class="border-b border-slate-100">
-                <td class="px-4 py-2 text-xs font-bold text-slate-800">${Sec.esc(l.nama)}</td>
-                <td class="px-2 py-2 text-xs"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${l.tipe === "datang" ? "bg-emerald-100 text-emerald-800" : l.tipe === "pulang" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}">${Sec.esc(l.tipe)}</span></td>
-                <td class="px-2 py-2 text-xs font-mono text-slate-600">${Sec.esc(String(l.jam).substring(0, 5))}</td></tr>`).join("")
-                || `<tr><td class="p-6 text-center text-xs text-slate-400">Belum ada pemindaian pada sesi ini.</td></tr>`;
+            }).join("") || `<tr><td colspan="5" class="p-6 text-center text-xs text-slate-400">Belum ada data guru/tendik.</td></tr>`;
+        } catch (err) {
+            console.error("renderTodayLog error:", err);
+            body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-xs text-rose-500">Gagal memuat log presensi: ${Sec.esc(err.message)}</td></tr>`;
         }
     },
 
@@ -338,31 +440,32 @@ const ModulPresensi = {
         return this._libPromise;
     },
 
-    async toggleCamera() {
-        if (this.scannerRunning) { await this.stopCamera(); return; }
-        const reader = document.getElementById("scan-reader");
-        const btn = document.getElementById("btn-scan-camera");
+    async toggleCamera(prefix = "scan") {
+        if (this.scannerRunning) { await this.stopCamera(prefix); return; }
+        const reader = document.getElementById(`${prefix}-reader`) || document.getElementById("scan-reader");
+        const btn = document.getElementById(`btn-${prefix}-camera`) || document.getElementById("btn-scan-camera");
         try {
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan kamera…`;
+            if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan kamera…`;
             await this.loadScannerLib();
-            reader.classList.remove("hidden");
-            this.scanner = new Html5Qrcode("scan-reader");
+            if (reader) reader.classList.remove("hidden");
+            const readerId = reader ? reader.id : "scan-reader";
+            this.scanner = new Html5Qrcode(readerId);
             await this.scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 230, height: 230 } },
-                (text) => this.handleCode(text), () => { });
+                (text) => this.handleCode(text, prefix), () => { });
             this.scannerRunning = true;
-            btn.innerHTML = `<i class="fa-solid fa-stop"></i> Matikan Kamera`;
+            if (btn) btn.innerHTML = `<i class="fa-solid fa-stop"></i> Matikan Kamera`;
         } catch (err) {
-            reader.classList.add("hidden");
-            btn.innerHTML = `<i class="fa-solid fa-camera"></i> Aktifkan Kamera`;
+            if (reader) reader.classList.add("hidden");
+            if (btn) btn.innerHTML = `<i class="fa-solid fa-camera"></i> Aktifkan Kamera`;
             App.showToast(`Kamera tidak dapat diakses: ${err.message || err}. Kamera memerlukan HTTPS & izin pengguna.`, "error");
         }
     },
 
-    async stopCamera() {
+    async stopCamera(prefix = "scan") {
         try { if (this.scanner && this.scannerRunning) { await this.scanner.stop(); this.scanner.clear(); } } catch (e) { /* abaikan */ }
         this.scannerRunning = false;
-        const reader = document.getElementById("scan-reader");
-        const btn = document.getElementById("btn-scan-camera");
+        const reader = document.getElementById(`${prefix}-reader`) || document.getElementById("scan-reader");
+        const btn = document.getElementById(`btn-${prefix}-camera`) || document.getElementById("btn-scan-camera");
         if (reader) reader.classList.add("hidden");
         if (btn) btn.innerHTML = `<i class="fa-solid fa-camera"></i> Aktifkan Kamera`;
     },
@@ -655,7 +758,9 @@ const ModulPresensi = {
                 const mk = h.off ? "" : (marks[h.dd] || "");
                 if (mk === "S") S++; else if (mk === "I") I++; else if (mk === "A") A++;
                 if (h.off) return `<td class="off"></td>`;
-                return `<td class="${canEdit ? "cell" : ""}${mk ? " mk-" + mk : ""}" data-nisn="${s.nisn}" data-d="${h.dd}">${mk}</td>`;
+                const display = mk === "H" ? "✓" : mk;
+                const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
+                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
             }).join("");
             html += `<tr><td>${i + 1}</td><td class="nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
                 <td data-sum="S">${S || ""}</td><td data-sum="I">${I || ""}</td><td data-sum="A">${A || ""}</td><td data-sum="J"><b>${(S + I + A) || ""}</b></td></tr>`;
@@ -665,14 +770,14 @@ const ModulPresensi = {
 
     cycleMark(td) {
         const nisn = td.dataset.nisn, d = td.dataset.d;
-        const order = ["", "S", "I", "A"];
+        const order = ["", "H", "S", "I", "A"];
         const cur = (this.siswaMarks[nisn] || {})[d] || "";
         const next = order[(order.indexOf(cur) + 1) % order.length];
         if (!this.siswaMarks[nisn]) this.siswaMarks[nisn] = {};
         if (next) this.siswaMarks[nisn][d] = next; else delete this.siswaMarks[nisn][d];
 
-        td.textContent = next;
-        td.className = `cell${next ? " mk-" + next : ""}`;
+        td.textContent = next === "H" ? "✓" : next;
+        td.className = `cell${next === "H" ? " mk-H" : (next ? " mk-" + next : "")}`;
         this.siswaDirty = true;
 
         // perbarui total baris

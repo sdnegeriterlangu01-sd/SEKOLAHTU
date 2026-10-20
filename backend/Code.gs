@@ -1040,6 +1040,7 @@ function handleGetAbsensi(ss, payload) {
 
 function handleSaveAbsensiBatch(ss, payload) {
   const sheet = ss.getSheetByName(TAB_ABSENSI);
+  const sheetSiswaBulan = ss.getSheetByName(TAB_ABSENSI_SISWA_BULAN);
   const records = payload.records || [];
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
 
@@ -1051,6 +1052,48 @@ function handleSaveAbsensiBatch(ss, payload) {
     ]);
   });
 
+  // Sinkronisasi otomatis ke TAB_ABSENSI_SISWA_BULAN untuk records siswa
+  if (sheetSiswaBulan) {
+    try {
+      const existing = sheetSiswaBulan.getDataRange().getValues();
+      const keyRowMap = {};
+      const marksMap = {};
+      for (let i = 1; i < existing.length; i++) {
+        const k = String(existing[i][0]);
+        keyRowMap[k] = i + 1;
+        try { marksMap[k] = existing[i][6] ? JSON.parse(existing[i][6]) : {}; } catch (e) { marksMap[k] = {}; }
+      }
+
+      records.forEach(r => {
+        if (r.kategori === "Siswa") {
+          const bulan = String(r.tanggal).substring(0, 7);
+          const dd = String(r.tanggal).substring(8, 10);
+          const ta = payload.tahunAjaran || "";
+          const key = `${ta}|${bulan}|${r.nisnNip}`;
+          let marks = marksMap[key] || {};
+          if (r.status === "Sakit") marks[dd] = "S";
+          else if (r.status === "Izin") marks[dd] = "I";
+          else if (r.status === "Alpa") marks[dd] = "A";
+          else marks[dd] = "H"; // Hadir
+          marksMap[key] = marks;
+
+          const rowIdx = keyRowMap[key];
+          const marksJson = JSON.stringify(marks);
+          if (rowIdx) {
+            sheetSiswaBulan.getRange(rowIdx, 6, 1, 3).setValues([[r.nama || "", marksJson, nowStr]]);
+          } else {
+            sheetSiswaBulan.appendRow([
+              key, ta, bulan, r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr
+            ]);
+            keyRowMap[key] = sheetSiswaBulan.getLastRow();
+          }
+        }
+      });
+    } catch (eSync) {
+      Logger.log("Gagal sync ke absensi siswa bulan: " + eSync.toString());
+    }
+  }
+
   return {
     success: true,
     message: `Berhasil mencatat presensi ${records.length} data ke database DB_Absensi!`,
@@ -1061,8 +1104,15 @@ function handleSaveAbsensiBatch(ss, payload) {
 function handleScanTendik(ss, payload) {
   const sheet = ss.getSheetByName(TAB_ABSENSI_TENDIK);
   const sheetTendik = ss.getSheetByName(TAB_TENDIK);
-  const nip = String(payload.nip || "").trim();
-  const minGap = payload.minGapMenit || 15;
+  var code = String(payload.code || "").trim();
+  var nip = String(payload.nip || "").trim();
+  if (!nip && code) {
+    var m = code.match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
+    nip = m ? m[1] : code;
+  }
+  nip = nip.replace(/[^A-Za-z0-9._-]/g, "").trim();
+
+  const minGap = payload.minGapMenit || 1;
   const now = new Date();
   const today = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd");
   const jamNow = Utilities.formatDate(now, Session.getScriptTimeZone(), "HH:mm");
@@ -1072,7 +1122,11 @@ function handleScanTendik(ss, payload) {
   let namaTendik = "Guru / Tendik";
   if (sheetTendik && sheetTendik.getLastRow() > 1) {
     const tendikData = sheetTendik.getRange(2, 1, sheetTendik.getLastRow() - 1, 2).getValues();
-    const found = tendikData.find(t => String(t[0]).trim() === nip);
+    const cleanTargetNip = nip.replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+    const found = tendikData.find(t => {
+      const cleanRowNip = String(t[0]).replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+      return cleanRowNip === cleanTargetNip;
+    });
     if (found) namaTendik = String(found[1]);
   }
 
@@ -1104,7 +1158,6 @@ function handleScanTendik(ss, payload) {
     tipe = "datang";
   } else {
     // Scan kedua / pembaruan = Pulang
-    // Cek selisih menit dengan jam datang
     const [hD, mD] = currentRec.jamDatang.split(":").map(Number);
     const [hN, mN] = jamNow.split(":").map(Number);
     const diffMenit = (hN * 60 + mN) - (hD * 60 + mD);

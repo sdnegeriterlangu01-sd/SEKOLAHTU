@@ -87,6 +87,7 @@ const App = {
         if (this.currentRoute === "berkas") ModulBerkas.renderTable();
         else if (this.currentRoute === "cetak") ModulCetak.populateStudentSelect();
         else if (this.currentRoute === "absensi") ModulPresensi.onShow();
+        else if (this.currentRoute === "scan-absensi") ModulPresensi.renderScanView();
     },
 
     navigateTo(route) {
@@ -130,6 +131,8 @@ const App = {
         // View specific refresh
         if (route === "dashboard") {
             this.updateDashboardStats();
+        } else if (route === "scan-absensi") {
+            ModulPresensi.renderScanView();
         } else if (route === "berkas") {
             ModulBerkas.renderTable();
         } else if (route === "surat") {
@@ -138,6 +141,7 @@ const App = {
             ModulCetak.populateStudentSelect();
             ModulCetak.generatePreview();
         } else if (route === "absensi") {
+            ModulAbsensi.populateKelasOptions();
             ModulPresensi.onShow();
             ModulAbsensi.renderPresensiInputTable();
             ModulAbsensi.renderRekapitulasi();

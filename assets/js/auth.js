@@ -404,6 +404,9 @@ const Auth = {
 
                 const j = await res.json().catch(() => ({}));
                 if (!res.ok) {
+                    if (j.message && j.message.toLowerCase().includes("rate limit")) {
+                        throw new Error("Batas kirim email verifikasi Supabase terlampaui. Silakan matikan opsi 'Confirm email' di dashboard Supabase (Authentication > Providers > Email) agar akun bisa langsung aktif dibuat tanpa email verifikasi.");
+                    }
                     throw new Error(j.msg || j.message || "Gagal membuat akun di Supabase.");
                 }
 

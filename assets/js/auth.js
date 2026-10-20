@@ -335,6 +335,18 @@ const Auth = {
         const modal = document.getElementById("modal-manage-users");
         if (!modal) return;
         document.getElementById("form-add-user")?.reset();
+
+        // Populate pilihan kelas yang diajar dari rombel bangkas siswa
+        const selGuruKelas = document.getElementById("new-user-guru-kelas");
+        if (selGuruKelas) {
+            const rombels = typeof DataStore !== "undefined" && DataStore.getRombels ? DataStore.getRombels() : ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
+            selGuruKelas.innerHTML = `<option value="Semua">Semua Kelas (Guru Mapel)</option>` +
+                rombels.map(r => {
+                    const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+                    return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
+                }).join("");
+        }
+
         this.onRoleChange("tu");
         this.switchUserTab("add");
         modal.classList.remove("hidden");

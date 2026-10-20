@@ -525,6 +525,20 @@ const DataStore = {
         this.saveSiswaAll(list.concat(others));
     },
 
+    // Daftar rombel unik yang ada di data siswa (mis. "Kelas 1", "Kelas 2", "Kelas 5A", dst.)
+    getRombels(ta) {
+        const students = this.getSiswa(ta);
+        const set = new Set();
+        students.forEach(s => {
+            const r = String(s.rombel || s.kelas || "").trim();
+            if (r) set.add(r);
+        });
+        if (set.size === 0) {
+            return ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b, "id", { numeric: true, sensitivity: 'base' }));
+    },
+
     getTendik() {
         try { return JSON.parse(localStorage.getItem(this.KEYS.TENDIK)) || []; } catch (e) { return []; }
     },

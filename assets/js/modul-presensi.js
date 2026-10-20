@@ -318,6 +318,26 @@ const ModulPresensi = {
         if (res.success && res.data) {
             this.sessionLog.unshift({ ...res.data });
             this.sessionLog = this.sessionLog.slice(0, 30);
+
+            // Perbarui cache data tendikRows agar langsung masuk ke tabel baris Pukul (Datang/Pulang)
+            const rec = res.data;
+            const cleanNip = Util.cleanId(rec.nip);
+            const tgl = rec.tanggal || Util.today();
+            if (!this.tendikRows) this.tendikRows = [];
+            const existingIdx = this.tendikRows.findIndex(x => Util.cleanId(x.nip) === cleanNip && x.tanggal === tgl);
+            if (existingIdx >= 0) {
+                this.tendikRows[existingIdx] = { ...this.tendikRows[existingIdx], ...rec, nip: cleanNip, tanggal: tgl };
+            } else {
+                this.tendikRows.push({ ...rec, nip: cleanNip, tanggal: tgl });
+            }
+
+            // Jika tab Rekap Guru & Tendik sedang terbuka, langsung render ulang tabelnya
+            const rtGrid = document.getElementById("rt-grid");
+            const tabTendik = document.getElementById("abs-tab-tendik");
+            if (rtGrid && tabTendik && !tabTendik.classList.contains("hidden")) {
+                const canEdit = Auth.canDo("saveAbsensiTendikManual");
+                rtGrid.innerHTML = this.buildTendikTable(canEdit);
+            }
         }
         await this.renderTodayLog(prefix);
         if (prefix === "mscan") await this.renderTodayLog("scan");
@@ -522,7 +542,13 @@ const ModulPresensi = {
             else if (u) tendik = [{ nip: u.id || "GURU", nama: u.nama || u.email, jabatan: "Guru" }];
         }
         const rowsBy = {};
-        this.tendikRows.forEach(r => { rowsBy[`${r.nip}|${r.tanggal}`] = r; });
+        this.tendikRows.forEach(r => {
+            const clean = Util.cleanId(r.nip);
+            const tgl = String(r.tanggal || "").substring(0, 10);
+            if (clean && tgl) {
+                rowsBy[`${clean}|${tgl}`] = r;
+            }
+        });
 
         const offCls = h => h.off ? " off" : "";
         let html = `<table class="abs-grid"><thead>
@@ -668,16 +694,23 @@ const ModulPresensi = {
 
     // ===================================================================== 3. REKAP SISWA BULANAN
     kelasOptions() {
-        const set = new Set();
-        DataStore.getSiswa().forEach(s => set.add(String(s.rombel || s.kelas)));
-        return Array.from(set).sort((a, b) => a.localeCompare(b, "id", { numeric: true }));
+        return typeof DataStore !== "undefined" && DataStore.getRombels ? DataStore.getRombels() : [];
     },
 
     siswaKelas() {
         const opt = this.kelasOptions();
         if (!opt.includes(this.kelasSiswa)) this.kelasSiswa = opt[0] || "";
-        return DataStore.getSiswa().filter(s => String(s.rombel || s.kelas) === this.kelasSiswa)
-            .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
+        return DataStore.getSiswa().filter(s => {
+            const k1 = String(s.kelas || "").trim();
+            const k2 = String(s.rombel || "").trim();
+            const selK = String(this.kelasSiswa || "").trim();
+            if (k1 === selK || k2 === selK) return true;
+            if (k1.toLowerCase() === selK.toLowerCase() || k2.toLowerCase() === selK.toLowerCase()) return true;
+            const d1 = k1.replace(/\D/g, "");
+            const d2 = k2.replace(/\D/g, "");
+            const dSel = selK.replace(/\D/g, "");
+            return !!(dSel && (d1 === dSel || d2 === dSel));
+        }).sort((a, b) => a.nama.localeCompare(b.nama, "id"));
     },
 
     async renderSiswa() {
@@ -724,7 +757,10 @@ const ModulPresensi = {
             el.querySelector("#rs-bulan").addEventListener("change", (e) => { if (e.target.value) { this.bulanSiswa = e.target.value; this.renderSiswa(); } });
         }
         const sel = document.getElementById("rs-kelas");
-        sel.innerHTML = opts.map(k => `<option value="${Sec.esc(k)}" ${k === this.kelasSiswa ? "selected" : ""}>Kelas ${Sec.esc(k)}</option>`).join("") || `<option value="">(belum ada siswa)</option>`;
+        sel.innerHTML = opts.map(k => {
+            const label = k.toLowerCase().startsWith("kelas") ? k : `Kelas ${k}`;
+            return `<option value="${Sec.esc(k)}" ${k === this.kelasSiswa ? "selected" : ""}>${Sec.esc(label)}</option>`;
+        }).join("") || `<option value="">(belum ada siswa)</option>`;
         document.getElementById("rs-bulan").value = this.bulanSiswa;
         document.getElementById("rs-save").classList.toggle("hidden", !canEdit);
 

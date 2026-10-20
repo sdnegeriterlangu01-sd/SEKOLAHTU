@@ -24,7 +24,28 @@ const ModulBerkas = {
         return null;
     },
 
+    populateKelasFilter() {
+        const filterEl = document.getElementById("filter-kelas-berkas");
+        if (!filterEl) return;
+        const rombels = DataStore.getRombels();
+        const curVal = filterEl.value || this.currentFilterKelas || "Semua";
+        filterEl.innerHTML = `<option value="Semua">Semua Tingkat Kelas</option>` +
+            rombels.map(r => {
+                const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+                return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
+            }).join("");
+
+        if (curVal && Array.from(filterEl.options).some(o => o.value === curVal)) {
+            filterEl.value = curVal;
+            this.currentFilterKelas = curVal;
+        } else {
+            filterEl.value = "Semua";
+            this.currentFilterKelas = "Semua";
+        }
+    },
+
     init() {
+        this.populateKelasFilter();
         const gk = this.detectGuruKelas();
         if (gk) {
             this.currentFilterKelas = gk;
@@ -70,8 +91,21 @@ const ModulBerkas = {
                 s.nama.toLowerCase().includes(this.searchQuery) ||
                 (s.nis && s.nis.toLowerCase().includes(this.searchQuery));
 
-            // Filter Kelas
-            const matchKelas = this.currentFilterKelas === "Semua" || s.kelas === this.currentFilterKelas;
+            // Filter Kelas (cocokkan s.rombel atau s.kelas secara fleksibel)
+            const targetKls = String(this.currentFilterKelas || "Semua").trim();
+            let matchKelas = targetKls === "Semua";
+            if (!matchKelas) {
+                const k1 = String(s.kelas || "").trim();
+                const k2 = String(s.rombel || "").trim();
+                if (k1 === targetKls || k2 === targetKls) matchKelas = true;
+                else if (k1.toLowerCase() === targetKls.toLowerCase() || k2.toLowerCase() === targetKls.toLowerCase()) matchKelas = true;
+                else {
+                    const d1 = k1.replace(/\D/g, "");
+                    const d2 = k2.replace(/\D/g, "");
+                    const dTarget = targetKls.replace(/\D/g, "");
+                    if (dTarget && (d1 === dTarget || d2 === dTarget)) matchKelas = true;
+                }
+            }
 
             // Filter Status Berkas
             const isComplete = s.berkas && s.berkas.kk?.uploaded && s.berkas.akta?.uploaded;

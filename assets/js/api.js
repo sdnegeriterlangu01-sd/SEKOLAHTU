@@ -496,7 +496,16 @@ const ApiClient = {
             case "getAbsensiSiswaBulan": {
                 let list = DataStore.getAbsensiSiswaBulan().filter(r => r.bulan === payload.bulan);
                 if (payload.tahunAjaran) list = list.filter(r => r.tahunAjaran === payload.tahunAjaran);
-                if (payload.kelas) list = list.filter(r => r.kelas === payload.kelas);
+                if (payload.kelas) {
+                    const targetK = String(payload.kelas).trim();
+                    list = list.filter(r => {
+                        const rk = String(r.kelas || "").trim();
+                        if (rk === targetK || rk.toLowerCase() === targetK.toLowerCase()) return true;
+                        const d1 = rk.replace(/\D/g, "");
+                        const d2 = targetK.replace(/\D/g, "");
+                        return !!(d1 && d2 && d1 === d2);
+                    });
+                }
                 return { success: true, data: list };
             }
 

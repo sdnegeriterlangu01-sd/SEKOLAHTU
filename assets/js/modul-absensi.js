@@ -36,19 +36,11 @@ const ModulAbsensi = {
     populateKelasOptions() {
         const sel = document.getElementById("absensi-kelas");
         if (!sel) return;
-        const siswa = DataStore.getSiswa();
-        const set = new Set();
-        siswa.forEach(s => {
-            const k = String(s.kelas || s.rombel || "").trim();
-            if (k) set.add(k);
-        });
-        const dynamicList = Array.from(set).filter(Boolean).sort();
-        const standard = ["1", "2", "3", "4", "5", "6"];
-        const allClasses = Array.from(new Set([...standard, ...dynamicList])).sort();
+        const rombels = DataStore.getRombels();
 
         const curVal = sel.value || this.selectedKelas || "Semua";
         sel.innerHTML = `<option value="Semua">Semua Kelas</option>` +
-            allClasses.map(k => {
+            rombels.map(k => {
                 const label = k.toLowerCase().startsWith("kelas") ? k : `Kelas ${k}`;
                 return `<option value="${Sec.esc(k)}">${Sec.esc(label)}</option>`;
             }).join("");
@@ -147,12 +139,16 @@ const ModulAbsensi = {
                 return false;
             });
 
-            return filtered.map(s => ({
-                idTarget: s.nisn,
-                nama: s.nama,
-                identitas: `NISN: ${s.nisn} • Kelas ${s.rombel || s.kelas || '-'}`,
-                kelas: s.rombel || s.kelas || "-"
-            }));
+            return filtered.map(s => {
+                const rombelStr = String(s.rombel || s.kelas || "-").trim();
+                const displayKelas = rombelStr.toLowerCase().startsWith("kelas") ? rombelStr : `Kelas ${rombelStr}`;
+                return {
+                    idTarget: s.nisn,
+                    nama: s.nama,
+                    identitas: `NISN: ${s.nisn} • ${displayKelas}`,
+                    kelas: rombelStr
+                };
+            });
         }
     },
 
@@ -236,7 +232,7 @@ const ModulAbsensi = {
         });
     },
 
-    async markAllHadir() {
+    markAllHadir() {
         const targets = this.getListTarget();
         if (targets.length === 0) {
             App.showToast("Tidak ada siswa/tendik pada kelas/filter ini.", "warning");
@@ -250,14 +246,17 @@ const ModulAbsensi = {
                 this.updateRadioStyle(radioHadir);
             }
         });
-        App.showToast("Menandai semua 'Hadir' dan menyinkronkan ke rekap...", "info");
-        await this.savePresensiBatch();
+        App.showToast("Semua baris telah ditandai Hadir. Klik tombol 'Simpan Presensi' untuk menyimpan ke database & rekapitulasi.", "info");
     },
 
     async savePresensiBatch() {
         const targets = this.getListTarget();
-        const records = [];
+        if (targets.length === 0) {
+            App.showToast("Tidak ada data presensi yang ditampilkan.", "warning");
+            return;
+        }
 
+        const records = [];
         targets.forEach(t => {
             const cleanId = t.idTarget.replace(/\s+/g, '');
             const selectedRadio = document.querySelector(`input[name="status_${cleanId}"]:checked`);
@@ -276,12 +275,21 @@ const ModulAbsensi = {
         });
 
         const btn = document.getElementById("btn-simpan-absensi");
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
-        }
+        const btnFast = document.getElementById("btn-fast-simpan-absensi");
+        const setBtnState = (loading) => {
+            if (btn) {
+                btn.disabled = loading;
+                btn.innerHTML = loading ? `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...` : `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Presensi Hari Ini`;
+            }
+            if (btnFast) {
+                btnFast.disabled = loading;
+                btnFast.innerHTML = loading ? `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...` : `<i class="fa-solid fa-floppy-disk"></i> Simpan Presensi`;
+            }
+        };
 
-        const res = await ApiClient.request("saveAbsensiBatch", { records: records });
+        setBtnState(true);
+
+        const res = await ApiClient.request("saveAbsensiBatch", { records: records, tahunAjaran: DataStore.getActiveTA() });
 
         // Sinkronisasi otomatis ke Rekap Absen Siswa Bulanan
         if (this.selectedKategori === "Siswa" && records.length > 0) {
@@ -290,12 +298,14 @@ const ModulAbsensi = {
                 const bulan = this.selectedDate.substring(0, 7);
                 const dd = this.selectedDate.substring(8, 10);
 
-                // Kelompokkan siswa berdasarkan kelas
+                // Kelompokkan siswa berdasarkan kelas / rombel murni
                 const perKelas = {};
                 records.forEach(r => {
-                    const k = String(r.kelas || "Semua").replace(/^kelas\s*/i, '').trim();
-                    if (!perKelas[k]) perKelas[k] = [];
-                    perKelas[k].push(r);
+                    const k = String(r.kelas || "").trim();
+                    if (k && k !== "-") {
+                        if (!perKelas[k]) perKelas[k] = [];
+                        perKelas[k].push(r);
+                    }
                 });
 
                 for (const [kls, recs] of Object.entries(perKelas)) {
@@ -306,7 +316,7 @@ const ModulAbsensi = {
                     });
 
                     const rowsToSave = recs.map(r => {
-                        const marks = existingMap[r.nisnNip] || {};
+                        const marks = { ...(existingMap[r.nisnNip] || {}) };
                         if (r.status === "Sakit") marks[dd] = "S";
                         else if (r.status === "Izin") marks[dd] = "I";
                         else if (r.status === "Alpa") marks[dd] = "A";
@@ -339,10 +349,7 @@ const ModulAbsensi = {
             App.showToast(res.message || "Gagal menyimpan presensi", "error");
         }
 
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Presensi Hari Ini`;
-        }
+        setBtnState(false);
     },
 
     renderRekapitulasi() {

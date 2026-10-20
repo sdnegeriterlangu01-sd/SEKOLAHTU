@@ -1,8 +1,17 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.0
+ * Backend REST API - Google Apps Script (GAS) v2.1.0
  * ==========================================================================
+ * 
+ * Version History:
+ * - v2.1.0 (20 Oktober 2026):
+ *   + Ditambahkan endpoint API "getConfig" dan "saveConfig" untuk sinkronisasi
+ *     konfigurasi profil sekolah & identitas Kepala Sekolah ke tab "Config" spreadsheet.
+ *   + Dukungan auto-create tab "Config" dan pemetaan fleksibel nama kolom konfigurasi.
+ * - v2.0.0 (19 Oktober 2026):
+ *   + Integrasi token auth Supabase & RBAC multi-role (Admin, Guru, TU, Kepsek, Kiosk).
+ *   + Sinkronisasi presensi tendik & siswa, backup drive, dan manajemen arsip surat.
  * 
  * Target Deployment:
  * - Execute as: Me (akun Google pemilik spreadsheet/drive)
@@ -40,7 +49,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.0.0",
+    version: "2.1.0",
     timestamp: new Date().toISOString(),
     message: "Google Apps Script Backend berjalan normal. Gunakan HTTP POST untuk berinteraksi."
   };
@@ -184,6 +193,15 @@ function doPost(e) {
 
       case "saveAbsensiSiswaBulan":
         responseData = handleSaveAbsensiSiswaBulan(ss, payload);
+        break;
+
+      // ==================== CONFIG & IDENTITAS SEKOLAH ====================
+      case "getConfig":
+        responseData = handleGetConfig(ss);
+        break;
+
+      case "saveConfig":
+        responseData = handleSaveConfig(ss, payload);
         break;
 
       default:
@@ -337,8 +355,8 @@ function setupDatabaseAndFolders() {
     sheetCfg.appendRow(["KEY", "VALUE"]);
     sheetCfg.appendRow(["NAMA_SEKOLAH", "SD NEGERI TERLANGU 01"]);
     sheetCfg.appendRow(["NPSN", "20326713"]);
-    sheetCfg.appendRow(["KEPALA_SEKOLAH", "Drs. H. Mulyono Santoso, M.Pd."]);
-    sheetCfg.appendRow(["NIP_KEPALA_SEKOLAH", "19680512 199303 1 004"]);
+    sheetCfg.appendRow(["KEPALA_SEKOLAH", "Aisah Suciati, S.Pd.SD., M.Pd."]);
+    sheetCfg.appendRow(["NIP_KEPALA_SEKOLAH", "19690808 199201 2 002"]);
     sheetCfg.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#f3f3f3");
   }
 
@@ -1339,3 +1357,57 @@ function handleSaveAbsensiSiswaBulan(ss, payload) {
 
   return { success: true, message: `Rekap absensi siswa kelas ${kelas} bulan ${bulan} berhasil disimpan!` };
 }
+
+/**
+ * ==========================================================================
+ * HANDLERS: CONFIG & IDENTITAS SEKOLAH
+ * ==========================================================================
+ */
+function handleGetConfig(ss) {
+  let sheet = ss.getSheetByName(TAB_CONFIG);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_CONFIG);
+    sheet.appendRow(["Key", "Value"]);
+    return { success: true, data: {} };
+  }
+  const data = sheet.getDataRange().getValues();
+  const config = {};
+  for (let i = 1; i < data.length; i++) {
+    const k = String(data[i][0]).trim();
+    if (k) {
+      let val = data[i][1];
+      try { val = JSON.parse(val); } catch (e) {}
+      config[k] = val;
+      if (k === "NAMA_SEKOLAH") config.namaSekolah = val;
+      if (k === "NPSN") config.npsn = val;
+      if (k === "KEPALA_SEKOLAH" || k === "NAMA_KEPALA_SEKOLAH") config.namaKepalaSekolah = val;
+      if (k === "NIP_KEPALA_SEKOLAH") config.nipKepalaSekolah = val;
+      if (k === "ALAMAT") config.alamat = val;
+    }
+  }
+  return { success: true, data: config };
+}
+
+function handleSaveConfig(ss, payload) {
+  let sheet = ss.getSheetByName(TAB_CONFIG);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_CONFIG);
+    sheet.appendRow(["Key", "Value"]);
+  }
+  const data = sheet.getDataRange().getValues();
+  const keyRowMap = {};
+  for (let i = 1; i < data.length; i++) {
+    keyRowMap[String(data[i][0]).trim()] = i + 1;
+  }
+  Object.keys(payload || {}).forEach(k => {
+    const val = typeof payload[k] === "object" ? JSON.stringify(payload[k]) : String(payload[k]);
+    if (keyRowMap[k]) {
+      sheet.getRange(keyRowMap[k], 2).setValue(val);
+    } else {
+      sheet.appendRow([k, val]);
+      keyRowMap[k] = sheet.getLastRow();
+    }
+  });
+  return { success: true, message: "Konfigurasi identitas sekolah & Kepala Sekolah berhasil disimpan ke cloud!" };
+}
+

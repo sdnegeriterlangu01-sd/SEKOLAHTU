@@ -68,8 +68,8 @@
                     <i class="fa-solid fa-shield-check text-3xl text-white"></i>
                 </div>
                 <h2 class="text-xl font-black tracking-wide">DOKUMEN RESMI TERVERIFIKASI SAH</h2>
-                <p class="text-xs text-emerald-100 mt-1 max-w-lg mx-auto leading-relaxed">
-                    Surat keterangan resmi ini diterbitkan secara sah dan tercatat pada Pangkalan Data SIM-TAS-SD UPT Satuan Pendidikan Kabupaten Brebes.
+                <p id="val-banner-subtitle" class="text-xs text-emerald-100 mt-1 max-w-lg mx-auto leading-relaxed">
+                    Surat resmi ini diterbitkan secara sah dan tercatat pada Pangkalan Data SIM-TAS-SD UPT Satuan Pendidikan Kabupaten Brebes.
                 </p>
                 <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white text-emerald-800 shadow-sm">
                     <i class="fa-solid fa-circle-check text-emerald-600"></i> Terautentikasi oleh Sistem Terpadu
@@ -84,7 +84,7 @@
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nomor Registrasi Surat</span>
                         <div id="val-nomor-surat" class="font-mono font-black text-blue-900 text-base md:text-lg tracking-tight">-</div>
-                        <span id="val-jenis-surat" class="text-xs font-semibold text-slate-600 mt-0.5 block">Surat Keterangan Resmi</span>
+                        <span id="val-jenis-surat" class="text-xs font-semibold text-slate-600 mt-0.5 block">Surat Resmi Kedinasan</span>
                     </div>
                     <div class="text-left sm:text-right">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status Keabsahan</span>
@@ -95,30 +95,8 @@
                     </div>
                 </div>
 
-                <!-- Detail Siswa -->
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
-                        <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Terkait
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-                        <div>
-                            <span class="text-[11px] text-slate-400 block">Nama Lengkap Siswa</span>
-                            <span id="val-nama-siswa" class="font-extrabold text-slate-800 text-sm">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[11px] text-slate-400 block">Nomor Induk Siswa Nasional (NISN)</span>
-                            <span id="val-nisn-siswa" class="font-mono font-bold text-slate-800 text-sm">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[11px] text-slate-400 block">Nomor Induk Kependudukan (NIK)</span>
-                            <span id="val-nik-siswa" class="font-mono font-bold text-slate-800 text-sm">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[11px] text-slate-400 block">Tingkat / Rombel Kelas</span>
-                            <span id="val-kelas-siswa" class="font-bold text-blue-900 text-sm">-</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Container Dinamis: Menyesuaikan Surat Siswa vs Surat Kedinasan -->
+                <div id="box-dynamic-detail"></div>
 
                 <!-- Detail Penerbit Satuan Pendidikan -->
                 <div>
@@ -136,11 +114,11 @@
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Pejabat Penandatangan</span>
-                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 text-sm">Drs. H. Mulyono Santoso, M.Pd.</span>
+                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 text-sm">Aisah Suciati, S.Pd.SD., M.Pd.</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nomor Induk Pegawai (NIP)</span>
-                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 text-sm">19680512 199303 1 004</span>
+                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 text-sm">19690808 199201 2 002</span>
                         </div>
                     </div>
                 </div>
@@ -197,12 +175,12 @@
                 <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2 flex flex-col justify-center">
                     <label class="block text-xs font-bold text-slate-700">Cari Berdasarkan Nomor Surat</label>
                     <div class="flex gap-2">
-                        <input type="text" id="input-search-nomor" placeholder="Contoh: 421.2/004/SD/2026" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
+                        <input type="text" id="input-search-nomor" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/033/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
                         <button type="button" onclick="searchByNomorManual()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition">
                             Cek
                         </button>
                     </div>
-                    <span class="text-[10px] text-slate-400">Atau masukkan NISN siswa untuk memeriksa surat aktif</span>
+                    <span class="text-[10px] text-slate-400">Masukkan Nomor Registrasi Surat untuk memeriksa keabsahan dokumen</span>
                 </div>
             </div>
 
@@ -220,7 +198,7 @@
                     </div>
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                         <strong class="block font-bold text-slate-800 mb-1">3. Cek Kesesuaian</strong>
-                        Pastikan nama siswa, NISN, dan nomor surat persis sama dengan lembar fisik.
+                        Pastikan nomor surat, penerima, dan perihal persis sama dengan lembar fisik.
                     </div>
                 </div>
             </div>
@@ -233,7 +211,7 @@
             </div>
             <h3 class="text-lg font-black text-rose-800">DOKUMEN TIDAK TERDAFTAR / TIDAK VALID</h3>
             <p id="invalid-reason-text" class="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                Nomor registrasi surat yang dipindai tidak ditemukan pada pangkalan data SIM-TAS-SD. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
+                Nomor surat yang diperiksa tidak ditemukan pada pangkalan data SIM-TAS-SD. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
             </p>
             <div class="pt-2 flex justify-center gap-3">
                 <button type="button" onclick="startQrScanner()" class="px-4 py-2 bg-blue-900 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
@@ -257,24 +235,132 @@
     <script>
         let html5QrCode = null;
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function renderVerifiedData(data) {
             document.getElementById("box-portal-landing").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
             document.getElementById("box-result-verified").classList.remove("hidden");
 
+            // Meta ID Card
             document.getElementById("val-nomor-surat").textContent = data.no || "-";
-            document.getElementById("val-jenis-surat").textContent = data.jenis || "Surat Keterangan Sekolah";
+            document.getElementById("val-jenis-surat").textContent = data.jenis || data.perihal || "Surat Resmi Kedinasan";
             document.getElementById("val-tgl-terbit").textContent = `Diterbitkan: ${data.tgl || "Bulan Berjalan"}`;
 
-            document.getElementById("val-nama-siswa").textContent = data.nama || "-";
-            document.getElementById("val-nisn-siswa").textContent = data.nisn || "-";
-            document.getElementById("val-nik-siswa").textContent = data.nik || "-";
-            document.getElementById("val-kelas-siswa").textContent = data.kelas ? (data.kelas.toLowerCase().includes("kelas") ? data.kelas : `Kelas ${data.kelas}`) : "Kelas Terdaftar";
+            const bannerSub = document.getElementById("val-banner-subtitle");
+            const isSiswa = (data.isSiswa === true) || (data.nisn && data.nisn !== "-" && String(data.nisn).trim() !== "" && !data.tujuan);
 
+            if (bannerSub) {
+                if (isSiswa) {
+                    bannerSub.textContent = "Surat keterangan resmi ini diterbitkan secara sah untuk peserta didik dan tercatat pada Pangkalan Data SIM-TAS-SD UPT Satuan Pendidikan Kabupaten Brebes.";
+                } else {
+                    bannerSub.textContent = "Surat dinas resmi ini diterbitkan secara sah dan terarsip pada Buku Register Surat Keluar SIM-TAS-SD UPT Satuan Pendidikan Kabupaten Brebes.";
+                }
+            }
+
+            const containerDetail = document.getElementById("box-dynamic-detail");
+
+            if (isSiswa) {
+                // Tampilan untuk Surat Keterangan Siswa
+                const nama = escapeHtml(data.nama || "-");
+                const nisn = escapeHtml(data.nisn || "-");
+                const nik = escapeHtml(data.nik || "-");
+                const rawKelas = data.kelas || "Aktif";
+                const kelas = rawKelas.toLowerCase().includes("kelas") ? rawKelas : `Kelas ${rawKelas}`;
+                const keperluan = data.keperluan && data.keperluan !== "-" ? escapeHtml(data.keperluan) : "";
+
+                containerDetail.innerHTML = `
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
+                            <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Terkait
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Nama Lengkap Siswa</span>
+                                <span class="font-extrabold text-slate-800 text-sm">${nama}</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Nomor Induk Siswa Nasional (NISN)</span>
+                                <span class="font-mono font-bold text-slate-800 text-sm">${nisn}</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Nomor Induk Kependudukan (NIK)</span>
+                                <span class="font-mono font-bold text-slate-800 text-sm">${nik}</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Tingkat / Rombel Kelas</span>
+                                <span class="font-bold text-blue-900 text-sm">${escapeHtml(kelas)}</span>
+                            </div>
+                            ${keperluan ? `
+                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5 mt-1">
+                                <span class="text-[11px] text-slate-400 block">Keperluan / Keterangan</span>
+                                <span class="text-xs font-semibold text-slate-700">${keperluan}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Tampilan untuk Surat Kedinasan / Surat Keluar Instansi
+                const tujuan = escapeHtml(data.tujuan || data.nama || "-");
+                const perihal = escapeHtml(data.perihal || data.jenis || "Surat Keluar Kedinasan");
+                const klasifikasi = data.kodeKlasifikasi ? escapeHtml(data.kodeKlasifikasi) : "";
+                const pengonsep = data.pengonsep ? escapeHtml(data.pengonsep) : "";
+                const keterangan = data.keterangan && data.keterangan !== "-" ? escapeHtml(data.keterangan) : "";
+
+                containerDetail.innerHTML = `
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
+                            <i class="fa-solid fa-envelope-open-text text-blue-600"></i> Informasi Penerima & Perihal Surat
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                            <div class="md:col-span-2">
+                                <span class="text-[11px] text-slate-400 block">Ditujukan Kepada / Penerima Surat</span>
+                                <div class="font-extrabold text-slate-900 text-base flex items-center gap-2 mt-0.5">
+                                    <i class="fa-solid fa-building-columns text-blue-600 text-sm"></i>
+                                    <span>${tujuan}</span>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5">
+                                <span class="text-[11px] text-slate-400 block">Perihal / Hal Surat</span>
+                                <span class="font-bold text-blue-950 text-sm leading-snug block mt-0.5">${perihal}</span>
+                            </div>
+                            ${klasifikasi ? `
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Kode Klasifikasi Arsip</span>
+                                <span class="font-mono font-bold text-slate-800 text-xs bg-slate-100 px-2.5 py-1 rounded-lg inline-block mt-0.5 border border-slate-200">${klasifikasi}</span>
+                            </div>
+                            ` : ''}
+                            ${pengonsep ? `
+                            <div>
+                                <span class="text-[11px] text-slate-400 block">Pengonsep / Bagian</span>
+                                <span class="font-semibold text-slate-800 text-xs inline-block mt-0.5">${pengonsep}</span>
+                            </div>
+                            ` : ''}
+                            ${keterangan ? `
+                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5">
+                                <span class="text-[11px] text-slate-400 block">Catatan / Ringkasan Arsip</span>
+                                <span class="text-xs text-slate-600 italic block mt-0.5">${keterangan}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Satuan Pendidikan Penerbit
             document.getElementById("val-nama-sekolah").textContent = data.sekolah || "SD NEGERI TERLANGU 01";
             document.getElementById("val-npsn-sekolah").textContent = data.npsn || "20326713";
-            document.getElementById("val-kepsek-sekolah").textContent = data.kepsek || "Drs. H. Mulyono Santoso, M.Pd.";
-            document.getElementById("val-nip-sekolah").textContent = data.nipKepsek || "19680512 199303 1 004";
+            document.getElementById("val-kepsek-sekolah").textContent = data.penandatangan || data.kepsek || "Aisah Suciati, S.Pd.SD., M.Pd.";
+            document.getElementById("val-nip-sekolah").textContent = data.nipPenandatangan || data.nipKepsek || "19690808 199201 2 002";
 
             const now = new Date();
             const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -300,7 +386,7 @@
             if (rawPayload) {
                 try {
                     const parsed = JSON.parse(decodeURIComponent(rawPayload));
-                    if (parsed && (parsed.no || parsed.nama)) {
+                    if (parsed && (parsed.no || parsed.nama || parsed.tujuan)) {
                         renderVerifiedData(parsed);
                         return;
                     }
@@ -310,14 +396,15 @@
             }
 
             // 2. Cek query parameter individual
-            const nomor = params.get("no") || params.get("nomor");
-            const nisn = params.get("nisn");
-            const nama = params.get("nama");
+            const nomor = (params.get("no") || params.get("nomor") || "").trim();
+            const nisn = (params.get("nisn") || "").trim();
+            const nama = (params.get("nama") || "").trim();
 
             if (nomor || nisn) {
                 let config = {};
                 let students = [];
                 let suratKeluar = [];
+                let tendikList = [];
 
                 try {
                     if (typeof DataStore !== "undefined") {
@@ -325,29 +412,77 @@
                         config = DataStore.getConfig() || {};
                         students = DataStore.getSiswa() || [];
                         suratKeluar = DataStore.getSuratKeluar() || [];
+                        tendikList = DataStore.getTendik() || [];
                     }
                 } catch (e) {}
 
-                // Cari data surat atau siswa
-                const student = students.find(s => s.nisn === nisn || (nama && s.nama && s.nama.toLowerCase().includes(nama.toLowerCase())));
-                const sk = suratKeluar.find(s => s.nomorSurat === nomor || s.id === nomor);
+                const cleanNomor = decodeURIComponent(nomor).toLowerCase().trim();
+                const sk = suratKeluar.find(s => {
+                    if (!s) return false;
+                    const sNo = (s.nomorSurat || "").toLowerCase().trim();
+                    const sId = (s.id || "").toLowerCase().trim();
+                    return sNo === cleanNomor || sId === cleanNomor || sNo.replace(/\s+/g, '') === cleanNomor.replace(/\s+/g, '');
+                });
 
-                if (student || sk || nomor) {
+                const student = students.find(s => 
+                    (nisn && s.nisn === nisn) || 
+                    (nama && s.nama && s.nama.toLowerCase().includes(nama.toLowerCase()))
+                );
+
+                if (sk) {
+                    let nipSigner = config.nipKepalaSekolah || "-";
+                    if (sk.penandatangan) {
+                        const foundTendik = tendikList.find(t => t.nama && (t.nama === sk.penandatangan || sk.penandatangan.includes(t.nama)));
+                        if (foundTendik && foundTendik.nip) nipSigner = foundTendik.nip;
+                    }
+
+                    const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-");
+
                     renderVerifiedData({
-                        no: decodeURIComponent(nomor || sk?.nomorSurat || "421.2/004/SD/2026"),
-                        nama: student?.nama || sk?.tujuan || nama || "Siswa Terdaftar",
-                        nisn: student?.nisn || nisn || "-",
-                        nik: student?.nik || "-",
-                        kelas: student?.kelas || student?.rombel || "Aktif",
-                        jenis: sk?.perihal || "Surat Keterangan Sekolah",
-                        tgl: sk?.tanggalSurat || "Dokumen Aktif",
+                        isSiswa: isSiswa,
+                        no: sk.nomorSurat,
+                        nama: isSiswa ? (sk.namaSiswa || sk.tujuan) : undefined,
+                        nisn: sk.nisn || "-",
+                        nik: sk.nik || "-",
+                        kelas: sk.kelas || "-",
+                        tujuan: sk.tujuan || "-",
+                        perihal: sk.perihal || "Surat Keluar Kedinasan",
+                        kodeKlasifikasi: sk.kodeKlasifikasi || "",
+                        pengonsep: sk.pengonsep || "",
+                        penandatangan: sk.penandatangan || config.namaKepalaSekolah,
+                        nipPenandatangan: nipSigner,
+                        jenis: sk.perihal || "Surat Keluar Kedinasan",
+                        tgl: sk.tanggalSurat || (typeof Util !== "undefined" ? Util.today() : ""),
+                        keterangan: sk.keterangan || "",
                         sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
                         npsn: config.npsn || "20326713",
-                        kepsek: config.namaKepalaSekolah || "Drs. H. Mulyono Santoso, M.Pd.",
-                        nipKepsek: config.nipKepalaSekolah || "19680512 199303 1 004"
+                        kepsek: config.namaKepalaSekolah || "-",
+                        nipKepsek: config.nipKepalaSekolah || "-"
                     });
                     return;
                 }
+
+                if (student) {
+                    renderVerifiedData({
+                        isSiswa: true,
+                        no: nomor || "421.2/004/SD/2026",
+                        nama: student.nama,
+                        nisn: student.nisn,
+                        nik: student.nik || "-",
+                        kelas: student.kelas || student.rombel || "Aktif",
+                        jenis: "Surat Keterangan Sekolah",
+                        tgl: typeof Util !== "undefined" ? Util.today() : "Aktif",
+                        sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+                        npsn: config.npsn || "20326713",
+                        kepsek: config.namaKepalaSekolah || "-",
+                        nipKepsek: config.nipKepalaSekolah || "-"
+                    });
+                    return;
+                }
+
+                // Jika nomor tidak ada di database
+                renderInvalid(`Dokumen dengan nomor surat "${nomor || nisn}" tidak terdaftar atau tidak ditemukan pada pangkalan data SIM-TAS-SD.`);
+                return;
             }
 
             // Jika tidak ada parameter apa pun, biarkan berada di box-portal-landing (tampilan awal)
@@ -359,13 +494,14 @@
         function searchByNomorManual() {
             const val = document.getElementById("input-search-nomor")?.value.trim();
             if (!val) {
-                alert("Silakan masukkan Nomor Registrasi Surat atau NISN terlebih dahulu!");
+                alert("Silakan masukkan Nomor Registrasi Surat terlebih dahulu!");
                 return;
             }
 
             let config = {};
             let students = [];
             let suratKeluar = [];
+            let tendikList = [];
 
             try {
                 if (typeof DataStore !== "undefined") {
@@ -373,28 +509,65 @@
                     config = DataStore.getConfig() || {};
                     students = DataStore.getSiswa() || [];
                     suratKeluar = DataStore.getSuratKeluar() || [];
+                    tendikList = DataStore.getTendik() || [];
                 }
             } catch (e) {}
 
-            const sk = suratKeluar.find(s => s.nomorSurat?.toLowerCase().includes(val.toLowerCase()) || s.id?.toLowerCase().includes(val.toLowerCase()));
-            const student = students.find(s => s.nisn === val || s.nama?.toLowerCase().includes(val.toLowerCase()));
+            const cleanVal = val.toLowerCase().trim();
+            const sk = suratKeluar.find(s => {
+                if (!s) return false;
+                const sNo = (s.nomorSurat || "").toLowerCase().trim();
+                const sId = (s.id || "").toLowerCase().trim();
+                return sNo === cleanVal || sId === cleanVal || sNo.replace(/\s+/g, '') === cleanVal.replace(/\s+/g, '');
+            });
+            const student = students.find(s => s.nisn === val || (s.nama && s.nama.toLowerCase() === cleanVal));
 
-            if (sk || student) {
+            if (sk) {
+                let nipSigner = config.nipKepalaSekolah || "-";
+                if (sk.penandatangan) {
+                    const foundTendik = tendikList.find(t => t.nama && (t.nama === sk.penandatangan || sk.penandatangan.includes(t.nama)));
+                    if (foundTendik && foundTendik.nip) nipSigner = foundTendik.nip;
+                }
+                const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-");
+
                 renderVerifiedData({
-                    no: sk?.nomorSurat || `REG-${val}`,
-                    nama: student?.nama || sk?.tujuan || "Siswa Terdaftar",
-                    nisn: student?.nisn || (student ? val : "-"),
-                    nik: student?.nik || "-",
-                    kelas: student?.kelas || "Aktif",
-                    jenis: sk?.perihal || "Surat Keterangan Sekolah",
-                    tgl: sk?.tanggalSurat || "Aktif",
+                    isSiswa: isSiswa,
+                    no: sk.nomorSurat,
+                    nama: isSiswa ? (sk.namaSiswa || sk.tujuan) : undefined,
+                    nisn: sk.nisn || "-",
+                    nik: sk.nik || "-",
+                    kelas: sk.kelas || "-",
+                    tujuan: sk.tujuan || "-",
+                    perihal: sk.perihal || "Surat Keluar Kedinasan",
+                    kodeKlasifikasi: sk.kodeKlasifikasi || "",
+                    pengonsep: sk.pengonsep || "",
+                    penandatangan: sk.penandatangan || config.namaKepalaSekolah,
+                    nipPenandatangan: nipSigner,
+                    jenis: sk.perihal || "Surat Keluar Kedinasan",
+                    tgl: sk.tanggalSurat || (typeof Util !== "undefined" ? Util.today() : "Aktif"),
+                    keterangan: sk.keterangan || "",
                     sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
                     npsn: config.npsn || "20326713",
-                    kepsek: config.namaKepalaSekolah || "Drs. H. Mulyono Santoso, M.Pd.",
-                    nipKepsek: config.nipKepalaSekolah || "19680512 199303 1 004"
+                    kepsek: config.namaKepalaSekolah || "-",
+                    nipKepsek: config.nipKepalaSekolah || "-"
+                });
+            } else if (student) {
+                renderVerifiedData({
+                    isSiswa: true,
+                    no: `REG-${val}`,
+                    nama: student.nama,
+                    nisn: student.nisn,
+                    nik: student.nik || "-",
+                    kelas: student.kelas || student.rombel || "Aktif",
+                    jenis: "Surat Keterangan Sekolah",
+                    tgl: typeof Util !== "undefined" ? Util.today() : "Aktif",
+                    sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+                    npsn: config.npsn || "20326713",
+                    kepsek: config.namaKepalaSekolah || "-",
+                    nipKepsek: config.nipKepalaSekolah || "-"
                 });
             } else {
-                renderInvalid(`Dokumen dengan nomor registrasi / NISN "${val}" tidak ditemukan pada pangkalan data.`);
+                renderInvalid(`Dokumen dengan nomor surat "${val}" tidak terdaftar atau tidak ditemukan pada pangkalan data SIM-TAS-SD.`);
             }
         }
 

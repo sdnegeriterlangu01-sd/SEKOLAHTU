@@ -135,7 +135,19 @@ Akun uji coba demo:
 
 ## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
 
-### 🚀 Versi 1.5.0 (20 Oktober 2026)
+### 🚀 Versi 1.5.1 (20 Oktober 2026)
+* **Modul Cetak Surat Mandiri & Format Cetak Resmi:**
+  - **Sinkronisasi Identitas Kepala Sekolah:** Sinkronisasi dinamis nama (`Aisah Suciati, S.Pd.SD., M.Pd.`) dan NIP (`19690808 199201 2 002`) dari Pengaturan Sistem, LocalStorage, dan Cloud Google Sheets (`Config`) ke seluruh template cetak surat (PDF/cetak langsung via HP maupun PC).
+  - **Perbaikan Interaksi Mode Penomoran:** Mengaktifkan tombol *Nomor Terbit*, *Nomor Baru*, dan *Ketik Manual* secara responsif pada perangkat mobile (HP) dan desktop.
+  - **Dukungan Tanda Tangan & Stempel Basah:** Menghapus opsi checkbox tanda tangan/stempel digital dan menyediakan ruang kosong terukur (75px) pada lembar surat agar siap dibubuhi tanda tangan kepala sekolah serta cap stempel basah fisik.
+  - **QR Code Terbuka untuk Scanner Kamera HP:** URL barcode verifikasi kini mengarah langsung ke domain publik online GitHub Pages (`https://sdnegeriterlangu01-sd.github.io/SIM-TAS-SD/verifikasi.html`), sehingga dapat langsung dipindai menggunakan aplikasi kamera smartphone biasa / Google Lens tanpa membuka web sistem terlebih dahulu.
+* **Portal Verifikasi Dokumen Dinamis ([`verifikasi.html`](verifikasi.html)):**
+  - **Deteksi Cerdas Format Surat:** Menyesuaikan data yang tampil berdasarkan jenis surat (Format Kedinasan: Penerima, Jabatan, Perihal, Dasar Surat; Format Siswa: Nama Siswa, NISN, Kelas, Wali).
+  - **Refinemen Validasi:** Menghapus penyebutan "NIS/NISN" pada penelusuran nomor surat dinas dan memperbaiki pesan status keabsahan dokumen tidak terdaftar.
+* **Backend Google Apps Script (GAS v2.1.0):**
+  - Penambahan endpoint `getConfig` dan `saveConfig` untuk persistensi konfigurasi sekolah dan identitas kepala sekolah ke tab `Config` spreadsheet secara terpusat.
+
+### 📌 Versi 1.5.0 (20 Oktober 2026)
 * **Presensi & Rekap Guru/Tendik:**
   - **Dual Lookup Matching:** Menambahkan pencocokan ganda berbasis NIP bersih dan Nama Bersih (otomatis mengabaikan gelar akademik) sehingga catatan scan barcode datang/pulang selalu terpetakan akurat ke tabel rekap bulanan.
   - **Toggle Rekap Tendik Akun Guru:** Menambahkan tombol alih *"Tampilkan Semua Guru & Tendik"* di tab Presensi Saya agar guru dapat beralih antara melihat presensi mandiri dan rekap sekolah.

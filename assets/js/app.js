@@ -423,6 +423,10 @@ const App = {
         this.loadSchoolSettings();
         this.updateConnectionStatusBadge();
 
+        if (config.isCloudMode && config.gasApiUrl) {
+            ApiClient.request("saveConfig", config).catch(e => console.warn("Sync config to cloud:", e));
+        }
+
         App.showToast("Pengaturan identitas sekolah & konfigurasi API berhasil disimpan!", "success");
     },
 

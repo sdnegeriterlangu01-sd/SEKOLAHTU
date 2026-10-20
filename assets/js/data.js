@@ -16,9 +16,9 @@ const DEFAULT_SCHOOL_CONFIG = {
     telepon: "-",
     email: "sdnterlangu01@gmail.com",
     website: "", // Kosong secara default jika belum ada website resmi
-    namaKepalaSekolah: "Drs. H. Mulyono Santoso, M.Pd.",
-    nipKepalaSekolah: "19680512 199303 1 004",
-    pangkatGolongan: "Pembina Utama Muda / IV-c",
+    namaKepalaSekolah: "Aisah Suciati, S.Pd.SD., M.Pd.",
+    nipKepalaSekolah: "19690808 199201 2 002",
+    pangkatGolongan: "Pembina / IV-a",
     gasApiUrl: "", // Isi dengan URL Google Apps Script Web App jika aktif
     isCloudMode: false,
     // --- Periodik Tahun Ajaran ---
@@ -217,7 +217,7 @@ const SEED_SISWA = [
 
 // Data Tenaga Pendidik & Kependidikan (Tendik / Guru)
 const SEED_TENDIK = [
-    { nip: "19680512 199303 1 004", nama: "Drs. H. Mulyono Santoso, M.Pd.", jabatan: "Kepala Sekolah", jk: "Laki-laki", statusKepegawaian: "PNS" },
+    { nip: "19690808 199201 2 002", nama: "Aisah Suciati, S.Pd.SD., M.Pd.", jabatan: "Kepala Sekolah", jk: "Perempuan", statusKepegawaian: "PNS" },
     { nip: "19750314 199802 2 001", nama: "Sri Wahyuni, S.Pd.SD", jabatan: "Guru Kelas 6", jk: "Perempuan", statusKepegawaian: "PNS" },
     { nip: "19820820 200604 1 008", nama: "Budi Hartono, S.Pd.", jabatan: "Guru Kelas 5", jk: "Laki-laki", statusKepegawaian: "PNS" },
     { nip: "19890115 201101 2 012", nama: "Endang Susilowati, S.Pd.", jabatan: "Guru Kelas 4", jk: "Perempuan", statusKepegawaian: "PNS" },
@@ -401,9 +401,10 @@ const DataStore = {
         } else {
             // Migrasi otomatis jika data di browser masih menggunakan data demo awal
             try {
-                const current = JSON.parse(localStorage.getItem(this.KEYS.CONFIG));
+                let current = JSON.parse(localStorage.getItem(this.KEYS.CONFIG));
+                let changed = false;
                 if (current && (current.namaSekolah === "SD NEGERI 01 MERDEKA BELAJAR" || current.npsn === "20104523")) {
-                    const migrated = {
+                    current = {
                         ...DEFAULT_SCHOOL_CONFIG,
                         ...current,
                         namaSekolah: "SD NEGERI TERLANGU 01",
@@ -412,7 +413,34 @@ const DataStore = {
                         alamat: current.alamat.includes("Cempaka") ? "Jl. Raya Terlangu, Desa Terlangu" : current.alamat,
                         website: current.website === "https://sdn01merdeka.sch.id" ? "" : (current.website || "")
                     };
-                    localStorage.setItem(this.KEYS.CONFIG, JSON.stringify(migrated));
+                    changed = true;
+                }
+                // Migrasi Kepala Sekolah aktif jika masih menggunakan nama lama
+                if (current && (current.namaKepalaSekolah === "Drs. H. Mulyono Santoso, M.Pd." || current.nipKepalaSekolah === "19680512 199303 1 004")) {
+                    current.namaKepalaSekolah = "Aisah Suciati, S.Pd.SD., M.Pd.";
+                    current.nipKepalaSekolah = "19690808 199201 2 002";
+                    current.pangkatGolongan = "Pembina / IV-a";
+                    changed = true;
+                }
+                if (changed) {
+                    localStorage.setItem(this.KEYS.CONFIG, JSON.stringify(current));
+                }
+
+                // Cek migrasi tendik kepala sekolah jika ada di localStorage
+                const tendikList = JSON.parse(localStorage.getItem(this.KEYS.TENDIK) || "[]");
+                if (Array.isArray(tendikList) && tendikList.length > 0) {
+                    let tendikChanged = false;
+                    tendikList.forEach(t => {
+                        if (t.nama === "Drs. H. Mulyono Santoso, M.Pd." || t.nip === "19680512 199303 1 004" || t.jabatan === "Kepala Sekolah") {
+                            t.nama = "Aisah Suciati, S.Pd.SD., M.Pd.";
+                            t.nip = "19690808 199201 2 002";
+                            t.jk = "Perempuan";
+                            tendikChanged = true;
+                        }
+                    });
+                    if (tendikChanged) {
+                        localStorage.setItem(this.KEYS.TENDIK, JSON.stringify(tendikList));
+                    }
                 }
             } catch (err) {
                 console.warn("Config migration check skipped", err);

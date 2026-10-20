@@ -581,6 +581,16 @@ const Sync = {
                 d.forEach(item => map.set(item.key || `${item.tahunAjaran}|${item.bulan}|${item.nisn}`, item));
                 DataStore.saveAbsensiSiswaBulan(Array.from(map.values()));
             }
+        },
+        config: {
+            action: "getConfig",
+            payload: {},
+            save: d => {
+                if (d && (d.namaSekolah || d.namaKepalaSekolah)) {
+                    const current = DataStore.getConfig();
+                    DataStore.saveConfig({ ...current, ...d });
+                }
+            }
         }
     },
 

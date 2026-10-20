@@ -352,36 +352,10 @@ const ModulVue = {
     // 6. MODULAR SUB-TABS: MODUL CETAK SURAT
     // -------------------------------------------------------------------------
     mountCetakTabs() {
-        const el = document.getElementById("vue-cetak-tabs");
-        if (!el || this.apps.cetakTabs) return;
-
-        const { createApp, computed } = Vue;
-        const store = this.store;
-
-        const app = createApp({
-            setup() {
-                const activeMode = computed(() => store.cetakNomorMode);
-
-                const modes = [
-                    { id: "terbit", label: "Nomor Terbit" },
-                    { id: "baru", label: "Nomor Baru" },
-                    { id: "manual", label: "Ketik Manual" }
-                ];
-
-                const setMode = (modeId) => {
-                    store.cetakNomorMode = modeId;
-                    if (window.ModulCetak) ModulCetak.setNomorMode(modeId);
-                };
-
-                return {
-                    activeMode,
-                    modes,
-                    setMode
-                };
-            }
-        });
-
-        this.apps.cetakTabs = app.mount(el);
+        // Tombol mode nomor surat dikelola secara native dan reaktif di ModulCetak
+        if (window.ModulCetak && this.store) {
+            this.store.cetakNomorMode = ModulCetak.nomorMode || "terbit";
+        }
     }
 };
 

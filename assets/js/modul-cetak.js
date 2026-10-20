@@ -41,20 +41,6 @@ const ModulCetak = {
                 this.generatePreview();
             });
         }
-
-        const checkTtd = document.getElementById("cetak-toggle-ttd");
-        if (checkTtd) {
-            checkTtd.addEventListener("change", () => {
-                this.generatePreview();
-            });
-        }
-
-        const checkStempel = document.getElementById("cetak-toggle-stempel");
-        if (checkStempel) {
-            checkStempel.addEventListener("change", () => {
-                this.generatePreview();
-            });
-        }
     },
 
     populateNomorTerbitSelect() {
@@ -80,7 +66,7 @@ const ModulCetak = {
         select.value = this.selectedNomorTerbit;
     },
 
-    setNomorMode(mode) {
+    async setNomorMode(mode) {
         this.nomorMode = mode;
         if (window.VueStore) VueStore.cetakNomorMode = mode;
         const btnTerbit = document.getElementById("btn-mode-terbit");
@@ -92,8 +78,10 @@ const ModulCetak = {
         const boxManual = document.getElementById("cetak-box-manual");
 
         [btnTerbit, btnBaru, btnManual].forEach(b => {
-            b?.classList.remove("bg-white", "text-blue-700", "shadow-xs");
-            b?.classList.add("text-slate-600");
+            if (b) {
+                b.classList.remove("bg-white", "text-blue-700", "shadow-xs", "font-bold");
+                b.classList.add("text-slate-600");
+            }
         });
 
         boxTerbit?.classList.add("hidden");
@@ -101,21 +89,42 @@ const ModulCetak = {
         boxManual?.classList.add("hidden");
 
         if (mode === "terbit") {
-            btnTerbit?.classList.add("bg-white", "text-blue-700", "shadow-xs");
-            btnTerbit?.classList.remove("text-slate-600");
+            if (btnTerbit) {
+                btnTerbit.classList.add("bg-white", "text-blue-700", "shadow-xs", "font-bold");
+                btnTerbit.classList.remove("text-slate-600");
+            }
             boxTerbit?.classList.remove("hidden");
             this.populateNomorTerbitSelect();
         } else if (mode === "baru") {
-            btnBaru?.classList.add("bg-white", "text-blue-700", "shadow-xs");
-            btnBaru?.classList.remove("text-slate-600");
+            if (btnBaru) {
+                btnBaru.classList.add("bg-white", "text-blue-700", "shadow-xs", "font-bold");
+                btnBaru.classList.remove("text-slate-600");
+            }
             boxBaru?.classList.remove("hidden");
+            try {
+                const resNomor = await ApiClient.handleLocalFallback("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
+                this.generatedNomorSurat = resNomor.data.nomorSurat;
+                const previewEl = document.getElementById("cetak-preview-baru");
+                if (previewEl) previewEl.textContent = this.generatedNomorSurat;
+            } catch (e) {
+                console.warn("Gagal generate nomor baru:", e);
+            }
         } else if (mode === "manual") {
-            btnManual?.classList.add("bg-white", "text-blue-700", "shadow-xs");
-            btnManual?.classList.remove("text-slate-600");
+            if (btnManual) {
+                btnManual.classList.add("bg-white", "text-blue-700", "shadow-xs", "font-bold");
+                btnManual.classList.remove("text-slate-600");
+            }
             boxManual?.classList.remove("hidden");
+            const inputManual = document.getElementById("cetak-input-manual");
+            if (inputManual && !inputManual.value) {
+                inputManual.value = this.manualNomorSurat || "421.2/001/SD/2026";
+                this.manualNomorSurat = inputManual.value;
+            }
         }
 
-        this.generatePreview();
+        if (this.selectedStudent) {
+            this.generatePreview();
+        }
     },
 
     onSelectNomorTerbit(val) {
@@ -200,8 +209,6 @@ const ModulCetak = {
         const student = this.selectedStudent;
         const type = this.currentTemplateType;
         const keperluan = document.getElementById("cetak-keperluan")?.value || "-";
-        const withTtd = document.getElementById("cetak-toggle-ttd")?.checked ?? true;
-        const withStempel = document.getElementById("cetak-toggle-stempel")?.checked ?? true;
 
         // Tentukan Nomor Surat Berdasarkan Mode
         if (this.nomorMode === "terbit") {
@@ -247,12 +254,17 @@ const ModulCetak = {
             kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
         }
 
-        // URL Verifikasi Dokumen untuk QR Code (Mendukung file://, localhost, dan domain online)
-        let baseUrl = "verifikasi.html";
+        // Basis URL Verifikasi Publik Online agar langsung dapat dibuka via scan kamera HP publik
+        const PUBLIC_ONLINE_URL = "https://sdnegeriterlangu01-sd.github.io/SIM-TAS-SD/verifikasi.html";
+        let baseUrl = PUBLIC_ONLINE_URL;
         try {
-            baseUrl = new URL("verifikasi.html", window.location.href).href.split("?")[0].split("#")[0];
+            if (window.location.protocol.startsWith("http") && !window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1")) {
+                baseUrl = new URL("verifikasi.html", window.location.href).href.split("?")[0].split("#")[0];
+            } else if (config.website && config.website.startsWith("http")) {
+                baseUrl = `${config.website.replace(/\/+$/, '')}/verifikasi.html`;
+            }
         } catch (e) {
-            baseUrl = `${window.location.origin}${window.location.pathname.replace("index.html", "")}verifikasi.html`;
+            baseUrl = PUBLIC_ONLINE_URL;
         }
 
         const verifyPayload = {
@@ -267,7 +279,8 @@ const ModulCetak = {
             sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
             npsn: config.npsn || "20326713",
             kepsek: config.namaKepalaSekolah || "-",
-            nipKepsek: config.nipKepalaSekolah || "-"
+            nipKepsek: config.nipKepalaSekolah || "-",
+            isSiswa: true
         };
 
         const encodedData = encodeURIComponent(JSON.stringify(verifyPayload));
@@ -387,34 +400,8 @@ const ModulCetak = {
                     <p style="margin-bottom: 4px;">${config.kabupatenKota || "Brebes"}, ${tglStr}</p>
                     <p style="font-weight: bold; margin-bottom: 8px;">Kepala Sekolah,</p>
 
-                    <div style="height: 75px; position: relative; display: flex; align-items: center; justify-content: center;">
-                        <!-- Stempel Sekolah Digital -->
-                        ${withStempel ? `
-                            <svg class="ttd-digital-stamp" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="80" cy="80" r="72" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="6 3"/>
-                                <circle cx="80" cy="80" r="64" stroke="#1d4ed8" stroke-width="2"/>
-                                <path id="textPath" d="M 25 80 A 55 55 0 0 1 135 80" fill="none"/>
-                                <text fill="#1d4ed8" font-size="8.5" font-weight="bold" letter-spacing="1">
-                                    <textPath href="#textPath" startOffset="50%" text-anchor="middle">PEMERINTAH KAB. BREBES • DINDIKPORA</textPath>
-                                </text>
-                                <text x="80" y="83" fill="#1d4ed8" font-size="9" font-weight="900" text-anchor="middle">SDN TERLANGU 01</text>
-                                <text x="80" y="96" fill="#1d4ed8" font-size="7.5" font-weight="bold" text-anchor="middle">KECAMATAN BREBES</text>
-                                <path id="textPathBottom" d="M 135 85 A 55 55 0 0 1 25 85" fill="none"/>
-                                <text fill="#1d4ed8" font-size="8" font-weight="bold" letter-spacing="1">
-                                    <textPath href="#textPathBottom" startOffset="50%" text-anchor="middle">★ UPT SATUAN PENDIDIKAN ★</textPath>
-                                </text>
-                            </svg>
-                        ` : ''}
-
-                        <!-- Tanda Tangan Digital -->
-                        ${withTtd ? `
-                            <svg class="ttd-digital-sign" viewBox="0 0 200 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 50 Q 50 10, 70 45 T 110 30 T 140 60 Q 160 75, 185 40" stroke="#0f172a" stroke-width="3" stroke-linecap="round" fill="none"/>
-                                <path d="M60 40 Q 80 80, 100 20" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                                <path d="M30 65 L 170 65" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                        ` : '<div style="height: 60px;"></div>'}
-                    </div>
+                    <!-- Area Tanda Tangan & Stempel Basah Manual -->
+                    <div style="height: 75px; margin: 4px 0;"></div>
 
                     <p style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">
                         ${config.namaKepalaSekolah}

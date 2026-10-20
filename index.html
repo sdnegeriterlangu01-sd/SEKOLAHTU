@@ -713,16 +713,26 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor Surat
                                     Resmi</label>
-                                <!-- Sub-tab Toggle Bar with Modular Vue 3 -->
+                                <!-- Sub-tab Toggle Bar Mode Penomoran Surat -->
                                 <div id="vue-cetak-tabs"
                                     class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-semibold text-slate-600 mb-2">
-                                    <button v-for="mode in modes"
-                                        :key="mode.id"
-                                        type="button" 
-                                        :id="'btn-mode-' + mode.id"
-                                        @click="setMode(mode.id)"
-                                        :class="['py-1 px-2 rounded-lg transition cursor-pointer', activeMode === mode.id ? 'bg-white text-blue-700 shadow-xs font-bold' : 'hover:text-slate-900']">
-                                        {{ mode.label }}
+                                    <button type="button" 
+                                        id="btn-mode-terbit"
+                                        onclick="ModulCetak.setNomorMode('terbit')"
+                                        class="py-1 px-2 rounded-lg transition cursor-pointer bg-white text-blue-700 shadow-xs font-bold">
+                                        Nomor Terbit
+                                    </button>
+                                    <button type="button" 
+                                        id="btn-mode-baru"
+                                        onclick="ModulCetak.setNomorMode('baru')"
+                                        class="py-1 px-2 rounded-lg transition cursor-pointer hover:text-slate-900">
+                                        Nomor Baru
+                                    </button>
+                                    <button type="button" 
+                                        id="btn-mode-manual"
+                                        onclick="ModulCetak.setNomorMode('manual')"
+                                        class="py-1 px-2 rounded-lg transition cursor-pointer hover:text-slate-900">
+                                        Ketik Manual
                                     </button>
                                 </div>
 
@@ -777,20 +787,6 @@
 
                             <!-- Extra Fields container for specific templates -->
                             <div id="cetak-extra-fields"></div>
-
-                            <!-- Options: TTD & Stempel -->
-                            <div class="pt-3 border-t border-slate-100 space-y-2.5">
-                                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="cetak-toggle-ttd" checked
-                                        class="rounded text-blue-600 focus:ring-blue-500">
-                                    <span>Sematkan Tanda Tangan Digital Kepala Sekolah</span>
-                                </label>
-                                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-                                    <input type="checkbox" id="cetak-toggle-stempel" checked
-                                        class="rounded text-blue-600 focus:ring-blue-500">
-                                    <span>Sematkan Stempel Resmi Satuan Pendidikan</span>
-                                </label>
-                            </div>
 
                             <div
                                 class="p-3 bg-blue-50/60 rounded-xl border border-blue-200 text-[11px] text-blue-800 flex items-start gap-2">

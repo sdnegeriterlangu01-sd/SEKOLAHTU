@@ -1,0 +1,341 @@
+<!-- ==============================================================
+     VIEW: MODUL 1 - BANGKAS DIGITAL SISWA (views/berkas-siswa/index.html)
+     ============================================================== -->
+<section id="view-berkas" class="app-view space-y-5">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Pengarsipan Berkas Pokok Siswa (Bangkas Digital)</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Arsip scan dokumen wajib: Kartu Keluarga (KK), Akta Kelahiran, KIP/PKH, dan Pas Foto.</p>
+        </div>
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button onclick="ModulImport.downloadTemplate()"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                <i class="fa-solid fa-file-arrow-down text-blue-600"></i> Unduh Format
+            </button>
+            <button onclick="ModulImport.openModal()" data-need="importStudents"
+                class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                <i class="fa-solid fa-file-import"></i> Impor Siswa Excel/CSV
+            </button>
+            <button onclick="ModulBerkas.exportCSV()"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor CSV
+            </button>
+            <button onclick="ModulBerkas.openAddModal()" data-need="saveStudent"
+                class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-user-plus"></i> Tambah Siswa Baru
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div
+        class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+        <!-- Search Box -->
+        <div class="md:col-span-2 relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="search-berkas-siswa"
+                placeholder="Pencarian instan NISN atau Nama Siswa..."
+                class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <!-- Filter Kelas -->
+        <div>
+            <select id="filter-kelas-berkas"
+                class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                <option value="Semua">Semua Tingkat Kelas</option>
+                <option value="1">Kelas 1</option>
+                <option value="2">Kelas 2</option>
+                <option value="3">Kelas 3</option>
+                <option value="4">Kelas 4</option>
+                <option value="5">Kelas 5</option>
+                <option value="6">Kelas 6</option>
+            </select>
+        </div>
+
+        <!-- Filter Status Berkas -->
+        <div>
+            <select id="filter-status-berkas"
+                class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                <option value="Semua">Semua Status Berkas</option>
+                <option value="Lengkap">Wajib Lengkap (KK + Akta)</option>
+                <option value="Belum Lengkap">Belum Lengkap</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Student Directory Table Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <span id="total-siswa-count" class="text-xs font-bold text-slate-600">0 Siswa Terdaftar</span>
+            <div class="text-[11px] text-slate-400">
+                Standardisasi Nama File: <span class="font-mono font-semibold text-slate-600">[NISN]_[Jenis_Dokumen]_[Tahun].pdf</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                        <th class="px-4 py-3 w-12">No</th>
+                        <th class="px-4 py-3">Nama Lengkap & NISN</th>
+                        <th class="px-4 py-3">Kelas</th>
+                        <th class="px-4 py-3">Kelengkapan Berkas Pokok</th>
+                        <th class="px-4 py-3 text-center">Status</th>
+                        <th class="px-4 py-3">Orang Tua / No HP</th>
+                        <th class="px-4 py-3 text-right">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody id="table-berkas-siswa-body">
+                    <!-- Rendered dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ==============================================================
+     MODALS FOR BERKAS SISWA
+     ============================================================== -->
+
+<!-- MODAL 1: Upload Berkas Siswa -->
+<div id="modal-upload-berkas"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-bold text-sm text-slate-900">Unggah Berkas Digital Siswa</h3>
+                <p id="upload-student-info" class="text-xs text-slate-500 mt-0.5">Nama Siswa</p>
+            </div>
+            <button onclick="ModulBerkas.closeUploadModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Dokumen Wajib</label>
+            <select id="upload-doc-type" onchange="ModulBerkas.updateAutoFilenamePreview()"
+                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
+                <option value="kk">Kartu Keluarga (KK)</option>
+                <option value="akta">Akta Kelahiran</option>
+                <option value="kip">KIP / PKH / KPS</option>
+                <option value="foto">Pas Foto Siswa</option>
+            </select>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex items-center justify-between">
+            <span class="text-slate-500">Format Nama File Otomatis:</span>
+            <span id="auto-filename-badge"
+                class="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-[11px]">
+                0134567890_KK_2026.pdf
+            </span>
+        </div>
+
+        <input type="file" id="upload-file-input" onchange="ModulBerkas.handleFileSelect(event)"
+            accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+        <div id="upload-preview-area">
+            <!-- Dropzone loaded here -->
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+            <button type="button" onclick="ModulBerkas.closeUploadModal()"
+                class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50">
+                Batal
+            </button>
+            <button type="button" id="btn-submit-upload" onclick="ModulBerkas.submitUpload()"
+                class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Drive
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: Tambah Siswa Baru -->
+<div id="modal-tambah-siswa"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-bold text-sm text-slate-900">Pendaftaran & Data Pokok Siswa Baru</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Tambahkan data pokok siswa ke basis data sekolah.</p>
+            </div>
+            <button onclick="ModulBerkas.closeAddModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="form-tambah-siswa" onsubmit="ModulBerkas.submitTambahSiswa(event)" class="space-y-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">NISN (10 Digit) <span class="text-red-500">*</span></label>
+                    <input type="text" id="tambah-nisn" required maxlength="10" placeholder="0134567890"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">NIS Sekolah</label>
+                    <input type="text" id="tambah-nis" placeholder="2026001"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                <input type="text" id="tambah-nama" required placeholder="Contoh: Muhammad Bintang Pratama"
+                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">NIK</label>
+                    <input type="text" id="tambah-nik" maxlength="16" placeholder="3374..."
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tempat Lahir</label>
+                    <input type="text" id="tambah-tempat-lahir" placeholder="Semarang"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir</label>
+                    <input type="date" id="tambah-tgl-lahir"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
+                    <select id="tambah-jk"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tingkat Kelas</label>
+                    <select id="tambah-kelas"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="1">Kelas 1</option>
+                        <option value="2">Kelas 2</option>
+                        <option value="3">Kelas 3</option>
+                        <option value="4">Kelas 4</option>
+                        <option value="5">Kelas 5</option>
+                        <option value="6">Kelas 6</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Orang Tua / Wali</label>
+                    <input type="text" id="tambah-ortu" placeholder="Nama Ayah / Ibu"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor HP / WhatsApp</label>
+                    <input type="tel" id="tambah-hp" placeholder="0812..."
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Tempat Tinggal</label>
+                <textarea id="tambah-alamat" rows="2" placeholder="Nama Jalan, RT/RW, Kelurahan..."
+                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <button type="button" onclick="ModulBerkas.closeAddModal()"
+                    class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50">
+                    Batal
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    Simpan Siswa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 3: Detail Siswa -->
+<div id="modal-detail-siswa"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 id="detail-siswa-nama" class="font-extrabold text-base text-slate-900">Nama Siswa</h3>
+                <p id="detail-siswa-nisn" class="text-xs text-slate-400 font-mono mt-0.5">NISN: -</p>
+            </div>
+            <button onclick="ModulBerkas.closeDetailModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">NIK Siswa</span>
+                <span id="detail-val-nik" class="font-mono font-bold text-slate-800">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">Tempat, Tanggal Lahir</span>
+                <span id="detail-val-ttl" class="font-bold text-slate-800">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">Jenis Kelamin</span>
+                <span id="detail-val-jk" class="font-bold text-slate-800">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">Nama Orang Tua / Wali</span>
+                <span id="detail-val-ortu" class="font-bold text-slate-800">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">Pekerjaan Orang Tua</span>
+                <span id="detail-val-pekerjaan" class="font-bold text-slate-800">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">No. HP / WA Wali</span>
+                <span id="detail-val-hp" class="font-mono font-bold text-slate-800">-</span>
+            </div>
+            <div class="col-span-2 p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 text-[11px] block">Alamat Domisili</span>
+                <span id="detail-val-alamat" class="font-medium text-slate-800">-</span>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+            <button onclick="ModulBerkas.closeDetailModal()"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 4: Preview Berkas / Viewer -->
+<div id="modal-preview-berkas"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 id="preview-modal-title" class="font-bold text-sm text-slate-900">Pratinjau Berkas Digital</h3>
+                <p id="preview-modal-subtitle" class="text-xs text-slate-400 font-mono mt-0.5">0134567890</p>
+            </div>
+            <button onclick="ModulBerkas.closePreviewModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div id="preview-modal-body">
+            <!-- Viewer rendered dynamically -->
+        </div>
+
+        <div class="flex justify-end pt-2">
+            <button onclick="ModulBerkas.closePreviewModal()"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>

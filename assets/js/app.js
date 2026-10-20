@@ -24,23 +24,23 @@ const App = {
         if (this._isStarted) return;
         this._isStarted = true;
 
-        this.initModules();
+        if (window.Router) Router.init();
         if (window.ModulVue) ModulVue.init();
         this.renderTASelector();
         this.renderQuickActions();
-        this.updateDashboardStats();
         this.updateConnectionStatusBadge();
 
         // Auto pull fresh data jika cloud mode aktif
         if (ApiClient.isCloudActive()) {
             Sync.pullAll().then(() => {
                 this.updateDashboardStats();
-                if (this.currentRoute === "berkas") ModulBerkas.renderTable();
+                if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
             }).catch(e => console.warn("Sync initial error:", e));
         }
 
-        // Navigate ke default route sesuai peran akun
-        const initial = Auth.defaultRoute();
+        // Navigate ke default route sesuai peran akun atau hash saat ini
+        const currentHash = window.location.hash ? Router.parseHash().path : "";
+        const initial = currentHash || Auth.defaultRoute() || "beranda";
         this.navigateTo(initial);
     },
 
@@ -49,8 +49,11 @@ const App = {
         navLinks.forEach(link => {
             link.addEventListener("click", (e) => {
                 e.preventDefault();
-                const route = link.getAttribute("data-route");
-                if (route) this.navigateTo(route);
+                const route = link.getAttribute("data-route") || link.getAttribute("href");
+                if (route) {
+                    const cleanRoute = route.replace(/^#\/?/, "");
+                    this.navigateTo(cleanRoute);
+                }
             });
         });
 
@@ -73,11 +76,7 @@ const App = {
     },
 
     initModules() {
-        ModulBerkas.init();
-        ModulSurat.init();
-        ModulCetak.init();
-        ModulAbsensi.init();
-        ModulPresensi.init();
+        // Module hooks are loaded on-demand via Router lifecycle (onMount)
     },
 
     renderTASelector() {
@@ -86,84 +85,29 @@ const App = {
 
     refreshAll() {
         this.updateDashboardStats();
-        if (this.currentRoute === "berkas") ModulBerkas.renderTable();
-        else if (this.currentRoute === "cetak") ModulCetak.populateStudentSelect();
-        else if (this.currentRoute === "absensi") ModulPresensi.onShow();
-        else if (this.currentRoute === "scan-absensi") ModulPresensi.renderScanView();
+        if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
+        else if (Router.currentRoute === "surat/cetak" && window.ModulCetak) ModulCetak.populateStudentSelect();
+        else if (Router.currentRoute.startsWith("presensi") && window.ModulPresensi) ModulPresensi.onShow();
     },
 
-    navigateTo(route) {
-        // Cek RBAC
-        if (!Auth.canRoute(route)) {
-            this.showToast("Anda tidak memiliki hak akses untuk membuka modul ini.", "warning");
-            return;
+    navigateTo(route, cb) {
+        if (!route) route = "beranda";
+        if (cb && window.Router) {
+            Router.afterNextRoute(cb);
         }
-
-        this.currentRoute = route;
-        if (window.VueStore) VueStore.refresh();
-        if (window.ModulVue) ModulVue.applyRoleNavVisibility();
-        this.renderQuickActions();
-
-        // Hide all views
-        const views = document.querySelectorAll(".app-view");
-        views.forEach(v => v.classList.add("hidden"));
-
-        // Show target view
-        const targetView = document.getElementById(`view-${route}`);
-        if (targetView) {
-            targetView.classList.remove("hidden");
-            targetView.classList.add("animate-fade-in");
+        if (window.Router) {
+            Router.navigate(route);
         }
-
-        // Update active nav link
-        const navLinks = document.querySelectorAll(".nav-link");
-        navLinks.forEach(link => {
-            if (link.getAttribute("data-route") === route) {
-                link.classList.add("active");
-            } else {
-                link.classList.remove("active");
-            }
-        });
-
-        // Close mobile drawer on route change
-        const sidebar = document.getElementById("main-sidebar");
-        const overlay = document.getElementById("sidebar-overlay");
-        if (sidebar && overlay && window.innerWidth < 1024) {
-            sidebar.classList.add("-translate-x-full");
-            overlay.classList.add("hidden");
-        }
-
-        // View specific refresh
-        if (route === "dashboard") {
-            this.updateDashboardStats();
-        } else if (route === "scan-absensi") {
-            ModulPresensi.renderScanView();
-        } else if (route === "berkas") {
-            ModulBerkas.renderTable();
-        } else if (route === "surat") {
-            ModulSurat.renderSubTab();
-        } else if (route === "cetak") {
-            ModulCetak.populateStudentSelect();
-            ModulCetak.generatePreview();
-        } else if (route === "absensi") {
-            ModulAbsensi.populateKelasOptions();
-            ModulPresensi.onShow();
-            ModulAbsensi.renderPresensiInputTable();
-            ModulAbsensi.renderRekapitulasi();
-        } else if (route === "pengaturan") {
-            this.loadSchoolSettings();
-        }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     pindahKeCetakSurat(nisn) {
-        this.navigateTo("cetak");
-        const selectSiswa = document.getElementById("cetak-select-siswa");
-        if (selectSiswa) {
-            selectSiswa.value = nisn;
-            ModulCetak.loadStudentData(nisn);
-        }
+        this.navigateTo("surat/cetak", () => {
+            const selectSiswa = document.getElementById("cetak-select-siswa");
+            if (selectSiswa) {
+                selectSiswa.value = nisn;
+                if (window.ModulCetak) ModulCetak.loadStudentData(nisn);
+            }
+        });
     },
 
     VERSION: "1.4.1",
@@ -244,7 +188,7 @@ const App = {
                     } else if (tendikToday && tendikToday.jamDatang) {
                         statGuruJam.innerHTML = `<span class="text-emerald-700 font-bold text-lg">Sudah Hadir</span> <span class="text-xs text-slate-400 font-normal">(${Util.formatTime(tendikToday.jamDatang)})</span>`;
                     } else {
-                        statGuruJam.innerHTML = `<span class="text-amber-600 font-bold text-lg">Belum Scan</span> <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi')" class="text-xs text-blue-600 underline ml-1">Scan Sekarang</a>`;
+                        statGuruJam.innerHTML = `<span class="text-amber-600 font-bold text-lg">Belum Scan</span> <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan')" class="text-xs text-blue-600 underline ml-1">Scan Sekarang</a>`;
                     }
                 }
             }
@@ -488,7 +432,7 @@ const App = {
 
         if (isKiosk) {
             container.innerHTML = `
-                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Presensi Mandiri
                 </a>
             `;
@@ -499,16 +443,16 @@ const App = {
             const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
             const labelKelas = gInfo && gInfo.isGuruKelas ? ` (Kelas ${gInfo.kelas})` : "";
             container.innerHTML = `
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Hari Ini${Sec.esc(labelKelas)}
                 </a>
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Bulanan
                 </a>
-                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-qrcode text-emerald-600 w-4"></i> Presensi Datang / Pulang Saya
                 </a>
-                <a href="#berkas" onclick="App.navigateTo('berkas');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/berkas-siswa" onclick="App.navigateTo('berkas-siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-folder-closed text-amber-600 w-4"></i> Berkas Siswa${Sec.esc(labelKelas)}
                 </a>
             `;
@@ -517,16 +461,16 @@ const App = {
 
         if (isKepsek) {
             container.innerHTML = `
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/tendik" onclick="App.navigateTo('presensi/tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-clipboard-user text-indigo-600 w-4"></i> Rekap Presensi Guru & Tendik
                 </a>
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Siswa
                 </a>
-                <a href="#surat" onclick="App.navigateTo('surat');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/surat/srikandi" onclick="App.navigateTo('surat/srikandi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-envelopes-bulk text-amber-600 w-4"></i> Buku Register Surat SRIKANDI
                 </a>
-                <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="#/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-print text-teal-600 w-4"></i> Cetak Surat Keterangan
                 </a>
             `;
@@ -535,19 +479,19 @@ const App = {
 
         // Admin & TU default
         container.innerHTML = `
-            <a href="#berkas" onclick="App.navigateTo('berkas'); ModulBerkas.openAddModal();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="#/berkas-siswa" onclick="App.navigateTo('berkas-siswa', () => { if (window.ModulBerkas) ModulBerkas.openAddModal(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-user-plus text-blue-600 w-4"></i> Tambah Siswa Baru
             </a>
-            <a href="#surat" onclick="App.navigateTo('surat'); ModulSurat.openModalSuratKeluar();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="#/surat/srikandi" onclick="App.navigateTo('surat/srikandi', () => { if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-paper-plane text-emerald-600 w-4"></i> Terbitkan Nomor Surat
             </a>
-            <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="#/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-file-invoice text-teal-600 w-4"></i> Cetak Surat Keterangan
             </a>
-            <a href="#absensi" onclick="App.navigateTo('absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="#/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Harian
             </a>
-            <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Absensi Datang/Pulang
             </a>
         `;

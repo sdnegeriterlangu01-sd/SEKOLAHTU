@@ -117,7 +117,7 @@ const ModulCetak = {
             boxManual?.classList.remove("hidden");
             const inputManual = document.getElementById("cetak-input-manual");
             if (inputManual && !inputManual.value) {
-                inputManual.value = this.manualNomorSurat || "421.2/001/SD/2026";
+                inputManual.value = this.manualNomorSurat || "421.2/001/X/2026";
                 this.manualNomorSurat = inputManual.value;
             }
         }
@@ -223,7 +223,7 @@ const ModulCetak = {
                 this.generatedNomorSurat = resNomor.data.nomorSurat;
             }
         } else if (this.nomorMode === "manual") {
-            this.generatedNomorSurat = this.manualNomorSurat || "421.2/001/SD/2026";
+            this.generatedNomorSurat = this.manualNomorSurat || "421.2/001/X/2026";
         } else {
             // Mode "baru" (otomatis increment)
             const resNomor = await ApiClient.handleLocalFallback("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });

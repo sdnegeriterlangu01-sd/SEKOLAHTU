@@ -217,34 +217,34 @@ const ModulVue = {
                     const r = role.value;
                     if (r === "kiosk") {
                         return [
-                            { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("scan-absensi") }
+                            { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("presensi/scan") }
                         ];
                     }
                     if (r === "guru") {
                         const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
                         const kelasLabel = g && g.isGuruKelas ? ` (Kelas ${g.kelas})` : "";
                         return [
-                            { label: `Input Presensi Hari Ini${kelasLabel}`, icon: "fa-clipboard-check", color: "text-indigo-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("harian"); } },
-                            { label: "Rekap Absensi Bulanan", icon: "fa-table-cells", color: "text-blue-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
-                            { label: "Presensi Datang / Pulang Saya", icon: "fa-qrcode", color: "text-emerald-600", action: () => App.navigateTo("scan-absensi") },
-                            { label: `Berkas Siswa${kelasLabel}`, icon: "fa-folder-closed", color: "text-amber-600", action: () => App.navigateTo("berkas") }
+                            { label: `Input Presensi Hari Ini${kelasLabel}`, icon: "fa-clipboard-check", color: "text-indigo-600", action: () => App.navigateTo("presensi/harian") },
+                            { label: "Rekap Absensi Bulanan", icon: "fa-table-cells", color: "text-blue-600", action: () => App.navigateTo("presensi/rekap") },
+                            { label: "Presensi Datang / Pulang Saya", icon: "fa-qrcode", color: "text-emerald-600", action: () => App.navigateTo("presensi/scan") },
+                            { label: `Berkas Siswa${kelasLabel}`, icon: "fa-folder-closed", color: "text-amber-600", action: () => App.navigateTo("berkas-siswa") }
                         ];
                     }
                     if (r === "kepsek") {
                         return [
-                            { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } },
-                            { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-blue-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
-                            { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-600", action: () => App.navigateTo("surat") },
-                            { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-600", action: () => App.navigateTo("cetak") }
+                            { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-600", action: () => App.navigateTo("presensi/tendik") },
+                            { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-blue-600", action: () => App.navigateTo("presensi/rekap") },
+                            { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-600", action: () => App.navigateTo("surat/srikandi") },
+                            { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-600", action: () => App.navigateTo("surat/cetak") }
                         ];
                     }
                     // Admin & TU default
                     return [
-                        { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-blue-600", action: () => { App.navigateTo("berkas"); if (window.ModulBerkas) ModulBerkas.openAddModal(); } },
-                        { label: "Terbitkan Nomor Surat", icon: "fa-paper-plane", color: "text-emerald-600", action: () => { App.navigateTo("surat"); if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); } },
-                        { label: "Cetak Surat Keterangan", icon: "fa-file-invoice", color: "text-teal-600", action: () => App.navigateTo("cetak") },
-                        { label: "Input Presensi Harian", icon: "fa-clipboard-check", color: "text-indigo-600", action: () => App.navigateTo("absensi") },
-                        { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("scan-absensi") }
+                        { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-blue-600", action: () => App.navigateTo("berkas-siswa", () => { if (window.ModulBerkas) ModulBerkas.openAddModal(); }) },
+                        { label: "Terbitkan Nomor Surat", icon: "fa-paper-plane", color: "text-emerald-600", action: () => App.navigateTo("surat/srikandi", () => { if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); }) },
+                        { label: "Cetak Surat Keterangan", icon: "fa-file-invoice", color: "text-teal-600", action: () => App.navigateTo("surat/cetak") },
+                        { label: "Input Presensi Harian", icon: "fa-clipboard-check", color: "text-indigo-600", action: () => App.navigateTo("presensi/harian") },
+                        { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("presensi/scan") }
                     ];
                 });
 
@@ -267,7 +267,13 @@ const ModulVue = {
     // -------------------------------------------------------------------------
     mountAbsensiTabs() {
         const el = document.getElementById("vue-absensi-tabs");
-        if (!el || this.apps.absensiTabs) return;
+        if (!el) return;
+        if (this.apps.absensiTabs) {
+            try {
+                this.apps.absensiTabs.unmount();
+            } catch (e) {}
+            this.apps.absensiTabs = null;
+        }
 
         const { createApp, computed } = Vue;
         const store = this.store;
@@ -278,9 +284,9 @@ const ModulVue = {
                 const role = computed(() => store.role);
 
                 const allTabs = [
-                    { id: "harian", label: "Presensi Harian", icon: "fa-clipboard-check", need: "getAbsensi" },
-                    { id: "tendik", label: "Rekap Guru & Tendik", icon: "fa-table-list", need: "getAbsensiTendikBulan" },
-                    { id: "siswa", label: "Rekap Siswa Bulanan", icon: "fa-table-cells", need: "getAbsensiSiswaBulan" },
+                    { id: "harian", label: "Presensi Harian", icon: "fa-clipboard-check", need: "getAbsensi", route: "presensi/harian" },
+                    { id: "tendik", label: "Rekap Guru & Tendik", icon: "fa-table-list", need: "getAbsensiTendikBulan", route: "presensi/tendik" },
+                    { id: "siswa", label: "Rekap Siswa Bulanan", icon: "fa-table-cells", need: "getAbsensiSiswaBulan", route: "presensi/rekap" },
                     { id: "qr", label: "Kartu ID QR", icon: "fa-id-card", need: "saveTendik" }
                 ];
 
@@ -299,7 +305,15 @@ const ModulVue = {
 
                 const switchTab = (tabId) => {
                     store.absensiTab = tabId;
-                    if (window.ModulPresensi) ModulPresensi.switchTab(tabId);
+                    if (tabId === "harian") {
+                        Router.navigate("presensi/harian");
+                    } else if (tabId === "tendik") {
+                        Router.navigate("presensi/tendik");
+                    } else if (tabId === "siswa") {
+                        Router.navigate("presensi/rekap");
+                    } else if (tabId === "qr") {
+                        if (window.ModulPresensi) ModulPresensi.switchTab("qr");
+                    }
                 };
 
                 return {
@@ -318,7 +332,13 @@ const ModulVue = {
     // -------------------------------------------------------------------------
     mountSuratTabs() {
         const el = document.getElementById("vue-surat-tabs");
-        if (!el || this.apps.suratTabs) return;
+        if (!el) return;
+        if (this.apps.suratTabs) {
+            try {
+                this.apps.suratTabs.unmount();
+            } catch (e) {}
+            this.apps.suratTabs = null;
+        }
 
         const { createApp, computed } = Vue;
         const store = this.store;

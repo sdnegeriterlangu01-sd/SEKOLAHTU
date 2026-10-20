@@ -1,0 +1,130 @@
+<!-- ==============================================================
+     VIEW: MODUL 3 - CETAK SURAT OTOMATIS (views/surat/cetak.html)
+     ============================================================== -->
+<section id="view-cetak" class="app-view space-y-5">
+
+    <!-- Header -->
+    <div id="view-cetak-header" class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Cetak Surat Otomatis (Self-Service Letter)</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Penerbitan surat keterangan resmi dengan injeksi data otomatis,
+                stiker QR-Code keabsahan, dan unduh PDF instan &lt; 5 detik.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btn-cetak-pdf-direct" onclick="ModulCetak.processPrintAndSave()"
+                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-md">
+                <i class="fa-solid fa-print"></i> Cetak / Unduh PDF Sekarang
+            </button>
+        </div>
+    </div>
+
+    <!-- Two-column Layout: Left Form & Right WYSIWYG Letter Preview -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left Panel: Parameter Controls -->
+        <div id="view-cetak-controls"
+            class="no-print lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-blue-600"></i> Pengaturan Data Surat
+            </h3>
+
+            <!-- Pilih Siswa (Autocomplete/Dropdown) -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih Siswa dari Database</label>
+                <select id="cetak-select-siswa"
+                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <!-- Populated by JS -->
+                </select>
+                <p class="text-[10px] text-slate-400 mt-1">Data NISN, Tempat Lahir, Orang Tua, dan Alamat terisi
+                    otomatis.</p>
+            </div>
+
+            <!-- Pengaturan Nomor Surat -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor Surat Resmi</label>
+                <!-- Sub-tab Toggle Bar Mode Penomoran Surat -->
+                <div id="vue-cetak-tabs"
+                    class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-semibold text-slate-600 mb-2">
+                    <button type="button" id="btn-mode-terbit" onclick="ModulCetak.setNomorMode('terbit')"
+                        class="py-1 px-2 rounded-lg transition cursor-pointer bg-white text-blue-700 shadow-xs font-bold">
+                        Nomor Terbit
+                    </button>
+                    <button type="button" id="btn-mode-baru" onclick="ModulCetak.setNomorMode('baru')"
+                        class="py-1 px-2 rounded-lg transition cursor-pointer hover:text-slate-900">
+                        Nomor Baru
+                    </button>
+                    <button type="button" id="btn-mode-manual" onclick="ModulCetak.setNomorMode('manual')"
+                        class="py-1 px-2 rounded-lg transition cursor-pointer hover:text-slate-900">
+                        Ketik Manual
+                    </button>
+                </div>
+
+                <!-- Mode 1: Pilih dari Nomor Terbit -->
+                <div id="cetak-box-terbit">
+                    <select id="cetak-select-nomor-terbit" onchange="ModulCetak.onSelectNomorTerbit(this.value)"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono">
+                        <!-- Populated from DataStore.getSuratKeluar() -->
+                    </select>
+                    <p class="text-[10px] text-slate-400 mt-1">Gunakan nomor yang sudah terdaftar di buku register surat
+                        keluar.</p>
+                </div>
+
+                <!-- Mode 2: Nomor Baru Otomatis (Hidden by default) -->
+                <div id="cetak-box-baru"
+                    class="hidden p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-600">Nomor Baru SRIKANDI:</span>
+                    <span id="cetak-preview-baru" class="font-mono font-bold text-blue-900 text-xs">...</span>
+                </div>
+
+                <!-- Mode 3: Manual Input (Hidden by default) -->
+                <div id="cetak-box-manual" class="hidden">
+                    <input type="text" id="cetak-input-manual" oninput="ModulCetak.onInputManualNomor(this.value)"
+                        placeholder="Contoh: 421.2/045/X/2026"
+                        class="w-full px-3 py-2 text-xs border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/30">
+                </div>
+            </div>
+
+            <!-- Jenis Surat -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Jenis Surat Keterangan Resmi</label>
+                <select id="cetak-jenis-surat"
+                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                    <option value="aktif">Surat Keterangan Aktif Belajar (PIP / Beasiswa)</option>
+                    <option value="mutasi">Surat Keterangan Pindah / Mutasi Siswa</option>
+                    <option value="rekomendasi">Surat Rekomendasi Siswa Berprestasi</option>
+                    <option value="kelakuan">Surat Keterangan Kelakuan Baik Siswa</option>
+                </select>
+            </div>
+
+            <!-- Keperluan Tambahan -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Keperluan Penerbitan Surat</label>
+                <textarea id="cetak-keperluan" rows="3"
+                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed"></textarea>
+            </div>
+
+            <!-- Extra Fields container for specific templates -->
+            <div id="cetak-extra-fields"></div>
+
+            <div
+                class="p-3 bg-blue-50/60 rounded-xl border border-blue-200 text-[11px] text-blue-800 flex items-start gap-2">
+                <i class="fa-solid fa-qrcode text-blue-600 mt-0.5 text-sm"></i>
+                <div>
+                    <strong>Keabsahan Dokumen:</strong>
+                    QR Code di pojok kiri bawah terhubung ke tautan verifikasi online publik untuk membuktikan keaslian
+                    nomor surat.
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Live WYSIWYG A4 Document Preview -->
+        <div id="view-cetak-preview-wrapper"
+            class="lg:col-span-8 bg-slate-200/80 p-4 rounded-2xl border border-slate-300 flex justify-center overflow-x-auto">
+            <!-- Official Printable Letter Canvas -->
+            <div id="kop-surat-print-area" class="kop-surat-preview">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+    </div>
+</section>

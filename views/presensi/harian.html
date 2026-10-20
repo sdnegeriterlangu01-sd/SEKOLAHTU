@@ -1,0 +1,175 @@
+<!-- ==============================================================
+     VIEW: PRESENSI HARIAN (views/presensi/harian.html)
+     ============================================================== -->
+<section id="view-absensi" class="app-view space-y-5">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Presensi & Rekapitulasi Kehadiran</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pencatatan harian, scan barcode/QR datang-pulang guru/tendik, rekap bulanan periodik & kartu ID QR.</p>
+        </div>
+        <div id="abs-harian-actions" class="flex items-center gap-2.5 flex-wrap">
+            <button onclick="ModulAbsensi.exportRekapCSV()"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor Rekap CSV
+            </button>
+            <button id="btn-simpan-absensi" onclick="ModulAbsensi.savePresensiBatch()"
+                class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Simpan Presensi Hari Ini
+            </button>
+        </div>
+    </div>
+
+    <!-- Sub-tab Navigation Bar with Modular Vue 3 -->
+    <div id="vue-absensi-tabs"
+        class="bg-slate-200/80 p-1 rounded-xl flex items-center gap-1 overflow-x-auto shadow-inner">
+        <button v-for="tab in visibleTabs" 
+            :key="tab.id"
+            type="button" 
+            :data-abs-tab="tab.id"
+            @click="switchTab(tab.id)"
+            :class="['px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer', currentTab === tab.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900']">
+            <i :class="['fa-solid', tab.icon]"></i>
+            <span>{{ tab.label }}</span>
+        </button>
+    </div>
+
+    <!-- SUB-TAB 1: Presensi Harian (Konvensional) -->
+    <div id="abs-tab-harian" class="space-y-5">
+        <!-- Presensi Filter & Fast Action Toolbar -->
+        <div
+            class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- Tanggal -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tanggal Presensi</label>
+                    <input type="date" id="absensi-tanggal"
+                        class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                </div>
+
+                <!-- Kategori -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kategori Sasaran</label>
+                    <select id="absensi-kategori"
+                        class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                        <option value="Siswa">Siswa</option>
+                        <option value="Tendik">Tenaga Pendidik / Tendik</option>
+                    </select>
+                </div>
+
+                <!-- Kelas (Hanya untuk Siswa) -->
+                <div id="absensi-kelas-filter-container">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tingkat Kelas</label>
+                    <select id="absensi-kelas"
+                        class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                        <option value="Semua">Semua Kelas</option>
+                        <option value="1">Kelas 1</option>
+                        <option value="2">Kelas 2</option>
+                        <option value="3">Kelas 3</option>
+                        <option value="4">Kelas 4</option>
+                        <option value="5" selected>Kelas 5</option>
+                        <option value="6">Kelas 6</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 1-Click Fast Fill Button & Simpan Presensi Button -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="ModulAbsensi.markAllHadir()"
+                    class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold inline-flex items-center gap-2 transition">
+                    <i class="fa-solid fa-check-double text-emerald-600"></i> 1-Click: Tandai Semua Hadir
+                </button>
+                <button id="btn-fast-simpan-absensi" onclick="ModulAbsensi.savePresensiBatch()"
+                    class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Presensi
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700">Daftar Kehadiran Harian</span>
+                <span class="text-[11px] text-slate-400">Pilih status: Hadir, Sakit, Izin, atau Alpa</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                            <th class="px-4 py-3 w-12">No</th>
+                            <th class="px-4 py-3">Nama Lengkap & Identitas</th>
+                            <th class="px-4 py-3">Status Kehadiran</th>
+                            <th class="px-4 py-3">Catatan / Keterangan</th>
+                            <th class="px-4 py-3 text-center">Status DB</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-input-absensi-body">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Real-Time Rekapitulasi & Charts Section -->
+        <div class="space-y-4 pt-2">
+            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-blue-600"></i> Dasbor Grafik Rekapitulasi Bulanan
+            </h3>
+
+            <!-- Metric Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Persentase Hadir</span>
+                    <div id="absen-stat-persen" class="text-xl font-black text-emerald-600">0%</div>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Total Hadir</span>
+                    <div id="absen-stat-hadir" class="text-xl font-black text-slate-800">0 Orang</div>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Sakit</span>
+                    <div id="absen-stat-sakit" class="text-xl font-black text-amber-600">0 Orang</div>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Izin</span>
+                    <div id="absen-stat-izin" class="text-xl font-black text-blue-600">0 Orang</div>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Alpa</span>
+                    <div id="absen-stat-alpa" class="text-xl font-black text-rose-600">0 Orang</div>
+                </div>
+            </div>
+
+            <!-- 2 Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Donut Chart -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-800 mb-1">Proporsi Kehadiran Hari Ini</h4>
+                        <p class="text-[11px] text-slate-400 mb-4">Distribusi status hadir, sakit, izin, alpa</p>
+                        <div class="h-52 relative">
+                            <canvas id="chart-presensi-donut"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Tren Bulanan -->
+                <div class="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-800 mb-1">Grafik Tren Persentase Kehadiran Bulanan</h4>
+                        <p class="text-[11px] text-slate-400 mb-4">Pemantauan konsistensi kehadiran 6 bulan terakhir</p>
+                        <div class="h-52 relative">
+                            <canvas id="chart-presensi-tren"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden tab containers for dynamic switching -->
+    <div id="abs-tab-tendik" class="space-y-4 hidden"></div>
+    <div id="abs-tab-siswa" class="space-y-4 hidden"></div>
+    <div id="abs-tab-qr" class="space-y-4 hidden"></div>
+</section>

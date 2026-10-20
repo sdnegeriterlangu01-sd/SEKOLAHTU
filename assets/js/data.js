@@ -48,7 +48,8 @@ const KODE_KLASIFIKASI_SURAT = [
     { kode: "005", nama: "Undangan Pertemuan / Rapat Dinas / Komite" },
     { kode: "090", nama: "Perjalanan Dinas (SPPD) & Tugas Guru" },
     { kode: "900", nama: "Keuangan, Anggaran & Dana BOS" },
-    { kode: "020", nama: "Peralatan, Sarana Prasarana & Aset Sekolah" }
+    { kode: "020", nama: "Peralatan, Sarana Prasarana & Aset Sekolah" },
+    { kode: "428", nama: "Kegiatan Kepramukaan" }
 ];
 
 // Data Pokok Siswa Contoh Realistis

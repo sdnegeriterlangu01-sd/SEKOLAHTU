@@ -1,0 +1,29 @@
+<!-- ==============================================================
+     VIEW: DETAIL & UPLOAD BERKAS SISWA (views/berkas-siswa/detail.html)
+     ============================================================== -->
+<section id="view-berkas-detail" class="app-view space-y-5">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="Router.navigate('berkas-siswa')" class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-900">Detail & Berkas Digital Siswa</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Kelola kelengkapan dokumen pokok dan informasi siswa.</p>
+            </div>
+        </div>
+        <div>
+            <button onclick="Router.navigate('berkas-siswa')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                Kembali ke Daftar
+            </button>
+        </div>
+    </div>
+
+    <!-- Container yang diisi detail siswa -->
+    <div id="berkas-detail-container" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+            <p class="text-xs">Pilih siswa dari <a href="#/berkas-siswa" class="text-blue-600 font-bold hover:underline">Daftar Siswa</a> untuk melihat portofolio berkas lengkap.</p>
+        </div>
+    </div>
+</section>

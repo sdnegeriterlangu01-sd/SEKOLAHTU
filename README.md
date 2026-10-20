@@ -144,6 +144,11 @@ Akun uji coba demo:
 * **Portal Verifikasi Dokumen Dinamis ([`verifikasi.html`](verifikasi.html)):**
   - **Deteksi Cerdas Format Surat:** Menyesuaikan data yang tampil berdasarkan jenis surat (Format Kedinasan: Penerima, Jabatan, Perihal, Dasar Surat; Format Siswa: Nama Siswa, NISN, Kelas, Wali).
   - **Refinemen Validasi:** Menghapus penyebutan "NIS/NISN" pada penelusuran nomor surat dinas dan memperbaiki pesan status keabsahan dokumen tidak terdaftar.
+* **Optimasi Desain Responsif & Ergonomi Mobile (Smartphone / Tablet):**
+  - **Header Navigasi Bebas Overflow:** Menata ulang tata letak header atas (`#app-top-header`) pada viewport mobile (lebar $\le 393px$ seperti iPhone 16) dengan *truncation* nama sekolah cerdas, selektor tahun ajaran ringkas, badge status cloud minimalis, dan tombol aksi cepat ikonik agar tidak saling bertumpuk maupun terpotong.
+  - **Dashboard Grid 2x2:** Mengubah kartu metrik utama dashboard menjadi kisi 2 kolom (`grid-cols-2`) dengan padding dan tipografi proporsional, sehingga 4 kartu statistik utama langsung terlihat rapi di layar atas tanpa perlu menggulir (*scrolling*) panjang.
+  - **Banner Hero & Tombol Akses Cepat:** Menyesuaikan ukuran teks, spasi, dan tata letak tombol pada banner sambutan beranda agar nyaman disentuh (*touch-friendly*) di smartphone.
+  - **Responsif Pratinjau Surat & Notifikasi Toast:** Pratinjau dokumen surat resmi kini menyesuaikan padding layar kecil, dan notifikasi toast mengambang secara adaptif di area aman bawah layar HP.
 * **Backend Google Apps Script (GAS v2.1.0):**
   - Penambahan endpoint `getConfig` dan `saveConfig` untuk persistensi konfigurasi sekolah dan identitas kepala sekolah ke tab `Config` spreadsheet secara terpusat.
 

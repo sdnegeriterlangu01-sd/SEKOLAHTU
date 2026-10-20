@@ -418,6 +418,90 @@ body {
 }
 
 /* ==========================================================================
+   MOBILE & RESPONSIVE REFINEMENTS
+   ========================================================================== */
+@media screen and (max-width: 640px) {
+  /* Toast Notification */
+  #toast-container {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .toast {
+    min-width: 0;
+    max-width: 100%;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Smooth Table Scrolling */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* Responsive Letter Preview inside View Cetak */
+  .kop-surat-preview {
+    padding: 1.2cm 0.9cm !important;
+    font-size: 10pt;
+    min-height: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-lg);
+  }
+
+  .kop-header {
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .kop-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .kop-teks h4,
+  .kop-teks .instansi-1,
+  .kop-teks .instansi-3 {
+    font-size: 8pt;
+  }
+
+  .kop-teks h3,
+  .kop-teks .instansi-2 {
+    font-size: 9.5pt;
+  }
+
+  .kop-teks h2,
+  .kop-teks .sekolah-nama {
+    font-size: 11.5pt;
+  }
+
+  .kop-teks h5,
+  .kop-teks .sekolah-kec {
+    font-size: 8pt;
+  }
+
+  .kop-teks p {
+    font-size: 7pt;
+  }
+
+  .surat-body {
+    font-size: 9.5pt;
+  }
+
+  .surat-table-data td {
+    font-size: 9pt;
+    padding: 1px 3px;
+  }
+
+  .surat-ttd-box {
+    width: 180px;
+  }
+}
+
+/* ==========================================================================
    PRINT MEDIA OPTIMIZATION (Strict Official Standard - 1 Page A4)
    ========================================================================== */
 @media print {

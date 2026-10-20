@@ -6,6 +6,17 @@
     <title>Portal Verifikasi Keabsahan Dokumen Resmi - SIM-TAS-SD</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'xs': '380px'
+                    }
+                }
+            }
+        }
+    </script>
     <!-- FontAwesome 6 CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
@@ -18,20 +29,20 @@
 
     <!-- Top Bar -->
     <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+        <div class="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <img src="assets/img/logo-brebes.svg" 
                     onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
-                    alt="Logo Kabupaten Brebes" class="w-9 h-9 object-contain drop-shadow">
-                <div>
-                    <h1 class="text-sm font-extrabold tracking-wide flex items-center gap-2">
-                        SIM-TAS-SD <span class="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">VERIFIKASI RESMI</span>
+                    alt="Logo Kabupaten Brebes" class="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow flex-shrink-0">
+                <div class="min-w-0">
+                    <h1 class="text-xs sm:text-sm font-extrabold tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
+                        SIM-TAS-SD <span class="bg-emerald-500 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold flex-shrink-0">VERIFIKASI</span>
                     </h1>
-                    <p class="text-xs text-blue-200">Sistem Validasi Keaslian Dokumen & Surat Keterangan Digital</p>
+                    <p class="text-[10px] sm:text-xs text-blue-200 truncate hidden xs:block">Sistem Validasi Keaslian Dokumen Digital</p>
                 </div>
             </div>
-            <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold">
-                <i class="fa-solid fa-arrow-left"></i> Masuk Aplikasi
+            <a href="index.html" class="text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold flex-shrink-0">
+                <i class="fa-solid fa-arrow-left"></i> <span class="hidden xs:inline">Masuk</span> Aplikasi
             </a>
         </div>
     </header>

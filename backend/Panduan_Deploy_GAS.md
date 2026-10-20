@@ -62,7 +62,7 @@ Untuk mengaktifkan verifikasi token Zero Trust di sisi server:
 3. Konfigurasikan:
    - **Deskripsi**: `SIM-TAS-SD Production API v2`
    - **Jalankan sebagai**: `Saya (emailanda@gmail.com)`
-   - **Siapa yang memiliki akses**: `Siapa saja` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
+   - **Siapa yang memiliki akses**: `Semua orang` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
 4. Klik **Terapkan** (`Deploy`).
 5. Salin **URL Aplikasi Web** yang muncul (formatnya: `https://script.google.com/macros/s/AKfycb.../exec`).
 

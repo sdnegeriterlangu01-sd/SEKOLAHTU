@@ -118,7 +118,12 @@ const Auth = {
     async loadProfile() {
         const uid = this.session.user.id;
         const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif`, {}, this.session.token);
-        if (!res.ok) throw new Error("Gagal membaca profil pengguna. Pastikan skema database Supabase (supabase/schema.sql) sudah dijalankan.");
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const detail = err.message || err.error || `HTTP ${res.status}`;
+            console.error("[Auth] Gagal membaca profil:", res.status, err);
+            throw new Error(`Gagal membaca profil pengguna (${detail}). Silakan jalankan ulang schema.sql terbaru di SQL Editor Supabase.`);
+        }
         const rows = await res.json();
         const p = rows && rows[0];
         if (!p) throw new Error("Profil pengguna belum tersedia. Hubungi administrator.");

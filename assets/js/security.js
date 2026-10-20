@@ -73,8 +73,10 @@ const ACL = {
         getSuratKeluar: ["admin", "kepsek", "tu"],
         getNextNomorSuratKeluar: ["admin", "kepsek", "tu"],
         saveSuratKeluar: ["admin", "tu"],
+        deleteSuratKeluar: ["admin", "tu"],
         getSuratMasuk: ["admin", "kepsek", "tu"],
         saveSuratMasuk: ["admin", "tu"],
+        deleteSuratMasuk: ["admin", "tu"],
         generateSuratDocPDF: ["admin", "kepsek", "tu"],
         // Absensi harian (lama)
         getAbsensi: ["admin", "kepsek", "tu", "guru"],
@@ -85,7 +87,7 @@ const ACL = {
         saveTendik: ["admin", "tu"],
         saveQrFiles: ["admin", "tu"],
         scanTendik: ["admin", "kepsek", "tu", "guru", "kiosk"],
-        getAbsensiTendikBulan: ["admin", "kepsek", "tu"],
+        getAbsensiTendikBulan: ["admin", "kepsek", "tu", "guru"],
         saveAbsensiTendikManual: ["admin", "tu"],
         // Absensi siswa bulanan
         getAbsensiSiswaBulan: ["admin", "kepsek", "tu", "guru"],
@@ -98,12 +100,12 @@ const ACL = {
     },
 
     ROUTES: {
-        dashboard: ["admin", "kepsek", "tu", "guru"],
+        dashboard: ["admin", "kepsek", "tu"],
         berkas: ["admin", "kepsek", "tu", "guru"],
         surat: ["admin", "kepsek", "tu"],
         cetak: ["admin", "kepsek", "tu"],
         absensi: ["admin", "kepsek", "tu", "guru", "kiosk"],
-        pengaturan: ["admin", "tu"]
+        pengaturan: ["admin", "kepsek", "tu"]
     },
 
     check(list, role) { return !!list && (list.includes("*") || list.includes(role)); }

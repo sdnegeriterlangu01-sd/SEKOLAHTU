@@ -132,12 +132,20 @@ function doPost(e) {
         responseData = handleSaveSuratKeluar(ss, payload);
         break;
 
+      case "deleteSuratKeluar":
+        responseData = handleDeleteSuratKeluar(ss, payload);
+        break;
+
       case "getSuratMasuk":
         responseData = handleGetSuratMasuk(ss);
         break;
 
       case "saveSuratMasuk":
         responseData = handleSaveSuratMasuk(ss, payload);
+        break;
+
+      case "deleteSuratMasuk":
+        responseData = handleDeleteSuratMasuk(ss, payload);
         break;
 
       // ==================== MODUL 3: GENERATE SURAT PDF ====================
@@ -711,17 +719,34 @@ function handleSaveSuratKeluar(ss, payload) {
   const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
   const tahun = parseInt(payload.tahun || new Date().getFullYear(), 10);
 
-  // Ambil nomor berikutnya secara atomik untuk mencegah nomor ganda
+  // Ambil nomor berikutnya secara atomik untuk mencegah nomor ganda (kecuali nomor manual ditentukan)
   const nextInfo = handleGetNextNomorSuratKeluar(ss, { kodeKlasifikasi: payload.kodeKlasifikasi, tahun: tahun }).data;
   const noUrut = payload.noUrut || nextInfo.nextNo;
-  const nomorSurat = payload.nomorSurat || nextInfo.nomorSurat;
-  const id = `SK-${tahun}-${String(noUrut).padStart(3, '0')}`;
+  const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || nextInfo.nomorSurat;
+  const id = payload.id || `SK-${tahun}-${String(noUrut).padStart(3, '0')}`;
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+
+  let fileUrl = payload.fileDriveUrl || "";
+  if (payload.fileBase64) {
+    try {
+      const root = getOrCreateSubFolder(DriveApp.getRootFolder(), ROOT_FOLDER_NAME);
+      const skFolder = getOrCreateSubFolder(root, FOLDER_SURAT_KELUAR);
+      const base64Data = payload.fileBase64.replace(/^data:([A-Za-z-+\/]+);base64,/, '');
+      const cleanNo = (nomorSurat || id).replace(/[\/\\:*?"<>|]/g, '_');
+      const filename = `SK_${cleanNo}.${payload.fileExt || "pdf"}`;
+      const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), payload.mimeType || "application/pdf", filename);
+      const f = skFolder.createFile(blob);
+      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = f.getUrl();
+    } catch (e) {
+      Logger.log("Gagal simpan file surat keluar ke Drive: " + e.message);
+    }
+  }
 
   sheet.appendRow([
     id,
     nomorSurat,
-    payload.kodeKlasifikasi,
+    payload.kodeKlasifikasi || "-",
     noUrut,
     tahun,
     payload.tanggalSurat,
@@ -730,15 +755,41 @@ function handleSaveSuratKeluar(ss, payload) {
     payload.pengonsep || "Staf TU",
     payload.penandatangan || "Kepala Sekolah",
     payload.keterangan || "-",
-    payload.fileDriveUrl || "",
+    fileUrl,
     nowStr
   ]);
 
   return {
     success: true,
-    message: `Nomor surat ${nomorSurat} berhasil didaftarkan tanpa risiko nomor ganda!`,
-    data: { id: id, nomorSurat: nomorSurat, noUrut: noUrut, tahun: tahun }
+    message: `Nomor surat ${nomorSurat} berhasil didaftarkan!`,
+    data: { id: id, nomorSurat: nomorSurat, noUrut: noUrut, tahun: tahun, fileDriveUrl: fileUrl }
   };
+}
+
+function handleDeleteSuratKeluar(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Tidak ada data surat keluar." };
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(payload.id) || String(data[i][1]) === String(payload.nomorSurat)) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: "Nomor surat keluar berhasil dihapus dari Google Sheets." };
+    }
+  }
+  return { success: false, message: "Surat keluar tidak ditemukan." };
+}
+
+function handleDeleteSuratMasuk(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_SURAT_MASUK);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Tidak ada data surat masuk." };
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(payload.id) || String(data[i][1]) === String(payload.noAgenda)) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: "Surat masuk berhasil dihapus dari Google Sheets." };
+    }
+  }
+  return { success: false, message: "Surat masuk tidak ditemukan." };
 }
 
 function handleGetSuratMasuk(ss) {

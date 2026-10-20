@@ -35,7 +35,7 @@ const Auth = {
 
     canDo(action) { return !!this.role() && ACL.check(ACL.ACTIONS[action], this.role()); },
     canRoute(route) { return !!this.role() && ACL.check(ACL.ROUTES[route], this.role()); },
-    defaultRoute() { return this.canRoute("dashboard") ? "dashboard" : "absensi"; },
+    defaultRoute() { return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("berkas") ? "berkas" : "absensi"); },
 
     // ------------------------------------------------------------------ INIT
     async init() {
@@ -324,5 +324,182 @@ const Auth = {
         if (nm) nm.textContent = u.nama || u.email;
         if (rl) rl.textContent = ACL.ROLES[u.role] + (this.session.demo ? " • Demo" : "");
         if (av) av.textContent = String(u.nama || u.email || "?").trim().substring(0, 2).toUpperCase();
+    },
+
+    // ------------------------------------------------ MANAJEMEN AKUN (ADMIN)
+    openUserModal() {
+        if (!this.isAdmin()) return;
+        const modal = document.getElementById("modal-manage-users");
+        if (!modal) return;
+        document.getElementById("form-add-user")?.reset();
+        this.onRoleChange("tu");
+        this.switchUserTab("add");
+        modal.classList.remove("hidden");
+    },
+
+    closeUserModal() {
+        const modal = document.getElementById("modal-manage-users");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    switchUserTab(tab) {
+        const btnAdd = document.getElementById("tab-btn-add-user");
+        const btnList = document.getElementById("tab-btn-list-user");
+        const formAdd = document.getElementById("form-add-user");
+        const boxList = document.getElementById("container-user-list");
+
+        if (tab === "add") {
+            btnAdd?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
+            btnAdd?.classList.remove("text-slate-500");
+            btnList?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
+            btnList?.classList.add("text-slate-500");
+            formAdd?.classList.remove("hidden");
+            boxList?.classList.add("hidden");
+        } else {
+            btnList?.classList.add("border-b-2", "border-blue-700", "text-blue-700");
+            btnList?.classList.remove("text-slate-500");
+            btnAdd?.classList.remove("border-b-2", "border-blue-700", "text-blue-700");
+            btnAdd?.classList.add("text-slate-500");
+            boxList?.classList.remove("hidden");
+            formAdd?.classList.add("hidden");
+            this.loadUsersList();
+        }
+    },
+
+    onRoleChange(role) {
+        const container = document.getElementById("guru-extra-container");
+        if (container) {
+            container.classList.toggle("hidden", role !== "guru");
+        }
+    },
+
+    async handleCreateUser(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const nama = document.getElementById("new-user-nama")?.value.trim();
+        const email = document.getElementById("new-user-email")?.value.trim();
+        const password = document.getElementById("new-user-password")?.value;
+        const role = document.getElementById("new-user-role")?.value;
+        const tipeGuru = document.getElementById("new-user-guru-tipe")?.value || "";
+        const kelasGuru = document.getElementById("new-user-guru-kelas")?.value || "";
+
+        if (!nama || !email || !password || !role) {
+            App.showToast("Semua kolom bertanda bintang wajib diisi!", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btn-save-new-user");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+        try {
+            if (this.usesSupabase()) {
+                const res = await this.sb("/auth/v1/signup", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        data: { nama, role, tipeGuru, kelasGuru }
+                    })
+                });
+
+                const j = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(j.msg || j.message || "Gagal membuat akun di Supabase.");
+                }
+
+                // Pastikan role dan nama terupdate di tabel profiles
+                if (j.user && j.user.id) {
+                    await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(j.user.id)}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ nama, role, aktif: true })
+                    }, this.session.token).catch(() => {});
+                }
+
+                App.showToast(`Akun ${nama} (${ACL.ROLES[role] || role}) berhasil didaftarkan!`, "success");
+                document.getElementById("form-add-user")?.reset();
+                this.switchUserTab("list");
+            } else {
+                // Mode Demo (Lokal)
+                const username = email.split("@")[0].toLowerCase().trim();
+                this.DEMO_USERS[username] = { pw: password, nama: nama, role: role };
+                App.showToast(`(Mode Demo) Akun ${username} (${ACL.ROLES[role]}) berhasil ditambahkan!`, "success");
+                document.getElementById("form-add-user")?.reset();
+                this.switchUserTab("list");
+            }
+        } catch (err) {
+            console.error("handleCreateUser:", err);
+            App.showToast(`Gagal: ${err.message}`, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-user-plus"></i> Daftarkan Pengguna`;
+        }
+    },
+
+    async loadUsersList() {
+        const tbody = document.getElementById("user-list-table-body");
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat daftar akun...</td></tr>`;
+
+        try {
+            if (this.usesSupabase()) {
+                const res = await this.sb(`/rest/v1/profiles?select=*&order=created_at.desc`, {}, this.session.token);
+                if (!res.ok) throw new Error("Gagal mengambil data profil.");
+                const list = await res.json();
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-slate-400">Belum ada akun pengguna terdaftar.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = list.map(u => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-3 py-2.5">
+                            <div class="font-bold text-slate-800">${Sec.esc(u.nama)}</div>
+                            <div class="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">${Sec.esc(u.id)}</div>
+                        </td>
+                        <td class="px-3 py-2.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                                u.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
+                                u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                            }">
+                                ${ACL.ROLES[u.role] || u.role}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${u.aktif ? 'text-emerald-600' : 'text-slate-400'}">
+                                <span class="w-1.5 h-1.5 rounded-full ${u.aktif ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
+                                ${u.aktif ? 'Aktif' : 'Nonaktif'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join("");
+            } else {
+                // Mode Demo List
+                const entries = Object.entries(this.DEMO_USERS);
+                tbody.innerHTML = entries.map(([usr, u]) => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-3 py-2.5">
+                            <div class="font-bold text-slate-800">${Sec.esc(u.nama)}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">User Demo: ${usr}</div>
+                        </td>
+                        <td class="px-3 py-2.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                                u.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
+                                u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                            }">
+                                ${ACL.ROLES[u.role] || u.role}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif (Demo)
+                            </span>
+                        </td>
+                    </tr>
+                `).join("");
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-rose-500 text-xs">Error memuat daftar: ${err.message}</td></tr>`;
+        }
     }
 };

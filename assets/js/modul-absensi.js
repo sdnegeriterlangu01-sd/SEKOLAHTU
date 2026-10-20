@@ -11,6 +11,21 @@ const ModulAbsensi = {
     activeChartDonut: null,
 
     init() {
+        if (Auth.role() === "guru") {
+            const u = Auth.user();
+            const tendik = DataStore.getTendik().find(t => 
+                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+            );
+            if (tendik && tendik.jabatan) {
+                const m = tendik.jabatan.match(/kelas\s*(\d+)/i);
+                if (m) {
+                    this.selectedKelas = m[1];
+                    const selKelas = document.getElementById("absensi-kelas");
+                    if (selKelas) selKelas.value = m[1];
+                }
+            }
+        }
         this.bindEvents();
         this.setDefaultDate();
         this.renderPresensiInputTable();
@@ -60,7 +75,20 @@ const ModulAbsensi = {
 
     getListTarget() {
         if (this.selectedKategori === "Tendik") {
-            const tendikList = DataStore.getTendik();
+            let tendikList = DataStore.getTendik();
+            // Untuk role guru, hanya tampilkan data tendik dirinya sendiri
+            if (Auth.role() === "guru") {
+                const u = Auth.user();
+                const filtered = tendikList.filter(t => 
+                    (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                    (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+                );
+                if (filtered.length > 0) {
+                    tendikList = filtered;
+                } else if (u) {
+                    tendikList = [{ nip: u.id || "GURU", nama: u.nama || u.email, jabatan: "Guru", jk: "-", statusKepegawaian: "-" }];
+                }
+            }
             return tendikList.map(t => ({
                 idTarget: t.nip,
                 nama: t.nama,

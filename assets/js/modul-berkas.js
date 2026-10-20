@@ -9,7 +9,28 @@ const ModulBerkas = {
     currentFilterStatus: "Semua",
     searchQuery: "",
 
+    detectGuruKelas() {
+        if (Auth.role() !== "guru") return null;
+        const u = Auth.user();
+        if (!u) return null;
+        const tendik = DataStore.getTendik().find(t => 
+            (u.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+            (u.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+        );
+        if (tendik && tendik.jabatan) {
+            const m = tendik.jabatan.match(/kelas\s*(\d+)/i);
+            if (m) return m[1];
+        }
+        return null;
+    },
+
     init() {
+        const gk = this.detectGuruKelas();
+        if (gk) {
+            this.currentFilterKelas = gk;
+            const filterEl = document.getElementById("filter-kelas-berkas");
+            if (filterEl) filterEl.value = gk;
+        }
         this.renderTable();
         this.bindEvents();
     },

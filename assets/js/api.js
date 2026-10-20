@@ -227,13 +227,13 @@ const ApiClient = {
                 const bulanRomawi = ROMAWI_BULAN[tgl.getMonth()];
 
                 const suratTahunIni = list.filter(s => s.tahun === tahun);
-                const noUrut = suratTahunIni.length > 0 ? Math.max(...suratTahunIni.map(s => s.noUrut || 0)) + 1 : 1;
-                const nomorSurat = `${payload.kodeKlasifikasi}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
+                const noUrut = payload.noUrut || (suratTahunIni.length > 0 ? Math.max(...suratTahunIni.map(s => s.noUrut || 0)) + 1 : 1);
+                const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || `${payload.kodeKlasifikasi}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
 
                 const newSurat = {
-                    id: `SK-${tahun}-${String(noUrut).padStart(3, "0")}`,
+                    id: payload.id || `SK-${tahun}-${String(noUrut).padStart(3, "0")}`,
                     nomorSurat,
-                    kodeKlasifikasi: payload.kodeKlasifikasi,
+                    kodeKlasifikasi: payload.kodeKlasifikasi || "-",
                     noUrut,
                     tahun,
                     tanggalSurat: payload.tanggalSurat || Util.today(),
@@ -242,13 +242,28 @@ const ApiClient = {
                     pengonsep: payload.pengonsep || "Staf TU",
                     penandatangan: payload.penandatangan || cfg.namaKepalaSekolah,
                     keterangan: payload.keterangan || "-",
-                    fileDriveUrl: payload.fileDriveUrl || `https://drive.google.com/file/d/sk-${tahun}-${noUrut}/view`,
+                    fileDriveUrl: payload.fileDriveUrl || payload.fileBase64 || `https://drive.google.com/file/d/sk-${tahun}-${noUrut}/view`,
+                    isManual: !!payload.nomorSuratManual,
                     createdAt: new Date().toISOString()
                 };
 
                 list.unshift(newSurat);
                 DataStore.saveSuratKeluar(list);
-                return { success: true, message: `Nomor surat keluar ${nomorSurat} berhasil diterbitkan!`, data: newSurat };
+                return { success: true, message: `Nomor surat keluar ${nomorSurat} berhasil disimpan!`, data: newSurat };
+            }
+
+            case "deleteSuratKeluar": {
+                let list = DataStore.getSuratKeluar();
+                list = list.filter(s => s.id !== payload.id && s.nomorSurat !== payload.nomorSurat);
+                DataStore.saveSuratKeluar(list);
+                return { success: true, message: "Nomor surat keluar berhasil dihapus!" };
+            }
+
+            case "deleteSuratMasuk": {
+                let list = DataStore.getSuratMasuk();
+                list = list.filter(s => s.id !== payload.id && s.noAgenda !== payload.noAgenda);
+                DataStore.saveSuratMasuk(list);
+                return { success: true, message: "Surat masuk berhasil dihapus!" };
             }
 
             case "getSuratMasuk":
@@ -454,7 +469,9 @@ const Sync = {
         importStudents: ["siswa"],
         uploadStudentDoc: ["siswa"],
         saveSuratKeluar: ["suratKeluar"],
+        deleteSuratKeluar: ["suratKeluar"],
         saveSuratMasuk: ["suratMasuk"],
+        deleteSuratMasuk: ["suratMasuk"],
         saveTendik: ["tendik"]
     },
 

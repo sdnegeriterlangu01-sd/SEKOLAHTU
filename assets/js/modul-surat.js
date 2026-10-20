@@ -168,9 +168,12 @@ const ModulSurat = {
                         <button onclick="ModulSurat.salinNomor('${s.nomorSurat}')" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Salin Nomor Surat">
                             <i class="fa-regular fa-copy"></i>
                         </button>
-                        <a href="${Sec.safeUrl(s.fileDriveUrl)}" target="_blank" rel="noopener noreferrer" class="p-2 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition inline-block" title="Lihat di Google Drive">
+                        <a href="${Sec.safeUrl(s.fileDriveUrl)}" target="_blank" rel="noopener noreferrer" class="p-2 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition inline-block" title="Lihat Berkas / Drive">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i>
                         </a>
+                        <button onclick="ModulSurat.hapusSuratKeluar('${s.id}', '${s.nomorSurat}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition inline-block" title="Hapus Nomor Surat">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -180,6 +183,20 @@ const ModulSurat = {
     salinNomor(nomor) {
         navigator.clipboard.writeText(nomor);
         App.showToast(`Nomor surat ${nomor} disalin ke clipboard!`, "success");
+    },
+
+    toggleManualNomor(isManual) {
+        const manualBox = document.getElementById("sk-manual-container");
+        const previewBox = document.getElementById("sk-preview-container");
+        const manualInput = document.getElementById("sk-nomor-manual");
+        if (manualBox) manualBox.classList.toggle("hidden", !isManual);
+        if (previewBox) previewBox.classList.toggle("hidden", isManual);
+        if (isManual && manualInput) {
+            if (!manualInput.value) {
+                manualInput.value = document.getElementById("sk-preview-nomor")?.textContent.trim() || "";
+            }
+            manualInput.focus();
+        }
     },
 
     async updateLiveNomorSuratPreview() {
@@ -200,6 +217,15 @@ const ModulSurat = {
         document.getElementById("sk-tujuan").value = "";
         document.getElementById("sk-perihal").value = "";
         document.getElementById("sk-keterangan").value = "";
+
+        const chkManual = document.getElementById("sk-is-manual");
+        if (chkManual) chkManual.checked = false;
+        const manualInput = document.getElementById("sk-nomor-manual");
+        if (manualInput) manualInput.value = "";
+        this.toggleManualNomor(false);
+
+        const fileInput = document.getElementById("sk-file");
+        if (fileInput) fileInput.value = "";
 
         const config = DataStore.getConfig();
         document.getElementById("sk-penandatangan").value = config.namaKepalaSekolah;
@@ -225,17 +251,42 @@ const ModulSurat = {
         const penandatangan = document.getElementById("sk-penandatangan").value.trim();
         const keterangan = document.getElementById("sk-keterangan").value.trim();
 
+        const isManual = document.getElementById("sk-is-manual")?.checked;
+        const nomorManual = isManual ? (document.getElementById("sk-nomor-manual")?.value.trim() || "") : "";
+
+        if (isManual && !nomorManual) {
+            App.showToast("Nomor surat manual wajib diisi jika mode manual dicentang!", "error");
+            return;
+        }
+
         if (!tujuan || !perihal) {
             App.showToast("Tujuan dan Perihal surat wajib diisi!", "error");
             return;
         }
 
+        const fileInput = document.getElementById("sk-file");
+        let fileBase64 = null;
+        let fileExt = "pdf";
+
         const btn = document.getElementById("btn-submit-sk");
         this._submittingSK = true;
         btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menerbitkan Nomor...`;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan Surat...`;
 
         try {
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 8 * 1024 * 1024) throw new Error("Ukuran berkas surat keluar maksimal 8 MB.");
+                const nameParts = file.name.split(".");
+                fileExt = nameParts.length > 1 ? nameParts.pop() : "pdf";
+                fileBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error("Gagal membaca berkas lampiran surat keluar."));
+                    reader.readAsDataURL(file);
+                });
+            }
+
             const res = await ApiClient.request("saveSuratKeluar", {
                 kodeKlasifikasi: kode,
                 tanggalSurat: tanggal,
@@ -243,7 +294,10 @@ const ModulSurat = {
                 perihal: perihal,
                 pengonsep: pengonsep,
                 penandatangan: penandatangan,
-                keterangan: keterangan
+                keterangan: keterangan,
+                nomorSuratManual: nomorManual,
+                fileBase64: fileBase64,
+                fileExt: fileExt
             });
 
             if (res && res.success) {
@@ -262,6 +316,22 @@ const ModulSurat = {
             this._submittingSK = false;
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-check"></i> Terbitkan Nomor Surat`;
+        }
+    },
+
+    async hapusSuratKeluar(id, nomor) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus nomor surat keluar "${nomor}"?\nNomor ini akan dihapus dari buku register arsip.`)) return;
+        try {
+            const res = await ApiClient.request("deleteSuratKeluar", { id, nomorSurat: nomor });
+            if (res && res.success) {
+                App.showToast(res.message || `Nomor surat ${nomor} berhasil dihapus!`, "success");
+                this.renderSuratKeluarTable();
+                App.updateDashboardStats();
+            } else {
+                App.showToast((res && res.message) || "Gagal menghapus surat keluar.", "error");
+            }
+        } catch (err) {
+            App.showToast(`Error: ${err.message}`, "error");
         }
     },
 
@@ -325,13 +395,32 @@ const ModulSurat = {
                         </span>
                     </td>
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                        <a href="${Sec.safeUrl(s.fileScanUrl)}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg inline-flex items-center gap-1.5 transition">
+                        <a href="${Sec.safeUrl(s.fileScanUrl)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg inline-flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-file-pdf text-red-500"></i> Scan Fisik
                         </a>
+                        <button onclick="ModulSurat.hapusSuratMasuk('${s.id}', '${s.noAgenda}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition ml-1 inline-block" title="Hapus Surat Masuk">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </td>
                 </tr>
             `;
         }).join("");
+    },
+
+    async hapusSuratMasuk(id, agenda) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus surat masuk agenda "${agenda}"?\nData agenda ini akan dihapus dari buku arsip surat masuk.`)) return;
+        try {
+            const res = await ApiClient.request("deleteSuratMasuk", { id, noAgenda: agenda });
+            if (res && res.success) {
+                App.showToast(res.message || `Surat masuk ${agenda} berhasil dihapus!`, "success");
+                this.renderSuratMasukTable();
+                App.updateDashboardStats();
+            } else {
+                App.showToast((res && res.message) || "Gagal menghapus surat masuk.", "error");
+            }
+        } catch (err) {
+            App.showToast(`Error: ${err.message}`, "error");
+        }
     },
 
     openModalSuratMasuk() {

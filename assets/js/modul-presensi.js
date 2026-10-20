@@ -69,10 +69,14 @@ const ModulPresensi = {
     buildTabs() {
         const bar = document.getElementById("abs-tabs");
         if (!bar) return;
-        bar.innerHTML = this.TABS.filter(t => Auth.canDo(t.need)).map(t => `
+        const isGuru = Auth.role() === "guru";
+        bar.innerHTML = this.TABS
+            .filter(t => Auth.canDo(t.need))
+            .filter(t => !isGuru || (t.id === "harian" || t.id === "tendik" || t.id === "siswa"))
+            .map(t => `
             <button type="button" data-abs-tab="${t.id}" onclick="ModulPresensi.switchTab('${t.id}')"
                 class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 ${this.tab === t.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}">
-                <i class="fa-solid ${t.icon}"></i> ${t.label}
+                <i class="fa-solid ${t.icon}"></i> ${t.id === "tendik" && isGuru ? "Presensi Saya" : t.label}
             </button>`).join("");
     },
 
@@ -290,8 +294,15 @@ const ModulPresensi = {
         if (Auth.canDo("getAbsensiTendikBulan")) {
             const res = await ApiClient.request("getAbsensiTendikBulan", { bulan: Util.monthKey() });
             const today = Util.today();
-            const rows = (res.success ? res.data : []).filter(r => r.tanggal === today);
-            const tendik = DataStore.getTendik().filter(t => t.aktif !== false);
+            let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
+            if (Auth.role() === "guru") {
+                const u = Auth.user();
+                const filtered = tendik.filter(t => 
+                    (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                    (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+                );
+                if (filtered.length > 0) tendik = filtered;
+            }
             body.innerHTML = tendik.map((t, i) => {
                 const r = rows.find(x => x.nip === Util.cleanId(t.nip));
                 const st = r && r.status && r.status !== "Hadir" ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${Sec.esc(r.status)}</span>` : "";
@@ -397,7 +408,16 @@ const ModulPresensi = {
 
     buildTendikTable(interactive) {
         const hari = this.hariBulan(this.bulanTendik);
-        const tendik = DataStore.getTendik().filter(t => t.aktif !== false);
+        let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
+        if (Auth.role() === "guru") {
+            const u = Auth.user();
+            const filtered = tendik.filter(t => 
+                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+            );
+            if (filtered.length > 0) tendik = filtered;
+            else if (u) tendik = [{ nip: u.id || "GURU", nama: u.nama || u.email, jabatan: "Guru" }];
+        }
         const rowsBy = {};
         this.tendikRows.forEach(r => { rowsBy[`${r.nip}|${r.tanggal}`] = r; });
 
@@ -562,6 +582,20 @@ const ModulPresensi = {
         if (!el) return;
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
         const opts = this.kelasOptions();
+        if (Auth.role() === "guru" && !this._guruKelasSet) {
+            const u = Auth.user();
+            const tendikMatch = DataStore.getTendik().find(t => 
+                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+            );
+            if (tendikMatch && tendikMatch.jabatan) {
+                const m = tendikMatch.jabatan.match(/kelas\s*(\d+)/i);
+                if (m && opts.includes(m[1])) {
+                    this.kelasSiswa = m[1];
+                    this._guruKelasSet = true;
+                }
+            }
+        }
         if (!opts.includes(this.kelasSiswa)) this.kelasSiswa = opts[0] || "";
 
         if (!el.dataset.built) {

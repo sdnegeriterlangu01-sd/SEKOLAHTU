@@ -318,7 +318,7 @@ const ModulCetak = {
                     <tr>
                         <td>Tingkat / Kelas</td>
                         <td>:</td>
-                        <td>Kelas ${student.kelas} (Sekolah Dasar)</td>
+                        <td>Kelas ${student.kelas}</td>
                     </tr>
                     <tr>
                         <td>Nama Orang Tua / Wali</td>

@@ -412,6 +412,16 @@ function handleBackupDatabase(ss) {
  * HANDLERS: MODUL 1 - BERKAS & DATA SISWA
  * ==========================================================================
  */
+function convertDriveViewToThumbnail(url) {
+  if (!url) return "";
+  const s = String(url).trim();
+  const m = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) {
+    return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+  }
+  return s;
+}
+
 function handleGetStudents(ss, payload) {
   const sheet = ss.getSheetByName(TAB_SISWA);
   if (!sheet || sheet.getLastRow() <= 1) return { success: true, data: [] };
@@ -438,7 +448,7 @@ function handleGetStudents(ss, payload) {
         kk: { uploaded: !!row[12], filename: String(row[13] || ""), url: String(row[12] || "") },
         akta: { uploaded: !!row[14], filename: String(row[15] || ""), url: String(row[14] || "") },
         kip: { uploaded: !!row[16], filename: String(row[17] || ""), url: String(row[16] || "") },
-        foto: { uploaded: !!row[18], filename: String(row[19] || ""), url: String(row[18] || "") }
+        foto: { uploaded: !!row[18], filename: String(row[19] || ""), url: convertDriveViewToThumbnail(row[18]) }
       },
       tahunAjaran: String(row[21] || ""),
       meta: meta
@@ -559,7 +569,9 @@ function handleUploadStudentDoc(ss, payload) {
   const decodedBlob = Utilities.newBlob(Utilities.base64Decode(base64Data), payload.mimeType || "application/pdf", filename);
   const driveFile = berkasFolder.createFile(decodedBlob);
   driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const fileId = driveFile.getId();
   const fileUrl = driveFile.getUrl();
+  const directUrl = (docType === "FOTO") ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000` : fileUrl;
 
   const sheet = ss.getSheetByName(TAB_SISWA);
   const data = sheet.getDataRange().getValues();
@@ -571,7 +583,7 @@ function handleUploadStudentDoc(ss, payload) {
       else if (docType === "KIP") { colUrl = 17; colName = 18; }
       else if (docType === "FOTO") { colUrl = 19; colName = 20; }
 
-      sheet.getRange(row, colUrl).setValue(fileUrl);
+      sheet.getRange(row, colUrl).setValue(directUrl);
       sheet.getRange(row, colName).setValue(filename);
       sheet.getRange(row, 21).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
       break;
@@ -581,7 +593,7 @@ function handleUploadStudentDoc(ss, payload) {
   return {
     success: true,
     message: `Dokumen ${docType} berhasil diunggah ke Google Drive /SIM-TAS/Berkas_Siswa/!`,
-    data: { filename: filename, url: fileUrl }
+    data: { filename: filename, url: directUrl, viewUrl: fileUrl }
   };
 }
 
@@ -1080,7 +1092,7 @@ function handleSaveAbsensiBatch(ss, payload) {
           const rowIdx = keyRowMap[key];
           const marksJson = JSON.stringify(marks);
           if (rowIdx) {
-            sheetSiswaBulan.getRange(rowIdx, 6, 1, 3).setValues([[r.nama || "", marksJson, nowStr]]);
+            sheetSiswaBulan.getRange(rowIdx, 4, 1, 5).setValues([[r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr]]);
           } else {
             sheetSiswaBulan.appendRow([
               key, ta, bulan, r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr
@@ -1099,6 +1111,17 @@ function handleSaveAbsensiBatch(ss, payload) {
     message: `Berhasil mencatat presensi ${records.length} data ke database DB_Absensi!`,
     count: records.length
   };
+}
+
+function formatTimeCell(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), "HH:mm");
+  }
+  const s = String(val).trim();
+  const m = s.match(/(\d{1,2}):(\d{2})/);
+  if (m) return `${m[1].length === 1 ? '0' + m[1] : m[1]}:${m[2]}`;
+  return s.substring(0, 5);
 }
 
 function handleScanTendik(ss, payload) {
@@ -1139,8 +1162,8 @@ function handleScanTendik(ss, payload) {
     if (String(data[i][0]) === key) {
       rowIdx = i + 1;
       currentRec = {
-        jamDatang: String(data[i][5]),
-        jamPulang: String(data[i][6]),
+        jamDatang: formatTimeCell(data[i][5]),
+        jamPulang: formatTimeCell(data[i][6]),
         status: String(data[i][4])
       };
       break;
@@ -1206,8 +1229,8 @@ function handleGetAbsensiTendikBulan(ss, payload) {
     nip: String(row[2]),
     nama: String(row[3]),
     status: String(row[4]),
-    jamDatang: String(row[5] || ""),
-    jamPulang: String(row[6] || ""),
+    jamDatang: formatTimeCell(row[5]),
+    jamPulang: formatTimeCell(row[6]),
     keterangan: String(row[7] || "")
   }));
 
@@ -1277,6 +1300,7 @@ function handleGetAbsensiSiswaBulan(ss, payload) {
     const targetK = String(payload.kelas).trim();
     list = list.filter(r => {
       const rk = String(r.kelas || "").trim();
+      if (!rk || rk === "-") return true;
       if (rk === targetK || rk.toLowerCase() === targetK.toLowerCase()) return true;
       const d1 = rk.replace(/\D/g, "");
       const d2 = targetK.replace(/\D/g, "");
@@ -1304,7 +1328,7 @@ function handleSaveAbsensiSiswaBulan(ss, payload) {
     const rowIdx = keyRowMap[key];
 
     if (rowIdx) {
-      sheet.getRange(rowIdx, 6, 1, 3).setValues([[r.nama || "", marksJson, nowStr]]);
+      sheet.getRange(rowIdx, 4, 1, 5).setValues([[kelas || "-", r.nisn, r.nama || "", marksJson, nowStr]]);
     } else {
       sheet.appendRow([
         key, tahunAjaran, bulan, kelas, r.nisn, r.nama || "", marksJson, nowStr

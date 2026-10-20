@@ -160,9 +160,9 @@ const ModulBerkas = {
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                 ${foto && berkas.foto.url ? `
-                                    <img src="${berkas.foto.url}" alt="${s.nama}" class="w-full h-full object-cover">
+                                    <img src="${Util.formatDriveImageUrl(berkas.foto.url)}" alt="${Sec.esc(s.nama)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'font-bold text-xs text-slate-600\\'>${Sec.esc(s.nama.substring(0, 2).toUpperCase())}</span>'">
                                 ` : `
-                                    <span class="font-bold text-xs text-slate-600">${s.nama.substring(0, 2).toUpperCase()}</span>
+                                    <span class="font-bold text-xs text-slate-600">${Sec.esc(s.nama.substring(0, 2).toUpperCase())}</span>
                                 `}
                             </div>
                             <div>
@@ -261,12 +261,18 @@ const ModulBerkas = {
         document.getElementById("preview-modal-subtitle").textContent = `${student.nama} (${student.nisn}) • File: ${doc.filename}`;
 
         const viewerContainer = document.getElementById("preview-modal-body");
-        const isImage = doc.url.includes("images.unsplash.com") || doc.url.startsWith("data:image/") || doc.filename.endsWith(".jpg") || doc.filename.endsWith(".png");
+        const isImage = docType === "foto" || (doc.url && (doc.url.includes("images.unsplash.com") || doc.url.startsWith("data:image/"))) || (doc.filename && (doc.filename.endsWith(".jpg") || doc.filename.endsWith(".png") || doc.filename.endsWith(".jpeg")));
 
         if (isImage) {
+            const imgUrl = Util.formatDriveImageUrl(doc.url);
             viewerContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center p-4 bg-slate-900 rounded-xl max-h-[60vh] overflow-auto">
-                    <img src="${doc.url}" alt="${doc.filename}" class="max-h-[50vh] object-contain rounded-lg shadow-lg">
+                    <img src="${imgUrl}" alt="${Sec.esc(doc.filename)}" class="max-h-[50vh] object-contain rounded-lg shadow-lg" onerror="this.onerror=null; this.src='${doc.url}';">
+                    <div class="mt-3 flex items-center gap-3">
+                        <a href="${doc.url}" target="_blank" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Foto di Google Drive
+                        </a>
+                    </div>
                 </div>
             `;
         } else {

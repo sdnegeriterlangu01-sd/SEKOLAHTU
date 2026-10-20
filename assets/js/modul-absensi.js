@@ -289,6 +289,19 @@ const ModulAbsensi = {
 
         setBtnState(true);
 
+        // 1. Simpan langsung ke cache lokal DataStore agar instan & status DB langsung 'Tersimpan'
+        const currentAbs = DataStore.getAbsensi();
+        const absMap = new Map();
+        currentAbs.forEach(item => absMap.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+        records.forEach(rec => {
+            absMap.set(`${rec.tanggal}_${rec.kategori}_${rec.nisnNip}`, {
+                id: `ABS-${rec.tanggal}-${rec.kategori}-${String(rec.nisnNip).replace(/\s+/g, "")}`,
+                ...rec,
+                timestamp: `${Util.today()} ${Util.nowTime()}`
+            });
+        });
+        DataStore.saveAbsensi(Array.from(absMap.values()));
+
         const res = await ApiClient.request("saveAbsensiBatch", { records: records, tahunAjaran: DataStore.getActiveTA() });
 
         // Sinkronisasi otomatis ke Rekap Absen Siswa Bulanan
@@ -334,6 +347,16 @@ const ModulAbsensi = {
                         kelas: kls,
                         rows: rowsToSave
                     });
+
+                    // Simpan juga ke cache lokal DataStore agar rekap bulanan instan
+                    const localBulan = DataStore.getAbsensiSiswaBulan();
+                    rowsToSave.forEach(row => {
+                        const key = `${ta}|${bulan}|${row.nisn}`;
+                        const idx = localBulan.findIndex(b => b.key === key);
+                        const rec = { key, tahunAjaran: ta, bulan, kelas: kls, nisn: row.nisn, nama: row.nama, marks: row.marks };
+                        if (idx >= 0) localBulan[idx] = rec; else localBulan.push(rec);
+                    });
+                    DataStore.saveAbsensiSiswaBulan(localBulan);
                 }
             } catch (errSync) {
                 console.warn("[ModulAbsensi] Gagal sinkronisasi rekap bulanan siswa:", errSync);

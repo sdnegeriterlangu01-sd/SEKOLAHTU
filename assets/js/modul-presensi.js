@@ -22,7 +22,6 @@ const ModulPresensi = {
 
     TABS: [
         { id: "harian", label: "Presensi Harian", icon: "fa-clipboard-check", need: "getAbsensi" },
-        { id: "scan", label: "Scan QR Datang/Pulang", icon: "fa-qrcode", need: "scanTendik" },
         { id: "tendik", label: "Rekap Guru & Tendik", icon: "fa-table-list", need: "getAbsensiTendikBulan" },
         { id: "siswa", label: "Rekap Siswa Bulanan", icon: "fa-table-cells", need: "getAbsensiSiswaBulan" },
         { id: "qr", label: "Kartu ID QR", icon: "fa-id-card", need: "saveTendik" }
@@ -428,10 +427,10 @@ const ModulPresensi = {
                         <div class="text-[10px] text-slate-400">${Sec.esc(t.jabatan || "")} • NIP: ${Sec.esc(t.nip || "-")}</div>
                     </td>
                     <td class="px-2 py-2 text-xs font-mono ${r && r.jamDatang ? "text-emerald-700 font-bold" : "text-slate-300"}">
-                        ${r && r.jamDatang ? "▶ " + Sec.esc(String(r.jamDatang).substring(0, 5)) : "—"}
+                        ${r && r.jamDatang ? "▶ " + Sec.esc(Util.formatTime(r.jamDatang)) : "—"}
                     </td>
                     <td class="px-2 py-2 text-xs font-mono ${r && r.jamPulang ? "text-blue-700 font-bold" : "text-slate-300"}">
-                        ${r && r.jamPulang ? "◀ " + Sec.esc(String(r.jamPulang).substring(0, 5)) : "—"}
+                        ${r && r.jamPulang ? "◀ " + Sec.esc(Util.formatTime(r.jamPulang)) : "—"}
                     </td>
                     <td class="px-2 py-2 text-right">
                         ${st}
@@ -569,9 +568,9 @@ const ModulPresensi = {
                     if (kind === "dp") inner = L;
                     extra = ` mk-${L}`;
                 } else if (r) {
-                    if (kind === "dp") inner = r.jamDatang ? r.jamDatang.substring(0, 5) : "";
+                    if (kind === "dp") inner = r.jamDatang ? Util.formatTime(r.jamDatang) : "";
                     if (kind === "da") inner = r.jamDatang ? "✓" : "";
-                    if (kind === "pp") inner = r.jamPulang ? r.jamPulang.substring(0, 5) : "";
+                    if (kind === "pp") inner = r.jamPulang ? Util.formatTime(r.jamPulang) : "";
                     if (kind === "pa") inner = r.jamPulang ? "✓" : "";
                 }
                 const tcls = (kind === "dp" || kind === "pp") ? " t" : (inner === "✓" ? " ok" : "");

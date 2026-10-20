@@ -755,6 +755,7 @@ const ModulPresensi = {
                     <p class="text-xs text-slate-400 mt-0.5">QR tergenerate otomatis dari NIP (teks: <span class="font-mono">SIMTAS|T|NIP</span>). Cetak sebagai kartu, atau simpan ke Google Drive.</p></div>
                 <div class="flex gap-2 flex-wrap">
                     <button type="button" onclick="ModulPresensi.openTendikForm()" class="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Tambah Guru/Tendik</button>
+                    <button type="button" onclick="ModulPresensi.openImportTendikModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs"><i class="fa-solid fa-file-excel"></i> Impor Guru/Tendik (Excel)</button>
                     <button type="button" onclick="ModulPresensi.cetakKartu()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-print text-blue-600"></i> Cetak Semua Kartu</button>
                     <button type="button" id="btn-qr-drive" onclick="ModulPresensi.simpanQrDrive()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-brands fa-google-drive"></i> Simpan Semua QR ke Google Drive</button>
                 </div>
@@ -774,10 +775,11 @@ const ModulPresensi = {
                 <div class="flex justify-center gap-1.5 mt-3">
                     <a href="${url}" download="QR_${Sec.esc(Util.cleanId(t.nip))}.png" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-download"></i> PNG</a>
                     <button type="button" onclick="ModulPresensi.openTendikForm('${Sec.esc(Util.cleanId(t.nip))}')" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-pen"></i> Ubah</button>
+                    <button type="button" onclick="ModulPresensi.hapusTendik('${Sec.esc(Util.cleanId(t.nip))}', '${Sec.esc(t.nama)}')" class="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-lg" title="Hapus Guru/Tendik"><i class="fa-solid fa-trash-can"></i></button>
                 </div>`;
             wrap.appendChild(card);
         }
-        if (list.length === 0) wrap.innerHTML = `<div class="col-span-full p-8 text-center text-xs text-slate-400">Belum ada guru/tendik. Klik "Tambah Guru/Tendik".</div>`;
+        if (list.length === 0) wrap.innerHTML = `<div class="col-span-full p-8 text-center text-xs text-slate-400">Belum ada guru/tendik. Klik "Tambah Guru/Tendik" atau "Impor Guru/Tendik (Excel)".</div>`;
     },
 
     async cetakKartu() {
@@ -836,7 +838,7 @@ const ModulPresensi = {
                     <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
                         <select id="td-jk" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"><option ${t && t.jk === "Perempuan" ? "" : "selected"}>Laki-laki</option><option ${t && t.jk === "Perempuan" ? "selected" : ""}>Perempuan</option></select></div>
                     <div><label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-                        <input id="td-status" value="${v("statusKepegawaian")}" placeholder="PNS / PPPK / Honorer" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
+                        <input id="td-status" value="${v("statusKepegawaian") || v("golongan")}" placeholder="PNS / PPPK / Honorer" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                 </div>
                 <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="td-aktif" ${!t || t.aktif !== false ? "checked" : ""}> Aktif (ikut presensi)</label>
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
@@ -855,16 +857,203 @@ const ModulPresensi = {
             return;
         }
         if (!g("td-nama")) { App.showToast("Nama wajib diisi.", "error"); return; }
+
+        const tendikData = {
+            nip,
+            nama: g("td-nama"),
+            jabatan: g("td-jabatan"),
+            jk: g("td-jk"),
+            statusKepegawaian: g("td-status"),
+            golongan: g("td-status"),
+            aktif: document.getElementById("td-aktif").checked
+        };
+
+        // Update lokal langsung ke DataStore agar instan
+        const currentList = DataStore.getTendik();
+        const cleanKey = Util.cleanId(nip);
+        const idx = currentList.findIndex(x => Util.cleanId(x.nip) === cleanKey);
+        if (idx >= 0) currentList[idx] = { ...currentList[idx], ...tendikData };
+        else currentList.push(tendikData);
+        DataStore.saveTendik(currentList);
+
         const res = await ApiClient.request("saveTendik", {
-            nip, nama: g("td-nama"), jabatan: g("td-jabatan"), jk: g("td-jk"),
-            statusKepegawaian: g("td-status"), aktif: document.getElementById("td-aktif").checked
+            ...tendikData,
+            tendik: tendikData,
+            list: [tendikData]
         });
+
         if (res.success) {
-            document.getElementById("modal-tendik").classList.add("hidden");
+            document.getElementById("modal-tendik")?.classList.add("hidden");
             App.showToast(res.message, "success");
             this.renderQR();
         } else {
             App.showToast(res.message || "Gagal menyimpan.", "error");
+        }
+    },
+
+    async hapusTendik(nipClean, nama) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus data ${nama} (NIP/ID: ${nipClean})?\nData kartu ID dan presensi akan dihapus.`)) return;
+        const res = await ApiClient.request("deleteTendik", { nip: nipClean });
+        if (res && res.success) {
+            App.showToast(res.message || `Data ${nama} berhasil dihapus.`, "success");
+            this.renderQR();
+        } else {
+            App.showToast((res && res.message) || "Gagal menghapus data.", "error");
+        }
+    },
+
+    // ---- Impor Guru & Tendik dari Excel / CSV ----
+    openImportTendikModal() {
+        this.pendingImportTendikRows = [];
+        const fileInput = document.getElementById("tendik-import-file");
+        if (fileInput) fileInput.value = "";
+        const previewBox = document.getElementById("tendik-import-preview-box");
+        if (previewBox) previewBox.classList.add("hidden");
+        const btn = document.getElementById("btn-process-import-tendik");
+        if (btn) btn.disabled = true;
+
+        const modal = document.getElementById("modal-import-tendik");
+        if (modal) modal.classList.remove("hidden");
+    },
+
+    closeImportTendikModal() {
+        const modal = document.getElementById("modal-import-tendik");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    async downloadTendikTemplate() {
+        try {
+            const XLSX = await ModulImport.loadXlsx();
+            const sampleData = [
+                ["NIP/ID", "Nama Lengkap", "Jabatan", "Jenis Kelamin", "Status Kepegawaian", "Aktif"],
+                ["19750810 200501 1 003", "Siti Rahayu, S.Pd.SD", "Guru Kelas 1", "Perempuan", "PNS", "Ya"],
+                ["19820315 200902 2 008", "Ahmad Fauzi, S.Pd", "Guru PJOK", "Laki-laki", "PPPK", "Ya"],
+                ["GTT001", "Budi Santoso, S.Pd", "Guru Kelas 4", "Laki-laki", "Honorer", "Ya"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(sampleData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Tendik");
+            XLSX.writeFile(wb, "Template_Data_Guru_Tendik.xlsx");
+            App.showToast("Template Excel Guru/Tendik berhasil diunduh!", "success");
+        } catch (e) {
+            App.showToast(`Gagal mengunduh template: ${e.message}`, "error");
+        }
+    },
+
+    async onImportTendikFileSelected(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        try {
+            const XLSX = await ModulImport.loadXlsx();
+            const data = await file.arrayBuffer();
+            const wb = XLSX.read(data, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+            if (!json || json.length === 0) {
+                App.showToast("Berkas kosong atau format tidak sesuai.", "error");
+                return;
+            }
+
+            const rows = [];
+            for (const row of json) {
+                let nip = "", nama = "", jabatan = "", jk = "Laki-laki", status = "PNS", aktif = true;
+
+                for (const [k, v] of Object.entries(row)) {
+                    const cleanKey = k.toLowerCase().replace(/[^a-z0-9]/g, "");
+                    const valStr = String(v).trim();
+                    if (cleanKey.includes("nip") || cleanKey.includes("id")) nip = valStr;
+                    else if (cleanKey.includes("nama")) nama = valStr;
+                    else if (cleanKey.includes("jabatan") || cleanKey.includes("tugas")) jabatan = valStr;
+                    else if (cleanKey.includes("kelamin") || cleanKey === "jk") jk = valStr.toUpperCase().startsWith("P") ? "Perempuan" : "Laki-laki";
+                    else if (cleanKey.includes("status") || cleanKey.includes("golongan")) status = valStr;
+                    else if (cleanKey.includes("aktif")) aktif = !(valStr.toLowerCase() === "tidak" || valStr.toLowerCase() === "false" || valStr === "0");
+                }
+
+                if (nip && nama) {
+                    rows.push({
+                        nip,
+                        nama,
+                        jabatan: jabatan || "Tenaga Pendidik",
+                        jk,
+                        statusKepegawaian: status || "PNS",
+                        golongan: status || "PNS",
+                        aktif
+                    });
+                }
+            }
+
+            if (rows.length === 0) {
+                App.showToast("Tidak ditemukan data valid (kolom NIP dan Nama wajib terisi).", "error");
+                return;
+            }
+
+            this.pendingImportTendikRows = rows;
+            const countEl = document.getElementById("tendik-import-count");
+            if (countEl) countEl.textContent = rows.length;
+
+            const tbody = document.getElementById("tendik-import-preview-tbody");
+            if (tbody) {
+                tbody.innerHTML = rows.slice(0, 15).map(r => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-2.5 py-1.5 font-mono text-[11px]">${Sec.esc(r.nip)}</td>
+                        <td class="px-2.5 py-1.5 font-semibold">${Sec.esc(r.nama)}</td>
+                        <td class="px-2.5 py-1.5">${Sec.esc(r.jabatan)}</td>
+                        <td class="px-2.5 py-1.5">${Sec.esc(r.statusKepegawaian)}</td>
+                    </tr>
+                `).join("") + (rows.length > 15 ? `<tr><td colspan="4" class="px-2.5 py-1.5 text-center text-slate-400 italic">...dan ${rows.length - 15} data lainnya</td></tr>` : "");
+            }
+
+            const previewBox = document.getElementById("tendik-import-preview-box");
+            if (previewBox) previewBox.classList.remove("hidden");
+
+            const btn = document.getElementById("btn-process-import-tendik");
+            if (btn) btn.disabled = false;
+
+        } catch (err) {
+            console.error("onImportTendikFileSelected:", err);
+            App.showToast(`Gagal membaca berkas: ${err.message}`, "error");
+        }
+    },
+
+    async processImportTendik() {
+        if (!this.pendingImportTendikRows || this.pendingImportTendikRows.length === 0) {
+            App.showToast("Belum ada data untuk diimpor.", "warning");
+            return;
+        }
+
+        const btn = document.getElementById("btn-process-import-tendik");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengimpor ${this.pendingImportTendikRows.length} data...`;
+
+        try {
+            const currentList = DataStore.getTendik();
+            this.pendingImportTendikRows.forEach(p => {
+                const key = Util.cleanId(p.nip);
+                const idx = currentList.findIndex(t => Util.cleanId(t.nip) === key);
+                if (idx >= 0) currentList[idx] = { ...currentList[idx], ...p };
+                else currentList.push(p);
+            });
+            DataStore.saveTendik(currentList);
+
+            const res = await ApiClient.request("saveTendik", {
+                list: this.pendingImportTendikRows
+            });
+
+            if (res && res.success) {
+                App.showToast(res.message || `Berhasil mengimpor ${this.pendingImportTendikRows.length} guru/tendik!`, "success");
+                this.closeImportTendikModal();
+                this.renderQR();
+            } else {
+                App.showToast((res && res.message) || "Gagal mengimpor data ke server.", "error");
+                this.renderQR();
+            }
+        } catch (err) {
+            App.showToast(`Error: ${err.message}`, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-file-import"></i> Impor Sekarang`;
         }
     }
 };

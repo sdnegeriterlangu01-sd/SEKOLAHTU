@@ -49,11 +49,11 @@ const ApiClient = {
             }
             if (json && !json.success && json.message && json.message.includes("Aksi tidak dikenali")) {
                 console.warn(`[ApiClient] GAS Web App belum mendukung aksi '${action}'. Deployment Apps Script perlu diperbarui ke versi baru.`);
-                if (action === "deleteSuratKeluar" || action === "deleteSuratMasuk") {
+                if (action === "deleteSuratKeluar" || action === "deleteSuratMasuk" || action === "deleteTendik") {
                     this.handleLocalFallback(action, payload);
                     return {
                         success: true,
-                        message: `Surat berhasil dihapus dari data lokal. PENTING: Harap update deployment Google Apps Script Anda (Manage deployments > New version > Deploy) agar aksi '${action}' juga terhapus permanen di Google Sheets.`
+                        message: `Data berhasil dihapus dari data lokal. PENTING: Harap update deployment Google Apps Script Anda (Manage deployments > New version > Deploy) agar aksi '${action}' juga terhapus permanen di Google Sheets.`
                     };
                 }
                 return {
@@ -244,6 +244,29 @@ const ApiClient = {
                 const noUrut = payload.noUrut || (suratTahunIni.length > 0 ? Math.max(...suratTahunIni.map(s => s.noUrut || 0)) + 1 : 1);
                 const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || `${payload.kodeKlasifikasi}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
 
+                const existingIdx = list.findIndex(s => (payload.id && s.id === payload.id) || (payload.oldNomorSurat && s.nomorSurat === payload.oldNomorSurat));
+
+                if (existingIdx >= 0) {
+                    const existing = list[existingIdx];
+                    const updated = {
+                        ...existing,
+                        id: payload.id || existing.id,
+                        nomorSurat,
+                        kodeKlasifikasi: payload.kodeKlasifikasi || existing.kodeKlasifikasi,
+                        tanggalSurat: payload.tanggalSurat || existing.tanggalSurat,
+                        tujuan: payload.tujuan,
+                        perihal: payload.perihal,
+                        pengonsep: payload.pengonsep || existing.pengonsep,
+                        penandatangan: payload.penandatangan || existing.penandatangan,
+                        keterangan: payload.keterangan || existing.keterangan,
+                        fileDriveUrl: payload.fileDriveUrl || payload.fileBase64 || existing.fileDriveUrl,
+                        isManual: !!payload.nomorSuratManual
+                    };
+                    list[existingIdx] = updated;
+                    DataStore.saveSuratKeluar(list);
+                    return { success: true, message: `Surat keluar ${nomorSurat} berhasil diperbarui!`, data: updated };
+                }
+
                 const newSurat = {
                     id: payload.id || `SK-${tahun}-${String(noUrut).padStart(3, "0")}`,
                     nomorSurat,
@@ -358,18 +381,29 @@ const ApiClient = {
                 return { success: true, data: DataStore.getTendik() };
 
             case "saveTendik": {
-                if (!payload.nip || !payload.nama) return { success: false, message: "NIP/ID dan Nama wajib diisi." };
+                const listInput = payload.list || (payload.tendik ? [payload.tendik] : (payload.nip ? [payload] : []));
+                if (!listInput || listInput.length === 0) return { success: false, message: "NIP/ID dan Nama wajib diisi." };
                 const list = DataStore.getTendik();
-                const key = Util.cleanId(payload.nip);
-                const idx = list.findIndex(t => Util.cleanId(t.nip) === key);
-                const rec = {
-                    nip: payload.nip, nama: payload.nama, jabatan: payload.jabatan || "-",
-                    jk: payload.jk || "-", statusKepegawaian: payload.statusKepegawaian || "-",
-                    aktif: payload.aktif !== false
-                };
-                if (idx >= 0) list[idx] = { ...list[idx], ...rec }; else list.push(rec);
+                listInput.forEach(p => {
+                    const key = Util.cleanId(p.nip);
+                    const idx = list.findIndex(t => Util.cleanId(t.nip) === key);
+                    const rec = {
+                        nip: p.nip, nama: p.nama, jabatan: p.jabatan || "-",
+                        jk: p.jk || "-", statusKepegawaian: p.statusKepegawaian || p.golongan || "-",
+                        aktif: p.aktif !== false
+                    };
+                    if (idx >= 0) list[idx] = { ...list[idx], ...rec }; else list.push(rec);
+                });
                 DataStore.saveTendik(list);
-                return { success: true, message: `Data ${payload.nama} berhasil disimpan.`, data: rec };
+                return { success: true, message: `Data guru/tendik berhasil disimpan (${listInput.length} orang).`, data: list };
+            }
+
+            case "deleteTendik": {
+                const key = Util.cleanId(payload.nip);
+                let list = DataStore.getTendik();
+                list = list.filter(t => Util.cleanId(t.nip) !== key);
+                DataStore.saveTendik(list);
+                return { success: true, message: `Data guru/tendik berhasil dihapus!` };
             }
 
             case "saveQrFiles":
@@ -486,7 +520,8 @@ const Sync = {
         deleteSuratKeluar: ["suratKeluar"],
         saveSuratMasuk: ["suratMasuk"],
         deleteSuratMasuk: ["suratMasuk"],
-        saveTendik: ["tendik"]
+        saveTendik: ["tendik"],
+        deleteTendik: ["tendik"]
     },
 
     async pull(kind) {

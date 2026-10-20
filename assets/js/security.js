@@ -85,6 +85,7 @@ const ACL = {
         // Tendik & presensi QR
         getTendik: ["admin", "kepsek", "tu", "guru"],
         saveTendik: ["admin", "tu"],
+        deleteTendik: ["admin", "tu"],
         saveQrFiles: ["admin", "tu"],
         scanTendik: ["admin", "kepsek", "tu", "guru", "kiosk"],
         getAbsensiTendikBulan: ["admin", "kepsek", "tu", "guru"],

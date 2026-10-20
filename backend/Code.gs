@@ -115,6 +115,10 @@ function doPost(e) {
         responseData = handleSaveTendik(ss, payload);
         break;
 
+      case "deleteTendik":
+        responseData = handleDeleteTendik(ss, payload);
+        break;
+
       case "saveQrFiles":
         responseData = handleSaveQrFiles(payload);
         break;
@@ -596,6 +600,7 @@ function handleGetTendik(ss) {
     nama: String(row[1]),
     jabatan: String(row[2]),
     golongan: String(row[3]),
+    statusKepegawaian: String(row[3]),
     jk: String(row[4]),
     noHp: String(row[5]),
     kodeQr: String(row[6]),
@@ -608,31 +613,55 @@ function handleGetTendik(ss) {
 
 function handleSaveTendik(ss, payload) {
   const sheet = ss.getSheetByName(TAB_TENDIK);
-  const list = payload.list || (payload.tendik ? [payload.tendik] : []);
+  if (!sheet) return { success: false, message: "Tab " + TAB_TENDIK + " tidak ditemukan." };
+
+  const list = payload.list || (payload.tendik ? [payload.tendik] : (payload.nip ? [payload] : []));
+  if (!list || list.length === 0) {
+    return { success: false, message: "Tidak ada data guru/tendik yang dikirim." };
+  }
+
   const existing = sheet.getDataRange().getValues();
   const nipRowMap = {};
   for (let i = 1; i < existing.length; i++) {
-    nipRowMap[String(existing[i][0])] = i + 1;
+    nipRowMap[String(existing[i][0]).trim()] = i + 1;
   }
 
   list.forEach(t => {
-    const nip = String(t.nip);
+    const nip = String(t.nip || "").trim();
+    if (!nip) return;
     const row = nipRowMap[nip];
+    const statusPeg = t.statusKepegawaian || t.golongan || "";
     if (row) {
       sheet.getRange(row, 2, 1, 8).setValues([[
-        t.nama || "", t.jabatan || "", t.golongan || "", t.jk || "",
+        t.nama || "", t.jabatan || "", statusPeg, t.jk || "",
         t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false
       ]]);
     } else {
       sheet.appendRow([
-        nip, t.nama || "", t.jabatan || "", t.golongan || "", t.jk || "",
+        nip, t.nama || "", t.jabatan || "", statusPeg, t.jk || "",
         t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false
       ]);
       nipRowMap[nip] = sheet.getLastRow();
     }
   });
 
-  return { success: true, message: "Data guru & tenaga kependidikan berhasil disimpan!" };
+  return { success: true, message: `Data ${list.length} guru & tenaga kependidikan berhasil disimpan!` };
+}
+
+function handleDeleteTendik(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_TENDIK);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Tidak ada data guru/tendik." };
+  const nip = String(payload.nip || "").trim();
+  if (!nip) return { success: false, message: "NIP wajib disertakan." };
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === nip) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: `Data guru/tendik dengan NIP ${nip} berhasil dihapus!` };
+    }
+  }
+  return { success: false, message: `Data guru/tendik dengan NIP ${nip} tidak ditemukan.` };
 }
 
 function handleSaveQrFiles(payload) {
@@ -741,6 +770,47 @@ function handleSaveSuratKeluar(ss, payload) {
     } catch (e) {
       Logger.log("Gagal simpan file surat keluar ke Drive: " + e.message);
     }
+  }
+
+  // Cek apakah mode edit (row sudah ada)
+  let existingRow = -1;
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if ((payload.id && String(data[i][0]) === String(payload.id)) ||
+          (payload.oldNomorSurat && String(data[i][1]) === String(payload.oldNomorSurat))) {
+        existingRow = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (existingRow > 1) {
+    if (!fileUrl) {
+      fileUrl = sheet.getRange(existingRow, 12).getValue() || "";
+    }
+    sheet.getRange(existingRow, 1, 1, 13).setValues([[
+      id,
+      nomorSurat,
+      payload.kodeKlasifikasi || "-",
+      noUrut,
+      tahun,
+      payload.tanggalSurat,
+      payload.tujuan,
+      payload.perihal,
+      payload.pengonsep || "Staf TU",
+      payload.penandatangan || "Kepala Sekolah",
+      payload.keterangan || "-",
+      fileUrl,
+      nowStr
+    ]]);
+
+    return {
+      success: true,
+      message: `Surat keluar ${nomorSurat} berhasil diperbarui!`,
+      data: { id: id, nomorSurat: nomorSurat, noUrut: noUrut, tahun: tahun, fileDriveUrl: fileUrl }
+    };
   }
 
   sheet.appendRow([

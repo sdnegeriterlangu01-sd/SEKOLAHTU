@@ -165,8 +165,11 @@ const ModulSurat = {
                         </span>
                     </td>
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                        <button onclick="ModulSurat.salinNomor('${s.nomorSurat}')" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Salin Nomor Surat">
+                        <button onclick="ModulSurat.salinNomor('${s.nomorSurat}')" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition inline-block" title="Salin Nomor Surat">
                             <i class="fa-regular fa-copy"></i>
+                        </button>
+                        <button onclick="ModulSurat.openEditSuratKeluar('${s.id}')" class="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition inline-block" title="Edit Nomor Surat & Unggah Berkas">
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                         <a href="${Sec.safeUrl(s.fileDriveUrl)}" target="_blank" rel="noopener noreferrer" class="p-2 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition inline-block" title="Lihat Berkas / Drive">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -213,6 +216,19 @@ const ModulSurat = {
         const modal = document.getElementById("modal-tambah-surat-keluar");
         if (!modal) return;
 
+        const editIdInput = document.getElementById("sk-edit-id");
+        if (editIdInput) editIdInput.value = "";
+
+        const titleEl = document.getElementById("sk-modal-title");
+        const subTitleEl = document.getElementById("sk-modal-subtitle");
+        const btnSubmit = document.getElementById("btn-submit-sk");
+        if (titleEl) titleEl.textContent = "Pendaftaran Nomor Surat Keluar (SRIKANDI)";
+        if (subTitleEl) subTitleEl.textContent = "Penomoran terpusat otomatis tanpa risiko nomor ganda.";
+        if (btnSubmit) btnSubmit.innerHTML = `<i class="fa-solid fa-check"></i> Simpan & Terbitkan Nomor`;
+
+        const fileContainer = document.getElementById("sk-current-file-container");
+        if (fileContainer) fileContainer.classList.add("hidden");
+
         document.getElementById("sk-tanggal").value = Util.today();
         document.getElementById("sk-tujuan").value = "";
         document.getElementById("sk-perihal").value = "";
@@ -231,6 +247,58 @@ const ModulSurat = {
         document.getElementById("sk-penandatangan").value = config.namaKepalaSekolah;
 
         this.updateLiveNomorSuratPreview();
+        modal.classList.remove("hidden");
+    },
+
+    openEditSuratKeluar(id) {
+        const modal = document.getElementById("modal-tambah-surat-keluar");
+        if (!modal) return;
+
+        const list = DataStore.getSuratKeluar();
+        const s = list.find(x => x.id === id || x.nomorSurat === id);
+        if (!s) {
+            App.showToast("Data surat keluar tidak ditemukan.", "error");
+            return;
+        }
+
+        const editIdInput = document.getElementById("sk-edit-id");
+        if (editIdInput) editIdInput.value = s.id;
+
+        const titleEl = document.getElementById("sk-modal-title");
+        const subTitleEl = document.getElementById("sk-modal-subtitle");
+        const btnSubmit = document.getElementById("btn-submit-sk");
+        if (titleEl) titleEl.textContent = "Edit Nomor Surat & Unggah Berkas";
+        if (subTitleEl) subTitleEl.textContent = `Memperbarui arsip surat resmi: ${s.nomorSurat}`;
+        if (btnSubmit) btnSubmit.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan`;
+
+        const kodeEl = document.getElementById("sk-kode-klasifikasi");
+        if (kodeEl && s.kodeKlasifikasi) kodeEl.value = s.kodeKlasifikasi;
+        document.getElementById("sk-tanggal").value = s.tanggalSurat || Util.today();
+        document.getElementById("sk-pengonsep").value = s.pengonsep || "Staf TU";
+        document.getElementById("sk-penandatangan").value = s.penandatangan || "";
+        document.getElementById("sk-tujuan").value = s.tujuan || "";
+        document.getElementById("sk-perihal").value = s.perihal || "";
+        document.getElementById("sk-keterangan").value = s.keterangan || "";
+
+        const chkManual = document.getElementById("sk-is-manual");
+        if (chkManual) chkManual.checked = true;
+        this.toggleManualNomor(true);
+        const manualInput = document.getElementById("sk-nomor-manual");
+        if (manualInput) manualInput.value = s.nomorSurat || "";
+
+        const fileInput = document.getElementById("sk-file");
+        if (fileInput) fileInput.value = "";
+        const fileContainer = document.getElementById("sk-current-file-container");
+        const fileLink = document.getElementById("sk-current-file-link");
+        if (fileContainer && fileLink) {
+            if (s.fileDriveUrl) {
+                fileLink.href = Sec.safeUrl(s.fileDriveUrl);
+                fileContainer.classList.remove("hidden");
+            } else {
+                fileContainer.classList.add("hidden");
+            }
+        }
+
         modal.classList.remove("hidden");
     },
 
@@ -287,7 +355,13 @@ const ModulSurat = {
                 });
             }
 
+            const editId = document.getElementById("sk-edit-id")?.value;
+            const existingSurat = editId ? DataStore.getSuratKeluar().find(x => x.id === editId) : null;
+
             const res = await ApiClient.request("saveSuratKeluar", {
+                id: editId || undefined,
+                oldNomorSurat: existingSurat ? existingSurat.nomorSurat : undefined,
+                fileDriveUrl: (!fileBase64 && existingSurat) ? existingSurat.fileDriveUrl : undefined,
                 kodeKlasifikasi: kode,
                 tanggalSurat: tanggal,
                 tujuan: tujuan,
@@ -307,7 +381,7 @@ const ModulSurat = {
                 this.renderSuratKeluarTable();
                 App.updateDashboardStats();
             } else {
-                App.showToast((res && res.message) || "Gagal menerbitkan nomor surat", "error");
+                App.showToast((res && res.message) || "Gagal menyimpan surat keluar", "error");
             }
         } catch (err) {
             console.error("submitSuratKeluar:", err);
@@ -315,7 +389,8 @@ const ModulSurat = {
         } finally {
             this._submittingSK = false;
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-check"></i> Terbitkan Nomor Surat`;
+            const editId = document.getElementById("sk-edit-id")?.value;
+            btn.innerHTML = editId ? `<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan` : `<i class="fa-solid fa-check"></i> Simpan & Terbitkan Nomor`;
         }
     },
 

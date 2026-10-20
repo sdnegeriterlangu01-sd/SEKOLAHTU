@@ -321,15 +321,13 @@ const ModulAbsensi = {
                     }
                 });
 
+                // 1. Simpan langsung ke cache lokal DataStore agar rekap bulanan siswa selalu instan
+                const localBulan = DataStore.getAbsensiSiswaBulan();
                 for (const [kls, recs] of Object.entries(perKelas)) {
-                    const existingRes = await ApiClient.request("getAbsensiSiswaBulan", { tahunAjaran: ta, bulan: bulan, kelas: kls });
-                    const existingMap = {};
-                    (existingRes.success && Array.isArray(existingRes.data) ? existingRes.data : []).forEach(row => {
-                        existingMap[row.nisn] = row.marks || {};
-                    });
-
                     const rowsToSave = recs.map(r => {
-                        const marks = { ...(existingMap[r.nisnNip] || {}) };
+                        const key = `${ta}|${bulan}|${r.nisnNip}`;
+                        const existingRec = localBulan.find(b => b.key === key || b.nisn === r.nisnNip);
+                        const marks = { ...(existingRec?.marks || {}) };
                         if (r.status === "Sakit") marks[dd] = "S";
                         else if (r.status === "Izin") marks[dd] = "I";
                         else if (r.status === "Alpa") marks[dd] = "A";
@@ -337,26 +335,26 @@ const ModulAbsensi = {
                         return {
                             nisn: r.nisnNip,
                             nama: r.nama,
-                            marks: marks
+                            marks: marks,
+                            kelas: kls
                         };
                     });
 
-                    await ApiClient.request("saveAbsensiSiswaBulan", {
-                        tahunAjaran: ta,
-                        bulan: bulan,
-                        kelas: kls,
-                        rows: rowsToSave
-                    });
-
-                    // Simpan juga ke cache lokal DataStore agar rekap bulanan instan
-                    const localBulan = DataStore.getAbsensiSiswaBulan();
                     rowsToSave.forEach(row => {
                         const key = `${ta}|${bulan}|${row.nisn}`;
-                        const idx = localBulan.findIndex(b => b.key === key);
+                        const idx = localBulan.findIndex(b => b.key === key || b.nisn === row.nisn);
                         const rec = { key, tahunAjaran: ta, bulan, kelas: kls, nisn: row.nisn, nama: row.nama, marks: row.marks };
                         if (idx >= 0) localBulan[idx] = rec; else localBulan.push(rec);
                     });
                     DataStore.saveAbsensiSiswaBulan(localBulan);
+
+                    // 2. Kirim update ke backend Cloud jika aktif
+                    ApiClient.request("saveAbsensiSiswaBulan", {
+                        tahunAjaran: ta,
+                        bulan: bulan,
+                        kelas: kls,
+                        rows: rowsToSave
+                    }).catch(e => console.warn("[ModulAbsensi] Sync saveAbsensiSiswaBulan cloud:", e));
                 }
             } catch (errSync) {
                 console.warn("[ModulAbsensi] Gagal sinkronisasi rekap bulanan siswa:", errSync);

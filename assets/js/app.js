@@ -25,7 +25,9 @@ const App = {
         this._isStarted = true;
 
         this.initModules();
+        if (window.ModulVue) ModulVue.init();
         this.renderTASelector();
+        this.renderQuickActions();
         this.updateDashboardStats();
         this.updateConnectionStatusBadge();
 
@@ -98,6 +100,9 @@ const App = {
         }
 
         this.currentRoute = route;
+        if (window.VueStore) VueStore.refresh();
+        if (window.ModulVue) ModulVue.applyRoleNavVisibility();
+        this.renderQuickActions();
 
         // Hide all views
         const views = document.querySelectorAll(".app-view");
@@ -161,44 +166,139 @@ const App = {
         }
     },
 
+    VERSION: "1.4.1",
+
     updateDashboardStats() {
         const students = DataStore.getSiswa();
         const suratKeluar = DataStore.getSuratKeluar();
         const suratMasuk = DataStore.getSuratMasuk();
         const absensiList = DataStore.getAbsensi();
         const today = Util.today();
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+
+        // Filter siswa untuk role guru
+        let targetStudents = students;
+        let isFilteredKelas = false;
+        let kelasLabel = "Seluruh Kelas";
+
+        if (role === "guru" && gInfo) {
+            if (gInfo.isGuruKelas) {
+                isFilteredKelas = true;
+                kelasLabel = `Kelas ${gInfo.kelas}`;
+                targetStudents = students.filter(s => {
+                    const k = String(s.rombel || s.kelas || "");
+                    const d1 = k.replace(/\D/g, "");
+                    const d2 = String(gInfo.kelas).replace(/\D/g, "");
+                    return k === gInfo.kelas || (d1 && d2 && d1 === d2) || k.toLowerCase().includes(gInfo.kelas.toLowerCase());
+                });
+            } else if (gInfo.isGuruMapel) {
+                kelasLabel = "Semua Kelas (Mapel)";
+            }
+        }
 
         // 1. Total Siswa & Kelengkapan Berkas
-        const totalSiswa = students.length;
-        const lengkapCount = students.filter(s => s.berkas && s.berkas.kk?.uploaded && s.berkas.akta?.uploaded).length;
+        const totalSiswa = targetStudents.length;
+        const lengkapCount = targetStudents.filter(s => s.berkas && s.berkas.kk?.uploaded && s.berkas.akta?.uploaded).length;
         const persenLengkap = totalSiswa > 0 ? Math.round((lengkapCount / totalSiswa) * 100) : 0;
 
         const statTotal = document.getElementById("stat-total-siswa");
         if (statTotal) statTotal.textContent = totalSiswa;
+        const statTotalTitle = document.getElementById("stat-total-siswa-title");
+        if (statTotalTitle) statTotalTitle.textContent = isFilteredKelas ? `Siswa ${kelasLabel}` : "Total Siswa Terdaftar";
+        const statTotalDesc = document.getElementById("stat-total-siswa-desc");
+        if (statTotalDesc) statTotalDesc.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> ${isFilteredKelas ? `Siswa binaan aktif ${kelasLabel}` : "Terindeks di database DB_Siswa"}`;
+
         const statBerkasLengkap = document.getElementById("stat-berkas-lengkap");
         if (statBerkasLengkap) statBerkasLengkap.textContent = `${persenLengkap}%`;
         const statBerkasDetail = document.getElementById("stat-berkas-detail");
-        if (statBerkasDetail) statBerkasDetail.textContent = `${lengkapCount} dari ${totalSiswa} siswa berkas pokok lengkap`;
+        if (statBerkasDetail) statBerkasDetail.textContent = `${lengkapCount} dari ${totalSiswa} siswa berkas lengkap`;
 
-        // 2. Surat Keluar & Masuk
-        const statSK = document.getElementById("stat-surat-keluar");
-        if (statSK) statSK.textContent = suratKeluar.length;
-        const statSM = document.getElementById("stat-surat-masuk");
-        if (statSM) statSM.textContent = suratMasuk.length;
+        // 2. Card 3: Agenda Surat atau Presensi Tendik (jika guru)
+        const cardSuratBox = document.getElementById("dashboard-card-surat");
+        const cardTendikBox = document.getElementById("dashboard-card-guru-presensi");
+        if (role === "guru") {
+            if (cardSuratBox) cardSuratBox.classList.add("hidden");
+            if (cardTendikBox) {
+                cardTendikBox.classList.remove("hidden");
+                const u = Auth.user();
+                const tendikToday = DataStore.getAbsensiTendik().find(r => r.tanggal === today && (Util.cleanId(r.nip) === Util.cleanId(u?.email?.split("@")[0] || u?.id) || (u?.nama && r.nama && r.nama.toLowerCase().includes(u.nama.toLowerCase()))));
+                const statGuruJam = document.getElementById("stat-guru-presensi-status");
+                if (statGuruJam) {
+                    if (tendikToday && tendikToday.jamPulang) {
+                        statGuruJam.innerHTML = `<span class="text-blue-700 font-bold text-lg">Sudah Pulang</span> <span class="text-xs text-slate-400 font-normal">(${Util.formatTime(tendikToday.jamPulang)})</span>`;
+                    } else if (tendikToday && tendikToday.jamDatang) {
+                        statGuruJam.innerHTML = `<span class="text-emerald-700 font-bold text-lg">Sudah Hadir</span> <span class="text-xs text-slate-400 font-normal">(${Util.formatTime(tendikToday.jamDatang)})</span>`;
+                    } else {
+                        statGuruJam.innerHTML = `<span class="text-amber-600 font-bold text-lg">Belum Scan</span> <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi')" class="text-xs text-blue-600 underline ml-1">Scan Sekarang</a>`;
+                    }
+                }
+            }
+        } else {
+            if (cardSuratBox) cardSuratBox.classList.remove("hidden");
+            if (cardTendikBox) cardTendikBox.classList.add("hidden");
+            const statSK = document.getElementById("stat-surat-keluar");
+            if (statSK) statSK.textContent = suratKeluar.length;
+            const statSM = document.getElementById("stat-surat-masuk");
+            if (statSM) statSM.textContent = suratMasuk.length;
+        }
 
-        // 3. Presensi Hari Ini
-        const todayAbsensi = absensiList.filter(a => a.tanggal === today);
-        const totalAbsen = todayAbsensi.length;
-        const totalHadir = todayAbsensi.filter(a => a.status === "Hadir").length;
-        const persenHadir = totalAbsen > 0 ? ((totalHadir / totalAbsen) * 100).toFixed(1) : 0;
+        // 3. Presensi Hari Ini (Rincian Hadir, Sakit, Izin, Alpa)
+        const targetNisns = new Set(targetStudents.map(s => s.nisn));
+        const todayAbsensi = absensiList.filter(a => a.tanggal === today && a.kategori === "Siswa" && (isFilteredKelas ? targetNisns.has(a.nisnNip) : true));
+
+        const countHadir = todayAbsensi.filter(a => a.status === "Hadir").length;
+        const countSakit = todayAbsensi.filter(a => a.status === "Sakit").length;
+        const countIzin = todayAbsensi.filter(a => a.status === "Izin").length;
+        const countAlpa = todayAbsensi.filter(a => a.status === "Alpa").length;
+        const totalDiabsen = todayAbsensi.length;
+        const basisTotal = totalSiswa > 0 ? totalSiswa : totalDiabsen;
+        const persenHadir = basisTotal > 0 ? ((countHadir / basisTotal) * 100).toFixed(1) : "0.0";
+
+        const statPresensiTitle = document.getElementById("stat-presensi-title");
+        if (statPresensiTitle) statPresensiTitle.textContent = isFilteredKelas ? `Kehadiran ${kelasLabel} Hari Ini` : "Kehadiran Siswa Hari Ini";
 
         const statPresensiPersen = document.getElementById("stat-presensi-persen");
         if (statPresensiPersen) statPresensiPersen.textContent = `${persenHadir}%`;
+
         const statPresensiDetail = document.getElementById("stat-presensi-detail");
-        if (statPresensiDetail) statPresensiDetail.textContent = `${totalHadir} hadir dari ${totalAbsen} target presensi`;
+        if (statPresensiDetail) {
+            statPresensiDetail.innerHTML = `
+                <div class="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800" title="Hadir"><i class="fa-solid fa-check mr-1"></i>H: ${countHadir}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" title="Sakit"><i class="fa-solid fa-notes-medical mr-1"></i>S: ${countSakit}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800" title="Izin"><i class="fa-solid fa-envelope-open mr-1"></i>I: ${countIzin}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800" title="Alpa"><i class="fa-solid fa-xmark mr-1"></i>A: ${countAlpa}</span>
+                </div>
+            `;
+        }
+
+        // Personalisasi Hero Banner sesuai Peran
+        const heroTitle = document.getElementById("dashboard-hero-title");
+        const heroDesc = document.getElementById("dashboard-hero-desc");
+        const u = Auth.user();
+        if (heroTitle && u) {
+            if (role === "guru") {
+                heroTitle.textContent = `Selamat Datang, ${u.nama}`;
+                if (heroDesc) {
+                    heroDesc.textContent = gInfo?.isGuruKelas 
+                        ? `Kelola data kehadiran dan administrasi siswa binaan Anda pada ${kelasLabel} secara mudah, akurat, dan paperless.`
+                        : `Kelola data kehadiran dan administrasi siswa seluruh kelas yang Anda ajar secara terpadu dan otomatis.`;
+                }
+            } else {
+                heroTitle.textContent = `Selamat Datang di SIM-TAS-SD`;
+                if (heroDesc) {
+                    heroDesc.textContent = `Kelola administrasi sekolah dasar secara modern, terpadu, dan otomatis. Pengarsipan berkas siswa, penomoran surat baku SRIKANDI, penerbitan surat keterangan instan, dan absensi digital terhubung langsung ke Google Sheets & Drive.`;
+                }
+            }
+        }
+
+        // Sembunyikan bagian arsitektur teknis jika role Guru
+        const stemSection = document.getElementById("dashboard-stem-section");
+        if (stemSection) stemSection.classList.toggle("hidden", role === "guru");
 
         // Render Recent Activity on Dashboard
-        this.renderRecentActivities(suratKeluar, suratMasuk, students);
+        this.renderRecentActivities(suratKeluar, suratMasuk, targetStudents);
     },
 
     renderRecentActivities(skList, smList, siswaList) {
@@ -336,17 +436,97 @@ const App = {
     },
 
     updateConnectionStatusBadge() {
-        const config = DataStore.getConfig();
         const badge = document.getElementById("cloud-status-badge");
         if (!badge) return;
 
-        if (config.isCloudMode && config.gasApiUrl) {
-            badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Mode: Google Sheets & Drive Aktif`;
+        const isCloud = ApiClient.isCloudActive();
+        if (isCloud) {
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="hidden sm:inline">Cloud Mode: Google Sheets & Drive</span><span class="sm:hidden font-bold">Cloud</span>`;
         } else {
-            badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Local Mode (Database Browser / Demo)`;
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> <span class="hidden sm:inline">Mode Demo (Lokal Browser)</span><span class="sm:hidden font-bold">Demo</span>`;
         }
+    },
+
+    renderQuickActions() {
+        if (window.ModulVue && ModulVue.apps && ModulVue.apps.quickActions) {
+            if (window.VueStore) VueStore.refresh();
+            return;
+        }
+        const container = document.getElementById("quick-actions-dropdown");
+        if (!container) return;
+
+        const role = Auth.role();
+        const isGuru = role === "guru";
+        const isKepsek = role === "kepsek";
+        const isKiosk = role === "kiosk";
+
+        if (isKiosk) {
+            container.innerHTML = `
+                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Presensi Mandiri
+                </a>
+            `;
+            return;
+        }
+
+        if (isGuru) {
+            const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+            const labelKelas = gInfo && gInfo.isGuruKelas ? ` (Kelas ${gInfo.kelas})` : "";
+            container.innerHTML = `
+                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Hari Ini${Sec.esc(labelKelas)}
+                </a>
+                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Bulanan
+                </a>
+                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-qrcode text-emerald-600 w-4"></i> Presensi Datang / Pulang Saya
+                </a>
+                <a href="#berkas" onclick="App.navigateTo('berkas');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-folder-closed text-amber-600 w-4"></i> Berkas Siswa${Sec.esc(labelKelas)}
+                </a>
+            `;
+            return;
+        }
+
+        if (isKepsek) {
+            container.innerHTML = `
+                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-clipboard-user text-indigo-600 w-4"></i> Rekap Presensi Guru & Tendik
+                </a>
+                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Siswa
+                </a>
+                <a href="#surat" onclick="App.navigateTo('surat');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-envelopes-bulk text-amber-600 w-4"></i> Buku Register Surat SRIKANDI
+                </a>
+                <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                    <i class="fa-solid fa-print text-teal-600 w-4"></i> Cetak Surat Keterangan
+                </a>
+            `;
+            return;
+        }
+
+        // Admin & TU default
+        container.innerHTML = `
+            <a href="#berkas" onclick="App.navigateTo('berkas'); ModulBerkas.openAddModal();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-user-plus text-blue-600 w-4"></i> Tambah Siswa Baru
+            </a>
+            <a href="#surat" onclick="App.navigateTo('surat'); ModulSurat.openModalSuratKeluar();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-paper-plane text-emerald-600 w-4"></i> Terbitkan Nomor Surat
+            </a>
+            <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-file-invoice text-teal-600 w-4"></i> Cetak Surat Keterangan
+            </a>
+            <a href="#absensi" onclick="App.navigateTo('absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Harian
+            </a>
+            <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Absensi Datang/Pulang
+            </a>
+        `;
     },
 
     // ==================== PENCADANGAN (BACKUP & RESTORE) ====================

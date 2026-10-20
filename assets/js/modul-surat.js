@@ -75,6 +75,7 @@ const ModulSurat = {
 
     switchSubTab(tab) {
         this.activeSubTab = tab;
+        if (window.VueStore) VueStore.suratSubTab = tab;
         this.renderSubTab();
     },
 

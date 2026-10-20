@@ -82,6 +82,7 @@ const ModulCetak = {
 
     setNomorMode(mode) {
         this.nomorMode = mode;
+        if (window.VueStore) VueStore.cetakNomorMode = mode;
         const btnTerbit = document.getElementById("btn-mode-terbit");
         const btnBaru = document.getElementById("btn-mode-baru");
         const btnManual = document.getElementById("btn-mode-manual");

@@ -73,14 +73,25 @@ const ApiClient = {
         payload = Sec.cleanDeep(payload);
 
         if (this.isCloudActive()) {
-            const res = await this.cloudCall(action, payload);
-            if (res && res.success && Sync.PULL_AFTER[action]) {
-                await Promise.all(Sync.PULL_AFTER[action].map(kind => Sync.pull(kind)));
+            const isDemo = Auth.session && Auth.session.demo;
+            // Jika sesi demo aktif, simpan secara lokal agar tidak tertolak token Supabase
+            if (!isDemo) {
+                const res = await this.cloudCall(action, payload);
+                if (res && res.success) {
+                    if (Sync.PULL_AFTER[action]) {
+                        await Promise.all(Sync.PULL_AFTER[action].map(kind => Sync.pull(kind)));
+                    }
+                    return res;
+                }
+                if (res && res.code === "AUTH") {
+                    console.warn(`[ApiClient] Request '${action}' dialihkan ke database lokal karena sesi tanpa token.`);
+                } else if (res && !res.success) {
+                    return res;
+                }
             }
-            return res;
         }
 
-        await new Promise(r => setTimeout(r, 120)); // latensi mikro agar UX terasa natural
+        await new Promise(r => setTimeout(r, 60)); // latensi mikro agar UX terasa natural
         try {
             return this.handleLocalFallback(action, payload);
         } catch (err) {
@@ -546,7 +557,31 @@ const Sync = {
         siswa: { action: "getStudents", payload: { all: true }, save: d => DataStore.saveSiswaAll(d) },
         tendik: { action: "getTendik", payload: {}, save: d => DataStore.saveTendik(d) },
         suratKeluar: { action: "getSuratKeluar", payload: {}, save: d => DataStore.saveSuratKeluar(d) },
-        suratMasuk: { action: "getSuratMasuk", payload: {}, save: d => DataStore.saveSuratMasuk(d) }
+        suratMasuk: { action: "getSuratMasuk", payload: {}, save: d => DataStore.saveSuratMasuk(d) },
+        absensi: { 
+            action: "getAbsensi", 
+            payload: { tanggal: Util.today() }, 
+            save: d => {
+                if (!Array.isArray(d)) return;
+                const current = DataStore.getAbsensi();
+                const map = new Map();
+                current.forEach(item => map.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+                d.forEach(item => map.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+                DataStore.saveAbsensi(Array.from(map.values()));
+            } 
+        },
+        absensiSiswaBulan: {
+            action: "getAbsensiSiswaBulan",
+            payload: { bulan: Util.monthKey() },
+            save: d => {
+                if (!Array.isArray(d)) return;
+                const current = DataStore.getAbsensiSiswaBulan();
+                const map = new Map();
+                current.forEach(item => map.set(item.key || `${item.tahunAjaran}|${item.bulan}|${item.nisn}`, item));
+                d.forEach(item => map.set(item.key || `${item.tahunAjaran}|${item.bulan}|${item.nisn}`, item));
+                DataStore.saveAbsensiSiswaBulan(Array.from(map.values()));
+            }
+        }
     },
 
     PULL_AFTER: {
@@ -558,7 +593,9 @@ const Sync = {
         saveSuratMasuk: ["suratMasuk"],
         deleteSuratMasuk: ["suratMasuk"],
         saveTendik: ["tendik"],
-        deleteTendik: ["tendik"]
+        deleteTendik: ["tendik"],
+        saveAbsensiBatch: ["absensi", "absensiSiswaBulan"],
+        saveAbsensiSiswaBulan: ["absensiSiswaBulan"]
     },
 
     async pull(kind) {

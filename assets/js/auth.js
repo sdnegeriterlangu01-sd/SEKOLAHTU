@@ -18,12 +18,13 @@ const Auth = {
     _idleTimer: null,
     _started: false,
 
-    // Akun contoh HANYA aktif di Mode Demo (Supabase belum dikonfigurasi)
+    // Akun contoh (Bisa dipakai baik di Mode Demo maupun pengujian cepat)
     DEMO_USERS: {
         admin: { pw: "admin123", nama: "Administrator (Demo)", role: "admin" },
         kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
         tu: { pw: "tu123", nama: "Staf TU (Demo)", role: "tu" },
-        guru: { pw: "guru123", nama: "Guru (Demo)", role: "guru" },
+        guru: { pw: "guru123", nama: "Guru Kelas 1 (Demo)", role: "guru", tipeGuru: "kelas", kelasGuru: "1" },
+        guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", kelasGuru: "Semua" },
         kiosk: { pw: "kiosk123", nama: "Terminal Scan (Demo)", role: "kiosk" }
     },
 
@@ -37,7 +38,33 @@ const Auth = {
     canRoute(route) { return !!this.role() && ACL.check(ACL.ROUTES[route], this.role()); },
     defaultRoute() {
         if (this.role() === "kiosk") return "scan-absensi";
-        return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("berkas") ? "berkas" : "scan-absensi");
+        return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("absensi") ? "absensi" : "scan-absensi");
+    },
+
+    // Deteksi apakah akun guru adalah Guru Kelas (spesifik kelas) atau Guru Mapel (semua kelas)
+    getGuruInfo() {
+        if (this.role() !== "guru") return null;
+        const u = this.user() || {};
+        let tendikList = [];
+        try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
+        const t = tendikList.find(item => 
+            (u.nama && item.nama && item.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+            (u.email && item.nip && item.nip.includes(u.email.split("@")[0]))
+        );
+        const jabatan = t?.jabatan || "";
+        const m = jabatan.match(/kelas\s*(\d+[a-zA-Z]?)/i);
+        const isMapel = (u.tipeGuru === "mapel") || (jabatan.toLowerCase().includes("mapel") || jabatan.toLowerCase().includes("pjok") || jabatan.toLowerCase().includes("agama") || jabatan.toLowerCase().includes("inggris") || jabatan.toLowerCase().includes("seni"));
+        const rawKelas = u.kelasGuru || (m ? m[1] : "");
+        const isKelas = !isMapel;
+        const kelas = rawKelas || (isKelas ? "1" : "");
+
+        return {
+            isGuruKelas: isKelas && !!kelas,
+            isGuruMapel: isMapel || !kelas || kelas === "Semua",
+            kelas: kelas || "1",
+            nama: u.nama || t?.nama || "Guru",
+            jabatan: jabatan || (isKelas ? `Guru Kelas ${kelas || '1'}` : "Guru Mata Pelajaran")
+        };
     },
 
     // ------------------------------------------------------------------ INIT
@@ -81,13 +108,30 @@ const Auth = {
     async login(identifier, password) {
         this.checkLockout();
 
-        if (!this.usesSupabase()) {
-            const u = this.DEMO_USERS[String(identifier).toLowerCase().trim()];
-            if (!u || u.pw !== password) { this.registerFail(); throw new Error("Nama pengguna atau kata sandi salah (Mode Demo)."); }
-            this.session = { demo: true, token: null, user: { id: "demo-" + u.role, email: identifier, nama: u.nama, role: u.role } };
+        // 1. Cek akun demo terlebih dahulu (memungkinkan pengujian cepat tanpa hambatan jaringan)
+        const cleanId = String(identifier).toLowerCase().trim();
+        const demoU = this.DEMO_USERS[cleanId];
+        if (demoU && demoU.pw === password) {
+            this.session = {
+                demo: true,
+                token: null,
+                user: {
+                    id: "demo-" + demoU.role,
+                    email: identifier,
+                    nama: demoU.nama,
+                    role: demoU.role,
+                    tipeGuru: demoU.tipeGuru || (demoU.role === "guru" ? "kelas" : ""),
+                    kelasGuru: demoU.kelasGuru || (demoU.role === "guru" ? "1" : "")
+                }
+            };
             this.resetFail();
             this.saveSession();
             return;
+        }
+
+        if (!this.usesSupabase()) {
+            this.registerFail();
+            throw new Error("Nama pengguna atau kata sandi salah (Mode Demo).");
         }
 
         const res = await this.sb("/auth/v1/token?grant_type=password", {
@@ -120,7 +164,7 @@ const Auth = {
 
     async loadProfile() {
         const uid = this.session.user.id;
-        const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif`, {}, this.session.token);
+        const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=nama,role,aktif,tipe_guru,kelas_guru`, {}, this.session.token);
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             const detail = err.message || err.error || `HTTP ${res.status}`;
@@ -134,10 +178,12 @@ const Auth = {
         if (!ACL.ROLES[p.role]) throw new Error("Peran akun tidak valid. Hubungi administrator.");
         this.session.user.nama = Sec.clean(p.nama || this.session.user.email);
         this.session.user.role = p.role;
+        this.session.user.tipeGuru = p.tipe_guru || (p.role === "guru" ? "kelas" : "");
+        this.session.user.kelasGuru = p.kelas_guru || (p.role === "guru" ? "1" : "");
     },
 
     async ensureFresh() {
-        if (!this.session || !this.usesSupabase()) return;
+        if (!this.session || !this.usesSupabase() || this.session.demo) return;
         if (this.session.exp - Date.now() > 60000) return;
         const res = await this.sb("/auth/v1/token?grant_type=refresh_token", {
             method: "POST",
@@ -168,8 +214,7 @@ const Auth = {
     forceLogout(message) { this.endSession(message); },
 
     endSession(message) {
-        // Pada mode cloud, bersihkan cache data dari perangkat agar tidak tertinggal di komputer bersama
-        if (this.usesSupabase() || ApiClient.isCloudActive()) DataStore.clearCache();
+        // Jangan bersihkan cache database lokal saat logout agar data presensi & pekerjaan tidak hilang ketika berpindah akun
         this.clearSession();
         if (message) sessionStorage.setItem(this.FLASH_KEY, message);
         location.reload();
@@ -182,8 +227,6 @@ const Auth = {
         try {
             const s = JSON.parse(sessionStorage.getItem(this.SESSION_KEY));
             if (!s || !s.user || !s.user.role) return null;
-            // Sesi demo tidak boleh dipakai saat Supabase aktif (dan sebaliknya)
-            if (!!s.demo === this.usesSupabase()) return null;
             return s;
         } catch (e) { return null; }
     },
@@ -297,10 +340,16 @@ const Auth = {
 
     onAuthenticated() {
         this.hideLogin();
-        if (this._started) return;
-        this._started = true;
         this.applyUI();
         this.startIdleWatch();
+        if (this._started) {
+            if (window.VueStore) VueStore.refresh();
+            if (window.ModulVue) ModulVue.applyRoleNavVisibility();
+            if (App.renderQuickActions) App.renderQuickActions();
+            App.navigateTo(this.defaultRoute());
+            return;
+        }
+        this._started = true;
         App.start();
     },
 

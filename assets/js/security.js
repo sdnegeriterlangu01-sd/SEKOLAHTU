@@ -124,7 +124,7 @@ const ACL = {
     },
 
     ROUTES: {
-        dashboard: ["admin", "kepsek", "tu"],
+        dashboard: ["admin", "kepsek", "tu", "guru"],
         "scan-absensi": ["admin", "kepsek", "tu", "guru", "kiosk"],
         berkas: ["admin", "kepsek", "tu", "guru"],
         surat: ["admin", "kepsek", "tu"],

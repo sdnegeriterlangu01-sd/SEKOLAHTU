@@ -28,7 +28,8 @@ const ModulPresensi = {
     ],
 
     GRID_CSS: `
-        .abs-grid{border-collapse:collapse;font-size:10px;background:#fff;color:#111827}
+        .abs-grid-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;position:relative}
+        .abs-grid{border-collapse:collapse;font-size:10px;background:#fff;color:#111827;width:max-content;min-width:100%}
         .abs-grid th,.abs-grid td{border:1px solid #1f2937;padding:1px 3px;text-align:center;line-height:1.25;height:19px;min-width:19px}
         .abs-grid th{background:#f1f5f9;font-weight:700}
         .abs-grid td.nama{text-align:left;padding:2px 6px;white-space:nowrap;font-weight:600}
@@ -43,6 +44,10 @@ const ModulPresensi = {
         .abs-grid td.mk-H{background:#d1fae5;color:#047857;font-weight:700}
         .abs-grid td.ok{color:#047857;font-weight:700}
         .abs-grid tr.grp-end td{border-bottom:2px solid #111827}
+        .abs-grid .sticky-col{position:sticky;background:#fff;z-index:2}
+        .abs-grid .sticky-no{left:0;min-width:26px;z-index:2}
+        .abs-grid .sticky-nama{left:26px;min-width:180px;z-index:2;box-shadow:2px 0 5px -2px rgba(0,0,0,0.18)}
+        .abs-grid thead th.sticky-col{background:#f1f5f9;z-index:4}
     `,
 
     // ===================================================================== INIT
@@ -67,7 +72,8 @@ const ModulPresensi = {
     firstAllowedTab() { const t = this.TABS.find(x => Auth.canDo(x.need)); return t ? t.id : "harian"; },
 
     buildTabs() {
-        const bar = document.getElementById("abs-tabs");
+        if (window.ModulVue && ModulVue.apps && ModulVue.apps.absensiTabs) return;
+        const bar = document.getElementById("vue-absensi-tabs") || document.getElementById("abs-tabs");
         if (!bar) return;
         const isGuru = Auth.role() === "guru";
         bar.innerHTML = this.TABS
@@ -84,6 +90,7 @@ const ModulPresensi = {
         if (!this.isAllowed(id)) id = this.firstAllowedTab();
         if (this.tab === "scan" && id !== "scan") this.stopCamera();
         this.tab = id;
+        if (window.VueStore) VueStore.absensiTab = id;
         this.buildTabs();
 
         this.TABS.forEach(t => {
@@ -768,6 +775,32 @@ const ModulPresensi = {
         const res = await ApiClient.request("getAbsensiSiswaBulan", { tahunAjaran: DataStore.getActiveTA(), bulan: this.bulanSiswa, kelas: this.kelasSiswa });
         this.siswaMarks = {};
         (res.success ? res.data : []).forEach(r => { this.siswaMarks[r.nisn] = r.marks || {}; });
+
+        // 1. Ambil marks dari DataStore.getAbsensiSiswaBulan() jika ada
+        const localBulan = (typeof DataStore !== "undefined" && DataStore.getAbsensiSiswaBulan) ? DataStore.getAbsensiSiswaBulan() : [];
+        localBulan.forEach(r => {
+            if (r.bulan === this.bulanSiswa && r.nisn) {
+                if (!this.siswaMarks[r.nisn]) this.siswaMarks[r.nisn] = {};
+                Object.assign(this.siswaMarks[r.nisn], r.marks || {});
+            }
+        });
+
+        // 2. AUTO-MERGE: Gabungkan langsung data presensi harian siswa (DB_Absensi / DataStore.getAbsensi())
+        // Ini memastikan setiap kali presensi harian disimpan, hari tersebut langsung tampil di tabel rekap bulanan!
+        const dailyAbs = (typeof DataStore !== "undefined" && DataStore.getAbsensi) ? DataStore.getAbsensi().filter(a =>
+            a.kategori === "Siswa" &&
+            a.tanggal && a.tanggal.startsWith(this.bulanSiswa)
+        ) : [];
+        dailyAbs.forEach(a => {
+            const nisn = String(a.nisnNip || "").trim();
+            if (!nisn) return;
+            const dd = String(a.tanggal).substring(8, 10);
+            if (!this.siswaMarks[nisn]) this.siswaMarks[nisn] = {};
+            const st = a.status;
+            // Catat tanda: S, I, A, atau H (Hadir)
+            this.siswaMarks[nisn][dd] = st === "Sakit" ? "S" : (st === "Izin" ? "I" : (st === "Alpa" ? "A" : "H"));
+        });
+
         this.siswaDirty = false;
         grid.innerHTML = this.buildSiswaTable(canEdit);
         grid.onclick = canEdit ? (e) => {
@@ -780,8 +813,8 @@ const ModulPresensi = {
         const hari = this.hariBulan(this.bulanSiswa);
         const siswa = this.siswaKelas();
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
-        let html = `<table class="abs-grid"><thead>
-            <tr><th rowspan="2">NO</th><th rowspan="2" style="min-width:210px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
+        let html = `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
+            <tr><th rowspan="2" class="sticky-col sticky-no">NO</th><th rowspan="2" class="sticky-col sticky-nama" style="min-width:180px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
             <tr>${hari.map(h => `<th class="${h.off ? "off" : ""}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 
         if (siswa.length === 0) html += `<tr><td colspan="${hari.length + 7}" style="padding:18px">Belum ada siswa pada kelas/TA ini. Impor data siswa terlebih dahulu.</td></tr>`;
@@ -797,10 +830,10 @@ const ModulPresensi = {
                 const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
                 return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
             }).join("");
-            html += `<tr><td>${i + 1}</td><td class="nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
+            html += `<tr><td class="sticky-col sticky-no">${i + 1}</td><td class="nama sticky-col sticky-nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
                 <td data-sum="S">${S || ""}</td><td data-sum="I">${I || ""}</td><td data-sum="A">${A || ""}</td><td data-sum="J"><b>${(S + I + A) || ""}</b></td></tr>`;
         });
-        return html + `</tbody></table>`;
+        return html + `</tbody></table></div>`;
     },
 
     cycleMark(td) {

@@ -188,7 +188,7 @@ const App = {
                     } else if (tendikToday && tendikToday.jamDatang) {
                         statGuruJam.innerHTML = `<span class="text-emerald-700 font-bold text-lg">Sudah Hadir</span> <span class="text-xs text-slate-400 font-normal">(${Util.formatTime(tendikToday.jamDatang)})</span>`;
                     } else {
-                        statGuruJam.innerHTML = `<span class="text-amber-600 font-bold text-lg">Belum Scan</span> <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan')" class="text-xs text-blue-600 underline ml-1">Scan Sekarang</a>`;
+                        statGuruJam.innerHTML = `<span class="text-amber-600 font-bold text-lg">Belum Scan</span> <a href="/presensi/scan" onclick="App.navigateTo('presensi/scan')" class="text-xs text-blue-600 underline ml-1">Scan Sekarang</a>`;
                     }
                 }
             }
@@ -245,7 +245,7 @@ const App = {
             if (role === "guru") {
                 heroTitle.textContent = `Selamat Datang, ${u.nama}`;
                 if (heroDesc) {
-                    heroDesc.textContent = gInfo?.isGuruKelas 
+                    heroDesc.textContent = gInfo?.isGuruKelas
                         ? `Kelola data kehadiran dan administrasi siswa binaan Anda pada ${kelasLabel} secara mudah, akurat, dan paperless.`
                         : `Kelola data kehadiran dan administrasi siswa seluruh kelas yang Anda ajar (${gInfo?.namaMapel ? 'Mata Pelajaran ' + gInfo.namaMapel : 'Lintas Kelas'}) secara terpadu dan otomatis.`;
                 }
@@ -432,7 +432,7 @@ const App = {
 
         if (isKiosk) {
             container.innerHTML = `
-                <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Presensi Mandiri
                 </a>
             `;
@@ -443,16 +443,16 @@ const App = {
             const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
             const labelKelas = gInfo && gInfo.isGuruKelas ? ` (Kelas ${gInfo.kelas})` : "";
             container.innerHTML = `
-                <a href="#/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Hari Ini${Sec.esc(labelKelas)}
                 </a>
-                <a href="#/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Bulanan
                 </a>
-                <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-qrcode text-emerald-600 w-4"></i> Presensi Datang / Pulang Saya
                 </a>
-                <a href="#/berkas-siswa" onclick="App.navigateTo('berkas-siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/berkas-siswa" onclick="App.navigateTo('berkas-siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-folder-closed text-amber-600 w-4"></i> Berkas Siswa${Sec.esc(labelKelas)}
                 </a>
             `;
@@ -461,16 +461,16 @@ const App = {
 
         if (isKepsek) {
             container.innerHTML = `
-                <a href="#/presensi/tendik" onclick="App.navigateTo('presensi/tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/tendik" onclick="App.navigateTo('presensi/tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-clipboard-user text-indigo-600 w-4"></i> Rekap Presensi Guru & Tendik
                 </a>
-                <a href="#/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/presensi/rekap" onclick="App.navigateTo('presensi/rekap');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Siswa
                 </a>
-                <a href="#/surat/srikandi" onclick="App.navigateTo('surat/srikandi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/surat/srikandi" onclick="App.navigateTo('surat/srikandi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-envelopes-bulk text-amber-600 w-4"></i> Buku Register Surat SRIKANDI
                 </a>
-                <a href="#/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                <a href="/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                     <i class="fa-solid fa-print text-teal-600 w-4"></i> Cetak Surat Keterangan
                 </a>
             `;
@@ -479,19 +479,19 @@ const App = {
 
         // Admin & TU default
         container.innerHTML = `
-            <a href="#/berkas-siswa" onclick="App.navigateTo('berkas-siswa', () => { if (window.ModulBerkas) ModulBerkas.openAddModal(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="/berkas-siswa" onclick="App.navigateTo('berkas-siswa', () => { if (window.ModulBerkas) ModulBerkas.openAddModal(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-user-plus text-blue-600 w-4"></i> Tambah Siswa Baru
             </a>
-            <a href="#/surat/srikandi" onclick="App.navigateTo('surat/srikandi', () => { if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="/surat/srikandi" onclick="App.navigateTo('surat/srikandi', () => { if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); });" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-paper-plane text-emerald-600 w-4"></i> Terbitkan Nomor Surat
             </a>
-            <a href="#/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="/surat/cetak" onclick="App.navigateTo('surat/cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-file-invoice text-teal-600 w-4"></i> Cetak Surat Keterangan
             </a>
-            <a href="#/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="/presensi/harian" onclick="App.navigateTo('presensi/harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Harian
             </a>
-            <a href="#/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
+            <a href="/presensi/scan" onclick="App.navigateTo('presensi/scan');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
                 <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Absensi Datang/Pulang
             </a>
         `;

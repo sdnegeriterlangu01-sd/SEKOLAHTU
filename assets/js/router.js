@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: CLIENT-SIDE SPA HASH ROUTER
-   Mendukung routing modular: #/menu/sub-menu tanpa reload halaman
+   Mendukung routing modular: /menu/sub-menu tanpa reload halaman
    Fitur: Template Caching (<300ms), RBAC Route Guard, Auto-Lifecycle Mount
    ========================================================================== */
 
@@ -156,10 +156,10 @@ const Router = {
 
     parseHash() {
         let hash = window.location.hash || "";
-        if (hash.startsWith("#/")) hash = hash.substring(2);
+        if (hash.startsWith("/")) hash = hash.substring(2);
         else if (hash.startsWith("#")) hash = hash.substring(1);
-        
-        // Pisahkan query parameter jika ada (misal: #/berkas-siswa?kelas=5)
+
+        // Pisahkan query parameter jika ada (misal: /berkas-siswa?kelas=5)
         const [pathPart, queryPart] = hash.split("?");
         const cleanPath = (pathPart || "").trim();
         const params = {};
@@ -213,7 +213,7 @@ const Router = {
             }
 
             if (updateHash) {
-                const targetHash = "#/" + resolvedPath;
+                const targetHash = "/" + resolvedPath;
                 if (window.location.hash !== targetHash) {
                     window.location.hash = targetHash;
                 }

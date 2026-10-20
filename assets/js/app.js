@@ -85,11 +85,16 @@ const App = {
     refreshAll() {
         this.updateDashboardStats();
         if (window.Router) {
-            if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) ModulBerkas.renderTable();
-            else if (Router.currentRoute === "surat/srikandi" && window.ModulSurat) ModulSurat.init();
-            else if (Router.currentRoute === "surat/cetak" && window.ModulCetak) ModulCetak.populateStudentSelect();
-            else if (Router.currentRoute === "presensi/harian" && window.ModulAbsensi) ModulAbsensi.init();
-            else if (Router.currentRoute.startsWith("presensi") && window.ModulPresensi) ModulPresensi.onShow();
+            if (Router.currentRoute === "berkas-siswa" && window.ModulBerkas) {
+                ModulBerkas.renderTable();
+            } else if (Router.currentRoute === "surat/srikandi" && window.ModulSurat) {
+                ModulSurat.renderSubTab();
+            } else if (Router.currentRoute === "surat/cetak" && window.ModulCetak) {
+                ModulCetak.populateStudentSelect();
+                ModulCetak.generatePreview();
+            } else if (Router.currentRoute.startsWith("presensi") && window.ModulPresensi) {
+                ModulPresensi.onShow();
+            }
         }
     },
 

@@ -16,6 +16,7 @@ const ModulCetak = {
         this.populateNomorTerbitSelect();
         this.bindEvents();
         this.selectDefaultStudent();
+        this.generatePreview();
     },
 
     bindEvents() {
@@ -141,21 +142,26 @@ const ModulCetak = {
         const select = document.getElementById("cetak-select-siswa");
         if (!select) return;
 
-        const students = DataStore.getSiswa();
+        let students = DataStore.getSiswa();
+        if (!students || students.length === 0) students = DataStore.getSiswaAll();
+        if (!students || students.length === 0) students = JSON.parse(JSON.stringify(SEED_SISWA));
+
         select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
             students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.kelas})</option>`).join("");
 
-        if (!this.selectedStudent && students.length > 0) {
-            this.selectDefaultStudent();
-        }
+        this.selectDefaultStudent();
     },
 
     selectDefaultStudent() {
-        const students = DataStore.getSiswa();
+        let students = DataStore.getSiswa();
+        if (!students || students.length === 0) students = DataStore.getSiswaAll();
+        if (!students || students.length === 0) students = JSON.parse(JSON.stringify(SEED_SISWA));
+
         if (students.length > 0) {
-            this.loadStudentData(students[0].nisn);
+            const targetNisn = this.selectedStudent ? this.selectedStudent.nisn : students[0].nisn;
+            this.loadStudentData(targetNisn);
             const select = document.getElementById("cetak-select-siswa");
-            if (select) select.value = students[0].nisn;
+            if (select) select.value = targetNisn;
         }
     },
 
@@ -164,8 +170,10 @@ const ModulCetak = {
             this.selectedStudent = null;
             return;
         }
-        const students = DataStore.getSiswa();
-        this.selectedStudent = students.find(s => s.nisn === nisn);
+        let students = DataStore.getSiswa();
+        if (!students || students.length === 0) students = DataStore.getSiswaAll();
+        if (!students || students.length === 0) students = JSON.parse(JSON.stringify(SEED_SISWA));
+        this.selectedStudent = students.find(s => s.nisn === nisn) || students[0];
         this.updateFormFieldsByTemplate();
         this.generatePreview();
     },
@@ -207,6 +215,12 @@ const ModulCetak = {
     },
 
     async generatePreview() {
+        if (!this.selectedStudent) {
+            let students = DataStore.getSiswa();
+            if (!students || students.length === 0) students = DataStore.getSiswaAll();
+            if (!students || students.length === 0) students = JSON.parse(JSON.stringify(SEED_SISWA));
+            this.selectedStudent = students[0];
+        }
         if (!this.selectedStudent) return;
 
         const config = DataStore.getConfig();

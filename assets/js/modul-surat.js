@@ -109,33 +109,36 @@ const ModulSurat = {
         const container = document.getElementById("table-surat-keluar-body");
         if (!container) return;
 
-        const list = DataStore.getSuratKeluar();
-        const filtered = list.filter(s => {
-            const matchSearch = !this.searchQueryKeluar ||
-                s.nomorSurat.toLowerCase().includes(this.searchQueryKeluar) ||
-                s.perihal.toLowerCase().includes(this.searchQueryKeluar) ||
-                s.tujuan.toLowerCase().includes(this.searchQueryKeluar);
+        try {
+            const list = DataStore.getSuratKeluar();
+            const qk = String(this.searchQueryKeluar || "").toLowerCase();
+            const filtered = (list || []).filter(s => {
+                if (!s) return false;
+                const matchSearch = !qk ||
+                    String(s.nomorSurat || "").toLowerCase().includes(qk) ||
+                    String(s.perihal || "").toLowerCase().includes(qk) ||
+                    String(s.tujuan || "").toLowerCase().includes(qk);
 
-            const matchKlas = this.filterKlasifikasi === "Semua" || s.kodeKlasifikasi === this.filterKlasifikasi;
-            return matchSearch && matchKlas;
-        });
+                const matchKlas = this.filterKlasifikasi === "Semua" || s.kodeKlasifikasi === this.filterKlasifikasi;
+                return matchSearch && matchKlas;
+            });
 
-        const countEl = document.getElementById("total-surat-keluar-count");
-        if (countEl) countEl.textContent = `${filtered.length} Surat Terdaftar`;
+            const countEl = document.getElementById("total-surat-keluar-count");
+            if (countEl) countEl.textContent = `${filtered.length} Surat Terdaftar`;
 
-        if (filtered.length === 0) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" class="py-12 text-center text-slate-400">
-                        <div class="flex flex-col items-center justify-center">
-                            <i class="fa-solid fa-envelope-open-text text-4xl mb-3 text-slate-300"></i>
-                            <p class="font-medium text-slate-600">Tidak ada surat keluar yang sesuai kriteria</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-envelope-open-text text-4xl mb-3 text-slate-300"></i>
+                                <p class="font-medium text-slate-600">Tidak ada surat keluar yang sesuai kriteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
         container.innerHTML = filtered.map(s => {
             return `
@@ -182,6 +185,16 @@ const ModulSurat = {
                 </tr>
             `;
         }).join("");
+        } catch (err) {
+            console.error("renderSuratKeluarTable error:", err);
+            container.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-rose-500 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> Gagal memuat surat keluar: ${Sec.esc(err.message)}
+                    </td>
+                </tr>
+            `;
+        }
     },
 
     salinNomor(nomor) {
@@ -416,31 +429,34 @@ const ModulSurat = {
         const container = document.getElementById("table-surat-masuk-body");
         if (!container) return;
 
-        const list = DataStore.getSuratMasuk();
-        const filtered = list.filter(s => {
-            return !this.searchQueryMasuk ||
-                s.noAgenda.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.noSuratAsli.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.pengirim.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.perihal.toLowerCase().includes(this.searchQueryMasuk);
-        });
+        try {
+            const list = DataStore.getSuratMasuk();
+            const qm = String(this.searchQueryMasuk || "").toLowerCase();
+            const filtered = (list || []).filter(s => {
+                if (!s) return false;
+                return !qm ||
+                    String(s.noAgenda || "").toLowerCase().includes(qm) ||
+                    String(s.noSuratAsli || "").toLowerCase().includes(qm) ||
+                    String(s.pengirim || "").toLowerCase().includes(qm) ||
+                    String(s.perihal || "").toLowerCase().includes(qm);
+            });
 
-        const countEl = document.getElementById("total-surat-masuk-count");
-        if (countEl) countEl.textContent = `${filtered.length} Surat Masuk`;
+            const countEl = document.getElementById("total-surat-masuk-count");
+            if (countEl) countEl.textContent = `${filtered.length} Surat Masuk`;
 
-        if (filtered.length === 0) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" class="py-12 text-center text-slate-400">
-                        <div class="flex flex-col items-center justify-center">
-                            <i class="fa-solid fa-inbox text-4xl mb-3 text-slate-300"></i>
-                            <p class="font-medium text-slate-600">Tidak ada surat masuk yang tercatat</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-inbox text-4xl mb-3 text-slate-300"></i>
+                                <p class="font-medium text-slate-600">Tidak ada surat masuk yang tercatat</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
         container.innerHTML = filtered.map(s => {
             return `
@@ -481,6 +497,16 @@ const ModulSurat = {
                 </tr>
             `;
         }).join("");
+        } catch (err) {
+            console.error("renderSuratMasukTable error:", err);
+            container.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-rose-500 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> Gagal memuat surat masuk: ${Sec.esc(err.message)}
+                    </td>
+                </tr>
+            `;
+        }
     },
 
     async hapusSuratMasuk(id, agenda) {

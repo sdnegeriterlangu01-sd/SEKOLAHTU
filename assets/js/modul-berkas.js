@@ -84,15 +84,22 @@ const ModulBerkas = {
 
     getFilteredData() {
         const students = DataStore.getSiswa();
-        return students.filter(s => {
-            // Filter Search
-            const matchSearch = !this.searchQuery ||
-                s.nisn.toLowerCase().includes(this.searchQuery) ||
-                s.nama.toLowerCase().includes(this.searchQuery) ||
-                (s.nis && s.nis.toLowerCase().includes(this.searchQuery));
+        const q = String(this.searchQuery || "").trim().toLowerCase();
+        const targetKls = String(this.currentFilterKelas || "Semua").trim();
+
+        return (students || []).filter(s => {
+            if (!s) return false;
+            // Filter Search: safely cast to string
+            const sNisn = String(s.nisn || "").toLowerCase();
+            const sNama = String(s.nama || "").toLowerCase();
+            const sNis = String(s.nis || s.nipd || "").toLowerCase();
+
+            const matchSearch = !q ||
+                sNisn.includes(q) ||
+                sNama.includes(q) ||
+                sNis.includes(q);
 
             // Filter Kelas (cocokkan s.rombel atau s.kelas secara fleksibel)
-            const targetKls = String(this.currentFilterKelas || "Semua").trim();
             let matchKelas = targetKls === "Semua";
             if (!matchKelas) {
                 const k1 = String(s.kelas || "").trim();
@@ -124,60 +131,63 @@ const ModulBerkas = {
         const container = document.getElementById("table-berkas-siswa-body");
         if (!container) return;
 
-        const data = this.getFilteredData();
-        const totalCountEl = document.getElementById("total-siswa-count");
-        if (totalCountEl) totalCountEl.textContent = `${data.length} Siswa Terdaftar`;
+        try {
+            const data = this.getFilteredData();
+            const totalCountEl = document.getElementById("total-siswa-count");
+            if (totalCountEl) totalCountEl.textContent = `${data.length} Siswa Terdaftar`;
 
-        if (data.length === 0) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" class="py-12 text-center text-slate-400">
-                        <div class="flex flex-col items-center justify-center">
-                            <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-300"></i>
-                            <p class="font-medium text-slate-600">Tidak ada berkas siswa yang sesuai kriteria</p>
-                            <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter kelas.</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        container.innerHTML = data.map((s, index) => {
-            const berkas = s.berkas || {};
-            const kk = berkas.kk?.uploaded;
-            const akta = berkas.akta?.uploaded;
-            const kip = berkas.kip?.uploaded;
-            const foto = berkas.foto?.uploaded;
-
-            const totalUploaded = [kk, akta, kip, foto].filter(Boolean).length;
-            const isFull = kk && akta; // Syarat wajib minimal KK + Akta
-
-            return `
-                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
-                    <td class="px-4 py-3.5 text-xs font-semibold text-slate-500">${index + 1}</td>
-                    <td class="px-4 py-3.5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                ${foto && berkas.foto.url ? `
-                                    <img src="${Util.formatDriveImageUrl(berkas.foto.url)}" alt="${Sec.esc(s.nama)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'font-bold text-xs text-slate-600\\'>${Sec.esc(s.nama.substring(0, 2).toUpperCase())}</span>'">
-                                ` : `
-                                    <span class="font-bold text-xs text-slate-600">${Sec.esc(s.nama.substring(0, 2).toUpperCase())}</span>
-                                `}
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-300"></i>
+                                <p class="font-medium text-slate-600">Tidak ada berkas siswa yang sesuai kriteria</p>
+                                <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter kelas.</p>
                             </div>
-                            <div>
-                                <div class="font-bold text-slate-800 text-sm hover:text-blue-600 cursor-pointer" onclick="ModulBerkas.openDetailModal('${s.nisn}')">
-                                    ${s.nama}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            container.innerHTML = data.map((s, index) => {
+                const berkas = s.berkas || {};
+                const kk = berkas.kk?.uploaded;
+                const akta = berkas.akta?.uploaded;
+                const kip = berkas.kip?.uploaded;
+                const foto = berkas.foto?.uploaded;
+
+                const totalUploaded = [kk, akta, kip, foto].filter(Boolean).length;
+                const isFull = kk && akta; // Syarat wajib minimal KK + Akta
+                const safeNama = String(s.nama || "Siswa");
+                const safeInitials = safeNama.trim().substring(0, 2).toUpperCase() || "S";
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
+                        <td class="px-4 py-3.5 text-xs font-semibold text-slate-500">${index + 1}</td>
+                        <td class="px-4 py-3.5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    ${foto && berkas.foto.url ? `
+                                        <img src="${Util.formatDriveImageUrl(berkas.foto.url)}" alt="${Sec.esc(safeNama)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'font-bold text-xs text-slate-600\\'>${Sec.esc(safeInitials)}</span>'">
+                                    ` : `
+                                        <span class="font-bold text-xs text-slate-600">${Sec.esc(safeInitials)}</span>
+                                    `}
                                 </div>
-                                <div class="text-xs text-slate-400 font-mono">NISN: ${s.nisn} ${s.nis ? `• NIS: ${s.nis}` : ''}</div>
+                                <div>
+                                    <div class="font-bold text-slate-800 text-sm hover:text-blue-600 cursor-pointer" onclick="ModulBerkas.openDetailModal('${s.nisn}')">
+                                        ${Sec.esc(safeNama)}
+                                    </div>
+                                    <div class="text-xs text-slate-400 font-mono">NISN: ${s.nisn} ${s.nis ? `• NIS: ${s.nis}` : ''}</div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3.5">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            Kelas ${s.rombel && String(s.rombel) !== String(s.kelas) ? s.rombel : s.kelas}
-                        </span>
-                    </td>
+                        </td>
+                        <td class="px-4 py-3.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                Kelas ${s.rombel && String(s.rombel) !== String(s.kelas) ? s.rombel : s.kelas}
+                            </span>
+                        </td>
                     <td class="px-4 py-3.5">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <!-- KK Tag -->
@@ -235,7 +245,17 @@ const ModulBerkas = {
                     </td>
                 </tr>
             `;
-        }).join("");
+            }).join("");
+        } catch (err) {
+            console.error("renderTable error:", err);
+            container.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-8 text-center text-rose-500 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation mr-1 text-base"></i> Gagal menampilkan data siswa: ${Sec.esc(err.message)}
+                    </td>
+                </tr>
+            `;
+        }
     },
 
     previewOrUpload(nisn, docType) {

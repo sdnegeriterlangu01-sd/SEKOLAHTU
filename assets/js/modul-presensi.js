@@ -51,7 +51,7 @@ const ModulPresensi = {
     `,
 
     // ===================================================================== INIT
-    init() {
+    init(targetTab) {
         if (!document.getElementById("presensi-css")) {
             const st = document.createElement("style");
             st.id = "presensi-css";
@@ -59,7 +59,8 @@ const ModulPresensi = {
             document.head.appendChild(st);
         }
         this.buildTabs();
-        this.switchTab(this.firstAllowedTab());
+        const tabToOpen = targetTab || (this.isAllowed(this.tab) ? this.tab : this.firstAllowedTab());
+        this.switchTab(tabToOpen);
     },
 
     onShow() {
@@ -99,10 +100,17 @@ const ModulPresensi = {
         const actions = document.getElementById("abs-harian-actions");
         if (actions) actions.classList.toggle("hidden", id !== "harian");
 
-        if (id === "scan") this.renderScan();
-        else if (id === "tendik") this.renderTendik();
-        else if (id === "siswa") this.renderSiswa();
-        else if (id === "qr") this.renderQR();
+        if (id === "harian") {
+            if (window.ModulAbsensi) ModulAbsensi.init();
+        } else if (id === "scan") {
+            this.renderScan();
+        } else if (id === "tendik") {
+            this.renderTendik();
+        } else if (id === "siswa") {
+            this.renderSiswa();
+        } else if (id === "qr") {
+            this.renderQR();
+        }
     },
 
     // ===================================================================== UTIL KALENDER

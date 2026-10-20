@@ -612,7 +612,7 @@ const Sync = {
         const src = this.SOURCES[kind];
         if (!src || !ApiClient.isCloudActive() || !Auth.canDo(src.action)) return false;
         const res = await ApiClient.cloudCall(src.action, src.payload);
-        if (res && res.success && Array.isArray(res.data)) {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
             src.save(res.data);
             return true;
         }

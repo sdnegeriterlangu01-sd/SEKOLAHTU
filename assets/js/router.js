@@ -48,9 +48,8 @@ const Router = {
             onMount: (params) => {
                 if (window.ModulSurat) {
                     ModulSurat.init();
-                    if (params && params.tab) {
-                        ModulSurat.switchSubTab(params.tab);
-                    }
+                    const targetTab = (params && params.tab) || ModulSurat.activeSubTab || "keluar";
+                    ModulSurat.switchSubTab(targetTab);
                 }
                 if (window.ModulVue) {
                     ModulVue.mountSuratTabs();
@@ -71,13 +70,13 @@ const Router = {
             template: "views/presensi/harian.html",
             title: "Presensi Harian",
             menuId: "absensi",
-            onMount: () => {
-                if (window.VueStore) VueStore.absensiTab = "harian";
+            onMount: (params) => {
+                const targetTab = (params && params.tab) || "harian";
+                if (window.VueStore) VueStore.absensiTab = targetTab;
                 if (window.ModulPresensi) {
-                    ModulPresensi.init();
-                    ModulPresensi.switchTab("harian");
+                    ModulPresensi.init(targetTab);
                 }
-                if (window.ModulAbsensi) {
+                if (window.ModulAbsensi && targetTab === "harian") {
                     ModulAbsensi.init();
                 }
                 if (window.ModulVue) {
@@ -86,26 +85,30 @@ const Router = {
             }
         },
         "presensi/rekap": {
-            template: "views/presensi/rekap.html",
+            template: "views/presensi/harian.html",
             title: "Rekap Absensi Siswa Bulanan",
             menuId: "absensi",
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "siswa";
                 if (window.ModulPresensi) {
-                    ModulPresensi.init();
-                    ModulPresensi.switchTab("siswa");
+                    ModulPresensi.init("siswa");
+                }
+                if (window.ModulVue) {
+                    ModulVue.mountAbsensiTabs();
                 }
             }
         },
         "presensi/tendik": {
-            template: "views/presensi/tendik.html",
+            template: "views/presensi/harian.html",
             title: "Rekap Presensi Guru & Tendik",
             menuId: "absensi",
             onMount: () => {
                 if (window.VueStore) VueStore.absensiTab = "tendik";
                 if (window.ModulPresensi) {
-                    ModulPresensi.init();
-                    ModulPresensi.switchTab("tendik");
+                    ModulPresensi.init("tendik");
+                }
+                if (window.ModulVue) {
+                    ModulVue.mountAbsensiTabs();
                 }
             }
         },
@@ -140,7 +143,9 @@ const Router = {
         "cetak": "surat/cetak",
         "absensi": "presensi/harian",
         "scan-absensi": "presensi/scan",
-        "presensi": "presensi/harian"
+        "presensi": "presensi/harian",
+        "rekap": "presensi/rekap",
+        "tendik": "presensi/tendik"
     },
 
     init() {

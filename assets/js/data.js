@@ -565,6 +565,11 @@ const DataStore = {
     },
 
     saveSiswaAll(list) {
+        if (!Array.isArray(list)) return;
+        if (list.length === 0) {
+            const current = localStorage.getItem(this.KEYS.SISWA);
+            if (current && current !== "[]") return; // Cegah penimpaan data lokal dengan array kosong
+        }
         localStorage.setItem(this.KEYS.SISWA, JSON.stringify(list));
     },
 
@@ -612,6 +617,11 @@ const DataStore = {
     },
 
     saveTendik(list) {
+        if (!Array.isArray(list)) return;
+        if (list.length === 0) {
+            const current = localStorage.getItem(this.KEYS.TENDIK);
+            if (current && current !== "[]") return;
+        }
         localStorage.setItem(this.KEYS.TENDIK, JSON.stringify(list));
     },
 
@@ -645,6 +655,11 @@ const DataStore = {
     },
 
     saveSuratKeluar(list) {
+        if (!Array.isArray(list)) return;
+        if (list.length === 0) {
+            const current = localStorage.getItem(this.KEYS.SURAT_KELUAR);
+            if (current && current !== "[]") return;
+        }
         localStorage.setItem(this.KEYS.SURAT_KELUAR, JSON.stringify(list));
     },
 
@@ -662,6 +677,11 @@ const DataStore = {
     },
 
     saveSuratMasuk(list) {
+        if (!Array.isArray(list)) return;
+        if (list.length === 0) {
+            const current = localStorage.getItem(this.KEYS.SURAT_MASUK);
+            if (current && current !== "[]") return;
+        }
         localStorage.setItem(this.KEYS.SURAT_MASUK, JSON.stringify(list));
     },
 

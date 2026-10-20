@@ -12,8 +12,8 @@
    Kosongkan SUPABASE_URL untuk menjalankan Mode Demo (login lokal, tanpa cloud).
    ========================================================================== */
 window.SIMTAS_CONFIG = {
-    SUPABASE_URL: "",       // contoh: "https://abcdefgh.supabase.co"
-    SUPABASE_ANON_KEY: "",  // contoh: "eyJhbGciOi..." (anon / public key)
-    GAS_API_URL: "",        // contoh: "https://script.google.com/macros/s/AKfycb.../exec"
-    IDLE_TIMEOUT_MENIT: 30  // otomatis keluar bila tidak ada aktivitas
+  SUPABASE_URL: "https://wesuxejtpquzqkojpvpg.supabase.co",       // contoh: "https://abcdefgh.supabase.co"
+  SUPABASE_ANON_KEY: "sb_publishable_fz1vTJMm99C7PPNsCKjS_g_dt2DfhVa",  // contoh: "eyJhbGciOi..." (anon / public key)
+  GAS_API_URL: "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec",        // contoh: "https://script.google.com/macros/s/AKfycb.../exec"
+  IDLE_TIMEOUT_MENIT: 30  // otomatis keluar bila tidak ada aktivitas
 };

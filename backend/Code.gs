@@ -1,10 +1,20 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.1.0
+ * Backend REST API - Google Apps Script (GAS) v2.2.0
  * ==========================================================================
  * 
  * Version History:
+ * - v2.2.0 (21 Oktober 2026):
+ *   v2.2.0 - Penambahan 4 Database Sheet Baru & Handler Integrasi SIM-TAS-SD 2026:
+ *    1. Menambahkan struktur sheet: DB_JadwalPelajaran, DB_PIP_Pengusulan, DB_PIP_Penerima, dan DB_PermohonanSurat.
+ *    2. Menambahkan action handlers doPost:
+ *       - Jadwal: getJadwal, saveJadwal, deleteJadwal
+ *       - PIP: getPIP, savePIP, updatePIPStatus, importPIP
+ *       - Permohonan Surat Mandiri: getPermohonanSurat, submitPermohonanSurat, updatePermohonanSurat
+ *       - Siswa: updateStudentPhone, updateStudentFields
+ *    3. Memperbarui setupDatabaseAndFolders() untuk inisialisasi otomatis tab baru dan header kolom terkait.
+
  * - v2.1.0 (20 Oktober 2026):
  *   + Ditambahkan endpoint API "getConfig" dan "saveConfig" untuk sinkronisasi
  *     konfigurasi profil sekolah & identitas Kepala Sekolah ke tab "Config" spreadsheet.

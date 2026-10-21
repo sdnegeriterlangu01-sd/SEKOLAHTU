@@ -135,6 +135,19 @@ Akun uji coba demo:
 
 ## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
 
+### 🚀 Versi 2.3.0 (21 Oktober 2026)
+* **Perbaikan Navigasi Seluruh Sub-Tab (Jadwal, PIP, Surat SRIKANDI):**
+  - **Modul Jadwal Pelajaran:** Pengaktifan tombol preset Kurikulum Merdeka, cetak A4 Landscape kedinasan, kartu saku (pocket card), serta normalisasi modal editor slot jadwal.
+  - **Modul PIP Kemendikbud:** Penataan class `.pip-tab-content` dan `.pip-subtab-btn` sehingga sub-tab Dasbor Analitik, Data Pengusulan Desil, dan Penerima SK PIP berganti secara bersih tanpa penumpukan tabel.
+  - **Modul Surat SRIKANDI:** Pemisahan kontainer DOM `view-surat-masuk` dan `view-surat-permohonan`, serta transisi sub-tab ke kontrol native yang sinkron dengan badge hitung permohonan pending ortu.
+* **Portal Layanan Mandiri Permohonan Surat Online (`permohonan.html`):**
+  - **Pelacakan Resi Cerdas (Smart Receipt Tracking):** Tombol "Lacak Sekarang" pada tanda terima berhasil otomatis memindahkan kode resi ke form pelacakan dan langsung mengeksekusi pencarian multi-layer (LocalStorage + Cloud Apps Script).
+  - **Bypass Auth untuk Portal Publik:** Pengecualian verifikasi token login staf pada aksi publik `submitPermohonanSurat` dan `trackPermohonanSurat` di frontend dan backend Apps Script, sehingga orang tua siswa dapat mengajukan surat dan melacak resi tanpa akun login.
+  - **Stepper Status Progres:** Pelacakan interaktif real-time dengan tahapan Menunggu Tinjauan, Sedang Diproses TU, hingga Siap Diambil di Sekolah.
+* **Backend Google Apps Script (GAS v2.3.0):**
+  - Endpoint baru `trackPermohonanSurat` untuk pencarian status berkas berbasis kode resi, NISN, atau no HP.
+  - Standardisasi response tiket dan sinkronisasi versi `2.3.0`.
+
 ### 🚀 Versi 1.5.1 (20 Oktober 2026)
 * **Modul Cetak Surat Mandiri & Format Cetak Resmi:**
   - **Sinkronisasi Identitas Kepala Sekolah:** Sinkronisasi dinamis nama (`Aisah Suciati, S.Pd.SD., M.Pd.`) dan NIP (`19690808 199201 2 002`) dari Pengaturan Sistem, LocalStorage, dan Cloud Google Sheets (`Config`) ke seluruh template cetak surat (PDF/cetak langsung via HP maupun PC).

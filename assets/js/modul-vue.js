@@ -320,46 +320,10 @@ const ModulVue = {
     // 5. MODULAR SUB-TABS: MODUL SURAT SRIKANDI
     // -------------------------------------------------------------------------
     mountSuratTabs() {
-        const el = document.getElementById("vue-surat-tabs");
-        if (!el || this.apps.suratTabs) return;
-
-        const { createApp, computed } = Vue;
-        const store = this.store;
-
-        const app = createApp({
-            setup() {
-                const activeTab = computed(() => store.suratSubTab);
-
-                const pendingPermohonan = computed(() => {
-                    const list = (window.DataStore && DataStore.getPermohonanSurat) ? DataStore.getPermohonanSurat() : [];
-                    return list.filter(p => p.status === "Menunggu Verifikasi TU").length;
-                });
-
-                const tabs = computed(() => [
-                    { id: "keluar", label: "Surat Keluar", icon: "fa-paper-plane" },
-                    { id: "masuk", label: "Surat Masuk", icon: "fa-inbox" },
-                    { 
-                        id: "permohonan", 
-                        label: "Pengajuan Ortu (Online)", 
-                        icon: "fa-inbox-in", 
-                        badge: pendingPermohonan.value > 0 ? String(pendingPermohonan.value) : null 
-                    }
-                ]);
-
-                const switchTab = (tabId) => {
-                    store.suratSubTab = tabId;
-                    if (window.ModulSurat) ModulSurat.switchSubTab(tabId);
-                };
-
-                return {
-                    activeTab,
-                    tabs,
-                    switchTab
-                };
-            }
-        });
-
-        this.apps.suratTabs = app.mount(el);
+        // Sub-tab Surat (Surat Keluar, Surat Masuk, Pengajuan Ortu) dikelola secara native & reaktif oleh ModulSurat
+        if (window.ModulSurat && this.store) {
+            this.store.suratSubTab = ModulSurat.activeSubTab || "keluar";
+        }
     },
 
     // -------------------------------------------------------------------------

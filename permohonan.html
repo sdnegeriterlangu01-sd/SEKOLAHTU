@@ -215,7 +215,7 @@
                     <button type="button" onclick="copyReceiptCode()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-copy"></i> Salin Resi
                     </button>
-                    <button type="button" onclick="switchPortalTab('tracking')" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                    <button type="button" onclick="goToTrackingFromReceipt()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-magnifying-glass"></i> Lacak Sekarang
                     </button>
                 </div>
@@ -310,12 +310,14 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
         <div class="max-w-4xl mx-auto px-4">
-            SIM-TAS-SD Versi 2.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
+            SIM-TAS-SD Versi 2.3.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
         </div>
     </footer>
 
     <!-- App JavaScript Dependencies -->
+    <script src="assets/js/config.js"></script>
     <script src="assets/js/security.js"></script>
+    <script src="assets/js/auth.js"></script>
     <script src="assets/js/data.js"></script>
     <script src="assets/js/api.js"></script>
     <script>
@@ -417,16 +419,26 @@
             btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Permohonan Surat Sekarang`;
 
             if (res && res.success) {
+                const trackCode = res.trackingCode || res.ticketId || (res.data && res.data.id);
+                // Sinkronkan ke local cache agar langsung terlacak seketika
+                if (res.data) {
+                    const localList = DataStore.getPermohonanSurat();
+                    if (!localList.some(r => r.id === res.data.id)) {
+                        localList.unshift(res.data);
+                        DataStore.savePermohonanSurat(localList);
+                    }
+                }
                 document.getElementById("form-permohonan-publik").reset();
                 document.getElementById("verified-student-card").classList.add("hidden");
-                document.getElementById("receipt-tracking-code").textContent = res.trackingCode;
+                document.getElementById("receipt-tracking-code").textContent = trackCode;
                 document.getElementById("receipt-student-name").textContent = `Siswa: ${verifiedStudent.nama} (${verifiedStudent.nisn})`;
                 document.getElementById("receipt-doc-type").textContent = `Jenis: ${jenisSurat}`;
                 document.getElementById("box-receipt-success").classList.remove("hidden");
                 document.getElementById("box-receipt-success").scrollIntoView({ behavior: 'smooth' });
+                showToast(`Permohonan berhasil dikirim dengan kode resi: ${trackCode}`, "success");
                 verifiedStudent = null;
             } else {
-                showToast("Gagal mengirim permohonan surat. Coba lagi.", "error");
+                showToast((res && res.message) || "Gagal mengirim permohonan surat. Coba lagi.", "error");
             }
         }
 
@@ -437,19 +449,64 @@
             });
         }
 
-        function searchTrackingResi() {
-            const query = document.getElementById("input-track-code").value.trim().toUpperCase();
+        function goToTrackingFromReceipt() {
+            const codeEl = document.getElementById("receipt-tracking-code");
+            const code = codeEl ? codeEl.textContent.trim() : "";
+            switchPortalTab('tracking');
+            if (code) {
+                const input = document.getElementById("input-track-code");
+                if (input) {
+                    input.value = code;
+                    searchTrackingResi();
+                }
+            }
+        }
+
+        async function searchTrackingResi() {
+            const input = document.getElementById("input-track-code");
+            const query = input ? input.value.trim().toUpperCase() : "";
             if (!query) {
                 showToast("Masukkan Kode Resi terlebih dahulu", "warning");
                 return;
             }
 
-            const list = DataStore.getPermohonanSurat();
-            const found = list.find(r => r.id === query || (r.noWhatsApp && r.noWhatsApp.includes(query)) || (r.nisn && r.nisn === query));
+            // 1. Cek di local store
+            let list = DataStore.getPermohonanSurat();
+            let found = list.find(r => (r.id && r.id.toUpperCase() === query) || (r.noWhatsApp && r.noWhatsApp.includes(query)) || (r.nisn && r.nisn === query));
+
+            // 2. Jika belum ditemukan di lokal dan cloud aktif, cari ke cloud
+            if (!found && ApiClient.isCloudActive()) {
+                const searchBtn = document.querySelector("#section-tracking button");
+                const oldText = searchBtn ? searchBtn.innerHTML : "";
+                if (searchBtn) {
+                    searchBtn.disabled = true;
+                    searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mencari...`;
+                }
+
+                try {
+                    const cloudRes = await ApiClient.request("trackPermohonanSurat", { query });
+                    if (cloudRes && cloudRes.success && cloudRes.data) {
+                        found = cloudRes.data;
+                        // Simpan ke cache lokal
+                        if (!list.some(r => r.id === found.id)) {
+                            list.unshift(found);
+                            DataStore.savePermohonanSurat(list);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[Tracking] Cloud track error:", e);
+                } finally {
+                    if (searchBtn) {
+                        searchBtn.disabled = false;
+                        searchBtn.innerHTML = oldText;
+                    }
+                }
+            }
+
             const box = document.getElementById("tracking-result-box");
 
             if (!found) {
-                box.classList.add("hidden");
+                if (box) box.classList.add("hidden");
                 showToast("Kode resi permohonan tidak ditemukan pada sistem.", "error");
                 return;
             }
@@ -477,32 +534,34 @@
             s3.className = inactiveClass;
             s4.className = inactiveClass;
 
-            if (st === "menunggu") {
+            if (st.includes("menunggu")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
                 badge.innerHTML = `<i class="fa-solid fa-clock"></i> Menunggu Tinjauan`;
                 s2.className = currentStepClass;
                 document.getElementById("res-tindak-text").textContent = "Permohonan Anda telah tercatat dan sedang menunggu verifikasi oleh staf Tata Usaha.";
-            } else if (st === "diproses") {
+            } else if (st.includes("proses") || st.includes("diproses")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
                 badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sedang Diproses TU`;
                 s2.className = activeClass;
                 s3.className = currentStepClass;
                 document.getElementById("res-tindak-text").textContent = "Data siswa telah divalidasi dengan buku induk. Surat sedang diajukan tanda tangan Kepala Sekolah.";
-            } else if (st === "disetujui" || st === "selesai") {
+            } else if (st.includes("disetujui") || st.includes("selesai") || st.includes("siap")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Siap Diambil di Sekolah`;
                 s2.className = activeClass;
                 s3.className = activeClass;
                 s4.className = activeClass;
                 document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${found.nomorSuratTerbit || '421.2/SD/2026'}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
-            } else if (st === "ditolak") {
+            } else if (st.includes("tolak") || st.includes("ditolak")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Permohonan Ditolak`;
                 document.getElementById("res-tindak-text").textContent = `Permohonan ditolak dengan alasan: ${found.keteranganTindak || 'Data tidak sesuai atau berkas persyaratan belum lengkap.'}`;
             }
 
-            box.classList.remove("hidden");
-            box.scrollIntoView({ behavior: 'smooth' });
+            if (box) {
+                box.classList.remove("hidden");
+                box.scrollIntoView({ behavior: 'smooth' });
+            }
         }
     </script>
 </body>

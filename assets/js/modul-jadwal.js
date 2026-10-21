@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: MODUL JADWAL PELAJARAN (SENIN - SABTU)
-   Versi 2.0.0 - SDN Terlangu 01 Brebes
+   Versi 2.3.0 - SDN Terlangu 01 Brebes
    Fitur:
    1. Manajemen matriks jadwal Senin s/d Sabtu (Jam 1 s/d 8) untuk Kelas 1 s/d 6.
    2. Isolasi edit berbasis peran (Guru Kelas hanya edit kelasnya; Guru Mapel mengampu slotnya).
@@ -12,6 +12,7 @@
 const ModulJadwal = {
     selectedKelas: "1",
     selectedTA: "",
+    filterHari: "Semua",
     editModalData: null,
 
     HARI_LIST: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"],
@@ -66,6 +67,14 @@ const ModulJadwal = {
                 this.renderGrid();
             });
         }
+
+        const selHari = document.getElementById("jadwal-select-hari");
+        if (selHari) {
+            selHari.addEventListener("change", (e) => {
+                this.filterHari = e.target.value;
+                this.renderGrid();
+            });
+        }
     },
 
     canEditCurrentClass() {
@@ -87,7 +96,7 @@ const ModulJadwal = {
         const role = Auth.role();
         const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
 
-        let options = [1, 2, 3, 4, 5, 6].map(k => `<option value="${k}">Kelas ${k}</option>`).join("");
+        let options = [1, 2, 3, 4, 5, 6].map(k => `<option value="${k}">Kelas ${k} (Fase ${k <= 2 ? 'A' : (k <= 4 ? 'B' : 'C')})</option>`).join("");
         container.innerHTML = options;
 
         if (role === "guru" && gInfo && gInfo.isGuruKelas) {
@@ -116,7 +125,12 @@ const ModulJadwal = {
         const canEdit = this.canEditCurrentClass();
         const wali = this.getWaliKelas(kelas);
 
-        // Update header banner info
+        // Update header banner & badge info
+        const badge = document.getElementById("jadwal-badge-kelas");
+        if (badge) {
+            badge.textContent = `Kelas ${kelas} • TA ${this.selectedTA || '2025/2026'} (${allJadwal.length} Jam/Minggu)`;
+        }
+
         const infoTitle = document.getElementById("jadwal-kelas-title");
         if (infoTitle) infoTitle.textContent = `Jadwal Pelajaran Kelas ${kelas}`;
         const infoWali = document.getElementById("jadwal-wali-text");
@@ -129,13 +143,17 @@ const ModulJadwal = {
             map[key] = j;
         });
 
+        const activeHariList = (this.filterHari && this.filterHari !== "Semua") 
+            ? [this.filterHari] 
+            : this.HARI_LIST;
+
         let html = `
             <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                         <tr class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white text-xs">
                             <th class="p-3.5 text-center font-bold border-r border-blue-800/60 w-24">Jam / Waktu</th>
-                            ${this.HARI_LIST.map(h => `
+                            ${activeHariList.map(h => `
                                 <th class="p-3.5 text-center font-bold border-r border-blue-800/60 last:border-r-0">
                                     <div class="text-sm tracking-wide font-extrabold">${h}</div>
                                 </th>
@@ -153,7 +171,7 @@ const ModulJadwal = {
                         <td class="p-2 text-center font-bold text-amber-800 bg-amber-100/70 border-r border-amber-200">
                             08:45 - 09:05
                         </td>
-                        <td colspan="6" class="p-2 text-center font-bold text-amber-900 tracking-wider">
+                        <td colspan="${activeHariList.length}" class="p-2 text-center font-bold text-amber-900 tracking-wider">
                             <i class="fa-solid fa-mug-hot mr-1.5 text-amber-600"></i> ISTIRAHAT PAGI (20 MENIT)
                         </td>
                     </tr>
@@ -168,7 +186,7 @@ const ModulJadwal = {
                     </td>
             `;
 
-            this.HARI_LIST.map(hari => {
+            activeHariList.forEach(hari => {
                 const key = `${hari}_${slot.jamKe}`;
                 const item = map[key];
                 const mapel = item?.mapel || "";
@@ -188,16 +206,17 @@ const ModulJadwal = {
                 html += `
                     <td class="p-2 border-r border-slate-100 last:border-r-0 align-top">
                         ${mapel ? `
-                            <div class="p-2.5 rounded-xl border ${badgeColor} transition hover:shadow-xs relative group">
+                            <div class="p-2.5 rounded-xl border ${badgeColor} transition hover:shadow-xs relative group cursor-pointer"
+                                onclick="${canEdit ? `ModulJadwal.openEditModal('${hari}', ${slot.jamKe})` : `App.showToast('${Sec.esc(mapel)} - ${Sec.esc(guru || wali)}', 'info')`}">
                                 <div class="flex items-center gap-1.5 font-bold text-xs leading-tight">
                                     <i class="fa-solid ${icon} text-[11px] opacity-75"></i>
                                     <span>${Sec.esc(mapel)}</span>
                                 </div>
-                                <div class="text-[10px] text-slate-500 mt-1 truncate" title="${Sec.esc(guru)}">
+                                <div class="text-[10px] text-slate-500 mt-1 truncate" title="${Sec.esc(guru || wali)}">
                                     <i class="fa-solid fa-user-tie text-[9px] mr-1 opacity-60"></i>${Sec.esc(guru || wali)}
                                 </div>
                                 ${canEdit ? `
-                                    <button onclick="ModulJadwal.openEditModal('${hari}', ${slot.jamKe})"
+                                    <button onclick="event.stopPropagation(); ModulJadwal.openEditModal('${hari}', ${slot.jamKe})"
                                         class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition p-1 text-slate-400 hover:text-blue-600 bg-white/80 rounded-md shadow-xs" title="Edit Jam Ini">
                                         <i class="fa-solid fa-pencil text-[10px]"></i>
                                     </button>
@@ -248,14 +267,23 @@ const ModulJadwal = {
         }
     },
 
+    openModal(hari, jamKe) {
+        this.openEditModal(hari || "Senin", jamKe || 1);
+    },
+
+    closeModal() {
+        this.closeEditModal();
+    },
+
     openEditModal(hari, jamKe) {
         if (!this.canEditCurrentClass()) {
             App.showToast("Anda tidak memiliki wewenang mengedit jadwal kelas ini.", "warning");
             return;
         }
 
+        hari = hari || "Senin";
+        jamKe = Number(jamKe) || 1;
         const slot = this.SLOTS.find(s => s.jamKe === jamKe) || { mulai: "07:00", selesai: "07:35" };
-        const key = `${hari}_${jamKe}`;
         const allJadwal = DataStore.getJadwal(this.selectedKelas, this.selectedTA);
         const item = allJadwal.find(j => j.hari === hari && j.jamKe === jamKe) || {};
 
@@ -268,22 +296,40 @@ const ModulJadwal = {
             waktuSelesai: item.waktuSelesai || slot.selesai,
             mapel: item.mapel || "",
             guru: item.guru || this.getWaliKelas(this.selectedKelas),
-            nip: item.nip || ""
+            nip: item.nip || "",
+            ruang: item.ruang || `Ruang Kelas ${this.selectedKelas}`
         };
 
         // Buka modal
         const modal = document.getElementById("modal-edit-jadwal");
         if (!modal) return;
 
-        document.getElementById("modal-jadwal-title").textContent = `Edit Jadwal: ${hari}, Jam Ke-${jamKe} (Kelas ${this.selectedKelas})`;
-        document.getElementById("form-jadwal-hari").value = hari;
-        document.getElementById("form-jadwal-jamke").value = jamKe;
-        document.getElementById("form-jadwal-mulai").value = this.editModalData.waktuMulai;
-        document.getElementById("form-jadwal-selesai").value = this.editModalData.waktuSelesai;
-        document.getElementById("form-jadwal-mapel").value = this.editModalData.mapel;
+        const titleEl = document.getElementById("jadwal-modal-title") || document.getElementById("modal-jadwal-title");
+        if (titleEl) titleEl.textContent = `Tambah / Edit Jadwal: ${hari}, Jam Ke-${jamKe} (Kelas ${this.selectedKelas})`;
+
+        const selRombel = document.getElementById("jadwal-form-rombel");
+        if (selRombel) selRombel.value = this.selectedKelas;
+
+        const formHari = document.getElementById("jadwal-form-hari") || document.getElementById("form-jadwal-hari");
+        if (formHari) formHari.value = hari;
+
+        const formJam = document.getElementById("jadwal-form-jam") || document.getElementById("form-jadwal-jamke");
+        if (formJam) formJam.value = String(jamKe);
+
+        const formMulai = document.getElementById("jadwal-form-mulai") || document.getElementById("form-jadwal-mulai");
+        if (formMulai) formMulai.value = this.editModalData.waktuMulai;
+
+        const formSelesai = document.getElementById("jadwal-form-selesai") || document.getElementById("form-jadwal-selesai");
+        if (formSelesai) formSelesai.value = this.editModalData.waktuSelesai;
+
+        const formMapel = document.getElementById("jadwal-form-mapel") || document.getElementById("form-jadwal-mapel");
+        if (formMapel) formMapel.value = this.editModalData.mapel;
+
+        const formRuang = document.getElementById("jadwal-form-ruang");
+        if (formRuang) formRuang.value = this.editModalData.ruang;
 
         // Populate guru dropdown
-        const selGuru = document.getElementById("form-jadwal-guru");
+        const selGuru = document.getElementById("jadwal-form-guru") || document.getElementById("form-jadwal-guru");
         if (selGuru) {
             const tendiks = DataStore.getTendik();
             selGuru.innerHTML = `<option value="">-- Pilih Guru Pengampu --</option>` +
@@ -299,27 +345,39 @@ const ModulJadwal = {
         this.editModalData = null;
     },
 
-    async saveEditModal() {
-        if (!this.editModalData) return;
+    async saveSlot(event) {
+        if (event && event.preventDefault) event.preventDefault();
+        await this.saveEditModal();
+    },
 
-        const mapel = document.getElementById("form-jadwal-mapel")?.value?.trim() || "";
-        const mulai = document.getElementById("form-jadwal-mulai")?.value || "07:00";
-        const selesai = document.getElementById("form-jadwal-selesai")?.value || "07:35";
-        const selGuru = document.getElementById("form-jadwal-guru");
+    async saveEditModal() {
+        const kelas = document.getElementById("jadwal-form-rombel")?.value || this.selectedKelas;
+        const hari = (document.getElementById("jadwal-form-hari") || document.getElementById("form-jadwal-hari"))?.value || "Senin";
+        const jamKe = Number((document.getElementById("jadwal-form-jam") || document.getElementById("form-jadwal-jamke"))?.value || 1);
+        const mapel = (document.getElementById("jadwal-form-mapel") || document.getElementById("form-jadwal-mapel"))?.value?.trim() || "";
+        const mulai = (document.getElementById("jadwal-form-mulai") || document.getElementById("form-jadwal-mulai"))?.value || "07:00";
+        const selesai = (document.getElementById("jadwal-form-selesai") || document.getElementById("form-jadwal-selesai"))?.value || "07:35";
+        const selGuru = document.getElementById("jadwal-form-guru") || document.getElementById("form-jadwal-guru");
         const guru = selGuru?.value || "";
         const nip = selGuru?.selectedOptions[0]?.getAttribute("data-nip") || "";
+        const ruang = document.getElementById("jadwal-form-ruang")?.value?.trim() || `Ruang Kelas ${kelas}`;
+
+        const slotId = (this.editModalData && this.editModalData.id) 
+            ? this.editModalData.id 
+            : `JDW-${kelas}-${hari.substring(0, 3).toUpperCase()}-${jamKe}`;
 
         const payloadItem = {
-            id: this.editModalData.id,
-            kelas: this.selectedKelas,
+            id: slotId,
+            kelas: String(kelas),
             tahunAjaran: this.selectedTA,
-            hari: this.editModalData.hari,
-            jamKe: this.editModalData.jamKe,
+            hari,
+            jamKe,
             waktuMulai: mulai,
             waktuSelesai: selesai,
             mapel,
             guru,
-            nip
+            nip,
+            ruang
         };
 
         const res = await ApiClient.request("saveJadwal", { item: payloadItem });
@@ -333,18 +391,29 @@ const ModulJadwal = {
         }
     },
 
+    async deleteSlot() {
+        await this.clearCurrentSlot();
+    },
+
     async clearCurrentSlot() {
-        if (!this.editModalData) return;
-        if (!confirm("Kosongkan mata pelajaran pada jam ini?")) return;
+        const kelas = document.getElementById("jadwal-form-rombel")?.value || this.selectedKelas;
+        const hari = (document.getElementById("jadwal-form-hari") || document.getElementById("form-jadwal-hari"))?.value || (this.editModalData?.hari || "Senin");
+        const jamKe = Number((document.getElementById("jadwal-form-jam") || document.getElementById("form-jadwal-jamke"))?.value || (this.editModalData?.jamKe || 1));
+
+        if (!confirm(`Kosongkan mata pelajaran untuk ${hari} Jam Ke-${jamKe} Kelas ${kelas}?`)) return;
+
+        const slotId = (this.editModalData && this.editModalData.id)
+            ? this.editModalData.id
+            : `JDW-${kelas}-${hari.substring(0, 3).toUpperCase()}-${jamKe}`;
 
         const payloadItem = {
-            id: this.editModalData.id,
-            kelas: this.selectedKelas,
+            id: slotId,
+            kelas: String(kelas),
             tahunAjaran: this.selectedTA,
-            hari: this.editModalData.hari,
-            jamKe: this.editModalData.jamKe,
-            waktuMulai: this.editModalData.waktuMulai,
-            waktuSelesai: this.editModalData.waktuSelesai,
+            hari,
+            jamKe,
+            waktuMulai: (document.getElementById("jadwal-form-mulai") || document.getElementById("form-jadwal-mulai"))?.value || "07:00",
+            waktuSelesai: (document.getElementById("jadwal-form-selesai") || document.getElementById("form-jadwal-selesai"))?.value || "07:35",
             mapel: "",
             guru: "",
             nip: ""
@@ -355,6 +424,98 @@ const ModulJadwal = {
         this.closeEditModal();
         this.renderGrid();
         App.updateDashboardStats();
+    },
+
+    // -------------------------------------------------------------------------
+    // PRESET MERDEKA: Isi jadwal standar Kurikulum Merdeka secara otomatis
+    // -------------------------------------------------------------------------
+    async applyPresetMerdeka() {
+        if (!this.canEditCurrentClass()) {
+            App.showToast("Anda tidak memiliki hak akses mengedit jadwal kelas ini.", "warning");
+            return;
+        }
+
+        const kelas = this.selectedKelas;
+        if (!confirm(`Terapkan Preset Kurikulum Merdeka untuk Kelas ${kelas}?\nJadwal mingguan akan diisi dengan pola mata pelajaran standar Kurikulum Merdeka.`)) return;
+
+        const wali = this.getWaliKelas(kelas);
+        const tendiks = DataStore.getTendik();
+        const guruAgama = tendiks.find(t => t.jabatan && t.jabatan.includes("PAI"))?.nama || "Siti Fatimah, S.Pd.I";
+        const nipAgama = tendiks.find(t => t.jabatan && t.jabatan.includes("PAI"))?.nip || "19910214 201708 2 004";
+        const guruPJOK = tendiks.find(t => t.jabatan && t.jabatan.includes("PJOK"))?.nama || "Agus Triyono, S.Pd.Jas";
+        const nipPJOK = tendiks.find(t => t.jabatan && t.jabatan.includes("PJOK"))?.nip || "19850904 201001 1 015";
+        const nipWali = tendiks.find(t => t.jabatan && t.jabatan.toLowerCase().includes(`kelas ${kelas}`))?.nip || "";
+
+        const presetDefinitions = [
+            // Senin
+            { hari: "Senin", jamKe: 1, mapel: "Upacara Bendera", guru: wali, nip: nipWali },
+            { hari: "Senin", jamKe: 2, mapel: "Pendidikan Pancasila", guru: wali, nip: nipWali },
+            { hari: "Senin", jamKe: 3, mapel: "Bahasa Indonesia", guru: wali, nip: nipWali },
+            { hari: "Senin", jamKe: 4, mapel: "Bahasa Indonesia", guru: wali, nip: nipWali },
+            { hari: "Senin", jamKe: 5, mapel: "Matematika", guru: wali, nip: nipWali },
+            // Selasa
+            { hari: "Selasa", jamKe: 1, mapel: "Pendidikan Agama Islam", guru: guruAgama, nip: nipAgama },
+            { hari: "Selasa", jamKe: 2, mapel: "Pendidikan Agama Islam", guru: guruAgama, nip: nipAgama },
+            { hari: "Selasa", jamKe: 3, mapel: "Bahasa Indonesia", guru: wali, nip: nipWali },
+            { hari: "Selasa", jamKe: 4, mapel: Number(kelas) >= 3 ? "IPAS" : "Matematika", guru: wali, nip: nipWali },
+            // Rabu
+            { hari: "Rabu", jamKe: 1, mapel: "PJOK (Pendidikan Jasmani)", guru: guruPJOK, nip: nipPJOK },
+            { hari: "Rabu", jamKe: 2, mapel: "PJOK (Pendidikan Jasmani)", guru: guruPJOK, nip: nipPJOK },
+            { hari: "Rabu", jamKe: 3, mapel: "Bahasa Jawa (Mulok)", guru: wali, nip: nipWali },
+            { hari: "Rabu", jamKe: 4, mapel: "Seni Rupa / Seni Budaya", guru: wali, nip: nipWali },
+            // Kamis
+            { hari: "Kamis", jamKe: 1, mapel: "Matematika", guru: wali, nip: nipWali },
+            { hari: "Kamis", jamKe: 2, mapel: Number(kelas) >= 3 ? "IPAS" : "Bahasa Indonesia", guru: wali, nip: nipWali },
+            { hari: "Kamis", jamKe: 3, mapel: "Pendidikan Pancasila", guru: wali, nip: nipWali },
+            { hari: "Kamis", jamKe: 4, mapel: "Bahasa Inggris", guru: wali, nip: nipWali },
+            // Jumat
+            { hari: "Jumat", jamKe: 1, mapel: "Senam Pagi & Pembiasaan Karakter", guru: wali, nip: nipWali },
+            { hari: "Jumat", jamKe: 2, mapel: "Projek P5 (Kearifan Lokal)", guru: wali, nip: nipWali },
+            // Sabtu
+            { hari: "Sabtu", jamKe: 1, mapel: "Pramuka / Ekstrakurikuler", guru: wali, nip: nipWali },
+            { hari: "Sabtu", jamKe: 2, mapel: "Literasi & Numerasi", guru: wali, nip: nipWali }
+        ];
+
+        const allJadwal = DataStore.getJadwalAll();
+        const otherJadwal = allJadwal.filter(j => !(String(j.kelas) === String(kelas) && (!j.tahunAjaran || j.tahunAjaran === this.selectedTA)));
+
+        const newSlots = presetDefinitions.map(p => {
+            const slot = this.SLOTS.find(s => s.jamKe === p.jamKe) || { mulai: "07:00", selesai: "07:35" };
+            return {
+                id: `JDW-${kelas}-${p.hari.substring(0, 3).toUpperCase()}-${p.jamKe}`,
+                kelas: String(kelas),
+                tahunAjaran: this.selectedTA,
+                hari: p.hari,
+                jamKe: p.jamKe,
+                waktuMulai: slot.mulai,
+                waktuSelesai: slot.selesai,
+                mapel: p.mapel,
+                guru: p.guru,
+                nip: p.nip,
+                ruang: `Ruang Kelas ${kelas}`
+            };
+        });
+
+        const merged = [...otherJadwal, ...newSlots];
+        DataStore.saveJadwalAll(merged);
+
+        if (ApiClient.isCloudActive()) {
+            for (const item of newSlots) {
+                await ApiClient.request("saveJadwal", { item });
+            }
+        }
+
+        App.showToast(`Preset Merdeka berhasil diterapkan untuk Kelas ${kelas} (${newSlots.length} slot)!`, "success");
+        this.renderGrid();
+        App.updateDashboardStats();
+    },
+
+    printLandscape() {
+        this.printJadwalA4();
+    },
+
+    printPocketCard() {
+        this.printJadwalPocket();
     },
 
     // -------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: MODUL PROGRAM INDONESIA PINTAR (PIP KEMENDIKBUD)
-   Versi 2.0.0 - SDN Terlangu 01 Brebes
+   Versi 2.3.0 - SDN Terlangu 01 Brebes
    Fitur:
    1. Dasbor & Visualisasi Analitik Desil Kemiskinan (1-4, 5-7, 8-10) & Status SK.
    2. Data Pengusulan PIP (Format Dapodik/Puslapdik 2026) + Impor Excel.
@@ -31,7 +31,7 @@ const ModulPIP = {
     },
 
     bindEvents() {
-        // Tab switching
+        // Tab switching via data-tab attribute or direct onclick
         document.querySelectorAll(".pip-subtab-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 const tab = btn.getAttribute("data-tab");
@@ -42,19 +42,42 @@ const ModulPIP = {
 
     switchTab(tab) {
         this.activeTab = tab;
-        document.querySelectorAll(".pip-subtab-btn").forEach(btn => {
-            const isTarget = btn.getAttribute("data-tab") === tab;
-            btn.classList.toggle("active-subtab", isTarget);
-            btn.classList.toggle("bg-blue-900", isTarget);
-            btn.classList.toggle("text-white", isTarget);
-            btn.classList.toggle("bg-white", !isTarget);
-            btn.classList.toggle("text-slate-600", !isTarget);
+
+        const allTabs = ["dasbor", "pengusulan", "penerima"];
+        allTabs.forEach(t => {
+            const content = document.getElementById(`pip-tab-${t}`);
+            if (content) {
+                if (t === tab) content.classList.remove("hidden");
+                else content.classList.add("hidden");
+            }
+
+            const btn = document.getElementById(`pip-btn-tab-${t}`);
+            if (btn) {
+                const isTarget = t === tab;
+                btn.className = `pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 cursor-pointer ${
+                    isTarget 
+                        ? 'bg-white text-amber-700 shadow-sm' 
+                        : 'text-slate-600 hover:text-slate-900'
+                }`;
+            }
         });
 
-        document.querySelectorAll(".pip-tab-content").forEach(el => el.classList.add("hidden"));
-        const targetContent = document.getElementById(`pip-tab-${tab}`);
-        if (targetContent) targetContent.classList.remove("hidden");
+        // Backward compatibility for class-based buttons
+        document.querySelectorAll(".pip-subtab-btn").forEach(btn => {
+            const btnTab = btn.getAttribute("data-tab");
+            if (btnTab) {
+                const isTarget = btnTab === tab;
+                btn.classList.toggle("bg-white", isTarget);
+                btn.classList.toggle("text-amber-700", isTarget);
+                btn.classList.toggle("shadow-sm", isTarget);
+                btn.classList.toggle("text-slate-600", !isTarget);
+            }
+        });
 
+        this.renderActiveTab();
+    },
+
+    renderTab() {
         this.renderActiveTab();
     },
 
@@ -117,6 +140,12 @@ const ModulPIP = {
         const elTotalDana = document.getElementById("pip-stat-total-dana");
         if (elTotalDana) elTotalDana.textContent = `Rp ${totalDana.toLocaleString("id-ID")}`;
 
+        const elPersenCair = document.getElementById("pip-stat-persen-cair");
+        if (elPersenCair) {
+            const pct = totalPenerima > 0 ? Math.round((sudahCair / totalPenerima) * 100) : 0;
+            elPersenCair.textContent = `${pct}%`;
+        }
+
         const elD1 = document.getElementById("pip-stat-desil-1-4");
         if (elD1) elD1.textContent = `${desil1_4} Siswa`;
         const elD2 = document.getElementById("pip-stat-desil-5-7");
@@ -135,7 +164,7 @@ const ModulPIP = {
     },
 
     renderDesilChart(d1, d2, d3) {
-        const canvas = document.getElementById("chart-pip-desil");
+        const canvas = document.getElementById("pip-chart-desil") || document.getElementById("chart-pip-desil");
         if (!canvas || typeof Chart === "undefined") return;
 
         if (this.chartDesilInstance) {

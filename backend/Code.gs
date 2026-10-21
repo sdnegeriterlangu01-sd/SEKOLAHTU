@@ -1,10 +1,15 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.2.0
+ * Backend REST API - Google Apps Script (GAS) v2.3.0
  * ==========================================================================
  * 
  * Version History:
+ * - v2.3.0 (21 Oktober 2026):
+ *   + Ditambahkan endpoint API "trackPermohonanSurat" untuk pelacakan kode resi mandiri orang tua.
+ *   + Pengecualian verifikasi token Supabase (Bypass Auth) untuk aksi publik (submit & track permohonan surat).
+ *   + Standardisasi response tiket permohonan surat (trackingCode, ticketId, dan objek data).
+ *   + Penyelarasan API payload dan optimasi respon JSON CORS text/plain.
  * - v2.2.0 (21 Oktober 2026):
  *   v2.2.0 - Penambahan 4 Database Sheet Baru & Handler Integrasi SIM-TAS-SD 2026:
  *    1. Menambahkan struktur sheet: DB_JadwalPelajaran, DB_PIP_Pengusulan, DB_PIP_Penerima, dan DB_PermohonanSurat.
@@ -14,7 +19,6 @@
  *       - Permohonan Surat Mandiri: getPermohonanSurat, submitPermohonanSurat, updatePermohonanSurat
  *       - Siswa: updateStudentPhone, updateStudentFields
  *    3. Memperbarui setupDatabaseAndFolders() untuk inisialisasi otomatis tab baru dan header kolom terkait.
-
  * - v2.1.0 (20 Oktober 2026):
  *   + Ditambahkan endpoint API "getConfig" dan "saveConfig" untuk sinkronisasi
  *     konfigurasi profil sekolah & identitas Kepala Sekolah ke tab "Config" spreadsheet.
@@ -63,7 +67,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.1.0",
+    version: "2.3.0",
     timestamp: new Date().toISOString(),
     message: "Google Apps Script Backend berjalan normal. Gunakan HTTP POST untuk berinteraksi."
   };
@@ -90,14 +94,19 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify(responseData)).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Verifikasi Token Supabase jika Script Properties disetel
-    const authCheck = verifySupabaseToken(token);
-    if (!authCheck.valid && isStrictAuthRequired()) {
-      return ContentService.createTextOutput(JSON.stringify({
-        success: false,
-        code: "AUTH",
-        message: authCheck.message || "Sesi Supabase tidak valid atau kedaluwarsa. Silakan masuk kembali."
-      })).setMimeType(ContentService.MimeType.JSON);
+    // Aksi portal publik (permohonan mandiri oleh orang tua siswa) tidak memerlukan token login staf TU
+    const isPublicAction = (action === "submitPermohonanSurat" || action === "trackPermohonanSurat");
+
+    // Verifikasi Token Supabase jika Script Properties disetel & bukan aksi publik
+    if (!isPublicAction) {
+      const authCheck = verifySupabaseToken(token);
+      if (!authCheck.valid && isStrictAuthRequired()) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          code: "AUTH",
+          message: authCheck.message || "Sesi Supabase tidak valid atau kedaluwarsa. Silakan masuk kembali."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -255,6 +264,10 @@ function doPost(e) {
 
       case "submitPermohonanSurat":
         responseData = handleSubmitPermohonanSurat(ss, payload);
+        break;
+
+      case "trackPermohonanSurat":
+        responseData = handleTrackPermohonanSurat(ss, payload);
         break;
 
       case "updatePermohonanSurat":
@@ -1847,11 +1860,69 @@ function handleSubmitPermohonanSurat(ss, payload) {
 
   sheet.appendRow(rowValues);
 
+  const payloadObj = {
+    id: id,
+    tanggalMasuk: nowStr,
+    nisn: String(payload.nisn || ""),
+    nama: String(payload.nama || ""),
+    kelas: String(payload.kelas || ""),
+    namaPemohon: String(payload.namaPemohon || payload.namaOrtu || ""),
+    hubunganPemohon: String(payload.hubunganPemohon || "Orang Tua / Wali"),
+    noWhatsApp: String(payload.noWhatsApp || payload.hpOrtu || ""),
+    jenisSurat: String(payload.jenisSurat || "Surat Keterangan Aktif"),
+    keperluan: String(payload.keperluan || ""),
+    status: String(payload.status || "Menunggu Verifikasi TU"),
+    nomorSuratTerbit: "",
+    keteranganTindak: String(payload.keterangan || "")
+  };
+
   return {
     success: true,
     message: `Permohonan surat berhasil dikirim! Simpan kode tracking Anda: ${id}`,
-    ticketId: id
+    ticketId: id,
+    trackingCode: id,
+    data: payloadObj
   };
+}
+
+function handleTrackPermohonanSurat(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet) return { success: false, message: "Tab DB_PermohonanSurat tidak ditemukan." };
+
+  const query = String(payload.query || payload.code || payload.id || "").trim().toUpperCase();
+  if (!query) return { success: false, message: "Kode resi atau parameter pencarian kosong." };
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    const id = String(r[0] || "").trim().toUpperCase();
+    const nisn = String(r[2] || "").trim();
+    const hp = String(r[6] || "").trim();
+    if (id === query || nisn === query || (query.length >= 8 && hp.includes(query))) {
+      return {
+        success: true,
+        message: "Data permohonan surat ditemukan.",
+        data: {
+          id: String(r[0] || ""),
+          tanggalMasuk: String(r[1] || ""),
+          nisn: String(r[2] || ""),
+          nama: String(r[3] || ""),
+          kelas: String(r[4] || ""),
+          namaPemohon: String(r[5] || ""),
+          hubunganPemohon: "Orang Tua / Wali",
+          noWhatsApp: String(r[6] || ""),
+          jenisSurat: String(r[7] || ""),
+          keperluan: String(r[8] || ""),
+          status: String(r[9] || "Menunggu Verifikasi TU"),
+          keteranganTindak: String(r[10] || ""),
+          nomorSuratTerbit: String(r[10] || "").match(/421\.[0-9\/SD\-]+/i) ? String(r[10]) : "",
+          updatedAt: String(r[11] || "")
+        }
+      };
+    }
+  }
+
+  return { success: false, message: "Kode resi permohonan tidak ditemukan pada sistem." };
 }
 
 function handleUpdatePermohonanSurat(ss, payload) {

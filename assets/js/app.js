@@ -147,7 +147,7 @@ const App = {
         } else if (route === "jadwal") {
             if (window.ModulJadwal) ModulJadwal.renderGrid();
         } else if (route === "pip") {
-            if (window.ModulPIP) ModulPIP.renderTab();
+            if (window.ModulPIP) (ModulPIP.renderActiveTab ? ModulPIP.renderActiveTab() : ModulPIP.renderTab());
         } else if (route === "surat") {
             ModulSurat.renderSubTab();
         } else if (route === "cetak") {
@@ -174,7 +174,7 @@ const App = {
         }
     },
 
-    VERSION: "1.4.1",
+    VERSION: "2.3.0",
 
     updateDashboardStats() {
         const students = DataStore.getSiswa();

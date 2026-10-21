@@ -93,6 +93,18 @@ const ModulSurat = {
         });
         [viewKeluar, viewMasuk, viewPermohonan].forEach(v => v?.classList.add("hidden"));
 
+        const badgePermohonan = document.getElementById("badge-pending-permohonan");
+        if (badgePermohonan) {
+            const listPermohonan = (window.DataStore && DataStore.getPermohonanSurat) ? DataStore.getPermohonanSurat() : [];
+            const pendingCount = listPermohonan.filter(p => (p.status || "").toLowerCase().includes("menunggu")).length;
+            if (pendingCount > 0) {
+                badgePermohonan.textContent = pendingCount;
+                badgePermohonan.classList.remove("hidden");
+            } else {
+                badgePermohonan.classList.add("hidden");
+            }
+        }
+
         if (this.activeSubTab === "keluar") {
             btnKeluar?.classList.add("bg-white", "text-blue-700", "shadow-sm");
             btnKeluar?.classList.remove("text-slate-600");

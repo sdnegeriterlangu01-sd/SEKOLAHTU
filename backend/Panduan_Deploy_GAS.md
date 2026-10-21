@@ -1,5 +1,5 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.1.0
+## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.3.0
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.
 
@@ -59,9 +59,9 @@ Untuk mengaktifkan verifikasi token Zero Trust di sisi server:
 ### Langkah 5: Publikasikan sebagai Web App (Penerapan Baru atau Update Versi)
 1. Di pojok kanan atas Apps Script:
    - **Jika baru pertama kali:** Klik **Terapkan** > **Penerapan Baru** (`Deploy` > `New deployment`), pilih jenis **Aplikasi Web** (`Web app`).
-   - **Jika memperbarui kode (Update v2.1.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
+   - **Jika memperbarui kode (Update v2.3.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
 2. Konfigurasikan:
-   - **Deskripsi**: `SIM-TAS-SD Production API v2.1.0 (Config Sync & Dynamic Verification)`
+   - **Deskripsi**: `SIM-TAS-SD Production API v2.3.0 (Public Letter Tracking & Full Subtabs Fix)`
    - **Jalankan sebagai**: `Saya (emailanda@gmail.com)`
    - **Siapa yang memiliki akses**: `Semua orang` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
 3. Klik **Terapkan** (`Deploy`).

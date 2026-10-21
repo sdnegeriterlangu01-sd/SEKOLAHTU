@@ -69,7 +69,7 @@
                         <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                             SIM-TAS-SD
                             <span
-                                class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.2.0</span>
+                                class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.3.0</span>
                         </div>
                         <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                             Terlangu 01</div>
@@ -729,13 +729,26 @@
                                 klasifikasi baku (tanpa nomor ganda) & buku agenda surat masuk.</p>
                         </div>
 
-                        <!-- Sub-tab Toggle Bar with Modular Vue 3 -->
+                        <!-- Sub-tab Toggle Bar with Direct Click Handlers & Vue Sync -->
                         <div id="vue-surat-tabs" class="bg-slate-200/80 p-1 rounded-xl flex items-center gap-1">
-                            <button v-for="tab in tabs" :key="tab.id" type="button" :id="'btn-tab-surat-' + tab.id"
-                                @click="switchTab(tab.id)"
-                                :class="['px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer', activeTab === tab.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900']">
-                                <i :class="['fa-solid', tab.icon]"></i>
-                                <span>{{ tab.label }}</span>
+                            <button type="button" id="btn-tab-surat-keluar"
+                                onclick="ModulSurat.switchSubTab('keluar')"
+                                class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer bg-white text-blue-700 shadow-sm">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Surat Keluar</span>
+                            </button>
+                            <button type="button" id="btn-tab-surat-masuk"
+                                onclick="ModulSurat.switchSubTab('masuk')"
+                                class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900">
+                                <i class="fa-solid fa-inbox"></i>
+                                <span>Surat Masuk</span>
+                            </button>
+                            <button type="button" id="btn-tab-surat-permohonan"
+                                onclick="ModulSurat.switchSubTab('permohonan')"
+                                class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 relative">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Pengajuan Ortu</span>
+                                <span id="badge-pending-permohonan" class="hidden ml-1 px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-black rounded-full shadow-xs">0</span>
                             </button>
                         </div>
                     </div>
@@ -840,9 +853,10 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- ================= SUB VIEW: PENGAJUAN ONLINE ORTU ================= -->
-                        <div id="view-surat-permohonan" class="hidden space-y-4">
+                    <!-- ================= SUB VIEW: PENGAJUAN ONLINE ORTU ================= -->
+                    <div id="view-surat-permohonan" class="hidden space-y-4">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="flex items-center gap-3 flex-grow max-w-xl">
                                     <div class="relative flex-grow">
@@ -1630,22 +1644,22 @@
 
                     <!-- Navigation Sub-Tabs -->
                     <div class="bg-slate-200/80 p-1 rounded-xl inline-flex items-center gap-1">
-                        <button id="pip-btn-tab-dasbor" onclick="ModulPIP.switchTab('dasbor')"
-                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 bg-white text-amber-700 shadow-sm cursor-pointer">
+                        <button id="pip-btn-tab-dasbor" data-tab="dasbor" onclick="ModulPIP.switchTab('dasbor')"
+                            class="pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 bg-white text-amber-700 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-chart-simple"></i> Dasbor & Analitik
                         </button>
-                        <button id="pip-btn-tab-pengusulan" onclick="ModulPIP.switchTab('pengusulan')"
-                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <button id="pip-btn-tab-pengusulan" data-tab="pengusulan" onclick="ModulPIP.switchTab('pengusulan')"
+                            class="pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
                             <i class="fa-solid fa-clipboard-question"></i> Data Pengusulan (Desil)
                         </button>
-                        <button id="pip-btn-tab-penerima" onclick="ModulPIP.switchTab('penerima')"
-                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <button id="pip-btn-tab-penerima" data-tab="penerima" onclick="ModulPIP.switchTab('penerima')"
+                            class="pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
                             <i class="fa-solid fa-id-card-clip"></i> Siswa Penerima SK PIP
                         </button>
                     </div>
 
                     <!-- SUB-VIEW 1: DASBOR & ANALITIK -->
-                    <div id="pip-tab-dasbor" class="space-y-5">
+                    <div id="pip-tab-dasbor" class="pip-tab-content space-y-5">
                         <!-- 4 Stat Cards -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <div class="glass-card rounded-2xl p-4 border border-slate-200">
@@ -1731,7 +1745,7 @@
                     </div>
 
                     <!-- SUB-VIEW 2: DATA PENGUSULAN -->
-                    <div id="pip-tab-pengusulan" class="hidden space-y-4">
+                    <div id="pip-tab-pengusulan" class="pip-tab-content hidden space-y-4">
                         <div
                             class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                             <div class="md:col-span-6 relative">
@@ -1790,7 +1804,7 @@
                     </div>
 
                     <!-- SUB-VIEW 3: SISWA PENERIMA SK -->
-                    <div id="pip-tab-penerima" class="hidden space-y-4">
+                    <div id="pip-tab-penerima" class="pip-tab-content hidden space-y-4">
                         <div
                             class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                             <div class="md:col-span-5 relative">

@@ -28,8 +28,10 @@ const ApiClient = {
 
     // -------- Pemanggilan ke Google Apps Script (membawa token) --------
     async cloudCall(action, payload = {}) {
-        const token = await Auth.getToken();
-        if (Auth.usesSupabase() && !token && action !== "ping") {
+        const token = (typeof Auth !== "undefined" && Auth.getToken) ? await Auth.getToken() : null;
+        const usesSupabase = (typeof Auth !== "undefined" && Auth.usesSupabase) ? Auth.usesSupabase() : false;
+        const isPublicAction = (action === "ping" || action === "submitPermohonanSurat" || action === "trackPermohonanSurat");
+        if (usesSupabase && !token && !isPublicAction) {
             return { success: false, code: "AUTH", message: "Sesi login cloud tidak ditemukan. Silakan masuk kembali dengan akun Supabase." };
         }
         try {
@@ -41,7 +43,7 @@ const ApiClient = {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const json = await response.json();
             if (json && json.code === "AUTH") {
-                if (Auth.usesSupabase()) {
+                if (usesSupabase && typeof Auth !== "undefined" && Auth.forceLogout) {
                     Auth.forceLogout("Sesi berakhir atau tidak valid. Silakan masuk kembali.");
                 } else {
                     return { success: false, code: "AUTH", message: "Backend Google Apps Script mewajibkan token Supabase. Konfigurasikan Supabase di config.js atau hapus Script Properties di Apps Script." };
@@ -73,12 +75,12 @@ const ApiClient = {
         payload = Sec.cleanDeep(payload);
 
         if (this.isCloudActive()) {
-            const isDemo = Auth.session && Auth.session.demo;
+            const isDemo = (typeof Auth !== "undefined" && Auth.session) ? Auth.session.demo : false;
             // Jika sesi demo aktif, simpan secara lokal agar tidak tertolak token Supabase
             if (!isDemo) {
                 const res = await this.cloudCall(action, payload);
                 if (res && res.success) {
-                    if (Sync.PULL_AFTER[action]) {
+                    if (typeof Sync !== "undefined" && Sync.PULL_AFTER && Sync.PULL_AFTER[action]) {
                         await Promise.all(Sync.PULL_AFTER[action].map(kind => Sync.pull(kind)));
                     }
                     return res;
@@ -626,7 +628,12 @@ const ApiClient = {
                 const list = DataStore.getPermohonanSurat();
                 const now = new Date();
                 const y = now.getFullYear();
-                const code = `REQ-${y}-${String(list.length + 1).padStart(4, "0")}`;
+                let counter = list.length + 1;
+                let code = `REQ-${y}-${String(counter).padStart(4, "0")}`;
+                while (list.some(r => r.id === code)) {
+                    counter++;
+                    code = `REQ-${y}-${String(counter).padStart(4, "0")}`;
+                }
                 const newReq = {
                     id: code,
                     tanggalMasuk: `${Util.today()} ${Util.nowTime()}`,
@@ -644,7 +651,21 @@ const ApiClient = {
                 };
                 list.unshift(newReq);
                 DataStore.savePermohonanSurat(list);
-                return { success: true, message: "Permohonan surat berhasil dikirim!", trackingCode: code, data: newReq };
+                return { success: true, message: "Permohonan surat berhasil dikirim!", trackingCode: code, ticketId: code, data: newReq };
+            }
+
+            case "trackPermohonanSurat": {
+                const query = String(payload.query || payload.code || payload.id || "").trim().toUpperCase();
+                const list = DataStore.getPermohonanSurat();
+                const found = list.find(r => 
+                    (r.id && r.id.toUpperCase() === query) ||
+                    (r.nisn && r.nisn === query) ||
+                    (r.noWhatsApp && r.noWhatsApp.includes(query))
+                );
+                if (found) {
+                    return { success: true, message: "Data permohonan surat ditemukan.", data: found };
+                }
+                return { success: false, message: "Kode resi permohonan tidak ditemukan pada sistem." };
             }
 
             case "updatePermohonanSurat": {

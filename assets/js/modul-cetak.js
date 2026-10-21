@@ -410,12 +410,13 @@ const ModulCetak = {
             </div>
         `;
 
-        // Render QR Code di dalam Dokumen (Berisi Nomor Surat Langsung agar langsung terhubung ke sistem verifikasi tanpa melalui URL/link)
+        // Render QR Code di dalam Dokumen (Berisi Nomor Surat Langsung saja sesuai standar pencarian)
         const qrBox = document.getElementById("qrcode-container");
         if (qrBox && typeof QRCode !== "undefined") {
             qrBox.innerHTML = "";
+            const cleanTextNomor = String(this.generatedNomorSurat || "").trim();
             new QRCode(qrBox, {
-                text: this.generatedNomorSurat,
+                text: cleanTextNomor,
                 width: 102,
                 height: 102,
                 colorDark: "#000000",

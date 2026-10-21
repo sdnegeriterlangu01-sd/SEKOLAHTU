@@ -861,7 +861,7 @@ const App = {
             if (window.VueStore) VueStore.refresh();
             return;
         }
-        const container = document.getElementById("quick-actions-dropdown");
+        const container = document.getElementById("vue-quick-actions");
         if (!container) return;
 
         const role = Auth.role();
@@ -869,11 +869,14 @@ const App = {
         const isKepsek = role === "kepsek";
         const isKiosk = role === "kiosk";
 
+        const btnClass = "group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer";
+
         if (isKiosk) {
             container.innerHTML = `
-                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Presensi Mandiri
-                </a>
+                <button type="button" onclick="App.navigateTo('scan-absensi');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-indigo-300"></i></span>
+                    <span>Scan Presensi Mandiri</span>
+                </button>
             `;
             return;
         }
@@ -882,57 +885,70 @@ const App = {
             const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
             const labelKelas = gInfo && gInfo.isGuruKelas ? ` (Kelas ${gInfo.kelas})` : "";
             container.innerHTML = `
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('harian');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Hari Ini${Sec.esc(labelKelas)}
-                </a>
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Bulanan
-                </a>
-                <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-qrcode text-emerald-600 w-4"></i> Presensi Datang / Pulang Saya
-                </a>
-                <a href="#berkas" onclick="App.navigateTo('berkas');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-folder-closed text-amber-600 w-4"></i> Berkas Siswa${Sec.esc(labelKelas)}
-                </a>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('harian');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-check text-amber-300"></i></span>
+                    <span>Input Presensi Hari Ini${Sec.esc(labelKelas)}</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-table-cells text-sky-300"></i></span>
+                    <span>Rekap Absensi Bulanan</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('scan-absensi');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>
+                    <span>Presensi Datang / Pulang Saya</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('berkas');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-folder-closed text-amber-300"></i></span>
+                    <span>Berkas Siswa${Sec.esc(labelKelas)}</span>
+                </button>
             `;
             return;
         }
 
         if (isKepsek) {
             container.innerHTML = `
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-clipboard-user text-indigo-600 w-4"></i> Rekap Presensi Guru & Tendik
-                </a>
-                <a href="#absensi" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-table-cells text-blue-600 w-4"></i> Rekap Absensi Siswa
-                </a>
-                <a href="#surat" onclick="App.navigateTo('surat');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-envelopes-bulk text-amber-600 w-4"></i> Buku Register Surat SRIKANDI
-                </a>
-                <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                    <i class="fa-solid fa-print text-teal-600 w-4"></i> Cetak Surat Keterangan
-                </a>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>
+                    <span>Rekap Presensi Guru & Tendik</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('siswa');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-table-cells text-sky-300"></i></span>
+                    <span>Rekap Absensi Siswa</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('surat');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-envelopes-bulk text-amber-300"></i></span>
+                    <span>Buku Register Surat SRIKANDI</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('cetak');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-print text-teal-300"></i></span>
+                    <span>Cetak Surat Keterangan</span>
+                </button>
             `;
             return;
         }
 
         // Admin & TU default
         container.innerHTML = `
-            <a href="#berkas" onclick="App.navigateTo('berkas'); ModulBerkas.openAddModal();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                <i class="fa-solid fa-user-plus text-blue-600 w-4"></i> Tambah Siswa Baru
-            </a>
-            <a href="#surat" onclick="App.navigateTo('surat'); ModulSurat.openModalSuratKeluar();" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                <i class="fa-solid fa-paper-plane text-emerald-600 w-4"></i> Terbitkan Nomor Surat
-            </a>
-            <a href="#cetak" onclick="App.navigateTo('cetak');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                <i class="fa-solid fa-file-invoice text-teal-600 w-4"></i> Cetak Surat Keterangan
-            </a>
-            <a href="#absensi" onclick="App.navigateTo('absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                <i class="fa-solid fa-clipboard-check text-indigo-600 w-4"></i> Input Presensi Harian
-            </a>
-            <a href="#scan-absensi" onclick="App.navigateTo('scan-absensi');" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                <i class="fa-solid fa-qrcode text-indigo-600 w-4"></i> Scan Absensi Datang/Pulang
-            </a>
+            <button type="button" onclick="App.navigateTo('berkas'); if (window.ModulBerkas) ModulBerkas.openAddModal();" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-user-plus text-sky-300"></i></span>
+                <span>Tambah Siswa Baru</span>
+            </button>
+            <button type="button" onclick="App.navigateTo('surat'); if (window.ModulSurat) ModulSurat.openModalSuratKeluar();" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-paper-plane text-emerald-300"></i></span>
+                <span>Terbitkan Nomor Surat</span>
+            </button>
+            <button type="button" onclick="App.navigateTo('cetak');" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-file-invoice text-teal-300"></i></span>
+                <span>Cetak Surat Keterangan</span>
+            </button>
+            <button type="button" onclick="App.navigateTo('absensi');" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-check text-amber-300"></i></span>
+                <span>Input Presensi Harian</span>
+            </button>
+            <button type="button" onclick="App.navigateTo('scan-absensi');" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-indigo-300"></i></span>
+                <span>Scan Absensi Datang/Pulang</span>
+            </button>
         `;
     },
 

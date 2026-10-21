@@ -104,6 +104,29 @@ body {
   background: #94a3b8;
 }
 
+/* Sidebar Nav Scrollbar */
+#vue-sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+#vue-sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+#vue-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#vue-sidebar-nav::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+#vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Navigation & Active Link Animations */
 .nav-link {
   position: relative;

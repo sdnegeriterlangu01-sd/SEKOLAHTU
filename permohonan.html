@@ -723,7 +723,8 @@
                 s2.className = activeClass;
                 s3.className = activeClass;
                 s4.className = activeClass;
-                document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${found.nomorSuratTerbit || '421.2/SD/2026'}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
+                const noReg = found.nomorSuratTerbit || (found.keteranganTindak && found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.]+)/i) ? found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.]+)/i)[1] : '421.2/001/SD/2026');
+                document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
             } else if (st.includes("tolak") || st.includes("ditolak")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Permohonan Ditolak`;

@@ -62,12 +62,12 @@ const ModulSurat = {
         const modalSelect = document.getElementById("sk-kode-klasifikasi");
 
         if (filterEl) {
-            filterEl.innerHTML = `<option value="Semua">Semua Klasifikasi</option>` + 
+            filterEl.innerHTML = `<option value="Semua">Semua Klasifikasi</option>` +
                 KODE_KLASIFIKASI_SURAT.map(k => `<option value="${k.kode}">${k.kode} - ${k.nama}</option>`).join("");
         }
 
         if (modalSelect) {
-            modalSelect.innerHTML = KODE_KLASIFIKASI_SURAT.map(k => 
+            modalSelect.innerHTML = KODE_KLASIFIKASI_SURAT.map(k =>
                 `<option value="${k.kode}">${k.kode} - ${k.nama}</option>`
             ).join("");
         }
@@ -695,6 +695,11 @@ const ModulSurat = {
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadge}">
                             <i class="fa-solid ${statusIcon}"></i> ${p.status}
                         </span>
+                        ${p.nomorSuratTerbit ? `
+                            <div class="text-[10px] font-mono font-bold text-blue-900 mt-1 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200">
+                                <i class="fa-solid fa-file-signature text-blue-700 mr-1"></i>${p.nomorSuratTerbit}
+                            </div>
+                        ` : ''}
                     </td>
                     <td class="px-4 py-3 text-center">
                         <select onchange="ModulSurat.updateStatusPermohonan('${p.id}', this.value)"
@@ -709,7 +714,7 @@ const ModulSurat = {
                     <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-1.5">
                             <button onclick="ModulSurat.prosesPermohonan('${p.id}')"
-                                title="Terbitkan & Cetak Surat Sekarang"
+                                title="Setujui & Buka Modul Cetak Surat"
                                 class="p-1.5 px-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition shadow-xs">
                                 <i class="fa-solid fa-print"></i> Cetak
                             </button>
@@ -727,9 +732,45 @@ const ModulSurat = {
 
     async updateStatusPermohonan(id, newStatus) {
         try {
-            const res = await ApiClient.request("updatePermohonanSurat", { id, status: newStatus });
+            const list = DataStore.getPermohonanSurat();
+            const item = list.find(p => p.id === id);
+            let noSurat = item ? (item.nomorSuratTerbit || "") : "";
+            let ketTindak = item ? (item.keteranganTindak || item.keterangan || "") : "";
+
+            // Jika status diubah menjadi Siap Diambil, cari nomor surat keluar atas nama siswa
+            if (newStatus === "Siap Diambil") {
+                if (!noSurat && item) {
+                    const suratKeluarList = DataStore.getSuratKeluar();
+                    const cleanNama = (item.nama || "").toLowerCase();
+                    const cleanNisn = (item.nisn || "");
+                    const foundSK = suratKeluarList.find(s => {
+                        const perihal = (s.perihal || "").toLowerCase();
+                        const tujuan = (s.tujuan || "").toLowerCase();
+                        return (cleanNama && (perihal.includes(cleanNama) || tujuan.includes(cleanNama))) ||
+                            (cleanNisn && (perihal.includes(cleanNisn) || tujuan.includes(cleanNisn)));
+                    });
+                    if (foundSK) {
+                        noSurat = foundSK.nomorSurat;
+                    } else if (suratKeluarList.length > 0) {
+                        noSurat = suratKeluarList[0].nomorSurat;
+                    }
+                }
+                if (noSurat) {
+                    ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.`;
+                }
+            }
+
+            const payload = {
+                id,
+                status: newStatus,
+                nomorSuratTerbit: noSurat || undefined,
+                keteranganTindak: ketTindak || undefined,
+                keterangan: ketTindak || undefined
+            };
+
+            const res = await ApiClient.request("updatePermohonanSurat", payload);
             if (res.success) {
-                App.showToast(`Status permohonan ${id} diperbarui: ${newStatus}`, "success");
+                App.showToast(`Status permohonan ${id} diperbarui: ${newStatus}${noSurat ? ' (' + noSurat + ')' : ''}`, "success");
                 this.renderPermohonanTable();
                 if (window.VueStore) VueStore.refresh();
             } else {
@@ -740,10 +781,22 @@ const ModulSurat = {
         }
     },
 
-    prosesPermohonan(id) {
+    async prosesPermohonan(id) {
         const item = DataStore.getPermohonanSurat().find(p => p.id === id);
         if (!item) return;
 
+        // 1. Ubah status permohonan menjadi "Disetujui TU" jika belum
+        if (item.status === "Menunggu Verifikasi TU" || (item.status || "").toLowerCase().includes("menunggu")) {
+            await this.updateStatusPermohonan(id, "Disetujui TU");
+        }
+
+        // 2. Kaitkan ID permohonan aktif ke ModulCetak
+        if (window.ModulCetak) {
+            ModulCetak.activePermohonanId = id;
+            ModulCetak.activePermohonan = item;
+        }
+
+        // 3. Pindah ke modul Cetak & siapkan template
         App.navigateTo("cetak");
         const selectSiswa = document.getElementById("cetak-select-siswa");
         if (selectSiswa && item.nisn) {
@@ -775,7 +828,7 @@ const ModulSurat = {
         }
 
         ModulCetak.generatePreview();
-        App.showToast(`Memuat data permohonan ${item.id} untuk ${item.nama}`, "info");
+        App.showToast(`Status permohonan ${item.id} Disetujui. Memuat cetak surat untuk ${item.nama}`, "info");
     },
 
     sendWhatsAppPermohonan(id) {
@@ -794,9 +847,11 @@ const ModulSurat = {
 
         const school = DataStore.getConfig()?.namaSekolah || "SD Negeri Terlangu 01";
         const namaOrtu = item.namaOrtu || item.namaPemohon || "Orang Tua Siswa";
-        const message = `Yth. Bapak/Ibu ${namaOrtu},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.\n\n` +
-            (item.status === "Siap Diambil" 
-                ? `Surat resmi telah dicetak dan ditandatangani. Silakan mengambil surat fisik di Ruang Tata Usaha ${school} pada jam operasional sekolah (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
+        const noReg = item.nomorSuratTerbit ? `\n*Nomor Registrasi SRIKANDI:* ${item.nomorSuratTerbit}` : "";
+
+        const message = `Yth. Bapak/Ibu ${namaOrtu},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.${noReg}\n\n` +
+            (item.status === "Siap Diambil"
+                ? `Surat resmi telah dicetak dan diterbitkan dengan Nomor Registrasi SRIKANDI: ${item.nomorSuratTerbit || '421.2/SD/2026'}.\nSilakan mengambil surat fisik di Ruang Tata Usaha ${school} pada jam operasional sekolah (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
                 : `Anda dapat memantau status secara berkala melalui tautan portal kami.\n\n`) +
             `Terima kasih.\n_Tata Usaha ${school}_`;
 

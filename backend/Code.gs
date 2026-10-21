@@ -1,51 +1,9 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.5.0
+ * Backend REST API - Google Apps Script (GAS) v2.5.1
+ * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
- * 
- * Version History:
- * - v2.5.1 (22 Oktober 2026):
- *   + Bypass Auth & Zero Auth Barrier: Endpoint publik "submitPermohonanSurat", "trackPermohonanSurat", dan "verifyStudentPublic" 100% bebas token login staf.
- *   + Penambahan endpoint publik "verifyStudentPublic" untuk pengecekan data siswa online via NISN langsung ke Google Sheets (TAB_SISWA).
- *   + Dukungan HTTP GET pada "doGet(e)" untuk pelacakan kode resi instan dan verifikasi siswa publik langsung dari browser/URL.
- *   + Optimasi Smart Matching pencarian kode resi di "handleTrackPermohonanSurat" (case-insensitive, strip-insensitive, 3-4 digit nomor urut, NISN, dan no HP WhatsApp).
- *   + Auto-create sheet "DB_PermohonanSurat" jika belum tersedia dan normalisasi format objek tanggal (Date).
- * - v2.5.0 (21 Oktober 2026):
- *   + Penambahan endpoint API "clearJadwalKelas" untuk 1-klik hapus seluruh jadwal pelajaran pada kelas tertentu.
- *   + Verifikasi dokumen surat: QR Code memuat string nomor registrasi surat untuk pencocokan instan tanpa skema URL.
- *   + Penyelarasan format tabel & impor Pengusulan PIP (28 kolom resmi Dapodik/Puslapdik 2026).
- *   + Penyelarasan format tabel & impor Penerima PIP (22 kolom SK Puslapdik 2026).
- *   + Pemetaan presisi profil akun Guru Kelas / Guru Mapel (tipeGuru & kelasGuru), isolasi dropdown absensi & rekap, serta perbaikan format jam jadwal.
- *   + Reposisi menu "Aksi Cepat" ke Hero Banner Dashboard Beranda.
- * - v2.4.0 (21 Oktober 2026):
- *   + Penyelarasan field dual alias WhatsApp permohonan surat (noWhatsApp & hpOrtu).
- *   + Dukungan format contoh Excel & import PIP Kemendikbud (Pengusulan & Penerima SK).
- *   + Dynamic rombel dropdown untuk pemilihan kelas modul Jadwal & modul PIP.
- *   + Perbaikan slot ID & preset Kurikulum Merdeka pada modul Jadwal Pelajaran.
- *   + Integrasi data hari libur nasional, hari Minggu, dan cuti bersama dari https://husniadil.com/calendar/{Tahun}/.
- *   + Optimasi QR Code surat keluar verifikasi langsung berbasis nomor surat resmi.
- * - v2.3.0 (21 Oktober 2026):
- *   + Ditambahkan endpoint API "trackPermohonanSurat" untuk pelacakan kode resi mandiri orang tua.
- *   + Pengecualian verifikasi token Supabase (Bypass Auth) untuk aksi publik (submit & track permohonan surat).
- *   + Standardisasi response tiket permohonan surat (trackingCode, ticketId, dan objek data).
- *   + Penyelarasan API payload dan optimasi respon JSON CORS text/plain.
- * - v2.2.0 (21 Oktober 2026):
- *   v2.2.0 - Penambahan 4 Database Sheet Baru & Handler Integrasi SIM-TAS-SD 2026:
- *    1. Menambahkan struktur sheet: DB_JadwalPelajaran, DB_PIP_Pengusulan, DB_PIP_Penerima, dan DB_PermohonanSurat.
- *    2. Menambahkan action handlers doPost:
- *       - Jadwal: getJadwal, saveJadwal, deleteJadwal
- *       - PIP: getPIP, savePIP, updatePIPStatus, importPIP
- *       - Permohonan Surat Mandiri: getPermohonanSurat, submitPermohonanSurat, updatePermohonanSurat
- *       - Siswa: updateStudentPhone, updateStudentFields
- *    3. Memperbarui setupDatabaseAndFolders() untuk inisialisasi otomatis tab baru dan header kolom terkait.
- * - v2.1.0 (20 Oktober 2026):
- *   + Ditambahkan endpoint API "getConfig" dan "saveConfig" untuk sinkronisasi
- *     konfigurasi profil sekolah & identitas Kepala Sekolah ke tab "Config" spreadsheet.
- *   + Dukungan auto-create tab "Config" dan pemetaan fleksibel nama kolom konfigurasi.
- * - v2.0.0 (19 Oktober 2026):
- *   + Integrasi token auth Supabase & RBAC multi-role (Admin, Guru, TU, Kepsek, Kiosk).
- *   + Sinkronisasi presensi tendik & siswa, backup drive, dan manajemen arsip surat.
  * 
  * Target Deployment:
  * - Execute as: Me (akun Google pemilik spreadsheet/drive)
@@ -79,6 +37,24 @@ const TAB_JADWAL = "DB_JadwalPelajaran";
 const TAB_PIP_PENGUSULAN = "DB_PIP_Pengusulan";
 const TAB_PIP_PENERIMA = "DB_PIP_Penerima";
 const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
+
+// Kolom Header Baku PIP (Persis Sama dengan Format Download Contoh Impor)
+const HEADERS_PIP_PENGUSULAN = [
+  "No", "Nama Murid", "NIK", "Valid Dukcapil", "NISN", "Valid NISN", 
+  "Tempat Lahir", "Tanggal Lahir", "Umur", "Jenis Kelamin", "Nama Ibu", 
+  "Pekerjaan Ibu", "Nama Ayah", "Pekerjaan Ayah", "Jenjang", "Kelas", 
+  "Rombel", "Semester ID", "Desil", "Bank", "Status Tabungan", 
+  "flag_drop", "keterangan_flag", "Fase ID", "Nama Fase", "Role", 
+  "Status SK", "SK Atas Nama"
+];
+
+const HEADERS_PIP_PENERIMA = [
+  "No", "nomenklatur", "kelas", "rombel", "nama_pd", 
+  "nama_ibu_kandung", "nama_ayah", "tanggal_lahir", "tempat_lahir", 
+  "nisn", "nik", "JK", "nominal", "no_rekening", "virtual_acc", 
+  "Tahap", "status_cair", "No Rekening / Virtual ACC", "Nama Pengusul", 
+  "confirmation_text", "nomor_sk", "tanggal_sk"
+];
 
 /**
  * Handle GET Requests (Health Check & Direct Info & Verifikasi Publik)
@@ -524,24 +500,34 @@ function setupDatabaseAndFolders() {
     sheetJadwal.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#d9ead3");
   }
 
-  // 10. Tab DB_PIP_Pengusulan
+  // 10. Tab DB_PIP_Pengusulan (28 Kolom Sesuai Format Impor Puslapdik)
   let sheetPIPU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
   if (!sheetPIPU) sheetPIPU = ss.insertSheet(TAB_PIP_PENGUSULAN);
   if (sheetPIPU.getLastRow() === 0) {
-    sheetPIPU.appendRow([
-      "ID", "TAHUN", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "DESIL", "NOMINAL", "STATUS_KELAYAKAN", "KETERANGAN", "UPDATED_AT"
-    ]);
-    sheetPIPU.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#fff2cc");
+    sheetPIPU.appendRow(HEADERS_PIP_PENGUSULAN);
+    sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setFontWeight("bold").setBackground("#fff2cc");
+  } else {
+    // Sinkronkan baris header jika masih menggunakan format lama
+    const curHeadersU = sheetPIPU.getRange(1, 1, 1, Math.min(28, sheetPIPU.getLastColumn())).getValues()[0];
+    if (String(curHeadersU[0]).toUpperCase() === "ID" || String(curHeadersU[1]).toUpperCase() === "TAHUN") {
+      sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setValues([HEADERS_PIP_PENGUSULAN]);
+      sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setFontWeight("bold").setBackground("#fff2cc");
+    }
   }
 
-  // 11. Tab DB_PIP_Penerima
+  // 11. Tab DB_PIP_Penerima (22 Kolom Sesuai Format Impor Puslapdik)
   let sheetPIPP = ss.getSheetByName(TAB_PIP_PENERIMA);
   if (!sheetPIPP) sheetPIPP = ss.insertSheet(TAB_PIP_PENERIMA);
   if (sheetPIPP.getLastRow() === 0) {
-    sheetPIPP.appendRow([
-      "ID", "TAHUN", "NISN", "NAMA", "KELAS", "NOMOR_SK", "TANGGAL_SK", "REKENING_SIMPEL", "BANK_PENYALUR", "NOMINAL", "STATUS_PENCAIRAN", "TGL_CAIR", "KETERANGAN", "UPDATED_AT"
-    ]);
-    sheetPIPP.getRange(1, 1, 1, 14).setFontWeight("bold").setBackground("#cfe2f3");
+    sheetPIPP.appendRow(HEADERS_PIP_PENERIMA);
+    sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setFontWeight("bold").setBackground("#cfe2f3");
+  } else {
+    // Sinkronkan baris header jika masih menggunakan format lama
+    const curHeadersP = sheetPIPP.getRange(1, 1, 1, Math.min(22, sheetPIPP.getLastColumn())).getValues()[0];
+    if (String(curHeadersP[0]).toUpperCase() === "ID" || String(curHeadersP[1]).toUpperCase() === "TAHUN") {
+      sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setValues([HEADERS_PIP_PENERIMA]);
+      sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setFontWeight("bold").setBackground("#cfe2f3");
+    }
   }
 
   // 12. Tab DB_PermohonanSurat
@@ -1836,52 +1822,134 @@ function handleClearJadwalKelas(ss, payload) {
  * ==========================================================================
  */
 function handleGetPIP(ss, payload) {
-  // 1. Data Pengusulan
+  // 1. Data Pengusulan (28 Kolom Resmi Dapodik/Puslapdik)
   let sheetU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
   const pengusulan = [];
   if (sheetU && sheetU.getLastRow() > 1) {
     const dataU = sheetU.getDataRange().getValues();
+    const headersU = dataU[0];
+    const isStandard28 = String(headersU[1] || "").toLowerCase().includes("nama murid") || String(headersU[4] || "").toLowerCase() === "nisn";
+
     for (let i = 1; i < dataU.length; i++) {
       const r = dataU[i];
-      pengusulan.push({
-        id: String(r[0] || ""),
-        tahun: String(r[1] || ""),
-        nisn: String(r[2] || ""),
-        nama: String(r[3] || ""),
-        kelas: String(r[4] || ""),
-        namaOrtu: String(r[5] || ""),
-        desil: Number(r[6]) || 1,
-        nominal: Number(r[7]) || 450000,
-        statusKelayakan: String(r[8] || "Layak"),
-        keterangan: String(r[9] || ""),
-        updatedAt: String(r[10] || "")
-      });
+      if (isStandard28) {
+        pengusulan.push({
+          id: `PIP_${r[4] || i}_${new Date().getFullYear()}`,
+          no: r[0],
+          nama: String(r[1] || ""),
+          namaMurid: String(r[1] || ""),
+          nik: String(r[2] || ""),
+          validDukcapil: String(r[3] || "Valid"),
+          nisn: String(r[4] || ""),
+          validNisn: String(r[5] || "Valid"),
+          tempatLahir: String(r[6] || ""),
+          tanggalLahir: String(r[7] || ""),
+          umur: r[8],
+          jk: String(r[9] || "L"),
+          jenisKelamin: String(r[9] || "L"),
+          namaIbu: String(r[10] || ""),
+          namaOrtu: String(r[10] || r[12] || ""),
+          pekerjaanIbu: String(r[11] || ""),
+          namaAyah: String(r[12] || ""),
+          pekerjaanAyah: String(r[13] || ""),
+          jenjang: String(r[14] || "SD"),
+          kelas: String(r[15] || "1").replace(/\D/g, "") || "1",
+          rombel: String(r[16] || `Kelas ${r[15] || 1}`),
+          semesterId: String(r[17] || "2025/2026-Genap"),
+          desil: Number(r[18]) || 3,
+          nominal: 450000,
+          bank: String(r[19] || "BRI"),
+          statusTabungan: String(r[20] || "Memiliki Rekening"),
+          flagDrop: r[21],
+          keteranganFlag: String(r[22] || "-"),
+          faseId: String(r[23] || "A"),
+          namaFase: String(r[24] || "Fase A"),
+          role: String(r[25] || "Siswa"),
+          statusSK: String(r[26] || "Belum Masuk SK"),
+          skAtasNama: String(r[27] || r[1] || ""),
+          statusKelayakan: "Layak",
+          keterangan: String(r[26] || ""),
+          updatedAt: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+        });
+      } else {
+        pengusulan.push({
+          id: String(r[0] || ""),
+          tahun: String(r[1] || ""),
+          nisn: String(r[2] || ""),
+          nama: String(r[3] || ""),
+          namaMurid: String(r[3] || ""),
+          kelas: String(r[4] || ""),
+          namaOrtu: String(r[5] || ""),
+          desil: Number(r[6]) || 1,
+          nominal: Number(r[7]) || 450000,
+          statusKelayakan: String(r[8] || "Layak"),
+          keterangan: String(r[9] || ""),
+          updatedAt: String(r[10] || "")
+        });
+      }
     }
   }
 
-  // 2. Data Siswa Penerima SK
+  // 2. Data Siswa Penerima SK (22 Kolom Resmi Puslapdik)
   let sheetP = ss.getSheetByName(TAB_PIP_PENERIMA);
   const penerima = [];
   if (sheetP && sheetP.getLastRow() > 1) {
     const dataP = sheetP.getDataRange().getValues();
+    const headersP = dataP[0];
+    const isStandard22 = String(headersP[4] || "").toLowerCase().includes("nama_pd") || String(headersP[9] || "").toLowerCase() === "nisn";
+
     for (let i = 1; i < dataP.length; i++) {
       const r = dataP[i];
-      penerima.push({
-        id: String(r[0] || ""),
-        tahun: String(r[1] || ""),
-        nisn: String(r[2] || ""),
-        nama: String(r[3] || ""),
-        kelas: String(r[4] || ""),
-        nomorSK: String(r[5] || ""),
-        tanggalSK: String(r[6] || ""),
-        nomorRekening: String(r[7] || ""),
-        bankPenyalur: String(r[8] || "BRI"),
-        nominal: Number(r[9]) || 450000,
-        statusPencairan: String(r[10] || "Belum Cair"),
-        tglCair: String(r[11] || ""),
-        keterangan: String(r[12] || ""),
-        updatedAt: String(r[13] || "")
-      });
+      if (isStandard22) {
+        penerima.push({
+          id: `PIP_${r[9] || i}_${new Date().getFullYear()}`,
+          no: r[0],
+          nomenklatur: String(r[1] || "SD NEGERI TERLANGU 01"),
+          kelas: String(r[2] || "1").replace(/\D/g, "") || "1",
+          rombel: String(r[3] || `Kelas ${r[2] || 1}`),
+          nama: String(r[4] || ""),
+          namaPd: String(r[4] || ""),
+          namaIbu: String(r[5] || ""),
+          namaAyah: String(r[6] || ""),
+          tanggalLahir: String(r[7] || ""),
+          tempatLahir: String(r[8] || "Brebes"),
+          nisn: String(r[9] || ""),
+          nik: String(r[10] || ""),
+          jk: String(r[11] || "L"),
+          nominal: Number(r[12]) || 450000,
+          nomorRekening: String(r[13] || "-"),
+          virtualAcc: String(r[14] || "-"),
+          tahap: String(r[15] || "Tahap 1"),
+          statusCair: String(r[16] || "Belum Cair"),
+          statusPencairan: String(r[16] || "Belum Cair"),
+          noRekeningOrVirtualAcc: String(r[17] || r[13] || "-"),
+          namaPengusul: String(r[18] || "Kepala SDN Terlangu 01"),
+          confirmationText: String(r[19] || "-"),
+          nomorSK: String(r[20] || ""),
+          tanggalSK: String(r[21] || ""),
+          bankPenyalur: "BRI",
+          tahun: "2026",
+          updatedAt: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+        });
+      } else {
+        penerima.push({
+          id: String(r[0] || ""),
+          tahun: String(r[1] || ""),
+          nisn: String(r[2] || ""),
+          nama: String(r[3] || ""),
+          kelas: String(r[4] || ""),
+          nomorSK: String(r[5] || ""),
+          tanggalSK: String(r[6] || ""),
+          nomorRekening: String(r[7] || ""),
+          bankPenyalur: String(r[8] || "BRI"),
+          nominal: Number(r[9]) || 450000,
+          statusPencairan: String(r[10] || "Belum Cair"),
+          statusCair: String(r[10] || "Belum Cair"),
+          tglCair: String(r[11] || ""),
+          keterangan: String(r[12] || ""),
+          updatedAt: String(r[13] || "")
+        });
+      }
     }
   }
 
@@ -1895,7 +1963,7 @@ function handleGetPIP(ss, payload) {
 }
 
 function handleSavePIP(ss, payload) {
-  const isPenerima = payload.kategori === "penerima" || !!payload.nomorSK;
+  const isPenerima = payload.kategori === "penerima" || payload.jenis === "penerima" || !!payload.nomorSK || !!payload.nomor_sk;
   const tabName = isPenerima ? TAB_PIP_PENERIMA : TAB_PIP_PENGUSULAN;
   let sheet = ss.getSheetByName(tabName);
   if (!sheet) {
@@ -1903,56 +1971,89 @@ function handleSavePIP(ss, payload) {
     sheet = ss.getSheetByName(tabName);
   }
 
-  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
-  const id = payload.id || `PIP_${payload.nisn}_${new Date().getFullYear()}`;
   const data = sheet.getDataRange().getValues();
   let rowIndex = -1;
-
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === id || String(data[i][2]) === String(payload.nisn)) {
-      rowIndex = i + 1;
-      break;
-    }
-  }
+  const nisnTarget = String(payload.nisn || "");
 
   if (isPenerima) {
+    for (let i = 1; i < data.length; i++) {
+      if (nisnTarget && String(data[i][9] || data[i][2]) === nisnTarget) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    const noUrut = rowIndex > 0 ? data[rowIndex - 1][0] : sheet.getLastRow();
     const rowValues = [
-      id,
-      String(payload.tahun || "2026"),
-      String(payload.nisn || ""),
-      String(payload.nama || ""),
-      String(payload.kelas || ""),
-      String(payload.nomorSK || ""),
-      String(payload.tanggalSK || ""),
-      String(payload.nomorRekening || ""),
-      String(payload.bankPenyalur || "BRI"),
+      noUrut,
+      String(payload.nomenklatur || "SD NEGERI TERLANGU 01"),
+      String(payload.kelas || "1"),
+      String(payload.rombel || `Kelas ${payload.kelas || 1}`),
+      String(payload.nama || payload.nama_pd || ""),
+      String(payload.namaIbu || payload.nama_ibu_kandung || ""),
+      String(payload.namaAyah || payload.nama_ayah || ""),
+      String(payload.tanggalLahir || payload.tanggal_lahir || ""),
+      String(payload.tempatLahir || payload.tempat_lahir || "Brebes"),
+      nisnTarget,
+      String(payload.nik || ""),
+      String(payload.jk || payload.JK || "L"),
       Number(payload.nominal) || 450000,
-      String(payload.statusPencairan || "Belum Cair"),
-      String(payload.tglCair || ""),
-      String(payload.keterangan || ""),
-      nowStr
+      String(payload.nomorRekening || payload.no_rekening || "-"),
+      String(payload.virtualAcc || payload.virtual_acc || "-"),
+      String(payload.tahap || payload.Tahap || "Tahap 1"),
+      String(payload.statusCair || payload.status_cair || payload.statusPencairan || "Belum Cair"),
+      String(payload.noRekeningOrVirtualAcc || payload.nomorRekening || "-"),
+      String(payload.namaPengusul || payload.nama_pengusul || "Kepala SDN Terlangu 01"),
+      String(payload.confirmationText || payload.confirmation_text || "-"),
+      String(payload.nomorSK || payload.nomor_sk || "0345/P3KE/PIP/2026"),
+      String(payload.tanggalSK || payload.tanggal_sk || "2026-01-15")
     ];
-    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, 14).setValues([rowValues]);
+
+    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, HEADERS_PIP_PENERIMA.length).setValues([rowValues]);
     else sheet.appendRow(rowValues);
   } else {
+    for (let i = 1; i < data.length; i++) {
+      if (nisnTarget && String(data[i][4] || data[i][2]) === nisnTarget) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    const noUrut = rowIndex > 0 ? data[rowIndex - 1][0] : sheet.getLastRow();
     const rowValues = [
-      id,
-      String(payload.tahun || "2026"),
-      String(payload.nisn || ""),
-      String(payload.nama || ""),
-      String(payload.kelas || ""),
-      String(payload.namaOrtu || ""),
-      Number(payload.desil) || 1,
-      Number(payload.nominal) || 450000,
-      String(payload.statusKelayakan || "Layak"),
-      String(payload.keterangan || ""),
-      nowStr
+      noUrut,
+      String(payload.nama || payload.namaMurid || ""),
+      String(payload.nik || ""),
+      String(payload.validDukcapil || "Valid"),
+      nisnTarget,
+      String(payload.validNisn || "Valid"),
+      String(payload.tempatLahir || "Brebes"),
+      String(payload.tanggalLahir || ""),
+      payload.umur || "",
+      String(payload.jk || payload.jenisKelamin || "L"),
+      String(payload.namaIbu || payload.namaOrtu || ""),
+      String(payload.pekerjaanIbu || ""),
+      String(payload.namaAyah || ""),
+      String(payload.pekerjaanAyah || ""),
+      String(payload.jenjang || "SD"),
+      String(payload.kelas || "1"),
+      String(payload.rombel || `Kelas ${payload.kelas || 1}`),
+      String(payload.semesterId || "2025/2026-Genap"),
+      Number(payload.desil) || 3,
+      String(payload.bank || "BRI"),
+      String(payload.statusTabungan || "Memiliki Rekening"),
+      payload.flagDrop !== undefined ? payload.flagDrop : 0,
+      String(payload.keteranganFlag || "-"),
+      String(payload.faseId || (Number(payload.kelas) <= 2 ? "A" : (Number(payload.kelas) <= 4 ? "B" : "C"))),
+      String(payload.namaFase || (Number(payload.kelas) <= 2 ? "Fase A" : (Number(payload.kelas) <= 4 ? "Fase B" : "Fase C"))),
+      String(payload.role || "Siswa"),
+      String(payload.statusSK || (payload.nomorSK ? "Sudah SK" : "Belum Masuk SK")),
+      String(payload.skAtasNama || payload.nama || "")
     ];
-    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, 11).setValues([rowValues]);
+
+    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, HEADERS_PIP_PENGUSULAN.length).setValues([rowValues]);
     else sheet.appendRow(rowValues);
   }
 
-  return { success: true, message: `Data PIP untuk siswa ${payload.nama} berhasil disimpan ke ${tabName}!`, id: id };
+  return { success: true, message: `Data PIP untuk siswa ${payload.nama} berhasil disimpan ke ${tabName}!`, id: nisnTarget };
 }
 
 function handleUpdatePIPStatus(ss, payload) {
@@ -1960,39 +2061,37 @@ function handleUpdatePIPStatus(ss, payload) {
   if (!sheet) return { success: false, message: "Tab penerima PIP tidak ditemukan." };
 
   const id = String(payload.id || "");
-  const newStatus = String(payload.status || "Sudah Cair");
-  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const nisn = String(payload.nisn || "");
+  const newStatus = String(payload.status || payload.statusCair || "Sudah Cair");
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === id || String(data[i][2]) === String(payload.nisn)) {
-      sheet.getRange(i + 1, 11).setValue(newStatus);
-      if (newStatus === "Sudah Cair") {
-        sheet.getRange(i + 1, 12).setValue(nowStr);
-      }
-      sheet.getRange(i + 1, 14).setValue(nowStr);
-      return { success: true, message: `Status pencairan PIP ${id} diperbarui menjadi: ${newStatus}` };
+    if ((id && String(data[i][0]) === id) || (nisn && String(data[i][9]) === nisn) || (nisn && String(data[i][2]) === nisn)) {
+      // Column 17 is status_cair
+      sheet.getRange(i + 1, 17).setValue(newStatus);
+      return { success: true, message: `Status pencairan PIP ${nisn || id} diperbarui menjadi: ${newStatus}` };
     }
   }
 
-  return { success: false, message: `Data penerima PIP dengan ID ${id} tidak ditemukan.` };
+  return { success: false, message: `Data penerima PIP dengan NISN/ID ${nisn || id} tidak ditemukan.` };
 }
 
 function handleImportPIP(ss, payload) {
-  const items = payload.items || [];
+  const items = payload.rows || payload.items || [];
   if (!Array.isArray(items) || items.length === 0) {
     return { success: false, message: "Tidak ada baris data untuk diimpor." };
   }
 
+  const jenis = payload.jenis || (items[0] && items[0].nomorSK ? "penerima" : "pengusulan");
   let successCount = 0;
   items.forEach(item => {
     try {
-      handleSavePIP(ss, item);
+      handleSavePIP(ss, { ...item, jenis: jenis, kategori: jenis });
       successCount++;
     } catch (e) {}
   });
 
-  return { success: true, message: `Berhasil mengimpor ${successCount} data PIP ke Google Sheets!` };
+  return { success: true, message: `Berhasil mengimpor ${successCount} data PIP (${jenis}) ke Google Sheets!` };
 }
 
 /**
@@ -2016,6 +2115,10 @@ function handleGetPermohonanSurat(ss, payload) {
     const r = data[i];
     const namaWali = String(r[5] || "");
     const hpWali = String(r[6] || "");
+    const ketStr = String(r[10] || "");
+    const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^\s\.]+)/i);
+    const noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+
     list.push({
       id: String(r[0] || ""),
       createdAt: String(r[1] || ""),
@@ -2030,7 +2133,9 @@ function handleGetPermohonanSurat(ss, payload) {
       jenisSurat: String(r[7] || ""),
       keperluan: String(r[8] || ""),
       status: String(r[9] || "Menunggu Verifikasi TU"),
-      keterangan: String(r[10] || ""),
+      keterangan: ketStr,
+      keteranganTindak: ketStr,
+      nomorSuratTerbit: noTerbit,
       updatedAt: String(r[11] || "")
     });
   }
@@ -2167,6 +2272,10 @@ function handleTrackPermohonanSurat(ss, payload) {
     const isHpMatch = (queryHp.length >= 6 && hp.includes(queryHp));
 
     if (isIdMatch || isNisnMatch || isHpMatch) {
+      const ketStr = String(r[10] || "");
+      const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^\s\.]+)/i);
+      const noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+
       return {
         success: true,
         message: "Data permohonan surat ditemukan.",
@@ -2182,8 +2291,8 @@ function handleTrackPermohonanSurat(ss, payload) {
           jenisSurat: String(r[7] || ""),
           keperluan: String(r[8] || ""),
           status: String(r[9] || "Menunggu Verifikasi TU"),
-          keteranganTindak: String(r[10] || ""),
-          nomorSuratTerbit: String(r[10] || "").match(/421\.[0-9\/SD\-]+/i) ? String(r[10]) : "",
+          keteranganTindak: ketStr,
+          nomorSuratTerbit: noTerbit,
           updatedAt: r[11] instanceof Date ? Utilities.formatDate(r[11], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : String(r[11] || "")
         }
       };
@@ -2199,15 +2308,26 @@ function handleUpdatePermohonanSurat(ss, payload) {
 
   const id = String(payload.id || "");
   const newStatus = String(payload.status || "Disetujui TU");
+  const noSurat = String(payload.nomorSuratTerbit || "");
+  const ket = payload.keteranganTindak || payload.keterangan || (noSurat ? `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.` : "");
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === id) {
       sheet.getRange(i + 1, 10).setValue(newStatus);
-      if (payload.keterangan) sheet.getRange(i + 1, 11).setValue(String(payload.keterangan));
+      if (ket) sheet.getRange(i + 1, 11).setValue(String(ket));
       sheet.getRange(i + 1, 12).setValue(nowStr);
-      return { success: true, message: `Status permohonan ${id} berhasil diubah menjadi: ${newStatus}` };
+      return { 
+        success: true, 
+        message: `Status permohonan ${id} berhasil diubah menjadi: ${newStatus}`,
+        data: {
+          id: id,
+          status: newStatus,
+          nomorSuratTerbit: noSurat,
+          keteranganTindak: ket
+        }
+      };
     }
   }
 

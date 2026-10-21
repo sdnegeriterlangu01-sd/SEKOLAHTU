@@ -666,11 +666,13 @@ const ModulPIP = {
                     { wch: 8 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 16 }, { wch: 8 },
                     { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 26 }
                 ];
-                XLSX.utils.book_append_sheet(wb, ws, "Pengusulan_PIP_2026");
-                XLSX.writeFile(wb, "data pengusulan PIP SDN Terlangu 01_2026.xlsx");
-                App.showToast("Format contoh pengusulan PIP berhasil diunduh!", "success");
+                const activeYear = (window.DataStore && DataStore.getConfig && DataStore.getConfig()?.tahunAjaran?.substring(0, 4)) || new Date().getFullYear();
+                const fileName = `format_pengusulan_pip_${activeYear}.xlsx`;
+                XLSX.utils.book_append_sheet(wb, ws, `Pengusulan_PIP_${activeYear}`);
+                XLSX.writeFile(wb, fileName);
+                App.showToast(`Format contoh pengusulan PIP berhasil diunduh (${fileName})!`, "success");
             } else {
-                // Header sesuai screenshot 203437 & 203455 dan data siswa SDN Terlangu 01 penerima pip tahun 2026.xlsx
+                // Header sesuai screenshot 203437 & 203455 dan spesifikasi resmi Puslapdik 2026
                 const headers = [
                     "No", "nomenklatur", "kelas", "rombel", "nama_pd", 
                     "nama_ibu_kandung", "nama_ayah", "tanggal_lahir", "tempat_lahir", 
@@ -693,9 +695,11 @@ const ModulPIP = {
                     { wch: 12 }, { wch: 14 }, { wch: 24 }, { wch: 24 }, { wch: 30 },
                     { wch: 22 }, { wch: 14 }
                 ];
-                XLSX.utils.book_append_sheet(wb, ws, "Penerima_SK_PIP_2026");
-                XLSX.writeFile(wb, "data siswa SDN Terlangu 01 penerima pip tahun 2026.xlsx");
-                App.showToast("Format contoh penerima SK PIP berhasil diunduh!", "success");
+                const activeYear = (window.DataStore && DataStore.getConfig && DataStore.getConfig()?.tahunAjaran?.substring(0, 4)) || new Date().getFullYear();
+                const fileName = `format_penerimaan_pip_${activeYear}.xlsx`;
+                XLSX.utils.book_append_sheet(wb, ws, `Penerimaan_PIP_${activeYear}`);
+                XLSX.writeFile(wb, fileName);
+                App.showToast(`Format contoh penerima PIP berhasil diunduh (${fileName})!`, "success");
             }
         } catch (err) {
             console.error("Gagal membuat template Excel:", err);

@@ -211,63 +211,59 @@ const ModulVue = {
     },
 
     // -------------------------------------------------------------------------
-    // 3. MODULAR TOP BAR QUICK ACTIONS
+    // 3. MODULAR TOP BAR / HERO QUICK ACTIONS
     // -------------------------------------------------------------------------
     mountQuickActions() {
         const el = document.getElementById("vue-quick-actions");
         if (!el || this.apps.quickActions) return;
 
-        const { createApp, ref, computed } = Vue;
+        const { createApp, computed } = Vue;
         const store = this.store;
 
         const app = createApp({
             setup() {
-                const isOpen = ref(false);
                 const role = computed(() => store.role);
 
                 const actions = computed(() => {
                     const r = role.value;
                     if (r === "kiosk") {
                         return [
-                            { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("scan-absensi") }
+                            { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-300", action: () => App.navigateTo("scan-absensi") }
                         ];
                     }
                     if (r === "guru") {
                         const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
                         const kelasLabel = g && g.isGuruKelas ? ` (Kelas ${g.kelas})` : "";
                         return [
-                            { label: `Input Presensi Hari Ini${kelasLabel}`, icon: "fa-clipboard-check", color: "text-indigo-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("harian"); } },
-                            { label: "Rekap Absensi Bulanan", icon: "fa-table-cells", color: "text-blue-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
-                            { label: "Presensi Datang / Pulang Saya", icon: "fa-qrcode", color: "text-emerald-600", action: () => App.navigateTo("scan-absensi") },
-                            { label: `Berkas Siswa${kelasLabel}`, icon: "fa-folder-closed", color: "text-amber-600", action: () => App.navigateTo("berkas") }
+                            { label: `Input Presensi Hari Ini${kelasLabel}`, icon: "fa-clipboard-check", color: "text-amber-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("harian"); } },
+                            { label: "Rekap Absensi Bulanan", icon: "fa-table-cells", color: "text-sky-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
+                            { label: "Presensi Datang / Pulang Saya", icon: "fa-qrcode", color: "text-emerald-300", action: () => App.navigateTo("scan-absensi") },
+                            { label: `Berkas Siswa${kelasLabel}`, icon: "fa-folder-closed", color: "text-amber-300", action: () => App.navigateTo("berkas") }
                         ];
                     }
                     if (r === "kepsek") {
                         return [
-                            { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } },
-                            { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-blue-600", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
-                            { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-600", action: () => App.navigateTo("surat") },
-                            { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-600", action: () => App.navigateTo("cetak") }
+                            { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } },
+                            { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-sky-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
+                            { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-300", action: () => App.navigateTo("surat") },
+                            { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-300", action: () => App.navigateTo("cetak") }
                         ];
                     }
                     // Admin & TU default
                     return [
-                        { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-blue-600", action: () => { App.navigateTo("berkas"); if (window.ModulBerkas) ModulBerkas.openAddModal(); } },
-                        { label: "Terbitkan Nomor Surat", icon: "fa-paper-plane", color: "text-emerald-600", action: () => { App.navigateTo("surat"); if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); } },
-                        { label: "Cetak Surat Keterangan", icon: "fa-file-invoice", color: "text-teal-600", action: () => App.navigateTo("cetak") },
-                        { label: "Input Presensi Harian", icon: "fa-clipboard-check", color: "text-indigo-600", action: () => App.navigateTo("absensi") },
-                        { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-indigo-600", action: () => App.navigateTo("scan-absensi") }
+                        { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-sky-300", action: () => { App.navigateTo("berkas"); if (window.ModulBerkas) ModulBerkas.openAddModal(); } },
+                        { label: "Terbitkan Nomor Surat", icon: "fa-paper-plane", color: "text-emerald-300", action: () => { App.navigateTo("surat"); if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); } },
+                        { label: "Cetak Surat Keterangan", icon: "fa-file-invoice", color: "text-teal-300", action: () => App.navigateTo("cetak") },
+                        { label: "Input Presensi Harian", icon: "fa-clipboard-check", color: "text-amber-300", action: () => App.navigateTo("absensi") },
+                        { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-indigo-300", action: () => App.navigateTo("scan-absensi") }
                     ];
                 });
 
-                const toggle = () => { isOpen.value = !isOpen.value; };
-                const close = () => { isOpen.value = false; };
                 const run = (act) => {
-                    close();
-                    if (act.action) act.action();
+                    if (act && typeof act.action === "function") act.action();
                 };
 
-                return { isOpen, actions, toggle, close, run };
+                return { actions, run };
             }
         });
 

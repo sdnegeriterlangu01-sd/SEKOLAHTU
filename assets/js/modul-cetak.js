@@ -10,6 +10,8 @@ const ModulCetak = {
     nomorMode: "terbit", // "terbit" | "baru" | "manual"
     selectedNomorTerbit: "",
     manualNomorSurat: "",
+    activePermohonanId: null,
+    activePermohonan: null,
 
     init() {
         this.populateStudentSelect();
@@ -473,14 +475,52 @@ const ModulCetak = {
             App.showToast(`Mencetak surat dengan Nomor Terbit: ${this.generatedNomorSurat}`, "success");
         }
 
+        // 2. Hubungkan otomatis ke Surat Permohonan Orang Tua jika ada
+        const noSurat = this.generatedNomorSurat;
+        const permohonanList = DataStore.getPermohonanSurat();
+        let targetPermohonan = null;
+        if (this.activePermohonanId) {
+            targetPermohonan = permohonanList.find(p => p.id === this.activePermohonanId);
+        }
+        if (!targetPermohonan && student && student.nisn) {
+            targetPermohonan = permohonanList.find(p => p.nisn === student.nisn && (p.status || "").toLowerCase() !== "selesai" && (p.status || "").toLowerCase() !== "ditolak");
+        }
+
+        if (targetPermohonan && noSurat) {
+            const ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.`;
+            targetPermohonan.status = "Siap Diambil";
+            targetPermohonan.nomorSuratTerbit = noSurat;
+            targetPermohonan.keteranganTindak = ketTindak;
+            targetPermohonan.keterangan = ketTindak;
+            DataStore.savePermohonanSurat(permohonanList);
+
+            try {
+                await ApiClient.request("updatePermohonanSurat", {
+                    id: targetPermohonan.id,
+                    status: "Siap Diambil",
+                    nomorSuratTerbit: noSurat,
+                    keteranganTindak: ketTindak,
+                    keterangan: ketTindak
+                });
+            } catch (err) {
+                console.warn("Gagal update cloud permohonan:", err);
+            }
+
+            App.showToast(`Permohonan ${targetPermohonan.id} status: Siap Diambil. No. Registrasi SRIKANDI: ${noSurat}`, "success");
+            this.activePermohonanId = null;
+            this.activePermohonan = null;
+            if (window.ModulSurat) ModulSurat.renderPermohonanTable();
+        }
+
         // 3. Trigger Print Window (< 5 detik)
         setTimeout(() => {
             document.body.classList.add('is-printing-letter');
             window.print();
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-print"></i> Cetak / Unduh PDF Sekarang`;
-            // Refresh data surat keluar
+            // Refresh data surat keluar & permohonan
             ModulSurat.renderSuratKeluarTable();
+            ModulSurat.renderPermohonanTable();
             App.updateDashboardStats();
         }, 300);
     }

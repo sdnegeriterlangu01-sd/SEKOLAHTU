@@ -5,6 +5,12 @@
  * ==========================================================================
  * 
  * Version History:
+ * - v2.5.1 (22 Oktober 2026):
+ *   + Bypass Auth & Zero Auth Barrier: Endpoint publik "submitPermohonanSurat", "trackPermohonanSurat", dan "verifyStudentPublic" 100% bebas token login staf.
+ *   + Penambahan endpoint publik "verifyStudentPublic" untuk pengecekan data siswa online via NISN langsung ke Google Sheets (TAB_SISWA).
+ *   + Dukungan HTTP GET pada "doGet(e)" untuk pelacakan kode resi instan dan verifikasi siswa publik langsung dari browser/URL.
+ *   + Optimasi Smart Matching pencarian kode resi di "handleTrackPermohonanSurat" (case-insensitive, strip-insensitive, 3-4 digit nomor urut, NISN, dan no HP WhatsApp).
+ *   + Auto-create sheet "DB_PermohonanSurat" jika belum tersedia dan normalisasi format objek tanggal (Date).
  * - v2.5.0 (21 Oktober 2026):
  *   + Penambahan endpoint API "clearJadwalKelas" untuk 1-klik hapus seluruh jadwal pelajaran pada kelas tertentu.
  *   + Verifikasi dokumen surat: QR Code memuat string nomor registrasi surat untuk pencocokan instan tanpa skema URL.
@@ -79,25 +85,44 @@ const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
  */
 function doGet(e) {
   const params = (e && e.parameter) ? e.parameter : {};
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 1. Verifikasi Keabsahan Surat Keluar Resmi
   if (params.action === "verifySuratKeluar" || params.no) {
     const no = params.no || params.nomorSurat;
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
     const result = handleVerifySuratKeluar(ss, { nomorSurat: no });
     return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
   }
+
+  // 2. Lacak Permohonan Surat Online Tanpa Login (Bisa via GET / Browser Langsung)
+  if (params.action === "trackPermohonanSurat" || params.resi || params.query) {
+    const q = params.query || params.resi || params.id;
+    const result = handleTrackPermohonanSurat(ss, { query: q });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 3. Verifikasi Data Siswa Publik Tanpa Login
+  if (params.action === "verifyStudentPublic" || (params.action === "checkNisn" && params.nisn)) {
+    const result = handleVerifyStudentPublic(ss, { nisn: params.nisn });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 4. Get Agenda Surat Keluar
   if (params.action === "getSuratKeluar") {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
     const result = handleGetSuratKeluar(ss);
     return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
   }
+
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.3.0",
+    version: "2.5.1",
     timestamp: new Date().toISOString(),
-    message: "Google Apps Script Backend berjalan normal. Gunakan HTTP POST untuk berinteraksi."
+    message: "Google Apps Script Backend berjalan normal. Portal mandiri aktif tanpa login."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -126,6 +151,7 @@ function doPost(e) {
     const isPublicAction = (
       action === "submitPermohonanSurat" || 
       action === "trackPermohonanSurat" || 
+      action === "verifyStudentPublic" ||
       action === "verifySuratKeluar" || 
       action === "getSuratKeluar"
     );
@@ -313,6 +339,10 @@ function doPost(e) {
 
       case "trackPermohonanSurat":
         responseData = handleTrackPermohonanSurat(ss, payload);
+        break;
+
+      case "verifyStudentPublic":
+        responseData = handleVerifyStudentPublic(ss, payload);
         break;
 
       case "updatePermohonanSurat":
@@ -2068,9 +2098,39 @@ function handleSubmitPermohonanSurat(ss, payload) {
   };
 }
 
+function handleVerifyStudentPublic(ss, payload) {
+  const nisn = String(payload.nisn || "").trim();
+  if (!nisn) return { success: false, message: "NISN tidak boleh kosong." };
+  const sheet = ss.getSheetByName(TAB_SISWA);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Database siswa belum tersedia di spreadsheet." };
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.min(12, sheet.getLastColumn())).getValues();
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    if (String(row[0]).trim() === nisn) {
+      return {
+        success: true,
+        message: "Siswa ditemukan pada pangkalan data sekolah.",
+        data: {
+          nisn: String(row[0]).trim(),
+          nama: String(row[2] || "").trim(),
+          kelas: String(row[7] || "").trim(),
+          namaOrtu: String(row[8] || "").trim(),
+          noHp: String(row[10] || "").trim()
+        }
+      };
+    }
+  }
+  return { success: false, message: "NISN tidak ditemukan pada database siswa SDN Terlangu 01." };
+}
+
 function handleTrackPermohonanSurat(ss, payload) {
-  const sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
-  if (!sheet) return { success: false, message: "Tab DB_PermohonanSurat belum tersedia di spreadsheet." };
+  let sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_PERMOHONAN_SURAT);
+    sheet.appendRow(["ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT"]);
+    return { success: false, message: "Belum ada permohonan surat yang diajukan di database." };
+  }
 
   const rawQuery = String(payload.query || payload.code || payload.id || "").trim();
   if (!rawQuery) return { success: false, message: "Kode resi atau parameter pencarian kosong." };
@@ -2078,6 +2138,10 @@ function handleTrackPermohonanSurat(ss, payload) {
   const queryUpper = rawQuery.toUpperCase();
   const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
   const queryHp = rawQuery.replace(/[^0-9]/g, "");
+
+  if (sheet.getLastRow() <= 1) {
+    return { success: false, message: "Belum ada permohonan surat yang terdaftar di database." };
+  }
 
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
@@ -2087,13 +2151,20 @@ function handleTrackPermohonanSurat(ss, payload) {
     const idClean = idUpper.replace(/[^A-Z0-9]/g, "");
     const nisn = String(r[2] || "").trim();
     const hp = String(r[6] || "").replace(/[^0-9]/g, "");
+    const idDigits = idClean.replace(/[^0-9]/g, "");
 
-    // Pencocokan fleksibel: ID persis, ID bersih tanpa simbol, 4 digit akhir, NISN siswa, atau nomor WhatsApp
+    // Pencocokan fleksibel cerdas:
+    // 1. ID persis sama (case insensitive)
+    // 2. ID bersih tanpa simbol strip/spasi (REQ20260001)
+    // 3. Nomor urut belakang (misal '0001' atau '1')
+    // 4. NISN siswa
+    // 5. Nomor WhatsApp / HP (minimal 6 digit belakang)
     const isIdMatch = (idUpper === queryUpper) || 
                       (idClean && idClean === queryClean) ||
-                      (queryClean.length >= 4 && idClean.endsWith(queryClean));
-    const isNisnMatch = (nisn && nisn === rawQuery);
-    const isHpMatch = (queryHp.length >= 8 && hp.includes(queryHp));
+                      (queryClean.length >= 3 && idClean.endsWith(queryClean)) ||
+                      (queryHp.length > 0 && idDigits.endsWith(queryHp));
+    const isNisnMatch = (nisn && (nisn === rawQuery || (queryHp.length >= 8 && nisn === queryHp)));
+    const isHpMatch = (queryHp.length >= 6 && hp.includes(queryHp));
 
     if (isIdMatch || isNisnMatch || isHpMatch) {
       return {
@@ -2101,7 +2172,7 @@ function handleTrackPermohonanSurat(ss, payload) {
         message: "Data permohonan surat ditemukan.",
         data: {
           id: String(r[0] || ""),
-          tanggalMasuk: String(r[1] || ""),
+          tanggalMasuk: r[1] instanceof Date ? Utilities.formatDate(r[1], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : String(r[1] || ""),
           nisn: String(r[2] || ""),
           nama: String(r[3] || ""),
           kelas: String(r[4] || ""),
@@ -2113,13 +2184,13 @@ function handleTrackPermohonanSurat(ss, payload) {
           status: String(r[9] || "Menunggu Verifikasi TU"),
           keteranganTindak: String(r[10] || ""),
           nomorSuratTerbit: String(r[10] || "").match(/421\.[0-9\/SD\-]+/i) ? String(r[10]) : "",
-          updatedAt: String(r[11] || "")
+          updatedAt: r[11] instanceof Date ? Utilities.formatDate(r[11], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : String(r[11] || "")
         }
       };
     }
   }
 
-  return { success: false, message: "Kode resi permohonan tidak ditemukan pada sistem." };
+  return { success: false, message: "Kode resi / nomor tersebut tidak ditemukan pada database sekolah." };
 }
 
 function handleUpdatePermohonanSurat(ss, payload) {

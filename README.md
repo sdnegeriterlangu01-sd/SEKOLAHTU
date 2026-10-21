@@ -135,6 +135,15 @@ Akun uji coba demo:
 
 ## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
 
+### 🚀 Versi 2.5.1 (22 Oktober 2026)
+* **Layanan Mandiri Permohonan Surat Online — Bebas Login & Terhubung Langsung ke Google Sheets (`DB_PermohonanSurat`):**
+  - **Akses Publik 100% Bebas Token Login (*Zero Auth Barrier*):** Mengecualikan verifikasi token Supabase untuk aksi publik `submitPermohonanSurat`, `trackPermohonanSurat`, dan `verifyStudentPublic` pada backend [`backend/Code.gs`](backend/Code.gs) dan API frontend [`assets/js/api.js`](assets/js/api.js), sehingga orang tua siswa dapat mengajukan surat dan melacak resi dari smartphone/laptop mana pun tanpa akun login.
+  - **Pencarian Real-Time Langsung ke Cloud:** Fungsi pelacakan resi pada [`permohonan.html`](permohonan.html) kini langsung menanyakan pangkalan data Google Sheets (`DB_PermohonanSurat`) via API Google Apps Script, mengatasi kendala isolasi *localStorage* antar-perangkat (laptop ke HP).
+  - **Smart Matching Pencarian Resi:** Mendukung pencarian resi yang sangat fleksibel: kode resi lengkap (`REQ-2026-0001`), tanpa tanda hubung (`REQ20260001`), nomor urut 3-4 digit (`0001` atau `1`), nomor NISN siswa (10 digit), maupun nomor WhatsApp yang didaftarkan.
+  - **Pengecekan Data Siswa Online & Fallback Input Manual:** Pengecekan NISN siswa di portal mandiri kini dapat memverifikasi langsung ke data siswa Google Sheets (`TAB_SISWA`) via endpoint baru `verifyStudentPublic`. Jika NISN siswa baru belum tercatat, tersedia formulir instan pengisian nama dan kelas siswa agar orang tua tidak pernah terblokir saat mengajukan surat.
+  - **Dukungan HTTP GET pada `doGet(e)`:** Memungkinkan pengecekan resi dan verifikasi siswa publik langsung via tautan URL browser atau protokol HTTP GET tanpa kendala CORS/preflight.
+  - **Auto-create Tab & Normalisasi Tanggal:** Google Apps Script otomatis membuat tab `DB_PermohonanSurat` dengan struktur kolom lengkap jika belum tersedia, serta menormalisasi objek Date ke format standar `yyyy-MM-dd HH:mm:ss`.
+
 ### 🚀 Versi 2.5.0 (21 Oktober 2026)
 * **Jadwal Pelajaran — Tombol 1-Klik Hapus Seluruh Jadwal Rombel Kelas:**
   - Menambahkan tombol interaktif **"Hapus Semua Jadwal Kelas"** pada toolbar jadwal pelajaran sekolah (`#view-jadwal`).

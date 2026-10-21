@@ -122,6 +122,34 @@
                         <div class="text-sm font-black text-slate-900" id="card-verified-nama">-</div>
                         <div class="text-[11px] text-slate-500" id="card-verified-ortu">Orang Tua: -</div>
                     </div>
+
+                    <!-- Manual Student Fallback (Jika NISN siswa baru/belum tercatat) -->
+                    <div id="manual-student-box" class="hidden p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-3 animate-fade-in text-xs">
+                        <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> NISN belum ditemukan pada database sekolah
+                        </div>
+                        <p class="text-[11px] text-amber-800">Bapak/Ibu tetap dapat mengajukan permohonan dengan mengisi nama dan kelas siswa di bawah ini:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
+                                <input type="text" id="req-manual-nama" placeholder="Contoh: Muhammad Rizky" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kelas Saat Ini <span class="text-rose-500">*</span></label>
+                                <select id="req-manual-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white">
+                                    <option value="1">Kelas 1</option>
+                                    <option value="2">Kelas 2</option>
+                                    <option value="3">Kelas 3</option>
+                                    <option value="4">Kelas 4</option>
+                                    <option value="5">Kelas 5</option>
+                                    <option value="6">Kelas 6</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" onclick="useManualStudent()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition">
+                            <i class="fa-solid fa-check"></i> Gunakan Data Siswa Ini
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Step 2: Jenis Surat & Keperluan -->
@@ -354,21 +382,66 @@
             }
         }
 
-        function verifyStudentByNISN() {
+        function getPublicGasUrl() {
+            return (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) ||
+                   (typeof DataStore !== "undefined" && DataStore.getConfig && DataStore.getConfig().gasApiUrl) ||
+                   "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec";
+        }
+
+        async function verifyStudentByNISN() {
             const nisnInput = document.getElementById("req-nisn").value.trim();
             if (!nisnInput) {
                 showToast("Silakan masukkan NISN siswa terlebih dahulu!", "warning");
                 return;
             }
 
-            const students = DataStore.getSiswa();
-            const found = students.find(s => s.nisn === nisnInput);
-            const card = document.getElementById("verified-student-card");
+            const btnCek = document.querySelector("#section-ajukan button[onclick='verifyStudentByNISN()']");
+            const oldBtnText = btnCek ? btnCek.innerHTML : "";
+            if (btnCek) {
+                btnCek.disabled = true;
+                btnCek.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...`;
+            }
 
+            // 1. Cek di local store dulu (jika ada)
+            let found = null;
+            try {
+                const students = DataStore.getSiswa();
+                found = students.find(s => s.nisn === nisnInput);
+            } catch (e) {}
+
+            // 2. Jika tidak ada di local store, cek langsung ke database Google Sheets (Cloud)
+            if (!found) {
+                const gasUrl = getPublicGasUrl();
+                try {
+                    const response = await fetch(gasUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({
+                            action: "verifyStudentPublic",
+                            payload: { nisn: nisnInput }
+                        })
+                    });
+                    if (response.ok) {
+                        const json = await response.json();
+                        if (json && json.success && json.data) {
+                            found = json.data;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[NISN] Gagal cek cloud:", e);
+                }
+            }
+
+            if (btnCek) {
+                btnCek.disabled = false;
+                btnCek.innerHTML = oldBtnText;
+            }
+
+            const card = document.getElementById("verified-student-card");
             if (found) {
                 verifiedStudent = found;
                 document.getElementById("card-verified-nama").textContent = found.nama;
-                document.getElementById("card-verified-kelas").textContent = `Kelas ${found.rombel || found.kelas}`;
+                document.getElementById("card-verified-kelas").textContent = `Kelas ${found.rombel || found.kelas || '-'}`;
                 document.getElementById("card-verified-ortu").textContent = `Orang Tua / Wali: ${found.namaOrtu || '-'}`;
                 if (found.namaOrtu && !document.getElementById("req-pemohon-nama").value) {
                     document.getElementById("req-pemohon-nama").value = found.namaOrtu;
@@ -377,12 +450,44 @@
                     document.getElementById("req-pemohon-wa").value = found.noHp;
                 }
                 card.classList.remove("hidden");
+                const manualBox = document.getElementById("manual-student-box");
+                if (manualBox) manualBox.classList.add("hidden");
                 showToast(`Data siswa ditemukan: ${found.nama}`, "success");
             } else {
                 verifiedStudent = null;
                 card.classList.add("hidden");
-                showToast("NISN tidak ditemukan pada database siswa SDN Terlangu 01.", "error");
+                const manualBox = document.getElementById("manual-student-box");
+                if (manualBox) manualBox.classList.remove("hidden");
+                showToast("NISN belum terdaftar. Silakan lengkapi nama & kelas siswa di bawah.", "warning");
             }
+        }
+
+        function useManualStudent() {
+            const nisnInput = document.getElementById("req-nisn").value.trim() || "-";
+            const nama = document.getElementById("req-manual-nama").value.trim();
+            const kelas = document.getElementById("req-manual-kelas").value;
+
+            if (!nama) {
+                showToast("Silakan masukkan Nama Lengkap Siswa!", "warning");
+                document.getElementById("req-manual-nama").focus();
+                return;
+            }
+
+            verifiedStudent = {
+                nisn: nisnInput,
+                nama: nama,
+                kelas: kelas,
+                rombel: kelas,
+                namaOrtu: "",
+                noHp: ""
+            };
+
+            document.getElementById("card-verified-nama").textContent = nama;
+            document.getElementById("card-verified-kelas").textContent = `Kelas ${kelas}`;
+            document.getElementById("card-verified-ortu").textContent = `NISN: ${nisnInput}`;
+            document.getElementById("verified-student-card").classList.remove("hidden");
+            document.getElementById("manual-student-box").classList.add("hidden");
+            showToast(`Data siswa siap digunakan: ${nama} (Kelas ${kelas})`, "success");
         }
 
         async function handlePublicSubmit(event) {
@@ -401,7 +506,7 @@
 
             const btn = document.getElementById("btn-submit-public-req");
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mengirimkan Permohonan...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mengirimkan ke Google Sheets...`;
 
             const payload = {
                 nisn: verifiedStudent.nisn,
@@ -416,7 +521,33 @@
                 hpOrtu: noWhatsApp
             };
 
-            const res = await ApiClient.request("submitPermohonanSurat", payload);
+            const gasUrl = getPublicGasUrl();
+            let res = null;
+
+            // 1. Kirim langsung ke Google Sheets (Bebas Token Login)
+            try {
+                const response = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "submitPermohonanSurat",
+                        payload: payload
+                    })
+                });
+                if (response.ok) {
+                    res = await response.json();
+                }
+            } catch (err) {
+                console.warn("[PublicSubmit] Direct GAS post failed:", err);
+            }
+
+            // Fallback via ApiClient jika fetch langsung gagal
+            if (!res || !res.success) {
+                try {
+                    res = await ApiClient.request("submitPermohonanSurat", payload);
+                } catch (e) {}
+            }
+
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Permohonan Surat Sekarang`;
 
@@ -424,11 +555,13 @@
                 const trackCode = res.trackingCode || res.ticketId || (res.data && res.data.id);
                 // Sinkronkan ke local cache agar langsung terlacak seketika
                 if (res.data) {
-                    const localList = DataStore.getPermohonanSurat();
-                    if (!localList.some(r => r.id === res.data.id)) {
-                        localList.unshift(res.data);
-                        DataStore.savePermohonanSurat(localList);
-                    }
+                    try {
+                        const localList = DataStore.getPermohonanSurat();
+                        if (!localList.some(r => r.id === res.data.id)) {
+                            localList.unshift(res.data);
+                            DataStore.savePermohonanSurat(localList);
+                        }
+                    } catch (e) {}
                 }
                 document.getElementById("form-permohonan-publik").reset();
                 document.getElementById("verified-student-card").classList.add("hidden");
@@ -437,10 +570,10 @@
                 document.getElementById("receipt-doc-type").textContent = `Jenis: ${jenisSurat}`;
                 document.getElementById("box-receipt-success").classList.remove("hidden");
                 document.getElementById("box-receipt-success").scrollIntoView({ behavior: 'smooth' });
-                showToast(`Permohonan berhasil dikirim dengan kode resi: ${trackCode}`, "success");
+                showToast(`Permohonan tersimpan di Google Sheets! Kode resi: ${trackCode}`, "success");
                 verifiedStudent = null;
             } else {
-                showToast((res && res.message) || "Gagal mengirim permohonan surat. Coba lagi.", "error");
+                showToast((res && res.message) || "Gagal mengirim permohonan ke server Google Sheets. Periksa koneksi internet.", "error");
             }
         }
 
@@ -472,64 +605,81 @@
                 return;
             }
 
-            const queryUpper = rawQuery.toUpperCase();
-            const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
-            const queryHp = rawQuery.replace(/[^0-9]/g, "");
+            const searchBtn = document.querySelector("#section-tracking button");
+            const oldText = searchBtn ? searchBtn.innerHTML : "";
+            if (searchBtn) {
+                searchBtn.disabled = true;
+                searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mencari ke Google Sheets...`;
+            }
 
-            const matchRecord = r => {
-                if (!r) return false;
-                const id = String(r.id || "").toUpperCase().trim();
-                const idClean = id.replace(/[^A-Z0-9]/g, "");
-                const nisn = String(r.nisn || "").trim();
-                const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
-                return (id === queryUpper) ||
-                       (idClean && idClean === queryClean) ||
-                       (queryClean.length >= 4 && idClean.endsWith(queryClean)) ||
-                       (nisn && nisn === rawQuery) ||
-                       (queryHp.length >= 8 && hp.includes(queryHp));
-            };
+            let found = null;
+            const gasUrl = getPublicGasUrl();
 
-            // 1. Cek di local store terlebih dahulu
-            let list = DataStore.getPermohonanSurat();
-            let found = list.find(matchRecord);
+            // 1. Cek LANGSUNG ke Google Sheets database DB_PermohonanSurat secara real-time
+            try {
+                const response = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "trackPermohonanSurat",
+                        payload: { query: rawQuery }
+                    })
+                });
 
-            // 2. Jika cloud aktif, selalu tanyakan ke cloud untuk status valid dan terbaru dari staf TU
-            if (ApiClient.isCloudActive()) {
-                const searchBtn = document.querySelector("#section-tracking button");
-                const oldText = searchBtn ? searchBtn.innerHTML : "";
-                if (searchBtn) {
-                    searchBtn.disabled = true;
-                    searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mencari...`;
-                }
-
-                try {
-                    const cloudRes = await ApiClient.request("trackPermohonanSurat", { query: rawQuery });
-                    if (cloudRes && cloudRes.success && cloudRes.data) {
-                        found = cloudRes.data;
+                if (response.ok) {
+                    const json = await response.json();
+                    if (json && json.success && json.data) {
+                        found = json.data;
                         // Simpan / update ke cache lokal
-                        const idx = list.findIndex(r => r.id === found.id);
-                        if (idx >= 0) {
-                            list[idx] = found;
-                        } else {
-                            list.unshift(found);
-                        }
-                        DataStore.savePermohonanSurat(list);
-                    }
-                } catch (e) {
-                    console.warn("[Tracking] Cloud track error:", e);
-                } finally {
-                    if (searchBtn) {
-                        searchBtn.disabled = false;
-                        searchBtn.innerHTML = oldText;
+                        try {
+                            let list = DataStore.getPermohonanSurat();
+                            const idx = list.findIndex(r => r.id === found.id);
+                            if (idx >= 0) {
+                                list[idx] = found;
+                            } else {
+                                list.unshift(found);
+                            }
+                            DataStore.savePermohonanSurat(list);
+                        } catch (e) {}
                     }
                 }
+            } catch (err) {
+                console.warn("[Tracking] Direct Google Sheets fetch failed:", err);
+            }
+
+            // 2. Fallback: jika offline atau Google Sheets belum selesai loading, cek cache lokal
+            if (!found) {
+                try {
+                    let list = DataStore.getPermohonanSurat();
+                    const queryUpper = rawQuery.toUpperCase();
+                    const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
+                    const queryHp = rawQuery.replace(/[^0-9]/g, "");
+
+                    found = list.find(r => {
+                        if (!r) return false;
+                        const id = String(r.id || "").toUpperCase().trim();
+                        const idClean = id.replace(/[^A-Z0-9]/g, "");
+                        const nisn = String(r.nisn || "").trim();
+                        const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
+                        return (id === queryUpper) ||
+                               (idClean && idClean === queryClean) ||
+                               (queryClean.length >= 3 && idClean.endsWith(queryClean)) ||
+                               (nisn && nisn === rawQuery) ||
+                               (queryHp.length >= 6 && hp.includes(queryHp));
+                    });
+                } catch (e) {}
+            }
+
+            if (searchBtn) {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = oldText;
             }
 
             const box = document.getElementById("tracking-result-box");
 
             if (!found) {
                 if (box) box.classList.add("hidden");
-                showToast("Kode resi permohonan tidak ditemukan pada sistem.", "error");
+                showToast(`Nomor resi \"${rawQuery}\" tidak ditemukan di database Google Sheets.`, "error");
                 return;
             }
 

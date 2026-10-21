@@ -135,6 +135,31 @@ Akun uji coba demo:
 
 ## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
 
+### 🚀 Versi 2.5.0 (21 Oktober 2026)
+* **Jadwal Pelajaran — Tombol 1-Klik Hapus Seluruh Jadwal Rombel Kelas:**
+  - Menambahkan tombol interaktif **"Hapus Semua Jadwal Kelas"** pada toolbar jadwal pelajaran sekolah (`#view-jadwal`).
+  - Dilengkapi dialog konfirmasi keamanan untuk mencegah ketidaksengajaan penghapusan, otomatis membersihkan slot jadwal kelas terpilih di `DataStore`, serta menyinkronkan penghapusan ke cloud backend (`clearJadwalKelas`).
+* **Verifikasi Dokumen Surat — QR Code Mandiri & Scanner Nomor Registrasi Langsung:**
+  - Memperbarui payload QR Code pada lembar cetak dokumen surat resmi (`assets/js/modul-cetak.js`) agar memuat langsung string nomor registrasi surat resmi tanpa format link/skema URL yang berpotensi gagal diakses scanner offline.
+  - Memperbarui portal verifikasi ([`verifikasi.html`](verifikasi.html)) agar pemindai kamera QR scanner (HTML5-QRCode) dan parser URL hash (`#verifikasi.html/{noSurat}`) langsung mengekstrak nomor surat bersih dan mengeksekusi pencarian keabsahan surat di database agenda secara instan.
+* **Modul PIP Kemendikbud — Penyelarasan Format Pengusulan PIP (28 Kolom Resmi):**
+  - Menyelaraskan struktur tabel database, template unduh contoh (`data pengusulan PIP SDN Terlangu 01_2026.xlsx`), dan parser impor SheetJS sesuai spesifikasi resmi Puslapdik/Dapodik 2026 (No, Nama Murid, NIK, Valid Dukcapil, NISN, Valid NISN, Tempat/Tanggal Lahir, Umur, JK, Orang Tua, Jenjang, Kelas, Rombel, Semester ID, Desil, Bank, Status Tabungan, Fase, Role, Status SK, SK Atas Nama).
+  - Pada tab **Data Penerima PIP**, menghapus tombol impor di samping tombol *Unduh Format Contoh*, sehingga tata letak toolbar bersih dan impor terpusat pada tombol impor utama di atas.
+* **Modul PIP Kemendikbud — Penyelarasan Format Penerima SK PIP (22 Kolom Resmi):**
+  - Menyesuaikan template unduh contoh (`data siswa SDN Terlangu 01 penerima pip tahun 2026.xlsx`), tabel display, dan parser impor data penerima dengan struktur lengkap: Nomenklatur Sekolah, Kelas, Rombel, Nama PD, Orang Tua, TTL, NISN, NIK, JK, Nominal Bantuan (Rp 450.000), No Rekening, Virtual Account, Tahap Penyaluran, Status Pencairan, Nama Pengusul, Nomor SK, dan Tanggal SK.
+* **Mapping Profil Akun Guru & Perbaikan Format Jam Jadwal Mengajar:**
+  - Menghubungkan pemetaan peran akun saat buat/edit akun (`tipeGuru` & `kelasGuru`) dengan persistensi `sim_tas_user_mappings` di `localStorage`, mencegah penimpaan keliru dari tendik bawaan.
+  - Filter kartu statistik dan target siswa di dashboard guru kini presisi menghitung jumlah siswa kelas binaan yang dimapping.
+  - Memperbaiki parser waktu mengajar hari ini pada dashboard guru (`formatJamMenit`) sehingga tidak lagi menampilkan string epoch mentah (`Sat Dec 30 1899...`), melainkan rentang jam rapi (contoh: `07:00 - 07:35 WIB`).
+* **Label Menu Sidebar & Penguncian Dropdown Absensi Kelas:**
+  - Menu sidebar otomatis beradaptasi menampilkan **"Absensi Kelas {kelas}"** sesuai kelas binaan yang dimapping saat pembuatan akun guru.
+  - Dropdown tingkat kelas pada form absensi harian (`#absensi-kelas`) dan rekapitulasi bulanan siswa (`#rs-kelas`) otomatis dikunci (*disabled / read-only*) khusus pada kelas binaan guru tersebut.
+* **Hero Banner Dashboard — Reposisi Tombol Aksi Cepat & Menu Pintasan:**
+  - Menghapus 2 tombol lama (*"Kelola Berkas Siswa"* dan *"Cetak Surat Mandiri (<5 Detik)"*) pada hero banner dashboard beranda.
+  - Memindahkan tombol **"Aksi Cepat"** beserta dropdown pintasan peran (*Role-Aware Quick Actions*) dari header navigasi atas langsung ke bawah kalimat sambutan hero banner dashboard beranda.
+* **Pembaruan Nomor Versi Aplikasi (v2.5.0):**
+  - Mengubah nomor versi aplikasi menjadi **v2.5.0** secara menyeluruh pada `index.html`, `assets/js/app.js`, `assets/js/modul-jadwal.js`, `assets/js/modul-pip.js`, `verifikasi.html`, `permohonan.html`, `backend/Code.gs`, `backend/Panduan_Deploy_GAS.md`, dan `README.md`.
+
 ### 🚀 Versi 2.4.0 (21 Oktober 2026)
 * **Perbaikan Nomor WhatsApp Pemohon pada Layanan Mandiri Permohonan Surat Online:**
   - Menyelaraskan dual alias parameter `namaPemohon` / `namaOrtu` dan `noWhatsApp` / `hpOrtu` / `noHp` pada form pengajuan mandiri (`permohonan.html`), tabel agenda tata usaha (`assets/js/modul-surat.js`), API gateway (`assets/js/api.js`), dan backend Apps Script (`backend/Code.gs`).

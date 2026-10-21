@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: MODUL JADWAL PELAJARAN (SENIN - SABTU)
-   Versi 2.4.0 - SDN Terlangu 01 Brebes
+   Versi 2.5.0 - SDN Terlangu 01 Brebes
    Fitur:
    1. Manajemen matriks jadwal Senin s/d Sabtu (Jam 1 s/d 8) untuk Kelas 1 s/d 6.
    2. Isolasi edit berbasis peran (Guru Kelas hanya edit kelasnya; Guru Mapel mengampu slotnya).
@@ -462,6 +462,32 @@ const ModulJadwal = {
 
         App.showToast("Slot jadwal berhasil dikosongkan.", "info");
         this.closeEditModal();
+        this.renderGrid();
+        App.updateDashboardStats();
+    },
+
+    // 1-Klik Delete untuk menghapus semua jadwal pada kelas tersebut
+    async clearAllJadwalKelas() {
+        if (!this.canEditCurrentClass()) {
+            App.showToast("Anda tidak memiliki wewenang mengedit jadwal kelas ini.", "warning");
+            return;
+        }
+        const kelas = this.selectedKelas;
+        const displayName = String(kelas).toLowerCase().startsWith("kelas") ? kelas : `Kelas ${kelas}`;
+        if (!confirm(`Apakah Anda yakin ingin MENGHAPUS SEMUA jadwal pelajaran untuk ${displayName}?\n\nPerhatian: Seluruh mata pelajaran Senin s/d Sabtu pada rombel ${displayName} akan dikosongkan.`)) {
+            return;
+        }
+
+        const currentList = DataStore.getJadwalAll().filter(j => !this.matchesClass(j.kelas || j.rombel, kelas));
+        DataStore.saveJadwalAll(currentList);
+
+        try {
+            await ApiClient.request("clearJadwalKelas", { rombel: String(kelas) });
+        } catch (e) {
+            console.warn("Sync clear jadwal kelas:", e);
+        }
+
+        App.showToast(`Semua jadwal pelajaran untuk ${displayName} berhasil dihapus!`, "success");
         this.renderGrid();
         App.updateDashboardStats();
     },

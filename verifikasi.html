@@ -238,7 +238,7 @@
 
     <!-- Footer -->
     <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white">
-        &copy; 2026 SIM-TAS-SD v2.4.0 • SD Negeri Terlangu 01 Brebes • Sistem Manajemen Tata Usaha Terpadu
+        &copy; 2026 SIM-TAS-SD v2.5.0 • SD Negeri Terlangu 01 Brebes • Sistem Manajemen Tata Usaha Terpadu
     </footer>
 
     <!-- Logic Script -->
@@ -406,8 +406,12 @@
                 }
             }
 
-            // 2. Cek query parameter individual (nomor surat saja)
-            const nomor = (params.get("no") || params.get("nomor") || "").trim();
+            // 2. Cek query parameter individual atau fragment hash (#verifikasi.html/{noSurat})
+            let nomor = (params.get("no") || params.get("nomor") || "").trim();
+            if (!nomor && window.location.hash) {
+                const hashRaw = decodeURIComponent(window.location.hash.substring(1)).trim();
+                nomor = hashRaw.replace(/^.*verifikasi\.html\/?/i, "").replace(/^no=/i, "").trim();
+            }
             const nisn = (params.get("nisn") || "").trim();
             const nama = (params.get("nama") || "").trim();
 
@@ -642,21 +646,34 @@
                     { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
                         stopQrScanner();
-                        // Jika hasil scan berupa URL lengkap ke verifikasi.html
-                        if (decodedText.includes("verifikasi.html") || decodedText.includes("?d=") || decodedText.includes("?no=")) {
-                            window.location.href = decodedText;
-                        } else {
-                            // Coba decode JSON atau parse teks
+                        let cleanNo = String(decodedText || "").trim();
+                        // Jika hasil scan berupa URL / link verifikasi atau query / hash
+                        if (cleanNo.includes("?no=") || cleanNo.includes("&no=")) {
                             try {
-                                const parsed = JSON.parse(decodedText);
-                                if (parsed && parsed.no) {
-                                    renderVerifiedData(parsed);
-                                    return;
-                                }
-                            } catch (e) {}
-                            document.getElementById("input-search-nomor").value = decodedText;
-                            searchByNomorManual();
+                                const url = new URL(cleanNo, window.location.href);
+                                cleanNo = url.searchParams.get("no") || cleanNo;
+                            } catch (e) {
+                                const m = cleanNo.match(/[?&]no=([^&#]+)/);
+                                if (m) cleanNo = decodeURIComponent(m[1]);
+                            }
+                        } else if (cleanNo.includes("#")) {
+                            const hashPart = cleanNo.split("#")[1] || "";
+                            cleanNo = hashPart.replace(/^.*verifikasi\.html\/?/i, "").replace(/^no=/i, "").trim() || cleanNo;
                         }
+
+                        // Coba JSON decode jika ada
+                        try {
+                            const parsed = JSON.parse(cleanNo);
+                            if (parsed && parsed.no) {
+                                renderVerifiedData(parsed);
+                                return;
+                            }
+                        } catch (e) {}
+
+                        // Isi ke input nomor surat dan langsung jalankan pencocokan nomor surat terdaftar
+                        const inp = document.getElementById("input-search-nomor");
+                        if (inp) inp.value = cleanNo;
+                        searchByNomorManual();
                     },
                     (errorMessage) => {
                         // ignore scan frame error

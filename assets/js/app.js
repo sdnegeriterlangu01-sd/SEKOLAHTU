@@ -180,7 +180,14 @@ const App = {
         }
     },
 
-    VERSION: "2.4.0",
+    VERSION: "2.5.0",
+
+    formatJamMenit(w) {
+        if (!w) return "";
+        const str = String(w);
+        const m = str.match(/(\d{1,2}:\d{2})/);
+        return m ? m[1].padStart(5, '0') : str;
+    },
 
     updateDashboardStats() {
         const students = DataStore.getSiswa();
@@ -199,17 +206,31 @@ const App = {
         if (role === "guru" && gInfo) {
             if (gInfo.isGuruKelas) {
                 isFilteredKelas = true;
-                kelasLabel = `Kelas ${gInfo.kelas}`;
+                const cleanK = String(gInfo.kelas || "1").replace(/kelas\s*/i, "").trim();
+                kelasLabel = `Kelas ${cleanK}`;
                 targetStudents = students.filter(s => {
-                    const k = String(s.rombel || s.kelas || "");
+                    const k = String(s.rombel || s.kelas || "").trim();
                     const d1 = k.replace(/\D/g, "");
-                    const d2 = String(gInfo.kelas).replace(/\D/g, "");
-                    return k === gInfo.kelas || (d1 && d2 && d1 === d2) || k.toLowerCase().includes(gInfo.kelas.toLowerCase());
+                    const d2 = cleanK.replace(/\D/g, "");
+                    if (d1 && d2 && d1 === d2) return true;
+                    return k.toLowerCase() === cleanK.toLowerCase() || k.toLowerCase() === `kelas ${cleanK}`.toLowerCase();
                 });
             } else if (gInfo.isGuruMapel) {
-                isFilteredKelas = false;
-                kelasLabel = gInfo.namaMapel ? `Mapel ${gInfo.namaMapel}` : "Semua Kelas (Mapel)";
-                targetStudents = students;
+                if (gInfo.kelas && gInfo.kelas !== "Semua") {
+                    isFilteredKelas = true;
+                    const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
+                    kelasLabel = `Kelas ${cleanK} (${gInfo.namaMapel || 'Mapel'})`;
+                    targetStudents = students.filter(s => {
+                        const k = String(s.rombel || s.kelas || "").trim();
+                        const d1 = k.replace(/\D/g, "");
+                        const d2 = cleanK.replace(/\D/g, "");
+                        return (d1 && d2 && d1 === d2) || k.toLowerCase().includes(cleanK.toLowerCase());
+                    });
+                } else {
+                    isFilteredKelas = false;
+                    kelasLabel = gInfo.namaMapel ? `Mapel ${gInfo.namaMapel}` : "Semua Kelas (Mapel)";
+                    targetStudents = students;
+                }
             }
         }
 
@@ -373,20 +394,32 @@ const App = {
         const allJadwal = DataStore.getJadwalAll();
         let slots = [];
 
+        const matchRombel = (itemRombel, targetRombel) => {
+            if (!itemRombel || !targetRombel) return false;
+            const r1 = String(itemRombel).trim();
+            const r2 = String(targetRombel).trim();
+            if (r1.toLowerCase() === r2.toLowerCase()) return true;
+            const d1 = r1.replace(/\D/g, "");
+            const d2 = r2.replace(/\D/g, "");
+            return !!(d1 && d2 && d1 === d2);
+        };
+
         if (gInfo && gInfo.isGuruKelas) {
             const rombel = String(gInfo.kelas || "1");
-            slots = allJadwal.filter(j => String(j.rombel) === rombel && j.hari === todayHari);
+            slots = allJadwal.filter(j => (matchRombel(j.rombel, rombel) || matchRombel(j.kelas, rombel)) && j.hari === todayHari);
         } else if (gInfo && gInfo.isGuruMapel) {
             const myName = (user?.nama || "").toLowerCase();
             const myMapel = (gInfo.namaMapel || "").toLowerCase();
+            const targetKelas = gInfo.kelas && gInfo.kelas !== "Semua" ? gInfo.kelas : "";
             slots = allJadwal.filter(j => {
                 const matchHari = j.hari === todayHari;
-                const matchGuru = myName && j.namaGuru && j.namaGuru.toLowerCase().includes(myName);
+                const matchGuru = myName && ((j.namaGuru && j.namaGuru.toLowerCase().includes(myName)) || (j.guru && j.guru.toLowerCase().includes(myName)));
                 const matchMapel = myMapel && j.mapel && j.mapel.toLowerCase().includes(myMapel);
-                return matchHari && (matchGuru || matchMapel);
+                const matchK = targetKelas ? (matchRombel(j.rombel, targetKelas) || matchRombel(j.kelas, targetKelas)) : true;
+                return matchHari && (matchGuru || matchMapel) && matchK;
             });
         } else {
-            slots = allJadwal.filter(j => j.hari === todayHari && String(j.rombel) === "1");
+            slots = allJadwal.filter(j => j.hari === todayHari && (matchRombel(j.rombel, "1") || matchRombel(j.kelas, "1")));
         }
 
         slots.sort((a, b) => Number(a.jamKe) - Number(b.jamKe));
@@ -404,6 +437,10 @@ const App = {
 
         container.innerHTML = slots.map(s => {
             const isBreak = s.mapel && s.mapel.toLowerCase().includes("istirahat");
+            const jamMulai = this.formatJamMenit(s.waktuMulai) || "07:00";
+            const jamSelesai = this.formatJamMenit(s.waktuSelesai) || "07:35";
+            const displayWaktu = `${jamMulai} - ${jamSelesai}`;
+
             if (isBreak) {
                 return `
                     <div class="flex items-center gap-3 p-2 bg-amber-50/70 border border-amber-200 rounded-xl text-xs">
@@ -411,10 +448,12 @@ const App = {
                         <div class="flex-grow font-semibold text-amber-900 flex items-center gap-2">
                             <i class="fa-solid fa-mug-hot text-amber-600"></i> ${s.mapel}
                         </div>
-                        <span class="text-[10px] text-amber-700 font-mono">${s.waktuMulai || ""}-${s.waktuSelesai || ""}</span>
+                        <span class="text-[10px] text-amber-700 font-mono">${displayWaktu}</span>
                     </div>
                 `;
             }
+
+            const rombelLabel = String(s.rombel || s.kelas || "1").toLowerCase().startsWith("kelas") ? (s.rombel || s.kelas) : `Kelas ${s.rombel || s.kelas || "1"}`;
 
             return `
                 <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 hover:border-blue-400 rounded-xl text-xs transition shadow-xs">
@@ -425,14 +464,14 @@ const App = {
                         <div class="min-w-0">
                             <div class="font-bold text-slate-800 truncate">${s.mapel || "Mata Pelajaran"}</div>
                             <div class="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                                <span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>Kelas ${s.rombel}</span>
+                                <span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>${rombelLabel}</span>
                                 <span>•</span>
-                                <span class="truncate">${s.namaGuru || "Guru"}</span>
+                                <span class="truncate">${s.namaGuru || s.guru || "Guru"}</span>
                             </div>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 pl-2">
-                        <span class="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${s.waktuMulai || ""}-${s.waktuSelesai || ""}</span>
+                        <span class="font-mono text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${displayWaktu}</span>
                     </div>
                 </div>
             `;

@@ -410,12 +410,12 @@ const ModulCetak = {
             </div>
         `;
 
-        // Render QR Code di dalam Dokumen (Rekayasa Ulang: Ukuran 105px x 105px, Warna Hitam Maksimum #000000)
+        // Render QR Code di dalam Dokumen (Berisi Nomor Surat Langsung agar langsung terhubung ke sistem verifikasi tanpa melalui URL/link)
         const qrBox = document.getElementById("qrcode-container");
         if (qrBox && typeof QRCode !== "undefined") {
             qrBox.innerHTML = "";
             new QRCode(qrBox, {
-                text: verifyUrl,
+                text: this.generatedNomorSurat,
                 width: 102,
                 height: 102,
                 colorDark: "#000000",

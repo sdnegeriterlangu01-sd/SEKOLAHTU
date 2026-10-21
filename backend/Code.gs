@@ -1,10 +1,17 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.4.0
+ * Backend REST API - Google Apps Script (GAS) v2.5.0
  * ==========================================================================
  * 
  * Version History:
+ * - v2.5.0 (21 Oktober 2026):
+ *   + Penambahan endpoint API "clearJadwalKelas" untuk 1-klik hapus seluruh jadwal pelajaran pada kelas tertentu.
+ *   + Verifikasi dokumen surat: QR Code memuat string nomor registrasi surat untuk pencocokan instan tanpa skema URL.
+ *   + Penyelarasan format tabel & impor Pengusulan PIP (28 kolom resmi Dapodik/Puslapdik 2026).
+ *   + Penyelarasan format tabel & impor Penerima PIP (22 kolom SK Puslapdik 2026).
+ *   + Pemetaan presisi profil akun Guru Kelas / Guru Mapel (tipeGuru & kelasGuru), isolasi dropdown absensi & rekap, serta perbaikan format jam jadwal.
+ *   + Reposisi menu "Aksi Cepat" ke Hero Banner Dashboard Beranda.
  * - v2.4.0 (21 Oktober 2026):
  *   + Penyelarasan field dual alias WhatsApp permohonan surat (noWhatsApp & hpOrtu).
  *   + Dukungan format contoh Excel & import PIP Kemendikbud (Pengusulan & Penerima SK).
@@ -249,6 +256,10 @@ function doPost(e) {
 
       case "deleteJadwal":
         responseData = handleDeleteJadwal(ss, payload);
+        break;
+
+      case "clearJadwalKelas":
+        responseData = handleClearJadwalKelas(ss, payload);
         break;
 
       // ==================== PROGRAM PIP ====================
@@ -1658,6 +1669,34 @@ function handleDeleteJadwal(ss, payload) {
   }
 
   return { success: false, message: `Slot jadwal dengan ID ${id} tidak ditemukan.` };
+}
+
+function handleClearJadwalKelas(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_JADWAL);
+  if (!sheet) return { success: false, message: "Tab jadwal tidak ditemukan." };
+
+  const targetRombel = String(payload.rombel || payload.kelas || "").trim();
+  if (!targetRombel) return { success: false, message: "Parameter rombel/kelas wajib diisi." };
+
+  const targetClean = targetRombel.replace(/\D/g, "");
+  const data = sheet.getDataRange().getValues();
+  let deletedCount = 0;
+
+  // Loop mundur agar index deleteRow tidak bergeser
+  for (let i = data.length - 1; i >= 1; i--) {
+    const rowRombel = String(data[i][1] || "").trim();
+    const rowClean = rowRombel.replace(/\D/g, "");
+    if (rowRombel.toLowerCase() === targetRombel.toLowerCase() || (targetClean && rowClean === targetClean)) {
+      sheet.deleteRow(i + 1);
+      deletedCount++;
+    }
+  }
+
+  return { 
+    success: true, 
+    message: `Berhasil menghapus ${deletedCount} slot jadwal untuk kelas ${targetRombel}.`, 
+    deletedCount: deletedCount 
+  };
 }
 
 /**

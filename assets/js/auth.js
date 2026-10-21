@@ -41,6 +41,31 @@ const Auth = {
         return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("absensi") ? "absensi" : "scan-absensi");
     },
 
+    USER_MAPPINGS_KEY: "sim_tas_user_mappings",
+    CUSTOM_USERS_KEY: "sim_tas_custom_users",
+
+    getUserMapping(idOrEmail) {
+        if (!idOrEmail) return null;
+        try {
+            const map = JSON.parse(localStorage.getItem(this.USER_MAPPINGS_KEY)) || {};
+            const key = String(idOrEmail).toLowerCase().trim();
+            const prefix = key.split("@")[0];
+            return map[key] || map[prefix] || null;
+        } catch (e) { return null; }
+    },
+
+    saveUserMapping(idOrEmail, data) {
+        if (!idOrEmail) return;
+        try {
+            const map = JSON.parse(localStorage.getItem(this.USER_MAPPINGS_KEY)) || {};
+            const key = String(idOrEmail).toLowerCase().trim();
+            const prefix = key.split("@")[0];
+            map[key] = { ...(map[key] || {}), ...data };
+            map[prefix] = map[key];
+            localStorage.setItem(this.USER_MAPPINGS_KEY, JSON.stringify(map));
+        } catch (e) {}
+    },
+
     cleanPersonName(name) {
         if (!name) return "";
         return String(name)
@@ -55,6 +80,8 @@ const Auth = {
     getGuruInfo() {
         if (this.role() !== "guru") return null;
         const u = this.user() || {};
+        const mapping = this.getUserMapping(u.email || u.id) || {};
+
         let tendikList = [];
         try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
 
@@ -72,49 +99,80 @@ const Auth = {
             return false;
         });
 
+        // PRIORITAS UTAMA: Mapping eksplisit saat akun dibuat / diedit
+        const explicitTipe = u.tipeGuru || mapping.tipeGuru || mapping.tipe_guru || "";
+        const explicitKelas = u.kelasGuru || mapping.kelasGuru || mapping.kelas_guru || "";
+
         const jabatan = (t?.jabatan || "").trim();
         const m = jabatan.match(/kelas\s*(\d+[a-zA-Z]?)/i);
 
         // Deteksi bidang mata pelajaran jika guru mapel
-        let namaMapel = "";
+        let namaMapel = mapping.namaMapel || "";
         const jabLow = jabatan.toLowerCase();
-        if (jabLow.includes("pjok") || jabLow.includes("penjas") || jabLow.includes("olahraga")) namaMapel = "PJOK";
-        else if (jabLow.includes("pai") || jabLow.includes("agama") || jabLow.includes("budi pekerti")) namaMapel = "PAI & Budi Pekerti";
-        else if (jabLow.includes("inggris")) namaMapel = "Bahasa Inggris";
-        else if (jabLow.includes("seni") || jabLow.includes("sbk")) namaMapel = "Seni Budaya";
-        else if (jabLow.includes("mapel")) namaMapel = "Mata Pelajaran";
-
-        // Tentukan apakah guru mapel atau guru kelas
-        const isExplicitMapel = (u.tipeGuru === "mapel") || (u.kelasGuru === "Semua") || !!namaMapel || (jabLow.includes("mapel") && !m);
-        const isMapel = isExplicitMapel;
-
-        // Tentukan kelas yang diajar
-        let kelas = "";
-        if (isMapel) {
-            kelas = "Semua";
-        } else if (u.kelasGuru && u.kelasGuru !== "Semua") {
-            kelas = String(u.kelasGuru).replace(/\D/g, "") || u.kelasGuru;
-        } else if (m) {
-            kelas = m[1];
-        } else {
-            kelas = "1";
+        if (!namaMapel) {
+            if (jabLow.includes("pjok") || jabLow.includes("penjas") || jabLow.includes("olahraga")) namaMapel = "PJOK";
+            else if (jabLow.includes("pai") || jabLow.includes("agama") || jabLow.includes("budi pekerti")) namaMapel = "PAI & Budi Pekerti";
+            else if (jabLow.includes("inggris")) namaMapel = "Bahasa Inggris";
+            else if (jabLow.includes("seni") || jabLow.includes("sbk")) namaMapel = "Seni Budaya";
+            else if (jabLow.includes("mapel")) namaMapel = "Mata Pelajaran";
         }
 
-        const isKelas = !isMapel;
+        let isKelas = false;
+        let isMapel = false;
+        let kelas = "";
+
+        if (explicitTipe === "mapel") {
+            isMapel = true;
+            isKelas = false;
+            kelas = explicitKelas || "Semua";
+        } else if (explicitTipe === "kelas") {
+            isKelas = true;
+            isMapel = false;
+            kelas = explicitKelas ? (String(explicitKelas).replace(/kelas\s*/i, "").trim() || explicitKelas) : (m ? m[1] : "1");
+        } else {
+            // Jika belum ada mapping eksplisit
+            if (explicitKelas && explicitKelas !== "Semua") {
+                isKelas = true;
+                isMapel = false;
+                kelas = String(explicitKelas).replace(/kelas\s*/i, "").trim() || explicitKelas;
+            } else if (explicitKelas === "Semua" || !!namaMapel || (jabLow.includes("mapel") && !m)) {
+                isMapel = true;
+                isKelas = false;
+                kelas = "Semua";
+            } else if (m) {
+                isKelas = true;
+                isMapel = false;
+                kelas = m[1];
+            } else {
+                isKelas = true;
+                isMapel = false;
+                kelas = "1";
+            }
+        }
+
+        const displayJabatan = isKelas 
+            ? `Guru Kelas ${kelas}` 
+            : (namaMapel ? `Guru Mapel ${namaMapel}` : (kelas && kelas !== 'Semua' ? `Guru Mapel (Kelas ${kelas})` : 'Guru Mata Pelajaran'));
 
         return {
             isGuruKelas: isKelas,
             isGuruMapel: isMapel,
-            kelas: isMapel ? "Semua" : (kelas || "1"),
+            kelas: isMapel && kelas === "Semua" ? "Semua" : (kelas || "1"),
             nama: u.nama || t?.nama || "Guru",
             nip: t?.nip || u.nip || "",
             namaMapel: namaMapel,
-            jabatan: jabatan || (isKelas ? `Guru Kelas ${kelas || '1'}` : `Guru Mapel (${namaMapel || 'PJOK/PAI'})`)
+            jabatan: displayJabatan
         };
     },
 
     // ------------------------------------------------------------------ INIT
     async init() {
+        // Load custom demo users & mappings
+        try {
+            const savedUsers = JSON.parse(localStorage.getItem(this.CUSTOM_USERS_KEY)) || {};
+            Object.assign(this.DEMO_USERS, savedUsers);
+        } catch (e) {}
+
         this.bindLoginForm();
         this.renderLoginMode();
 
@@ -226,10 +284,18 @@ const Auth = {
         if (!p) throw new Error("Profil pengguna belum tersedia. Hubungi administrator.");
         if (!p.aktif) throw new Error("Akun Anda belum diaktifkan oleh administrator.");
         if (!ACL.ROLES[p.role]) throw new Error("Peran akun tidak valid. Hubungi administrator.");
-        this.session.user.nama = Sec.clean(p.nama || this.session.user.email);
+        
+        const localMapping = this.getUserMapping(this.session.user.email || uid) || {};
+        this.session.user.nama = Sec.clean(p.nama || localMapping.nama || this.session.user.email);
         this.session.user.role = p.role;
-        this.session.user.tipeGuru = p.tipe_guru || "";
-        this.session.user.kelasGuru = p.kelas_guru || "";
+        this.session.user.tipeGuru = p.tipe_guru || localMapping.tipeGuru || localMapping.tipe_guru || "";
+        this.session.user.kelasGuru = p.kelas_guru || localMapping.kelasGuru || localMapping.kelas_guru || "";
+        this.saveUserMapping(this.session.user.email, {
+            nama: this.session.user.nama,
+            role: this.session.user.role,
+            tipeGuru: this.session.user.tipeGuru,
+            kelasGuru: this.session.user.kelasGuru
+        });
     },
 
     async ensureFresh() {
@@ -560,13 +626,29 @@ const Auth = {
                     }, this.session.token).catch(() => {});
                 }
 
+                this.saveUserMapping(email, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+                if (j.user && j.user.id) this.saveUserMapping(j.user.id, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+
                 App.showToast(`Akun ${nama} (${ACL.ROLES[role] || role}) berhasil didaftarkan!`, "success");
                 document.getElementById("form-add-user")?.reset();
                 this.switchUserTab("list");
             } else {
                 // Mode Demo (Lokal)
                 const username = email.split("@")[0].toLowerCase().trim();
-                this.DEMO_USERS[username] = { pw: password, nama: nama, role: role, tipeGuru: tipeGuru, kelasGuru: kelasGuru };
+                const newUserObj = { pw: password, nama: nama, role: role, tipeGuru: tipeGuru, kelasGuru: kelasGuru };
+                this.DEMO_USERS[username] = newUserObj;
+                this.DEMO_USERS[email.toLowerCase().trim()] = newUserObj;
+                
+                try {
+                    const customUsers = JSON.parse(localStorage.getItem(this.CUSTOM_USERS_KEY)) || {};
+                    customUsers[username] = newUserObj;
+                    customUsers[email.toLowerCase().trim()] = newUserObj;
+                    localStorage.setItem(this.CUSTOM_USERS_KEY, JSON.stringify(customUsers));
+                } catch (e) {}
+
+                this.saveUserMapping(email, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+                this.saveUserMapping(username, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+
                 App.showToast(`(Mode Demo) Akun ${username} (${ACL.ROLES[role]}) berhasil ditambahkan!`, "success");
                 document.getElementById("form-add-user")?.reset();
                 this.switchUserTab("list");
@@ -636,7 +718,19 @@ const Auth = {
                     this.DEMO_USERS[id].tipeGuru = tipeGuru;
                     this.DEMO_USERS[id].kelasGuru = kelasGuru;
                 }
+                try {
+                    const customUsers = JSON.parse(localStorage.getItem(this.CUSTOM_USERS_KEY)) || {};
+                    if (customUsers[id]) {
+                        customUsers[id].nama = nama;
+                        customUsers[id].role = role;
+                        customUsers[id].tipeGuru = tipeGuru;
+                        customUsers[id].kelasGuru = kelasGuru;
+                        localStorage.setItem(this.CUSTOM_USERS_KEY, JSON.stringify(customUsers));
+                    }
+                } catch (e) {}
             }
+
+            this.saveUserMapping(id, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
 
             // Jika mengedit akun yang sedang login saat ini, perbarui sesi dan tampilan seketika
             if (this.session && this.session.user && (this.session.user.id === id || this.session.user.email?.includes(id))) {

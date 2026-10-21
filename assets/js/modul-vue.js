@@ -117,8 +117,17 @@ const ModulVue = {
                     const currentRole = role.value || (Auth.role && Auth.role());
                     if (item.route === "absensi" && currentRole === "guru") {
                         const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
-                        if (g && g.isGuruKelas) return `Absensi Kelas ${g.kelas}`;
-                        if (g && g.isGuruMapel) return `Absensi Siswa (Mapel)`;
+                        if (g && g.isGuruKelas) {
+                            const k = String(g.kelas || "1").replace(/kelas\s*/i, "").trim();
+                            return `Absensi Kelas ${k}`;
+                        }
+                        if (g && g.isGuruMapel) {
+                            if (g.kelas && g.kelas !== "Semua") {
+                                const k = String(g.kelas).replace(/kelas\s*/i, "").trim();
+                                return `Absensi Kelas ${k}`;
+                            }
+                            return `Absensi Siswa (Mapel)`;
+                        }
                     }
                     return item.label;
                 };

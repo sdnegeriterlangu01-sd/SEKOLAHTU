@@ -795,19 +795,27 @@ const ModulPresensi = {
         const el = document.getElementById("abs-tab-siswa");
         if (!el) return;
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
-        const opts = this.kelasOptions();
-        if (Auth.role() === "guru" && !this._guruKelasSet) {
-            const u = Auth.user();
-            const tendikMatch = DataStore.getTendik().find(t => 
-                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
-                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
-            );
-            if (tendikMatch && tendikMatch.jabatan) {
-                const m = tendikMatch.jabatan.match(/kelas\s*(\d+)/i);
-                if (m && opts.includes(m[1])) {
-                    this.kelasSiswa = m[1];
-                    this._guruKelasSet = true;
-                }
+        let opts = this.kelasOptions();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        if (Auth.role() === "guru" && gInfo) {
+            if (gInfo.isGuruKelas) {
+                const cleanK = String(gInfo.kelas || "1").replace(/kelas\s*/i, "").trim();
+                const matched = opts.find(o => {
+                    const d1 = String(o).replace(/\D/g, "");
+                    const d2 = cleanK.replace(/\D/g, "");
+                    return (d1 && d2 && d1 === d2) || String(o).toLowerCase().includes(cleanK.toLowerCase());
+                }) || opts[0] || `Kelas ${cleanK}`;
+                this.kelasSiswa = matched;
+                opts = [matched];
+            } else if (gInfo.isGuruMapel && gInfo.kelas && gInfo.kelas !== "Semua") {
+                const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
+                const matched = opts.find(o => {
+                    const d1 = String(o).replace(/\D/g, "");
+                    const d2 = cleanK.replace(/\D/g, "");
+                    return (d1 && d2 && d1 === d2) || String(o).toLowerCase().includes(cleanK.toLowerCase());
+                }) || opts[0] || `Kelas ${cleanK}`;
+                this.kelasSiswa = matched;
+                opts = [matched];
             }
         }
         if (!opts.includes(this.kelasSiswa)) this.kelasSiswa = opts[0] || "";

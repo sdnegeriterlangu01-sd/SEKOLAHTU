@@ -1,6 +1,6 @@
 /* ==========================================================================
    SIM-TAS-SD: MODUL PROGRAM INDONESIA PINTAR (PIP KEMENDIKBUD)
-   Versi 2.4.0 - SDN Terlangu 01 Brebes
+   Versi 2.5.0 - SDN Terlangu 01 Brebes
    Fitur:
    1. Dasbor & Visualisasi Analitik Desil Kemiskinan (1-4, 5-7, 8-10) & Status SK.
    2. Data Pengusulan PIP (Format Dapodik/Puslapdik 2026) + Unduh Format & Impor Excel.
@@ -451,6 +451,9 @@ const ModulPIP = {
             if (Number(item.desil) <= 4) desilColor = "bg-rose-100 text-rose-800 font-bold border border-rose-200";
             else if (Number(item.desil) <= 7) desilColor = "bg-amber-100 text-amber-800 font-bold border border-amber-200";
 
+            const ortuText = [item.namaAyah ? `Ayah: ${item.namaAyah}` : '', item.namaIbu ? `Ibu: ${item.namaIbu}` : ''].filter(Boolean).join(' • ') || '-';
+            const rombelText = item.rombel || `Kelas ${item.kelas || '1'}`;
+
             return `
                 <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
                     <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
@@ -458,30 +461,33 @@ const ModulPIP = {
                         <div class="font-bold text-slate-800 flex items-center flex-wrap gap-1">
                             ${Sec.esc(item.nama)} ${auditBadge}
                         </div>
-                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)}</div>
+                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)} ${item.nik ? `<span class="text-slate-400 font-normal">| NIK: ${Sec.esc(item.nik)}</span>` : ''}</div>
+                        ${item.jk ? `<div class="text-[9px] text-slate-400">${item.jk === 'L' ? 'Laki-laki' : (item.jk === 'P' ? 'Perempuan' : Sec.esc(item.jk))} ${item.umur ? `• ${item.umur} Th` : ''}</div>` : ''}
                     </td>
                     <td class="p-3 text-center">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            Kelas ${Sec.esc(item.kelas)}
+                            ${Sec.esc(rombelText)}
                         </span>
                         <div class="text-[9px] text-slate-400 mt-0.5">${Sec.esc(item.namaFase || '-')}</div>
                     </td>
+                    <td class="p-3 text-slate-600">
+                        <div class="text-[11px] font-medium truncate max-w-[170px]" title="${Sec.esc(ortuText)}">${Sec.esc(ortuText)}</div>
+                        ${item.pekerjaanAyah || item.pekerjaanIbu ? `<div class="text-[9px] text-slate-400 truncate max-w-[170px]">${Sec.esc(item.pekerjaanAyah || item.pekerjaanIbu || '')}</div>` : ''}
+                    </td>
                     <td class="p-3 text-center">
                         <span class="px-2 py-0.5 rounded-md text-[11px] ${desilColor}">Desil ${item.desil || '-'}</span>
-                    </td>
-                    <td class="p-3 text-slate-600">
-                        <div class="font-medium">${Sec.esc(item.skAtasNama || item.nama)}</div>
-                        <div class="text-[9px] text-slate-400">Tahun: ${Sec.esc(item.tahunUsulan || '2026')}</div>
+                        <div class="text-[9px] text-slate-400 mt-0.5">${Sec.esc(item.bank || 'BRI')} • ${Sec.esc(item.statusTabungan || 'Rekening')}</div>
                     </td>
                     <td class="p-3 text-center">
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSudahSK ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500'}">
                             <i class="fa-solid ${isSudahSK ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-start'}"></i>
-                            ${isSudahSK ? 'Sudah SK' : 'Belum Masuk SK'}
+                            ${isSudahSK ? 'Sudah SK' : 'Belum SK'}
                         </span>
+                        <div class="text-[9px] text-slate-500 mt-0.5 truncate max-w-[120px]" title="${Sec.esc(item.skAtasNama || item.nama)}">${Sec.esc(item.skAtasNama || item.nama)}</div>
                     </td>
                     <td class="p-3 text-right">
                         <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_aktif')" 
-                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs" title="Cetak Surat Aktif Belajar PIP">
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar PIP">
                             <i class="fa-solid fa-print"></i> Aktif Belajar
                         </button>
                     </td>
@@ -509,7 +515,7 @@ const ModulPIP = {
 
         const q = (this.searchQuery || "").toLowerCase();
         data = data.filter(p => {
-            const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q) || (p.nomorRekening && p.nomorRekening.includes(q));
+            const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q) || (p.nomorRekening && p.nomorRekening.includes(q)) || (p.virtualAcc && p.virtualAcc.includes(q));
             const matchK = this.filterKelas === "Semua" || 
                 String(p.kelas).toLowerCase().trim() === String(this.filterKelas).toLowerCase().trim() ||
                 String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
@@ -539,27 +545,30 @@ const ModulPIP = {
         tbody.innerHTML = data.map((item, idx) => {
             const isSudahCair = item.statusCair && item.statusCair.toLowerCase().includes("sudah");
             const nominal = Number(item.nominal) || 450000;
+            const rombelText = item.rombel || `Kelas ${item.kelas || '1'}`;
+            const noRekDisplay = item.nomorRekening && item.nomorRekening !== '-' ? item.nomorRekening : (item.virtualAcc || '-');
 
             return `
                 <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
                     <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                     <td class="p-3">
                         <div class="font-bold text-slate-800">${Sec.esc(item.nama)}</div>
-                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)}</div>
+                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)} ${item.nik ? `<span class="text-slate-400 font-normal">| NIK: ${Sec.esc(item.nik)}</span>` : ''}</div>
+                        ${item.tempatLahir || item.tanggalLahir ? `<div class="text-[9px] text-slate-400">${Sec.esc(item.tempatLahir || '')}, ${Sec.esc(item.tanggalLahir || '')}</div>` : ''}
                     </td>
                     <td class="p-3 text-center">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            Kelas ${Sec.esc(item.kelas)}
+                            ${Sec.esc(rombelText)}
                         </span>
                     </td>
                     <td class="p-3">
                         <div class="font-mono text-xs text-slate-700 font-semibold">${Sec.esc(item.nomorSK || 'SK Puslapdik')}</div>
-                        <div class="text-[10px] text-slate-400">${Sec.esc(item.tahap || 'Tahap 1')} • TA ${Sec.esc(item.tahunAnggaran || '2026')}</div>
+                        <div class="text-[10px] text-slate-400">${Sec.esc(item.tahap || 'Tahap 1')} ${item.tanggalSK ? `• ${Sec.esc(item.tanggalSK)}` : ''}</div>
                     </td>
                     <td class="p-3 font-mono font-bold text-emerald-800">Rp ${nominal.toLocaleString("id-ID")}</td>
                     <td class="p-3">
-                        <div class="font-mono text-xs text-slate-700 font-semibold">${Sec.esc(item.nomorRekening || '-')}</div>
-                        <div class="text-[10px] text-slate-400">Bank ${Sec.esc(item.bankPenyalur || 'BRI')} • ${Sec.esc(item.statusRekening || 'Aktivasi')}</div>
+                        <div class="font-mono text-xs text-slate-700 font-semibold">${Sec.esc(noRekDisplay)}</div>
+                        <div class="text-[10px] text-slate-400">${item.virtualAcc && item.virtualAcc !== '-' ? `VA: ${Sec.esc(item.virtualAcc)} • ` : ''}Bank ${Sec.esc(item.bankPenyalur || 'BRI')}</div>
                     </td>
                     <td class="p-3 text-center">
                         <button onclick="ModulPIP.toggleStatusCair('${item.nisn}')" 
@@ -624,7 +633,7 @@ const ModulPIP = {
     },
 
     // -------------------------------------------------------------------------
-    // Item 2: FORMAT CONTOH EXCEL (PENGUSULAN & PENERIMA)
+    // FORMAT CONTOH EXCEL RESMI PUSLAPDIK / DAPODIK
     // -------------------------------------------------------------------------
     async downloadTemplate(jenis = "pengusulan") {
         App.showToast("Menyiapkan format contoh Excel...", "info");
@@ -633,44 +642,59 @@ const ModulPIP = {
             const wb = XLSX.utils.book_new();
 
             if (jenis === "pengusulan") {
+                // Header sesuai screenshot 202713 & 202733 dan data pengusulan PIP SDN Terlangu 01_2026.xlsx
                 const headers = [
-                    "NO", "NISN", "NAMA SISWA", "KELAS", "NAMA FASE", 
-                    "DESIL KEMISKINAN", "SK ATAS NAMA", "STATUS SK", "TAHUN USULAN", "CATATAN DAPODIK"
+                    "No", "Nama Murid", "NIK", "Valid Dukcapil", "NISN", "Valid NISN", 
+                    "Tempat Lahir", "Tanggal Lahir", "Umur", "Jenis Kelamin", "Nama Ibu", 
+                    "Pekerjaan Ibu", "Nama Ayah", "Pekerjaan Ayah", "Jenjang", "Kelas", 
+                    "Rombel", "Semester ID", "Desil", "Bank", "Status Tabungan", 
+                    "flag_drop", "keterangan_flag", "Fase ID", "Nama Fase", "Role", 
+                    "Status SK", "SK Atas Nama"
                 ];
                 const sampleRows = [
-                    [1, "3154829101", "Ahmad Fauzan Pratama", "Kelas 1", "Fase A", 2, "Ahmad Fauzan Pratama", "Sudah SK", "2026", "Prioritas 1 (DTKS Kemensos)"],
-                    [2, "3145920192", "Budi Santoso", "Kelas 2", "Fase A", 3, "Budi Santoso", "Belum Masuk SK", "2026", "Pengusulan Kuota Tambahan"],
-                    [3, "3139841029", "Citra Kirana Lestari", "Kelas 3", "Fase B", 4, "Citra Kirana Lestari", "Sudah SK", "2026", "Verifikasi Berkas KIP Lengkap"]
+                    [1, "AHMAD FAUZAN PRATAMA", "3329090102170001", "Valid", "3171234567", "Valid", "Brebes", "2017-02-01", 9, "Laki-laki", "SITI AMINAH", "Ibu Rumah Tangga", "SLAMET RIYADI", "Buruh Harian Lepas", "SD", "1", "Kelas 1", "2025/2026-Genap", 2, "BRI", "Memiliki Rekening", 0, "-", "A", "Fase A", "Siswa", "Sudah SK", "AHMAD FAUZAN PRATAMA"],
+                    [2, "NURUL HIDAYAH", "3329095204160002", "Valid", "3167890123", "Valid", "Brebes", "2016-04-12", 10, "Perempuan", "ROHANI", "Pedagang Kecil", "KASIM", "Petani", "SD", "2", "Kelas 2", "2025/2026-Genap", 3, "BRI", "Memiliki Rekening", 0, "-", "A", "Fase A", "Siswa", "Sudah SK", "NURUL HIDAYAH"],
+                    [3, "BAGAS ADITYA PUTRA", "3329091508150003", "Valid", "3154567890", "Valid", "Brebes", "2015-08-15", 11, "Laki-laki", "MARYAM", "Ibu Rumah Tangga", "SUTRISNO", "Buruh Tani", "SD", "3", "Kelas 3", "2025/2026-Genap", 4, "BRI", "Belum Aktivasi", 0, "-", "B", "Fase B", "Siswa", "Belum Masuk SK", "BAGAS ADITYA PUTRA"]
                 ];
                 const wsData = [headers, ...sampleRows];
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
 
                 ws["!cols"] = [
-                    { wch: 6 }, { wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 12 },
-                    { wch: 18 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 32 }
+                    { wch: 6 }, { wch: 26 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+                    { wch: 16 }, { wch: 14 }, { wch: 8 }, { wch: 14 }, { wch: 20 }, { wch: 20 },
+                    { wch: 20 }, { wch: 20 }, { wch: 10 }, { wch: 8 }, { wch: 12 }, { wch: 18 },
+                    { wch: 8 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 16 }, { wch: 8 },
+                    { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 26 }
                 ];
                 XLSX.utils.book_append_sheet(wb, ws, "Pengusulan_PIP_2026");
-                XLSX.writeFile(wb, "Format_Contoh_Pengusulan_PIP_2026.xlsx");
+                XLSX.writeFile(wb, "data pengusulan PIP SDN Terlangu 01_2026.xlsx");
                 App.showToast("Format contoh pengusulan PIP berhasil diunduh!", "success");
             } else {
+                // Header sesuai screenshot 203437 & 203455 dan data siswa SDN Terlangu 01 penerima pip tahun 2026.xlsx
                 const headers = [
-                    "NO", "NISN", "NAMA SISWA", "KELAS", "NOMOR SK", 
-                    "TAHAP", "NOMINAL", "BANK PENYALUR", "NOMOR REKENING", "STATUS REKENING", "STATUS CAIR", "TANGGAL CAIR", "TAHUN ANGGARAN"
+                    "No", "nomenklatur", "kelas", "rombel", "nama_pd", 
+                    "nama_ibu_kandung", "nama_ayah", "tanggal_lahir", "tempat_lahir", 
+                    "nisn", "nik", "JK", "nominal", "no_rekening", "virtual_acc", 
+                    "Tahap", "status_cair", "No Rekening / Virtual ACC", "Nama Pengusul", 
+                    "confirmation_text", "nomor_sk", "tanggal_sk"
                 ];
                 const sampleRows = [
-                    [1, "3154829101", "Ahmad Fauzan Pratama", "Kelas 1", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-1", "Sudah Aktivasi", "Sudah Cair", "2026-03-15", "2026"],
-                    [2, "3145920192", "Budi Santoso", "Kelas 2", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-2", "Sudah Aktivasi", "Belum Cair", "-", "2026"],
-                    [3, "3139841029", "Citra Kirana Lestari", "Kelas 3", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-3", "Belum Aktivasi", "Belum Cair", "-", "2026"]
+                    [1, "SD NEGERI TERLANGU 01", "1", "Kelas 1", "AHMAD FAUZAN PRATAMA", "SITI AMINAH", "SLAMET RIYADI", "2017-02-01", "Brebes", "3171234567", "3329090102170001", "L", 450000, "0123-01-098765-50-1", "88013171234567", "Tahap 1", "Sudah Cair", "0123-01-098765-50-1", "Kepala SDN Terlangu 01", "Dana telah disalurkan melalui rekening SimPel", "0345/P3KE/PIP/2026", "2026-01-15"],
+                    [2, "SD NEGERI TERLANGU 01", "2", "Kelas 2", "NURUL HIDAYAH", "ROHANI", "KASIM", "2016-04-12", "Brebes", "3167890123", "3329095204160002", "P", 450000, "0123-01-098765-50-2", "88013167890123", "Tahap 1", "Belum Cair", "0123-01-098765-50-2", "Kepala SDN Terlangu 01", "Menunggu pencairan oleh wali siswa", "0345/P3KE/PIP/2026", "2026-01-15"],
+                    [3, "SD NEGERI TERLANGU 01", "3", "Kelas 3", "BAGAS ADITYA PUTRA", "MARYAM", "SUTRISNO", "2015-08-15", "Brebes", "3154567890", "3329091508150003", "L", 450000, "0123-01-098765-50-3", "88013154567890", "Tahap 1", "Belum Cair", "0123-01-098765-50-3", "Kepala SDN Terlangu 01", "Menunggu aktivasi rekening", "0345/P3KE/PIP/2026", "2026-01-15"]
                 ];
                 const wsData = [headers, ...sampleRows];
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
 
                 ws["!cols"] = [
-                    { wch: 6 }, { wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 24 },
-                    { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 24 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 16 }
+                    { wch: 6 }, { wch: 24 }, { wch: 8 }, { wch: 12 }, { wch: 26 },
+                    { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 14 },
+                    { wch: 20 }, { wch: 6 }, { wch: 12 }, { wch: 22 }, { wch: 18 },
+                    { wch: 12 }, { wch: 14 }, { wch: 24 }, { wch: 24 }, { wch: 30 },
+                    { wch: 22 }, { wch: 14 }
                 ];
                 XLSX.utils.book_append_sheet(wb, ws, "Penerima_SK_PIP_2026");
-                XLSX.writeFile(wb, "Format_Contoh_Penerima_SK_PIP_2026.xlsx");
+                XLSX.writeFile(wb, "data siswa SDN Terlangu 01 penerima pip tahun 2026.xlsx");
                 App.showToast("Format contoh penerima SK PIP berhasil diunduh!", "success");
             }
         } catch (err) {
@@ -680,7 +704,7 @@ const ModulPIP = {
     },
 
     // -------------------------------------------------------------------------
-    // 4. IMPOR EXCEL DENGAN SHEETJS (ON-DEMAND)
+    // 4. IMPOR EXCEL DENGAN SHEETJS (SESUAI DOKUMEN RESMI)
     // -------------------------------------------------------------------------
     triggerImport(jenis = "pengusulan") {
         const fileInput = document.getElementById(jenis === "pengusulan" ? "file-import-pip-usulan" : "file-import-pip-penerima") ||
@@ -713,36 +737,70 @@ const ModulPIP = {
                     norm[k.toLowerCase().replace(/[^a-z0-9]/g, "")] = String(row[k]).trim();
                 });
 
-                const nisn = norm.nisn || norm.nisnsiswa || norm.nomornisn || norm.pesertadidiknisn || "";
-                const nama = norm.nama || norm.namasiswa || norm.namapesertadidik || norm.namalengkap || norm.namalengkapsiswa || "";
-                const kelas = norm.kelas || norm.rombel || norm.tingkat || norm.rombelkelas || "1";
+                const nisn = norm.nisn || norm.validnisn || norm.nisnsiswa || norm.nomornisn || norm.pesertadidiknisn || "";
+                const nama = norm.namamurid || norm.namapd || norm.nama || norm.namasiswa || norm.namapesertadidik || norm.namalengkap || "";
+                const rawKelas = norm.kelas || norm.rombel || norm.tingkat || "1";
+                const cleanKelas = String(rawKelas).replace(/\D/g, "") || "1";
 
                 if (nisn && nama) {
                     if (jenis === "pengusulan") {
                         parsedRows.push({
                             nisn,
                             nama,
-                            kelas: kelas.replace(/\D/g, "") || kelas,
-                            namaFase: norm.namafase || norm.fase || (Number(kelas) <= 2 ? "Fase A" : (Number(kelas) <= 4 ? "Fase B" : "Fase C")),
-                            desil: Number(norm.desil || norm.desilkemiskinan || norm.kategoridesil || "3") || 3,
-                            skAtasNama: norm.skatasnama || norm.atasnama || `${nama} (Siswa)`,
-                            statusSK: norm.statussk || norm.keterangansk || (norm.masuksk && norm.masuksk.toLowerCase().includes("sudah") ? "Sudah SK" : "Belum Masuk SK"),
+                            nik: norm.nik || norm.validdukcapil || "",
+                            validDukcapil: norm.validdukcapil || "Valid",
+                            validNisn: norm.validnisn || "Valid",
+                            tempatLahir: norm.tempatlahir || "Brebes",
+                            tanggalLahir: norm.tanggallahir || "",
+                            umur: norm.umur || "",
+                            jk: norm.jeniskelamin || norm.jk || "L",
+                            namaIbu: norm.namaibu || norm.namaibukandung || "",
+                            pekerjaanIbu: norm.pekerjaanibu || "",
+                            namaAyah: norm.namaayah || "",
+                            pekerjaanAyah: norm.pekerjaanayah || "",
+                            jenjang: norm.jenjang || "SD",
+                            kelas: cleanKelas,
+                            rombel: norm.rombel || `Kelas ${cleanKelas}`,
+                            semesterId: norm.semesterid || "2025/2026-Genap",
+                            desil: Number(norm.desil || norm.desilkemiskinan || "3") || 3,
+                            bank: norm.bank || "BRI",
+                            statusTabungan: norm.statustabungan || "Memiliki Rekening",
+                            flagDrop: norm.flagdrop || "0",
+                            keteranganFlag: norm.keteranganflag || "-",
+                            faseId: norm.faseid || (Number(cleanKelas) <= 2 ? "A" : (Number(cleanKelas) <= 4 ? "B" : "C")),
+                            namaFase: norm.namafase || (Number(cleanKelas) <= 2 ? "Fase A" : (Number(cleanKelas) <= 4 ? "Fase B" : "Fase C")),
+                            role: norm.role || "Siswa",
+                            statusSK: norm.statussk || (norm.skatasnama ? "Sudah SK" : "Belum Masuk SK"),
+                            skAtasNama: norm.skatasnama || norm.atasnama || nama,
                             tahunUsulan: norm.tahunusulan || norm.tahun || "2026",
-                            catatanDapodik: norm.catatan || norm.catatandapodik || norm.keterangan || "Diimpor dari file pengusulan"
+                            catatanDapodik: norm.catatan || norm.catatandapodik || "Diimpor dari file pengusulan"
                         });
                     } else {
                         parsedRows.push({
                             nisn,
                             nama,
-                            kelas: kelas.replace(/\D/g, "") || kelas,
-                            nomorSK: norm.nomorsk || norm.nosk || norm.nomorskkemendikbud || "0345/P3KE/PIP/2026",
+                            nomenklatur: norm.nomenklatur || "SD NEGERI TERLANGU 01",
+                            kelas: cleanKelas,
+                            rombel: norm.rombel || `Kelas ${cleanKelas}`,
+                            namaIbu: norm.namaibukandung || norm.namaibu || "",
+                            namaAyah: norm.namaayah || "",
+                            tanggalLahir: norm.tanggallahir || "",
+                            tempatLahir: norm.tempatlahir || "Brebes",
+                            nik: norm.nik || "",
+                            jk: norm.jk || norm.jeniskelamin || "L",
+                            nomorSK: norm.nomorsk || norm.nosk || "0345/P3KE/PIP/2026",
+                            tanggalSK: norm.tanggalsk || "2026-01-15",
                             tahap: norm.tahap || norm.tahappenyaluran || "Tahap 1",
-                            nominal: Number(norm.nominal || norm.nominalbantuan || norm.dana || "450000") || 450000,
+                            nominal: Number(norm.nominal || norm.nominalbantuan || "450000") || 450000,
                             bankPenyalur: norm.bank || norm.bankpenyalur || "BRI",
-                            nomorRekening: norm.nomorrekening || norm.norek || norm.nomorrekeningsimpel || "-",
+                            nomorRekening: norm.norekening || norm.nomorrekening || norm.norek || "-",
+                            virtualAcc: norm.virtualacc || "-",
+                            noRekeningOrVirtualAcc: norm.norekeningvirtualacc || norm.norekening || norm.virtualacc || "-",
                             statusRekening: norm.statusrekening || "Sudah Aktivasi",
-                            statusCair: norm.statuscair || norm.statuspencairan || norm.status || "Belum Cair",
+                            statusCair: norm.statuscair || norm.statuspencairan || "Belum Cair",
                             tanggalCair: norm.tanggalcair || norm.tglcair || "-",
+                            namaPengusul: norm.namapengusul || "Kepala SDN Terlangu 01",
+                            confirmationText: norm.confirmationtext || "-",
                             tahunAnggaran: norm.tahunanggaran || norm.tahun || "2026"
                         });
                     }

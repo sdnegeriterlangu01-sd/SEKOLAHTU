@@ -12,21 +12,6 @@ const ModulAbsensi = {
 
     init() {
         this.populateKelasOptions();
-        if (Auth.role() === "guru") {
-            const u = Auth.user();
-            const tendik = DataStore.getTendik().find(t => 
-                (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
-                (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
-            );
-            if (tendik && tendik.jabatan) {
-                const m = tendik.jabatan.match(/kelas\s*(\d+)/i);
-                if (m) {
-                    this.selectedKelas = m[1];
-                    const selKelas = document.getElementById("absensi-kelas");
-                    if (selKelas) selKelas.value = m[1];
-                }
-            }
-        }
         this.bindEvents();
         this.setDefaultDate();
         this.renderPresensiInputTable();
@@ -38,6 +23,41 @@ const ModulAbsensi = {
         if (!sel) return;
         const rombels = DataStore.getRombels();
 
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+
+        // Kunci kelas jika akun guru telah dimapping kelasnya saat buat akun
+        if (role === "guru" && gInfo && gInfo.isGuruKelas) {
+            const cleanK = String(gInfo.kelas || "1").replace(/kelas\s*/i, "").trim();
+            const matchedRombel = rombels.find(r => {
+                const d1 = String(r).replace(/\D/g, "");
+                const d2 = cleanK.replace(/\D/g, "");
+                return (d1 && d2 && d1 === d2) || String(r).toLowerCase().includes(cleanK.toLowerCase());
+            }) || `Kelas ${cleanK}`;
+            const label = matchedRombel.toLowerCase().startsWith("kelas") ? matchedRombel : `Kelas ${matchedRombel}`;
+
+            sel.innerHTML = `<option value="${Sec.esc(matchedRombel)}" selected>${Sec.esc(label)}</option>`;
+            sel.value = matchedRombel;
+            sel.disabled = true;
+            this.selectedKelas = matchedRombel;
+            return;
+        } else if (role === "guru" && gInfo && gInfo.isGuruMapel && gInfo.kelas && gInfo.kelas !== "Semua") {
+            const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
+            const matchedRombel = rombels.find(r => {
+                const d1 = String(r).replace(/\D/g, "");
+                const d2 = cleanK.replace(/\D/g, "");
+                return (d1 && d2 && d1 === d2) || String(r).toLowerCase().includes(cleanK.toLowerCase());
+            }) || `Kelas ${cleanK}`;
+            const label = matchedRombel.toLowerCase().startsWith("kelas") ? matchedRombel : `Kelas ${matchedRombel}`;
+
+            sel.innerHTML = `<option value="${Sec.esc(matchedRombel)}" selected>${Sec.esc(label)}</option>`;
+            sel.value = matchedRombel;
+            sel.disabled = true;
+            this.selectedKelas = matchedRombel;
+            return;
+        }
+
+        sel.disabled = false;
         const curVal = sel.value || this.selectedKelas || "Semua";
         sel.innerHTML = `<option value="Semua">Semua Kelas</option>` +
             rombels.map(k => {

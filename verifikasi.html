@@ -218,6 +218,18 @@
             </div>
         </div>
 
+        <!-- Mode Loading: Sedang Memeriksa Cloud Database -->
+        <div id="box-verifikasi-loading" class="hidden bg-white rounded-3xl shadow-xl border border-blue-100 p-8 text-center animate-fade-in space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-blue-600 text-2xl shadow-inner">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="font-bold text-slate-800 text-base">Memeriksa Keabsahan Dokumen...</h3>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Menghubungkan ke Pangkalan Data Buku Register SIM-TAS-SD UPT Satuan Pendidikan...</p>
+            </div>
+            <div id="loading-nomor-badge" class="font-mono text-xs text-blue-800 bg-blue-50 px-3 py-1 rounded-full inline-block font-semibold"></div>
+        </div>
+
         <!-- Mode 3: Dokumen Tidak Ditemukan / Tidak Valid -->
         <div id="box-result-invalid" class="hidden bg-white rounded-3xl shadow-xl border border-rose-200 overflow-hidden animate-fade-in p-8 text-center space-y-4">
             <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
@@ -245,6 +257,7 @@
     </footer>
 
     <!-- Logic Script -->
+    <script src="assets/js/config.js"></script>
     <script src="assets/js/data.js"></script>
     <script>
         let html5QrCode = null;
@@ -262,6 +275,8 @@
         function renderVerifiedData(data) {
             document.getElementById("box-portal-landing").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
+            const loadBox = document.getElementById("box-verifikasi-loading");
+            if (loadBox) loadBox.classList.add("hidden");
             document.getElementById("box-result-verified").classList.remove("hidden");
 
             // Meta ID Card
@@ -386,6 +401,8 @@
         function renderInvalid(reason, searchedNomor) {
             document.getElementById("box-portal-landing").classList.add("hidden");
             document.getElementById("box-result-verified").classList.add("hidden");
+            const loadBox = document.getElementById("box-verifikasi-loading");
+            if (loadBox) loadBox.classList.add("hidden");
             document.getElementById("box-result-invalid").classList.remove("hidden");
             if (reason) {
                 document.getElementById("invalid-reason-text").textContent = reason;
@@ -402,6 +419,8 @@
             document.getElementById("box-portal-landing").classList.remove("hidden");
             document.getElementById("box-result-verified").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
+            const loadBox = document.getElementById("box-verifikasi-loading");
+            if (loadBox) loadBox.classList.add("hidden");
 
             // Bersihkan hash & search query dari baris URL tanpa reload browser
             if (window.history && window.history.replaceState) {
@@ -481,17 +500,62 @@
         }
 
         function processUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            
-            // 1. Cek query parameter "no" atau "nomor" (contoh: ?no=421.2%2F004%2FSD%2F2026)
+            const urlObj = new URL(window.location.href);
+            const params = urlObj.searchParams;
+
+            // 1. Ekstrak payload mandiri 'd' jika tersedia di parameter URL (misal dari scan QR surat fisik)
+            let embeddedPayload = null;
+            const rawPayload = params.get("d");
+            if (rawPayload) {
+                try {
+                    embeddedPayload = JSON.parse(decodeURIComponent(rawPayload));
+                } catch (e1) {
+                    try {
+                        embeddedPayload = JSON.parse(decodeURIComponent(escape(atob(rawPayload))));
+                    } catch (e2) {
+                        console.warn("Gagal parse payload d:", e2);
+                    }
+                }
+            }
+
+            // Jika ada payload mandiri dari cetak lembar surat, simpan/cache ke LocalStore HP
+            if (embeddedPayload) {
+                try {
+                    if (typeof DataStore !== "undefined") {
+                        DataStore.init();
+                        const existingList = DataStore.getSuratKeluar() || [];
+                        const pNo = embeddedPayload.no || embeddedPayload.nomorSurat || embeddedPayload.n;
+                        if (pNo && !existingList.some(s => (s.nomorSurat || s.nomorSuratManual) === pNo)) {
+                            existingList.unshift({
+                                id: embeddedPayload.id || `SK-${Date.now()}`,
+                                nomorSurat: pNo,
+                                kodeKlasifikasi: embeddedPayload.kodeKlasifikasi || "421.2",
+                                tanggalSurat: embeddedPayload.tgl || embeddedPayload.tanggalSurat,
+                                tujuan: embeddedPayload.nama ? `Orang Tua / Siswa (${embeddedPayload.nama})` : (embeddedPayload.tujuan || "-"),
+                                perihal: embeddedPayload.perihal || embeddedPayload.jenis || "Surat Keterangan Siswa",
+                                namaSiswa: embeddedPayload.nama,
+                                nisn: embeddedPayload.nisn,
+                                nik: embeddedPayload.nik,
+                                kelas: embeddedPayload.kelas,
+                                isSiswa: !!embeddedPayload.nama,
+                                penandatangan: embeddedPayload.kepsek || embeddedPayload.penandatangan
+                            });
+                            DataStore.saveSuratKeluar(existingList);
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Gagal cache payload ke DataStore:", err);
+                }
+            }
+
+            // 2. Ekstrak nomor registrasi surat
             let rawNomor = (params.get("no") || params.get("nomor") || "").trim();
-            
-            // 2. Cek fragment hash (#...)
+            if (!rawNomor && embeddedPayload) {
+                rawNomor = embeddedPayload.no || embeddedPayload.nomorSurat || embeddedPayload.n || "";
+            }
             if (!rawNomor && window.location.hash) {
                 rawNomor = window.location.hash.substring(1).trim();
             }
-
-            // 3. Fallback jika seluruh window.location.href memuat parameter ?no=
             if (!rawNomor && window.location.href.includes("?no=")) {
                 rawNomor = window.location.href;
             }
@@ -501,26 +565,8 @@
                 if (cleanNo) {
                     const inp = document.getElementById("input-search-nomor");
                     if (inp) inp.value = cleanNo;
-                    // Langsung otomatis jalankan pemeriksaan Buku Register Surat Keluar
-                    searchByNomorManual(cleanNo);
+                    searchByNomorManual(cleanNo, embeddedPayload);
                     return;
-                }
-            }
-
-            // Cek payload encoded 'd' (jika ada surat lama dengan payload mandiri)
-            const rawPayload = params.get("d");
-            if (rawPayload) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(rawPayload));
-                    if (parsed && (parsed.no || parsed.nomorSurat)) {
-                        const cleanDNo = extractCleanNomorSurat(parsed.no || parsed.nomorSurat);
-                        const inp = document.getElementById("input-search-nomor");
-                        if (inp) inp.value = cleanDNo;
-                        searchByNomorManual(cleanDNo);
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("Gagal parse payload d:", e);
                 }
             }
 
@@ -528,9 +574,11 @@
             document.getElementById("box-portal-landing").classList.remove("hidden");
             document.getElementById("box-result-verified").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
+            const loadBox = document.getElementById("box-verifikasi-loading");
+            if (loadBox) loadBox.classList.add("hidden");
         }
 
-        function searchByNomorManual(explicitNomor) {
+        async function searchByNomorManual(explicitNomor, optionalPayload) {
             let val = (typeof explicitNomor === "string" && explicitNomor.trim()) 
                 ? explicitNomor.trim() 
                 : (document.getElementById("input-search-nomor")?.value || "").trim();
@@ -569,7 +617,7 @@
             const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
             const targetNorm = norm(cleanVal);
 
-            // Pencarian HANYA memeriksa Buku Register Surat Keluar (DataStore.getSuratKeluar())
+            // 1. Periksa Buku Register Lokal (DataStore / SEED)
             const sk = suratKeluar.find(s => {
                 if (!s) return false;
                 const sNo = (s.nomorSurat || s.nomorSuratManual || s.noSurat || "").toLowerCase().trim();
@@ -587,7 +635,6 @@
                     if (foundTendik && foundTendik.nip) nipSigner = foundTendik.nip;
                 }
 
-                // Deteksi format surat keluar: apakah ditujukan untuk siswa (Surat Keterangan Siswa/PIP) atau kedinasan umum
                 const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-") ||
                     (sk.perihal && (sk.perihal.toLowerCase().includes("keterangan") || sk.perihal.toLowerCase().includes("aktif") || sk.perihal.toLowerCase().includes("pip")));
 
@@ -615,7 +662,147 @@
                 return;
             }
 
-            // Jika nomor tidak ada di Buku Register Surat Keluar
+            // 2. Periksa apakah ada payload mandiri dari cetak lembar surat
+            if (optionalPayload) {
+                const pNo = (optionalPayload.no || optionalPayload.nomorSurat || "").toLowerCase().trim();
+                if (!pNo || pNo === cleanVal || (targetNorm && norm(pNo) === targetNorm)) {
+                    renderVerifiedData({
+                        isSiswa: !!optionalPayload.nama,
+                        no: optionalPayload.no || val,
+                        nama: optionalPayload.nama,
+                        nisn: optionalPayload.nisn || "-",
+                        nik: optionalPayload.nik || "-",
+                        kelas: optionalPayload.kelas || "-",
+                        tujuan: optionalPayload.tujuan || `Orang Tua / Siswa (${optionalPayload.nama || "-"})`,
+                        perihal: optionalPayload.perihal || optionalPayload.jenis || "Surat Keterangan Siswa",
+                        kodeKlasifikasi: optionalPayload.kodeKlasifikasi || "421.2",
+                        pengonsep: "Staf TU (Sistem Mandiri)",
+                        penandatangan: optionalPayload.kepsek || config.namaKepalaSekolah,
+                        nipPenandatangan: optionalPayload.nipKepsek || config.nipKepalaSekolah,
+                        jenis: optionalPayload.jenis || "Surat Keterangan Resmi",
+                        tgl: optionalPayload.tgl || "Aktif",
+                        keterangan: "Tervalidasi via Tanda Keabsahan Digital QR Code",
+                        sekolah: optionalPayload.sekolah || config.namaSekolah || "SD NEGERI TERLANGU 01",
+                        npsn: optionalPayload.npsn || config.npsn || "20326713",
+                        kepsek: optionalPayload.kepsek || config.namaKepalaSekolah || "-",
+                        nipKepsek: optionalPayload.nipKepsek || config.nipKepalaSekolah || "-"
+                    });
+                    return;
+                }
+            }
+
+            // 3. Jika tidak ada di lokal (misal HP belum pernah buka data laptop), hubungi Pangkalan Data Cloud (Google Apps Script)
+            const loadingBox = document.getElementById("box-verifikasi-loading");
+            const loadingBadge = document.getElementById("loading-nomor-badge");
+            if (loadingBox) {
+                if (loadingBadge) loadingBadge.textContent = val;
+                document.getElementById("box-portal-landing").classList.add("hidden");
+                document.getElementById("box-result-verified").classList.add("hidden");
+                document.getElementById("box-result-invalid").classList.add("hidden");
+                loadingBox.classList.remove("hidden");
+                window.scrollTo({ top: loadingBox.offsetTop - 80, behavior: "smooth" });
+            }
+
+            const gasUrl = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) ||
+                (config && config.gasApiUrl) ||
+                "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec";
+
+            if (gasUrl && gasUrl.startsWith("http")) {
+                try {
+                    // Coba method POST verifySuratKeluar (portal publik tanpa token staf TU)
+                    const res = await fetch(gasUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({
+                            action: "verifySuratKeluar",
+                            payload: { nomorSurat: val }
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && json.success && json.verified && json.data) {
+                            const cloudSk = json.data;
+                            const cloudCfg = json.config || config || {};
+
+                            // Simpan ke local cache DataStore di HP agar pencarian berikutnya instan
+                            try {
+                                if (typeof DataStore !== "undefined") {
+                                    const currList = DataStore.getSuratKeluar() || [];
+                                    if (!currList.some(s => (s.nomorSurat || s.nomorSuratManual) === cloudSk.nomorSurat)) {
+                                        currList.unshift(cloudSk);
+                                        DataStore.saveSuratKeluar(currList);
+                                    }
+                                }
+                            } catch (e) {}
+
+                            const isSiswa = !!cloudSk.isSiswa || (cloudSk.nisn && cloudSk.nisn !== "-") ||
+                                (cloudSk.perihal && (cloudSk.perihal.toLowerCase().includes("keterangan") || cloudSk.perihal.toLowerCase().includes("aktif") || cloudSk.perihal.toLowerCase().includes("pip")));
+
+                            renderVerifiedData({
+                                isSiswa: isSiswa,
+                                no: cloudSk.nomorSurat || cloudSk.nomorSuratManual || val,
+                                nama: isSiswa ? (cloudSk.namaSiswa || cloudSk.tujuan) : undefined,
+                                nisn: cloudSk.nisn || "-",
+                                nik: cloudSk.nik || "-",
+                                kelas: cloudSk.kelas || "-",
+                                tujuan: cloudSk.tujuan || "-",
+                                perihal: cloudSk.perihal || "Surat Keluar Kedinasan",
+                                kodeKlasifikasi: cloudSk.kodeKlasifikasi || "",
+                                pengonsep: cloudSk.pengonsep || "",
+                                penandatangan: cloudSk.penandatangan || cloudCfg.namaKepalaSekolah,
+                                nipPenandatangan: cloudCfg.nipKepalaSekolah || "-",
+                                jenis: cloudSk.perihal || "Surat Keluar Kedinasan",
+                                tgl: cloudSk.tanggalSurat || "Aktif",
+                                keterangan: cloudSk.keterangan || "",
+                                sekolah: cloudCfg.namaSekolah || "SD NEGERI TERLANGU 01",
+                                npsn: cloudCfg.npsn || "20326713",
+                                kepsek: cloudCfg.namaKepalaSekolah || "-",
+                                nipKepsek: cloudCfg.nipKepalaSekolah || "-"
+                            });
+                            return;
+                        } else if (json && json.message && json.message.includes("Aksi tidak dikenali")) {
+                            // Deployment GAS versi sebelumnya: coba getSuratKeluar
+                            const listRes = await fetch(gasUrl, {
+                                method: "POST",
+                                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                                body: JSON.stringify({ action: "getSuratKeluar" })
+                            });
+                            if (listRes.ok) {
+                                const listJson = await listRes.json();
+                                if (listJson && listJson.success && Array.isArray(listJson.data)) {
+                                    const match = listJson.data.find(s => {
+                                        const sNo = (s.nomorSurat || s.nomorSuratManual || "").toLowerCase().trim();
+                                        return sNo === cleanVal || (targetNorm && norm(sNo) === targetNorm);
+                                    });
+                                    if (match) {
+                                        renderVerifiedData({
+                                            isSiswa: !!match.isSiswa || (match.perihal && match.perihal.toLowerCase().includes("keterangan")),
+                                            no: match.nomorSurat || val,
+                                            tujuan: match.tujuan || "-",
+                                            perihal: match.perihal || "Surat Keluar Kedinasan",
+                                            penandatangan: match.penandatangan || config.namaKepalaSekolah,
+                                            nipPenandatangan: config.nipKepalaSekolah || "-",
+                                            jenis: match.perihal || "Surat Keluar Kedinasan",
+                                            tgl: match.tanggalSurat || "Aktif",
+                                            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+                                            npsn: config.npsn || "20326713",
+                                            kepsek: config.namaKepalaSekolah || "-",
+                                            nipKepsek: config.nipKepalaSekolah || "-"
+                                        });
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.warn("[Verifikasi] Gagal koneksi cloud:", fetchErr);
+                }
+            }
+
+            // Jika tidak ditemukan di lokal, tidak ada payload QR, dan tidak ditemukan di Cloud
+            if (loadingBox) loadingBox.classList.add("hidden");
             renderInvalid(`Dokumen dengan nomor registrasi "${val}" tidak terdaftar atau tidak ditemukan pada Buku Register Surat Keluar SIM-TAS-SD.`, val);
         }
 
@@ -637,6 +824,17 @@
                         // Ambil dan bersihkan nomor surat dari hasil scan QR Code
                         const cleanNo = extractCleanNomorSurat(decodedText);
                         
+                        // Ekstrak payload mandiri jika tersemat di QR
+                        let scanPayload = null;
+                        if (decodedText && (decodedText.includes("?d=") || decodedText.includes("&d="))) {
+                            try {
+                                const m = decodedText.match(/[?&]d=([^&#]+)/i);
+                                if (m && m[1]) {
+                                    scanPayload = JSON.parse(decodeURIComponent(m[1]));
+                                }
+                            } catch (e) {}
+                        }
+
                         // Masukkan nomor surat bersih ke input box pencarian
                         const inp = document.getElementById("input-search-nomor");
                         if (inp) {
@@ -645,7 +843,7 @@
                         }
 
                         // Langsung otomatis cek keabsahan surat keluar ke Buku Register
-                        searchByNomorManual(cleanNo);
+                        searchByNomorManual(cleanNo, scanPayload);
                     },
                     (errorMessage) => {
                         // ignore scan frame error

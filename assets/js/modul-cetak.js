@@ -277,8 +277,24 @@ const ModulCetak = {
             baseUrl = PUBLIC_ONLINE_URL;
         }
 
-        // REKAYASA ULANG QR CODE: Menggunakan nomor surat saja tanpa nisn (sesuai instruksi revisi)
-        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}`;
+        // Payload ringkas verifikasi mandiri (agar smartphone/perangkat lain yang belum tersinkron atau mode demo tetap dapat memvalidasi seketika saat scan)
+        const compactPayload = encodeURIComponent(JSON.stringify({
+            no: this.generatedNomorSurat,
+            nama: student.nama,
+            nisn: student.nisn,
+            nik: student.nik || "-",
+            kelas: student.kelas,
+            perihal: `${judulSurat} an. ${student.nama}`,
+            jenis: judulSurat,
+            tgl: new Date().toISOString().split('T')[0],
+            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+            npsn: config.npsn || "20326713",
+            kepsek: config.namaKepalaSekolah,
+            nipKepsek: config.nipKepalaSekolah
+        }));
+
+        // REKAYASA ULANG QR CODE: Memuat parameter nomor surat murni & payload verifikasi cadangan
+        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}&d=${compactPayload}`;
 
         // Format alamat dan kontak kop surat
         const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";

@@ -75,9 +75,23 @@ const TAB_PIP_PENERIMA = "DB_PIP_Penerima";
 const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
 
 /**
- * Handle GET Requests (Health Check & Direct Info)
+ * Handle GET Requests (Health Check & Direct Info & Verifikasi Publik)
  */
 function doGet(e) {
+  const params = (e && e.parameter) ? e.parameter : {};
+  if (params.action === "verifySuratKeluar" || params.no) {
+    const no = params.no || params.nomorSurat;
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const result = handleVerifySuratKeluar(ss, { nomorSurat: no });
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  if (params.action === "getSuratKeluar") {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const result = handleGetSuratKeluar(ss);
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
@@ -108,8 +122,13 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify(responseData)).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Aksi portal publik (permohonan mandiri oleh orang tua siswa) tidak memerlukan token login staf TU
-    const isPublicAction = (action === "submitPermohonanSurat" || action === "trackPermohonanSurat");
+    // Aksi portal publik (permohonan mandiri & verifikasi keabsahan surat resmi) tidak memerlukan token login staf TU
+    const isPublicAction = (
+      action === "submitPermohonanSurat" || 
+      action === "trackPermohonanSurat" || 
+      action === "verifySuratKeluar" || 
+      action === "getSuratKeluar"
+    );
 
     // Verifikasi Token Supabase jika Script Properties disetel & bukan aksi publik
     if (!isPublicAction) {
@@ -170,6 +189,10 @@ function doPost(e) {
         break;
 
       // ==================== MODUL 2: PENOMORAN & SURAT (SRIKANDI) ====================
+      case "verifySuratKeluar":
+        responseData = handleVerifySuratKeluar(ss, payload);
+        break;
+
       case "getSuratKeluar":
         responseData = handleGetSuratKeluar(ss);
         break;
@@ -859,6 +882,84 @@ function handleSaveQrFiles(payload) {
  * HANDLERS: MODUL 2 - PENOMORAN & PENGARSIPAN SURAT (SRIKANDI)
  * ==========================================================================
  */
+
+/**
+ * Verifikasi Keabsahan Surat Keluar (Publik tanpa login TU)
+ */
+function handleVerifySuratKeluar(ss, payload) {
+  const targetNo = String(payload.nomorSurat || "").trim();
+  if (!targetNo) {
+    return { success: false, verified: false, message: "Nomor registrasi surat tidak disertakan." };
+  }
+
+  const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return { success: false, verified: false, message: "Buku Register Surat Keluar masih kosong di server." };
+  }
+
+  const cleanTarget = targetNo.toLowerCase().trim();
+  const norm = function(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); };
+  const targetNorm = norm(cleanTarget);
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  let found = null;
+
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    const sId = String(row[0] || "").trim();
+    const sNo = String(row[1] || "").trim();
+    
+    if (sNo.toLowerCase() === cleanTarget || sId.toLowerCase() === cleanTarget ||
+        (targetNorm && norm(sNo) === targetNorm) || (targetNorm && norm(sId) === targetNorm)) {
+      found = {
+        id: sId,
+        nomorSurat: sNo,
+        kodeKlasifikasi: String(row[2] || ""),
+        noUrut: parseInt(row[3], 10),
+        tahun: parseInt(row[4], 10),
+        tanggalSurat: row[5] instanceof Date ? Utilities.formatDate(row[5], Session.getScriptTimeZone(), "yyyy-MM-dd") : String(row[5]),
+        tujuan: String(row[6] || ""),
+        perihal: String(row[7] || ""),
+        pengonsep: String(row[8] || ""),
+        penandatangan: String(row[9] || ""),
+        keterangan: String(row[10] || ""),
+        fileDriveUrl: String(row[11] || "")
+      };
+      break;
+    }
+  }
+
+  if (!found) {
+    return { success: true, verified: false, message: "Nomor registrasi surat tidak ditemukan di Buku Register Surat Keluar." };
+  }
+
+  // Profil sekolah resmi untuk stempel validasi
+  let configSekolah = {
+    namaSekolah: "SD NEGERI TERLANGU 01",
+    npsn: "20326713",
+    namaKepalaSekolah: "Aisah Suciati, S.Pd.SD., M.Pd.",
+    nipKepalaSekolah: "19690808 199201 2 002"
+  };
+  try {
+    const cfgSheet = ss.getSheetByName(TAB_CONFIG);
+    if (cfgSheet && cfgSheet.getLastRow() > 1) {
+      const cfgVals = cfgSheet.getRange(2, 1, cfgSheet.getLastRow() - 1, 2).getValues();
+      cfgVals.forEach(function(r) {
+        const k = String(r[0]).trim();
+        const v = String(r[1]).trim();
+        if (k && v) configSekolah[k] = v;
+      });
+    }
+  } catch (err) {}
+
+  return {
+    success: true,
+    verified: true,
+    data: found,
+    config: configSekolah
+  };
+}
+
 function handleGetSuratKeluar(ss) {
   const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
   if (!sheet || sheet.getLastRow() <= 1) return { success: true, data: [] };

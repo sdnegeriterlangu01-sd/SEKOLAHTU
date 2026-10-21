@@ -135,6 +135,34 @@ Akun uji coba demo:
 
 ## 5. Catatan Rilis & Riwayat Versi (Release Notes / Version History)
 
+### 🚀 Versi 2.4.0 (21 Oktober 2026)
+* **Perbaikan Nomor WhatsApp Pemohon pada Layanan Mandiri Permohonan Surat Online:**
+  - Menyelaraskan dual alias parameter `namaPemohon` / `namaOrtu` dan `noWhatsApp` / `hpOrtu` / `noHp` pada form pengajuan mandiri (`permohonan.html`), tabel agenda tata usaha (`assets/js/modul-surat.js`), API gateway (`assets/js/api.js`), dan backend Apps Script (`backend/Code.gs`).
+  - Mengatasi kendala nomor WhatsApp orang tua tampil tanda strip (`-`) pada tabel dashboard permohonan surat tata usaha, sehingga staf TU kini dapat langsung menghubungi nomor WhatsApp pemohon atau mengirimkan notifikasi surat selesai dengan satu klik (`sendWhatsAppPermohonan`).
+* **Format Contoh Excel & Tombol Impor Terintegrasi pada Modul PIP Kemendikbud:**
+  - Menyediakan fitur **Unduh Format Contoh (Excel)** pada tab **Data Pengusulan (Desil)** dan tab **Siswa Penerima SK PIP** berbasis SheetJS (`.xlsx`) lengkap dengan struktur kolom baku Puslapdik Kemendikbud 2026 dan baris data sampel riil.
+  - Menyediakan tombol **Impor Data Excel** langsung pada header masing-masing tab yang terhubung dengan parser cerdas pendeteksi alias kolom otomatis (NISN, Nama Siswa, Kelas, Desil Kemiskinan, Status SK, Nomor SK, Nomor Rekening SimPel BRI, dan Status Pencairan).
+  - Menyelaraskan ID tabel dan penghitung siswa (`table-pip-pengusulan-body` dan `table-pip-penerima-body`) dengan header kolom yang presisi dan informatif.
+* **Perbaikan Penyimpanan & Preset Kurikulum Merdeka Modul Jadwal Pelajaran:**
+  - Memperbaiki bug grid jadwal pelajaran kosong setelah klik tombol *"Preset Merdeka"* atau simpan manual slot jadwal.
+  - Mengatasi ketidakcocokan identifikasi kelas (antara format `"Kelas 1"` dan angka `"1"`), menyelaraskan field dual alias (`kelas` dan `rombel`, `guru` dan `namaGuru`), serta melakukan update instan ke `DataStore.saveJadwalAll` sebelum dan sesudah sinkronisasi API/Cloud Apps Script.
+  - Mengoptimalkan pembagian mata pelajaran Kurikulum Merdeka berdasarkan jenjang kelas (Fase A/B/C: IPAS otomatis aktif untuk kelas 3 ke atas).
+* **Dynamic Rombel Dropdown pada Modul Jadwal Pelajaran:**
+  - Mengganti daftar kelas statis (*hardcoded*) pada dropdown selektor kelas jadwal (`#jadwal-select-kelas`) dan modal tambah/edit slot (`#jadwal-form-rombel`) dengan data dinamis yang ditarik langsung dari master rombel siswa aktif (`DataStore.getRombels()`).
+  - Tetap menyertakan penanda fase kurikulum `(Fase A/B/C)` di samping nama kelas (contoh: *Kelas 1 (Fase A)*, *Kelas 4 (Fase B)*, *Kelas 6 (Fase C)*).
+* **Dynamic Rombel Dropdown pada Modul PIP Tab Data Penerima SK:**
+  - Mengganti pilihan kelas statis pada filter pencarian penerima SK PIP (`#pip-filter-kelas-penerima`) dengan data dinamis dari master rombel siswa aktif (`DataStore.getRombels()`).
+  - Mendukung filter pencocokan nama kelas fleksibel baik berupa angka maupun format teks dengan nama rombel.
+* **Sinkronisasi Kalender Hari Libur Nasional, Hari Minggu, & Cuti Bersama:**
+  - Mengintegrasikan data hari libur nasional resmi, hari Minggu, dan cuti bersama bersumber langsung dari `https://husniadil.com/calendar/{Tahun}/` (SKB 3 Menteri resmi 2025, 2026, dan 2027) ke dalam master database sekolah (`DEFAULT_SCHOOL_CONFIG.hariLibur`).
+  - Mengaktifkan pendeteksian hari libur pada modul absensi siswa (`ModulAbsensi.renderPresensiInputTable`) berupa banner penanda hari libur resmi, serta pada matriks presensi tendik (`ModulPresensi.libur()` dan `hariBulan()`).
+  - Menyediakan fungsi sinkronisasi kalender live `syncKalenderHusniAdil(year)` dan endpoint GAS `getCalendarHolidays`.
+* **Optimasi QR Code Dokumen & Portal Verifikasi Keabsahan Surat:**
+  - Memperbarui tautan verifikasi pada QR Code lembar cetak surat keluar (`assets/js/modul-cetak.js`) menjadi hanya menyertakan nomor surat resmi (`verifikasi.html?no=...`) tanpa parameter NISN (`&nisn=...`).
+  - Mengoptimalkan logika pencarian verifikasi (`verifikasi.html`) dengan normalisasi alfanumerik (`norm(s)`), pencarian lintas database agenda surat keluar (`DB_SuratKeluar`), buku register cetak (`SEED_SURAT_KELUAR`), dan permohonan surat terbit (`DB_PermohonanSurat`), sehingga pemindaian barcode fisik melalui kamera smartphone / Google Lens selalu valid dan presisi.
+* **Pembaruan Nomor Versi Aplikasi (v2.4.0):**
+  - Memperbarui seluruh penanda versi pada seluruh berkas sistem: `index.html` (sidebar badge & footer), `assets/js/app.js`, `assets/js/modul-jadwal.js`, `assets/js/modul-pip.js`, `backend/Code.gs`, `backend/Panduan_Deploy_GAS.md`, dan `README.md`.
+
 ### 🚀 Versi 2.3.0 (21 Oktober 2026)
 * **Perbaikan Navigasi Seluruh Sub-Tab (Jadwal, PIP, Surat SRIKANDI):**
   - **Modul Jadwal Pelajaran:** Pengaktifan tombol preset Kurikulum Merdeka, cetak A4 Landscape kedinasan, kartu saku (pocket card), serta normalisasi modal editor slot jadwal.

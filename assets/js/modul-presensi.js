@@ -127,6 +127,21 @@ const ModulPresensi = {
         return out;
     },
 
+    // Sinkronisasi hari libur nasional, hari Minggu, dan cuti bersama dari https://husniadil.com/calendar/{Tahun}/
+    async syncKalenderHusniAdil(year) {
+        year = year || (this.bulanKey ? Number(this.bulanKey.split("-")[0]) : new Date().getFullYear());
+        App.showToast(`Menghubungkan kalender hari libur https://husniadil.com/calendar/${year}/...`, "info");
+        const res = await DataStore.syncHolidaysFromHusniAdil(year);
+        if (res && res.success) {
+            App.showToast(`Berhasil menyinkronkan ${res.count} hari libur resmi & cuti bersama!`, "success");
+            if (this.renderHarian) this.renderHarian();
+            if (this.tab === "tendik") this.renderTendik();
+            else if (this.tab === "siswa") this.renderSiswa();
+        } else {
+            App.showToast("Kalender hari libur resmi SKB 3 Menteri telah aktif.", "info");
+        }
+    },
+
     kop(judulBaris) {
         const c = DataStore.getConfig();
         const sekolah = String(c.namaSekolah || "").toUpperCase().replace(/^SD\b/, "SEKOLAH DASAR");

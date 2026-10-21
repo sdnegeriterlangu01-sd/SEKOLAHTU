@@ -1,5 +1,5 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.3.0
+## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.4.0
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.
 

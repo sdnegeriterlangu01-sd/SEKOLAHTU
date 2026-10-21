@@ -95,6 +95,22 @@ const ModulAbsensi = {
         }
     },
 
+    // Deteksi hari libur nasional, hari Minggu, dan cuti bersama (Sumber: husniadil.com/calendar/{Tahun}/)
+    getHolidayInfo(dateStr) {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        const isMinggu = d.getDay() === 0;
+        const holidays = DataStore.getConfig().hariLibur || [];
+        const match = holidays.find(h => h.tanggal === dateStr);
+        if (match) {
+            return { isHoliday: true, name: match.ket, type: "Nasional / Cuti Bersama", source: "husniadil.com" };
+        }
+        if (isMinggu) {
+            return { isHoliday: true, name: "Hari Minggu (Akhir Pekan)", type: "Minggu", source: "Kalender" };
+        }
+        return null;
+    },
+
     getListTarget() {
         if (this.selectedKategori === "Tendik") {
             let tendikList = DataStore.getTendik();
@@ -160,6 +176,7 @@ const ModulAbsensi = {
         const existingAbsensi = DataStore.getAbsensi().filter(a => 
             a.tanggal === this.selectedDate && a.kategori === this.selectedKategori
         );
+        const holidayInfo = this.getHolidayInfo(this.selectedDate);
 
         if (targets.length === 0) {
             container.innerHTML = `
@@ -172,7 +189,23 @@ const ModulAbsensi = {
             return;
         }
 
-        container.innerHTML = targets.map((t, index) => {
+        const holidayRow = holidayInfo ? `
+            <tr class="bg-rose-50/80 border-b-2 border-rose-200">
+                <td colspan="5" class="p-3">
+                    <div class="flex items-center justify-between text-xs text-rose-900">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-xmark text-rose-600 text-sm"></i>
+                            <span>Tanggal <strong>${this.selectedDate}</strong> bertepatan dengan <strong>${holidayInfo.name}</strong> (${holidayInfo.type}).</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-200 text-rose-800 uppercase tracking-wider">
+                            Hari Libur
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        ` : '';
+
+        const rowsHtml = targets.map((t, index) => {
             const recorded = existingAbsensi.find(a => a.nisnNip === t.idTarget);
             const currentStatus = recorded ? recorded.status : "Hadir";
             const keterangan = recorded ? recorded.keterangan : "";
@@ -214,6 +247,8 @@ const ModulAbsensi = {
                 </tr>
             `;
         }).join("");
+
+        container.innerHTML = holidayRow + rowsHtml;
     },
 
     updateRadioStyle(radioInput) {

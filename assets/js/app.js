@@ -145,9 +145,15 @@ const App = {
         } else if (route === "berkas") {
             ModulBerkas.renderTable();
         } else if (route === "jadwal") {
-            if (window.ModulJadwal) ModulJadwal.renderGrid();
+            if (window.ModulJadwal) {
+                ModulJadwal.renderKelasSelector();
+                ModulJadwal.renderGrid();
+            }
         } else if (route === "pip") {
-            if (window.ModulPIP) (ModulPIP.renderActiveTab ? ModulPIP.renderActiveTab() : ModulPIP.renderTab());
+            if (window.ModulPIP) {
+                ModulPIP.renderKelasFilter();
+                (ModulPIP.renderActiveTab ? ModulPIP.renderActiveTab() : ModulPIP.renderTab());
+            }
         } else if (route === "surat") {
             ModulSurat.renderSubTab();
         } else if (route === "cetak") {
@@ -174,7 +180,7 @@ const App = {
         }
     },
 
-    VERSION: "2.3.0",
+    VERSION: "2.4.0",
 
     updateDashboardStats() {
         const students = DataStore.getSiswa();

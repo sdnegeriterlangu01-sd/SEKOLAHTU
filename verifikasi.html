@@ -238,7 +238,7 @@
 
     <!-- Footer -->
     <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white">
-        &copy; 2026 SIM-TAS-SD • SD Negeri Terlangu 01 Brebes • Sistem Manajemen Tata Usaha Terpadu
+        &copy; 2026 SIM-TAS-SD v2.4.0 • SD Negeri Terlangu 01 Brebes • Sistem Manajemen Tata Usaha Terpadu
     </footer>
 
     <!-- Logic Script -->
@@ -406,7 +406,7 @@
                 }
             }
 
-            // 2. Cek query parameter individual
+            // 2. Cek query parameter individual (nomor surat saja)
             const nomor = (params.get("no") || params.get("nomor") || "").trim();
             const nisn = (params.get("nisn") || "").trim();
             const nama = (params.get("nama") || "").trim();
@@ -427,13 +427,48 @@
                     }
                 } catch (e) {}
 
-                const cleanNomor = decodeURIComponent(nomor).toLowerCase().trim();
+                if (!suratKeluar.length && typeof SEED_SURAT_KELUAR !== "undefined") {
+                    suratKeluar = SEED_SURAT_KELUAR;
+                }
+
+                let cleanNomor = nomor.toLowerCase().trim();
+                try { cleanNomor = decodeURIComponent(cleanNomor).toLowerCase().trim(); } catch (e) {}
+
+                const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                const targetNorm = norm(cleanNomor);
+
                 const sk = suratKeluar.find(s => {
                     if (!s) return false;
                     const sNo = (s.nomorSurat || "").toLowerCase().trim();
                     const sId = (s.id || "").toLowerCase().trim();
-                    return sNo === cleanNomor || sId === cleanNomor || sNo.replace(/\s+/g, '') === cleanNomor.replace(/\s+/g, '');
+                    return sNo === cleanNomor || sId === cleanNomor ||
+                        sNo.replace(/\s+/g, '') === cleanNomor.replace(/\s+/g, '') ||
+                        (targetNorm && norm(sNo) === targetNorm) ||
+                        (targetNorm && norm(sId) === targetNorm);
                 });
+
+                // Fallback cek permohonan surat jika nomor terbit berasal dari permohonan
+                if (!sk && targetNorm) {
+                    const permohonanList = (typeof DataStore !== "undefined" && DataStore.getPermohonanSurat) ? DataStore.getPermohonanSurat() : [];
+                    const pFound = permohonanList.find(p => p.nomorSuratTerbit && norm(p.nomorSuratTerbit) === targetNorm);
+                    if (pFound) {
+                        renderVerifiedData({
+                            isSiswa: true,
+                            no: pFound.nomorSuratTerbit,
+                            nama: pFound.nama,
+                            nisn: pFound.nisn,
+                            nik: "-",
+                            kelas: pFound.kelas,
+                            jenis: pFound.jenisSurat,
+                            tgl: pFound.tanggalMasuk || (typeof Util !== "undefined" ? Util.today() : "Aktif"),
+                            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
+                            npsn: config.npsn || "20326713",
+                            kepsek: config.namaKepalaSekolah || "-",
+                            nipKepsek: config.nipKepalaSekolah || "-"
+                        });
+                        return;
+                    }
+                }
 
                 const student = students.find(s => 
                     (nisn && s.nisn === nisn) || 
@@ -524,12 +559,22 @@
                 }
             } catch (e) {}
 
+            if (!suratKeluar.length && typeof SEED_SURAT_KELUAR !== "undefined") {
+                suratKeluar = SEED_SURAT_KELUAR;
+            }
+
             const cleanVal = val.toLowerCase().trim();
+            const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            const targetNorm = norm(cleanVal);
+
             const sk = suratKeluar.find(s => {
                 if (!s) return false;
                 const sNo = (s.nomorSurat || "").toLowerCase().trim();
                 const sId = (s.id || "").toLowerCase().trim();
-                return sNo === cleanVal || sId === cleanVal || sNo.replace(/\s+/g, '') === cleanVal.replace(/\s+/g, '');
+                return sNo === cleanVal || sId === cleanVal ||
+                    sNo.replace(/\s+/g, '') === cleanVal.replace(/\s+/g, '') ||
+                    (targetNorm && norm(sNo) === targetNorm) ||
+                    (targetNorm && norm(sId) === targetNorm);
             });
             const student = students.find(s => s.nisn === val || (s.nama && s.nama.toLowerCase() === cleanVal));
 

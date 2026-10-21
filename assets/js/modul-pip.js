@@ -1,12 +1,13 @@
 /* ==========================================================================
    SIM-TAS-SD: MODUL PROGRAM INDONESIA PINTAR (PIP KEMENDIKBUD)
-   Versi 2.3.0 - SDN Terlangu 01 Brebes
+   Versi 2.4.0 - SDN Terlangu 01 Brebes
    Fitur:
    1. Dasbor & Visualisasi Analitik Desil Kemiskinan (1-4, 5-7, 8-10) & Status SK.
-   2. Data Pengusulan PIP (Format Dapodik/Puslapdik 2026) + Impor Excel.
-   3. Data Penerima PIP (Format SK Puslapdik Kemendikbud 2026) + Impor Excel + Toggle Cair.
+   2. Data Pengusulan PIP (Format Dapodik/Puslapdik 2026) + Unduh Format & Impor Excel.
+   3. Data Penerima PIP (Format SK Puslapdik Kemendikbud 2026) + Unduh Format & Impor Excel + Toggle Cair.
    4. Integrasi 1-Klik Cetak Rekomendasi Pencairan BRI & Aktif Belajar PIP.
    5. Smart Audit PIP x Dapodik (Inovasi 3) & Poverty Vulnerability Radar (Inovasi 4).
+   6. Dynamic Rombel Dropdown dari Data Siswa Aktif.
    ========================================================================== */
 
 const ModulPIP = {
@@ -26,8 +27,40 @@ const ModulPIP = {
             this.filterKelas = String(gInfo.kelas).replace(/\D/g, "") || "1";
         }
 
+        this.renderKelasFilter();
         this.bindEvents();
         this.renderActiveTab();
+    },
+
+    // Inovasi & Item 5: Pilihan kelas otomatis mengambil data dari rombel siswa
+    renderKelasFilter() {
+        const sel = document.getElementById("pip-filter-kelas-penerima");
+        if (!sel) return;
+
+        const rombels = DataStore.getRombels ? DataStore.getRombels() : [];
+        const currentVal = this.filterKelas || "Semua";
+
+        let optionsHtml = `<option value="Semua" ${currentVal === "Semua" ? "selected" : ""}>Semua Tingkat Kelas</option>`;
+
+        if (rombels && rombels.length > 0) {
+            rombels.forEach(r => {
+                const cleanNum = String(r).replace(/\D/g, "");
+                let fase = "Fase A";
+                const n = parseInt(cleanNum, 10);
+                if (n === 3 || n === 4) fase = "Fase B";
+                else if (n >= 5) fase = "Fase C";
+
+                const isSelected = String(currentVal) === String(r) || String(currentVal) === cleanNum;
+                optionsHtml += `<option value="${Sec.esc(r)}" ${isSelected ? "selected" : ""}>${Sec.esc(r)} (${fase})</option>`;
+            });
+        } else {
+            for (let i = 1; i <= 6; i++) {
+                const isSelected = String(currentVal) === String(i);
+                optionsHtml += `<option value="${i}" ${isSelected ? "selected" : ""}>Kelas ${i}</option>`;
+            }
+        }
+
+        sel.innerHTML = optionsHtml;
     },
 
     bindEvents() {
@@ -38,6 +71,66 @@ const ModulPIP = {
                 if (tab) this.switchTab(tab);
             });
         });
+
+        // Search pengusulan
+        const searchUsul = document.getElementById("pip-search-pengusulan");
+        if (searchUsul) {
+            searchUsul.oninput = (e) => {
+                this.searchQuery = e.target.value.trim();
+                this.renderPengusulan();
+            };
+        }
+
+        // Filter Desil
+        const selDesil = document.getElementById("pip-filter-desil");
+        if (selDesil) {
+            selDesil.onchange = (e) => {
+                this.filterDesil = e.target.value;
+                this.renderPengusulan();
+            };
+        }
+
+        // Filter Layak / SK
+        const selLayak = document.getElementById("pip-filter-layak");
+        if (selLayak) {
+            selLayak.onchange = (e) => {
+                const v = e.target.value;
+                if (v === "Layak") this.filterStatusSK = "Sudah";
+                else if (v === "Perlu Verifikasi") this.filterStatusSK = "Belum";
+                else this.filterStatusSK = "Semua";
+                this.renderPengusulan();
+            };
+        }
+
+        // Search penerima
+        const searchPen = document.getElementById("pip-search-penerima");
+        if (searchPen) {
+            searchPen.oninput = (e) => {
+                this.searchQuery = e.target.value.trim();
+                this.renderPenerima();
+            };
+        }
+
+        // Filter Kelas Penerima (Dynamic)
+        const selKelas = document.getElementById("pip-filter-kelas-penerima");
+        if (selKelas) {
+            selKelas.onchange = (e) => {
+                this.filterKelas = e.target.value;
+                this.renderPenerima();
+            };
+        }
+
+        // Filter Status Pencairan
+        const selCair = document.getElementById("pip-filter-cair");
+        if (selCair) {
+            selCair.onchange = (e) => {
+                const v = e.target.value;
+                if (v.includes("Sudah")) this.filterStatusCair = "Sudah";
+                else if (v.includes("Belum")) this.filterStatusCair = "Belum";
+                else this.filterStatusCair = "Semua";
+                this.renderPenerima();
+            };
+        }
     },
 
     switchTab(tab) {
@@ -291,7 +384,7 @@ const ModulPIP = {
     // 2. DATA PENGUSULAN PIP
     // -------------------------------------------------------------------------
     renderPengusulan() {
-        const tbody = document.getElementById("pip-pengusulan-tbody");
+        const tbody = document.getElementById("pip-pengusulan-tbody") || document.getElementById("table-pip-pengusulan-body");
         if (!tbody) return;
 
         const role = Auth.role();
@@ -309,8 +402,14 @@ const ModulPIP = {
         const q = (this.searchQuery || "").toLowerCase();
         data = data.filter(p => {
             const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q);
-            const matchK = this.filterKelas === "Semua" || String(p.kelas).includes(this.filterKelas);
-            const matchD = this.filterDesil === "Semua" || String(p.desil) === this.filterDesil;
+            const matchK = this.filterKelas === "Semua" || 
+                String(p.kelas).toLowerCase().trim() === String(this.filterKelas).toLowerCase().trim() ||
+                String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
+            const matchD = this.filterDesil === "Semua" || 
+                (this.filterDesil === "1-4" ? Number(p.desil) >= 1 && Number(p.desil) <= 4 :
+                 this.filterDesil === "5-7" ? Number(p.desil) >= 5 && Number(p.desil) <= 7 :
+                 this.filterDesil === "8-10" ? Number(p.desil) >= 8 && Number(p.desil) <= 10 :
+                 String(p.desil) === this.filterDesil);
             let matchSK = true;
             if (this.filterStatusSK === "Sudah") matchSK = p.statusSK && p.statusSK.toLowerCase().includes("sudah");
             else if (this.filterStatusSK === "Belum") matchSK = !p.statusSK || !p.statusSK.toLowerCase().includes("sudah");
@@ -318,15 +417,15 @@ const ModulPIP = {
             return matchQ && matchK && matchD && matchSK;
         });
 
-        const totalEl = document.getElementById("pip-pengusulan-count");
-        if (totalEl) totalEl.textContent = `${data.length} Siswa Terdaftar Pengusulan`;
+        const totalEl = document.getElementById("pip-pengusulan-count") || document.getElementById("pip-total-pengusulan-count");
+        if (totalEl) totalEl.textContent = `${data.length} Siswa Terdaftar Pengusulan PIP`;
 
         if (data.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="p-8 text-center text-slate-400 text-xs">
+                    <td colspan="7" class="p-8 text-center text-slate-400 text-xs">
                         <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
-                        <p>Tidak ada data pengusulan PIP yang cocok dengan filter.</p>
+                        <p>Tidak ada data pengusulan PIP yang cocok dengan filter pencarian.</p>
                     </td>
                 </tr>
             `;
@@ -355,21 +454,24 @@ const ModulPIP = {
             return `
                 <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
                     <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                    <td class="p-3 font-mono font-bold text-blue-900">${Sec.esc(item.nisn)}</td>
                     <td class="p-3">
                         <div class="font-bold text-slate-800 flex items-center flex-wrap gap-1">
                             ${Sec.esc(item.nama)} ${auditBadge}
                         </div>
-                        <div class="text-[10px] text-slate-400 font-sans mt-0.5">${Sec.esc(item.skAtasNama || item.nama)}</div>
+                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)}</div>
                     </td>
                     <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                             Kelas ${Sec.esc(item.kelas)}
                         </span>
+                        <div class="text-[9px] text-slate-400 mt-0.5">${Sec.esc(item.namaFase || '-')}</div>
                     </td>
-                    <td class="p-3 text-center font-medium text-slate-600">${Sec.esc(item.namaFase || '-')}</td>
                     <td class="p-3 text-center">
                         <span class="px-2 py-0.5 rounded-md text-[11px] ${desilColor}">Desil ${item.desil || '-'}</span>
+                    </td>
+                    <td class="p-3 text-slate-600">
+                        <div class="font-medium">${Sec.esc(item.skAtasNama || item.nama)}</div>
+                        <div class="text-[9px] text-slate-400">Tahun: ${Sec.esc(item.tahunUsulan || '2026')}</div>
                     </td>
                     <td class="p-3 text-center">
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSudahSK ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500'}">
@@ -377,12 +479,11 @@ const ModulPIP = {
                             ${isSudahSK ? 'Sudah SK' : 'Belum Masuk SK'}
                         </span>
                     </td>
-                    <td class="p-3 text-center">
-                        <div class="inline-flex items-center gap-1">
-                            <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_aktif')" class="p-1 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded" title="Cetak Surat Aktif Belajar PIP">
-                                <i class="fa-solid fa-print"></i>
-                            </button>
-                        </div>
+                    <td class="p-3 text-right">
+                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_aktif')" 
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs" title="Cetak Surat Aktif Belajar PIP">
+                            <i class="fa-solid fa-print"></i> Aktif Belajar
+                        </button>
                     </td>
                 </tr>
             `;
@@ -393,7 +494,7 @@ const ModulPIP = {
     // 3. DATA PENERIMA SK PIP (KEMENDIKBUD)
     // -------------------------------------------------------------------------
     renderPenerima() {
-        const tbody = document.getElementById("pip-penerima-tbody");
+        const tbody = document.getElementById("pip-penerima-tbody") || document.getElementById("table-pip-penerima-body");
         if (!tbody) return;
 
         const role = Auth.role();
@@ -409,7 +510,9 @@ const ModulPIP = {
         const q = (this.searchQuery || "").toLowerCase();
         data = data.filter(p => {
             const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q) || (p.nomorRekening && p.nomorRekening.includes(q));
-            const matchK = this.filterKelas === "Semua" || String(p.kelas).includes(this.filterKelas);
+            const matchK = this.filterKelas === "Semua" || 
+                String(p.kelas).toLowerCase().trim() === String(this.filterKelas).toLowerCase().trim() ||
+                String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
             const matchT = this.filterTahap === "Semua" || String(p.tahap) === this.filterTahap;
             let matchC = true;
             if (this.filterStatusCair === "Sudah") matchC = p.statusCair && p.statusCair.toLowerCase().includes("sudah");
@@ -418,15 +521,15 @@ const ModulPIP = {
             return matchQ && matchK && matchT && matchC;
         });
 
-        const totalEl = document.getElementById("pip-penerima-count");
+        const totalEl = document.getElementById("pip-penerima-count") || document.getElementById("pip-total-penerima-count");
         if (totalEl) totalEl.textContent = `${data.length} Siswa Masuk SK Penerima PIP`;
 
         if (data.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="p-8 text-center text-slate-400 text-xs">
+                    <td colspan="8" class="p-8 text-center text-slate-400 text-xs">
                         <i class="fa-solid fa-hand-holding-dollar text-3xl mb-2 text-slate-300"></i>
-                        <p>Tidak ada data penerima PIP yang cocok dengan filter.</p>
+                        <p>Tidak ada data penerima PIP yang cocok dengan filter pencarian.</p>
                     </td>
                 </tr>
             `;
@@ -440,37 +543,37 @@ const ModulPIP = {
             return `
                 <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
                     <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
-                    <td class="p-3 font-mono font-bold text-blue-900">${Sec.esc(item.nisn)}</td>
                     <td class="p-3">
                         <div class="font-bold text-slate-800">${Sec.esc(item.nama)}</div>
-                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">SK: ${Sec.esc(item.nomorSK || '-')}</div>
+                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)}</div>
                     </td>
                     <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                             Kelas ${Sec.esc(item.kelas)}
                         </span>
                     </td>
-                    <td class="p-3 text-center font-semibold text-slate-700">${Sec.esc(item.tahap || 'Tahap 1')}</td>
-                    <td class="p-3 text-right font-mono font-bold text-emerald-800">Rp ${nominal.toLocaleString("id-ID")}</td>
+                    <td class="p-3">
+                        <div class="font-mono text-xs text-slate-700 font-semibold">${Sec.esc(item.nomorSK || 'SK Puslapdik')}</div>
+                        <div class="text-[10px] text-slate-400">${Sec.esc(item.tahap || 'Tahap 1')} • TA ${Sec.esc(item.tahunAnggaran || '2026')}</div>
+                    </td>
+                    <td class="p-3 font-mono font-bold text-emerald-800">Rp ${nominal.toLocaleString("id-ID")}</td>
                     <td class="p-3">
                         <div class="font-mono text-xs text-slate-700 font-semibold">${Sec.esc(item.nomorRekening || '-')}</div>
                         <div class="text-[10px] text-slate-400">Bank ${Sec.esc(item.bankPenyalur || 'BRI')} • ${Sec.esc(item.statusRekening || 'Aktivasi')}</div>
                     </td>
                     <td class="p-3 text-center">
                         <button onclick="ModulPIP.toggleStatusCair('${item.nisn}')" 
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition ${isSudahCair ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer ${isSudahCair ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
                             <i class="fa-solid ${isSudahCair ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
                             ${isSudahCair ? 'Sudah Cair' : 'Belum Cair'}
                         </button>
-                        ${item.tanggalCair && item.tanggalCair !== '-' ? `<div class="text-[9px] text-slate-400 mt-0.5">${item.tanggalCair}</div>` : ''}
+                        ${item.tanggalCair && item.tanggalCair !== '-' ? `<div class="text-[9px] text-slate-400 mt-0.5 font-mono">${item.tanggalCair}</div>` : ''}
                     </td>
-                    <td class="p-3 text-center">
-                        <div class="inline-flex items-center gap-1.5">
-                            <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_pencairan')" 
-                                class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition flex items-center gap-1 shadow-xs" title="Cetak Surat Keterangan / Rekomendasi Pencairan BRI">
-                                <i class="fa-solid fa-print"></i> Cetak Rekomendasi
-                            </button>
-                        </div>
+                    <td class="p-3 text-right">
+                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_pencairan')" 
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Keterangan / Rekomendasi Pencairan BRI">
+                            <i class="fa-solid fa-print"></i> Cetak Rekomendasi
+                        </button>
                     </td>
                 </tr>
             `;
@@ -521,10 +624,67 @@ const ModulPIP = {
     },
 
     // -------------------------------------------------------------------------
+    // Item 2: FORMAT CONTOH EXCEL (PENGUSULAN & PENERIMA)
+    // -------------------------------------------------------------------------
+    async downloadTemplate(jenis = "pengusulan") {
+        App.showToast("Menyiapkan format contoh Excel...", "info");
+        try {
+            const XLSX = await ModulImport.loadXlsx();
+            const wb = XLSX.utils.book_new();
+
+            if (jenis === "pengusulan") {
+                const headers = [
+                    "NO", "NISN", "NAMA SISWA", "KELAS", "NAMA FASE", 
+                    "DESIL KEMISKINAN", "SK ATAS NAMA", "STATUS SK", "TAHUN USULAN", "CATATAN DAPODIK"
+                ];
+                const sampleRows = [
+                    [1, "3154829101", "Ahmad Fauzan Pratama", "Kelas 1", "Fase A", 2, "Ahmad Fauzan Pratama", "Sudah SK", "2026", "Prioritas 1 (DTKS Kemensos)"],
+                    [2, "3145920192", "Budi Santoso", "Kelas 2", "Fase A", 3, "Budi Santoso", "Belum Masuk SK", "2026", "Pengusulan Kuota Tambahan"],
+                    [3, "3139841029", "Citra Kirana Lestari", "Kelas 3", "Fase B", 4, "Citra Kirana Lestari", "Sudah SK", "2026", "Verifikasi Berkas KIP Lengkap"]
+                ];
+                const wsData = [headers, ...sampleRows];
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                ws["!cols"] = [
+                    { wch: 6 }, { wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 12 },
+                    { wch: 18 }, { wch: 28 }, { wch: 18 }, { wch: 14 }, { wch: 32 }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, "Pengusulan_PIP_2026");
+                XLSX.writeFile(wb, "Format_Contoh_Pengusulan_PIP_2026.xlsx");
+                App.showToast("Format contoh pengusulan PIP berhasil diunduh!", "success");
+            } else {
+                const headers = [
+                    "NO", "NISN", "NAMA SISWA", "KELAS", "NOMOR SK", 
+                    "TAHAP", "NOMINAL", "BANK PENYALUR", "NOMOR REKENING", "STATUS REKENING", "STATUS CAIR", "TANGGAL CAIR", "TAHUN ANGGARAN"
+                ];
+                const sampleRows = [
+                    [1, "3154829101", "Ahmad Fauzan Pratama", "Kelas 1", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-1", "Sudah Aktivasi", "Sudah Cair", "2026-03-15", "2026"],
+                    [2, "3145920192", "Budi Santoso", "Kelas 2", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-2", "Sudah Aktivasi", "Belum Cair", "-", "2026"],
+                    [3, "3139841029", "Citra Kirana Lestari", "Kelas 3", "0345/P3KE/PIP/2026", "Tahap 1", 450000, "BRI", "0123-01-098765-50-3", "Belum Aktivasi", "Belum Cair", "-", "2026"]
+                ];
+                const wsData = [headers, ...sampleRows];
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                ws["!cols"] = [
+                    { wch: 6 }, { wch: 16 }, { wch: 28 }, { wch: 12 }, { wch: 24 },
+                    { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 24 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 16 }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, "Penerima_SK_PIP_2026");
+                XLSX.writeFile(wb, "Format_Contoh_Penerima_SK_PIP_2026.xlsx");
+                App.showToast("Format contoh penerima SK PIP berhasil diunduh!", "success");
+            }
+        } catch (err) {
+            console.error("Gagal membuat template Excel:", err);
+            App.showToast(`Gagal mengunduh format contoh: ${err.message}`, "error");
+        }
+    },
+
+    // -------------------------------------------------------------------------
     // 4. IMPOR EXCEL DENGAN SHEETJS (ON-DEMAND)
     // -------------------------------------------------------------------------
     triggerImport(jenis = "pengusulan") {
-        const fileInput = document.getElementById(jenis === "pengusulan" ? "file-import-pip-usulan" : "file-import-pip-penerima");
+        const fileInput = document.getElementById(jenis === "pengusulan" ? "file-import-pip-usulan" : "file-import-pip-penerima") ||
+                          document.getElementById("pip-file-input");
         if (fileInput) fileInput.click();
     },
 
@@ -534,7 +694,7 @@ const ModulPIP = {
 
         App.showToast("Membaca file Excel PIP...", "info");
         try {
-            await ModulImport.loadXlsx();
+            const XLSX = await ModulImport.loadXlsx();
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: "array" });
             const sheetName = workbook.SheetNames[0];
@@ -553,9 +713,9 @@ const ModulPIP = {
                     norm[k.toLowerCase().replace(/[^a-z0-9]/g, "")] = String(row[k]).trim();
                 });
 
-                const nisn = norm.nisn || norm.nisnsiswa || norm.nomornisn || "";
-                const nama = norm.nama || norm.namasiswa || norm.namapesertadidik || "";
-                const kelas = norm.kelas || norm.rombel || norm.tingkat || "1";
+                const nisn = norm.nisn || norm.nisnsiswa || norm.nomornisn || norm.pesertadidiknisn || "";
+                const nama = norm.nama || norm.namasiswa || norm.namapesertadidik || norm.namalengkap || norm.namalengkapsiswa || "";
+                const kelas = norm.kelas || norm.rombel || norm.tingkat || norm.rombelkelas || "1";
 
                 if (nisn && nama) {
                     if (jenis === "pengusulan") {
@@ -564,24 +724,24 @@ const ModulPIP = {
                             nama,
                             kelas: kelas.replace(/\D/g, "") || kelas,
                             namaFase: norm.namafase || norm.fase || (Number(kelas) <= 2 ? "Fase A" : (Number(kelas) <= 4 ? "Fase B" : "Fase C")),
-                            desil: Number(norm.desil || norm.desilkemiskinan || "3") || 3,
+                            desil: Number(norm.desil || norm.desilkemiskinan || norm.kategoridesil || "3") || 3,
                             skAtasNama: norm.skatasnama || norm.atasnama || `${nama} (Siswa)`,
                             statusSK: norm.statussk || norm.keterangansk || (norm.masuksk && norm.masuksk.toLowerCase().includes("sudah") ? "Sudah SK" : "Belum Masuk SK"),
                             tahunUsulan: norm.tahunusulan || norm.tahun || "2026",
-                            catatanDapodik: norm.catatan || norm.keterangan || "Diimpor dari file pengusulan"
+                            catatanDapodik: norm.catatan || norm.catatandapodik || norm.keterangan || "Diimpor dari file pengusulan"
                         });
                     } else {
                         parsedRows.push({
                             nisn,
                             nama,
                             kelas: kelas.replace(/\D/g, "") || kelas,
-                            nomorSK: norm.nomorsk || norm.nosk || "0345/P3KE/PIP/2026",
+                            nomorSK: norm.nomorsk || norm.nosk || norm.nomorskkemendikbud || "0345/P3KE/PIP/2026",
                             tahap: norm.tahap || norm.tahappenyaluran || "Tahap 1",
-                            nominal: Number(norm.nominal || norm.dana || "450000") || 450000,
+                            nominal: Number(norm.nominal || norm.nominalbantuan || norm.dana || "450000") || 450000,
                             bankPenyalur: norm.bank || norm.bankpenyalur || "BRI",
-                            nomorRekening: norm.nomorrekening || norm.norek || "-",
+                            nomorRekening: norm.nomorrekening || norm.norek || norm.nomorrekeningsimpel || "-",
                             statusRekening: norm.statusrekening || "Sudah Aktivasi",
-                            statusCair: norm.statuscair || norm.status || "Belum Cair",
+                            statusCair: norm.statuscair || norm.statuspencairan || norm.status || "Belum Cair",
                             tanggalCair: norm.tanggalcair || norm.tglcair || "-",
                             tahunAnggaran: norm.tahunanggaran || norm.tahun || "2026"
                         });
@@ -608,6 +768,65 @@ const ModulPIP = {
         } finally {
             event.target.value = "";
         }
+    },
+
+    // -------------------------------------------------------------------------
+    // FITUR TAMBAHAN: EXPORT CSV & SMART AUDIT
+    // -------------------------------------------------------------------------
+    exportPenerimaCSV() {
+        const data = DataStore.getPIPPenerima();
+        if (!data || data.length === 0) {
+            App.showToast("Tidak ada data penerima PIP untuk diekspor.", "warning");
+            return;
+        }
+
+        const headers = ["No", "NISN", "Nama Siswa", "Kelas", "Nomor SK", "Tahap", "Nominal", "Bank", "No Rekening", "Status Rekening", "Status Cair", "Tanggal Cair", "Tahun"];
+        const rows = data.map((d, i) => [
+            i + 1,
+            `'${d.nisn}`,
+            `"${(d.nama || '').replace(/"/g, '""')}"`,
+            d.kelas,
+            `"${(d.nomorSK || '').replace(/"/g, '""')}"`,
+            d.tahap,
+            d.nominal || 450000,
+            d.bankPenyalur || 'BRI',
+            `'${d.nomorRekening || '-'}`,
+            d.statusRekening || 'Aktivasi',
+            d.statusCair || 'Belum Cair',
+            d.tanggalCair || '-',
+            d.tahunAnggaran || '2026'
+        ]);
+
+        const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Data_Penerima_PIP_SDN_Terlangu_01_${new Date().getFullYear()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        App.showToast("Data penerima PIP berhasil diekspor!", "success");
+    },
+
+    runSmartAudit() {
+        const pengusulan = DataStore.getPIPPengusulan();
+        const students = DataStore.getSiswa();
+        let matchCount = 0;
+        let notFoundCount = 0;
+
+        pengusulan.forEach(p => {
+            const found = students.some(s => s.nisn === p.nisn);
+            if (found) matchCount++;
+            else notFoundCount++;
+        });
+
+        App.showToast(`Audit Selesai: ${matchCount} siswa valid padan dengan Dapodik, ${notFoundCount} belum tercatat di DB Siswa.`, "info");
+    },
+
+    renderRadarKemiskinan() {
+        this.switchTab("dasbor");
+        const el = document.getElementById("pip-vulnerability-radar");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
     }
 };
 

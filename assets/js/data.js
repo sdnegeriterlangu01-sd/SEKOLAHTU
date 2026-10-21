@@ -24,15 +24,80 @@ const DEFAULT_SCHOOL_CONFIG = {
     // --- Periodik Tahun Ajaran ---
     tahunAjaranAktif: "",   // diisi otomatis (mis. "2026/2027")
     daftarTahunAjaran: [],
-    // --- Kalender Libur (kolom abu-abu pada rekap absensi; hari Minggu otomatis) ---
-    // Lengkapi libur nasional/cuti bersama sesuai SKB 3 Menteri di menu Pengaturan.
+    // --- Kalender Libur Nasional & Cuti Bersama (Sumber: https://husniadil.com/calendar/{Tahun}/ sesuai SKB 3 Menteri) ---
     hariLibur: [
-        { tanggal: "2026-08-17", ket: "HUT Kemerdekaan RI" },
+        // 2025
+        { tanggal: "2025-01-01", ket: "Tahun Baru Masehi" },
+        { tanggal: "2025-01-27", ket: "Isra' Mi'raj Nabi Muhammad SAW" },
+        { tanggal: "2025-01-28", ket: "Cuti Bersama Imlek" },
+        { tanggal: "2025-01-29", ket: "Tahun Baru Imlek 2576 Kongzili" },
+        { tanggal: "2025-03-28", ket: "Cuti Bersama Nyepi" },
+        { tanggal: "2025-03-29", ket: "Hari Raya Nyepi Tahun Baru Saka 1947" },
+        { tanggal: "2025-03-31", ket: "Hari Raya Idul Fitri 1446 H" },
+        { tanggal: "2025-04-01", ket: "Hari Raya Idul Fitri 1446 H" },
+        { tanggal: "2025-04-02", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2025-04-03", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2025-04-04", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2025-04-07", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2025-04-18", ket: "Wafat Yesus Kristus (Jumat Agung)" },
+        { tanggal: "2025-04-20", ket: "Kebangkitan Yesus Kristus (Paskah)" },
+        { tanggal: "2025-05-01", ket: "Hari Buruh Internasional" },
+        { tanggal: "2025-05-12", ket: "Hari Raya Waisak 2569 BE" },
+        { tanggal: "2025-05-13", ket: "Cuti Bersama Waisak" },
+        { tanggal: "2025-05-29", ket: "Kenaikan Yesus Kristus" },
+        { tanggal: "2025-05-30", ket: "Cuti Bersama Kenaikan Yesus Kristus" },
+        { tanggal: "2025-06-01", ket: "Hari Lahir Pancasila" },
+        { tanggal: "2025-06-06", ket: "Hari Raya Idul Adha 1446 H" },
+        { tanggal: "2025-06-09", ket: "Cuti Bersama Idul Adha" },
+        { tanggal: "2025-06-27", ket: "Tahun Baru Islam 1447 H" },
+        { tanggal: "2025-08-17", ket: "Hari Kemerdekaan Republik Indonesia" },
+        { tanggal: "2025-08-18", ket: "Cuti Bersama Kemerdekaan Republik Indonesia" },
+        { tanggal: "2025-09-05", ket: "Maulid Nabi Muhammad SAW" },
+        { tanggal: "2025-12-25", ket: "Hari Raya Natal" },
+        { tanggal: "2025-12-26", ket: "Cuti Bersama Natal" },
+        // 2026
+        { tanggal: "2026-01-01", ket: "Tahun Baru Masehi" },
+        { tanggal: "2026-01-16", ket: "Isra' Mi'raj Nabi Muhammad SAW" },
+        { tanggal: "2026-02-16", ket: "Cuti Bersama Imlek" },
+        { tanggal: "2026-02-17", ket: "Tahun Baru Imlek 2577 Kongzili" },
+        { tanggal: "2026-03-18", ket: "Cuti Bersama Nyepi" },
+        { tanggal: "2026-03-19", ket: "Hari Raya Nyepi Tahun Baru Saka 1948" },
+        { tanggal: "2026-03-20", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2026-03-21", ket: "Hari Raya Idul Fitri 1447 H" },
+        { tanggal: "2026-03-22", ket: "Hari Raya Idul Fitri 1447 H" },
+        { tanggal: "2026-03-23", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2026-03-24", ket: "Cuti Bersama Idul Fitri" },
+        { tanggal: "2026-04-03", ket: "Wafat Yesus Kristus (Jumat Agung)" },
+        { tanggal: "2026-04-05", ket: "Kebangkitan Yesus Kristus (Paskah)" },
+        { tanggal: "2026-05-01", ket: "Hari Buruh Internasional" },
+        { tanggal: "2026-05-14", ket: "Kenaikan Yesus Kristus" },
+        { tanggal: "2026-05-15", ket: "Cuti Bersama Kenaikan Yesus Kristus" },
+        { tanggal: "2026-05-27", ket: "Hari Raya Idul Adha 1447 H" },
+        { tanggal: "2026-05-28", ket: "Cuti Bersama Idul Adha" },
+        { tanggal: "2026-05-31", ket: "Hari Raya Waisak 2570 BE" },
+        { tanggal: "2026-06-01", ket: "Hari Lahir Pancasila" },
+        { tanggal: "2026-06-16", ket: "Tahun Baru Islam 1448 H" },
+        { tanggal: "2026-08-17", ket: "Hari Kemerdekaan Republik Indonesia" },
+        { tanggal: "2026-08-25", ket: "Maulid Nabi Muhammad SAW" },
+        { tanggal: "2026-12-24", ket: "Cuti Bersama Natal" },
         { tanggal: "2026-12-25", ket: "Hari Raya Natal" },
+        // 2027
         { tanggal: "2027-01-01", ket: "Tahun Baru Masehi" },
+        { tanggal: "2027-02-05", ket: "Isra' Mi'raj Nabi Muhammad SAW" },
+        { tanggal: "2027-02-06", ket: "Tahun Baru Imlek 2578 Kongzili" },
+        { tanggal: "2027-03-09", ket: "Hari Raya Nyepi Tahun Baru Saka 1949" },
+        { tanggal: "2027-03-10", ket: "Hari Raya Idul Fitri 1448 H" },
+        { tanggal: "2027-03-11", ket: "Hari Raya Idul Fitri 1448 H" },
+        { tanggal: "2027-03-26", ket: "Wafat Yesus Kristus (Jumat Agung)" },
+        { tanggal: "2027-03-28", ket: "Kebangkitan Yesus Kristus (Paskah)" },
         { tanggal: "2027-05-01", ket: "Hari Buruh Internasional" },
+        { tanggal: "2027-05-06", ket: "Kenaikan Yesus Kristus" },
+        { tanggal: "2027-05-17", ket: "Hari Raya Idul Adha 1448 H" },
+        { tanggal: "2027-05-20", ket: "Hari Raya Waisak 2571 BE" },
         { tanggal: "2027-06-01", ket: "Hari Lahir Pancasila" },
-        { tanggal: "2027-08-17", ket: "HUT Kemerdekaan RI" },
+        { tanggal: "2027-06-06", ket: "Tahun Baru Islam 1449 H" },
+        { tanggal: "2027-08-15", ket: "Maulid Nabi Muhammad SAW" },
+        { tanggal: "2027-08-17", ket: "Hari Kemerdekaan Republik Indonesia" },
         { tanggal: "2027-12-25", ket: "Hari Raya Natal" }
     ],
     scanMinGapMenit: 30     // jarak minimal scan datang -> pulang
@@ -763,12 +828,41 @@ const DataStore = {
         if (!Array.isArray(cfg.daftarTahunAjaran) || cfg.daftarTahunAjaran.length === 0) {
             cfg.daftarTahunAjaran = [cfg.tahunAjaranAktif];
         }
-        if (!Array.isArray(cfg.hariLibur)) cfg.hariLibur = DEFAULT_SCHOOL_CONFIG.hariLibur;
+        if (!Array.isArray(cfg.hariLibur) || cfg.hariLibur.length <= 10) {
+            // Gabungkan libur default lengkap dari husniadil.com jika data tersimpan masih versi lama
+            const mapTgl = new Map();
+            DEFAULT_SCHOOL_CONFIG.hariLibur.forEach(h => mapTgl.set(h.tanggal, h));
+            (cfg.hariLibur || []).forEach(h => mapTgl.set(h.tanggal, h));
+            cfg.hariLibur = Array.from(mapTgl.values()).sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+        }
         return cfg;
     },
 
     saveConfig(cfg) {
         localStorage.setItem(this.KEYS.CONFIG, JSON.stringify(cfg));
+    },
+
+    async syncHolidaysFromHusniAdil(year) {
+        year = year || new Date().getFullYear();
+        try {
+            const res = await ApiClient.request("getCalendarHolidays", { year });
+            if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+                const cfg = this.getConfig();
+                const mapTgl = new Map();
+                (cfg.hariLibur || []).forEach(h => mapTgl.set(h.tanggal, h));
+                res.data.forEach(h => {
+                    const tgl = h.tanggal || h.date;
+                    const ket = h.ket || h.name;
+                    if (tgl && ket) mapTgl.set(tgl, { tanggal: tgl, ket });
+                });
+                cfg.hariLibur = Array.from(mapTgl.values()).sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+                this.saveConfig(cfg);
+                return { success: true, count: res.data.length, data: cfg.hariLibur };
+            }
+        } catch (e) {
+            console.warn("syncHolidaysFromHusniAdil error:", e);
+        }
+        return { success: false, message: "Gagal menyinkronkan libur dari husniadil.com" };
     },
 
     // ================= PERIODIK TAHUN AJARAN =================
@@ -907,8 +1001,25 @@ const DataStore = {
 
     getJadwal(kelas, ta) {
         const list = this.getJadwalAll();
-        return list.filter(j => {
-            if (kelas && kelas !== "Semua" && String(j.kelas) !== String(kelas)) return false;
+        const normK = k => String(k || "").toLowerCase().replace(/kelas\s*/i, "").trim();
+        const targetK = normK(kelas);
+
+        return list.map(j => ({
+            ...j,
+            kelas: j.kelas || j.rombel || "1",
+            rombel: j.rombel || j.kelas || "1",
+            guru: j.guru || j.namaGuru || "",
+            namaGuru: j.namaGuru || j.guru || "",
+            jamKe: Number(j.jamKe) || 1
+        })).filter(j => {
+            if (kelas && kelas !== "Semua") {
+                const kItem = normK(j.kelas || j.rombel);
+                if (kItem !== targetK && String(j.kelas || j.rombel).trim() !== String(kelas).trim()) {
+                    const num1 = kItem.match(/\d+/)?.[0];
+                    const num2 = targetK.match(/\d+/)?.[0];
+                    if (!num1 || !num2 || num1 !== num2) return false;
+                }
+            }
             if (ta && j.tahunAjaran && j.tahunAjaran !== ta) return false;
             return true;
         });

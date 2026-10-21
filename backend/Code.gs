@@ -1,10 +1,17 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.3.0
+ * Backend REST API - Google Apps Script (GAS) v2.4.0
  * ==========================================================================
  * 
  * Version History:
+ * - v2.4.0 (21 Oktober 2026):
+ *   + Penyelarasan field dual alias WhatsApp permohonan surat (noWhatsApp & hpOrtu).
+ *   + Dukungan format contoh Excel & import PIP Kemendikbud (Pengusulan & Penerima SK).
+ *   + Dynamic rombel dropdown untuk pemilihan kelas modul Jadwal & modul PIP.
+ *   + Perbaikan slot ID & preset Kurikulum Merdeka pada modul Jadwal Pelajaran.
+ *   + Integrasi data hari libur nasional, hari Minggu, dan cuti bersama dari https://husniadil.com/calendar/{Tahun}/.
+ *   + Optimasi QR Code surat keluar verifikasi langsung berbasis nomor surat resmi.
  * - v2.3.0 (21 Oktober 2026):
  *   + Ditambahkan endpoint API "trackPermohonanSurat" untuk pelacakan kode resi mandiri orang tua.
  *   + Pengecualian verifikasi token Supabase (Bypass Auth) untuk aksi publik (submit & track permohonan surat).
@@ -225,6 +232,10 @@ function doPost(e) {
 
       case "saveConfig":
         responseData = handleSaveConfig(ss, payload);
+        break;
+
+      case "getCalendarHolidays":
+        responseData = handleGetCalendarHolidays(ss, payload);
         break;
 
       // ==================== JADWAL PELAJARAN ====================
@@ -1546,20 +1557,30 @@ function handleGetJadwal(ss, payload) {
   if (data.length <= 1) return { success: true, data: [] };
 
   const list = [];
-  const targetRombel = payload && payload.rombel ? String(payload.rombel) : null;
+  const rawTarget = payload && (payload.rombel || payload.kelas) ? String(payload.rombel || payload.kelas) : null;
+  const targetRombel = (rawTarget && rawTarget !== "Semua") ? rawTarget : null;
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     const rombel = String(row[1]);
-    if (targetRombel && targetRombel !== "Semua" && rombel !== targetRombel) continue;
+    if (targetRombel) {
+      const norm1 = rombel.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const norm2 = targetRombel.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const d1 = rombel.replace(/\D/g, "");
+      const d2 = targetRombel.replace(/\D/g, "");
+      const match = (norm1 === norm2) || (d1 && d2 && d1 === d2) || rombel.includes(targetRombel) || targetRombel.includes(rombel);
+      if (!match) continue;
+    }
 
     list.push({
       id: String(row[0] || ""),
       rombel: rombel,
+      kelas: rombel,
       hari: String(row[2] || ""),
       jamKe: Number(row[3]) || 1,
       mapel: String(row[4] || ""),
       namaGuru: String(row[5] || ""),
+      guru: String(row[5] || ""),
       waktuMulai: String(row[6] || ""),
       waktuSelesai: String(row[7] || ""),
       ruang: String(row[8] || ""),
@@ -1577,38 +1598,49 @@ function handleSaveJadwal(ss, payload) {
     sheet.appendRow(["ID", "ROMBEL", "HARI", "JAM_KE", "MAPEL", "NAMA_GURU", "WAKTU_MULAI", "WAKTU_SELESAI", "RUANG", "UPDATED_AT"]);
   }
 
-  const id = payload.id || `JADWAL_${payload.rombel}_${payload.hari}_${payload.jamKe}`;
+  const items = payload.items || (payload.item ? [payload.item] : [payload]);
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
   const data = sheet.getDataRange().getValues();
-  let rowIndex = -1;
+  let savedCount = 0;
 
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === id || (String(data[i][1]) === String(payload.rombel) && String(data[i][2]) === String(payload.hari) && String(data[i][3]) === String(payload.jamKe))) {
-      rowIndex = i + 1;
-      break;
+  items.forEach(item => {
+    const rombel = String(item.rombel || item.kelas || "1");
+    const hari = String(item.hari || "Senin");
+    const jamKe = Number(item.jamKe) || 1;
+    const mapel = String(item.mapel || "");
+    const namaGuru = String(item.namaGuru || item.guru || "");
+    const id = item.id || `JADWAL_${rombel.replace(/\s+/g, '_')}_${hari}_${jamKe}`;
+
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === id || (String(data[i][1]) === rombel && String(data[i][2]) === hari && Number(data[i][3]) === jamKe)) {
+        rowIndex = i + 1;
+        break;
+      }
     }
-  }
 
-  const rowValues = [
-    id,
-    String(payload.rombel || "1"),
-    String(payload.hari || "Senin"),
-    Number(payload.jamKe) || 1,
-    String(payload.mapel || ""),
-    String(payload.namaGuru || ""),
-    String(payload.waktuMulai || ""),
-    String(payload.waktuSelesai || ""),
-    String(payload.ruang || `Kelas ${payload.rombel || 1}`),
-    nowStr
-  ];
+    const rowValues = [
+      id,
+      rombel,
+      hari,
+      jamKe,
+      mapel,
+      namaGuru,
+      String(item.waktuMulai || ""),
+      String(item.waktuSelesai || ""),
+      String(item.ruang || `Kelas ${rombel}`),
+      nowStr
+    ];
 
-  if (rowIndex > 0) {
-    sheet.getRange(rowIndex, 1, 1, 10).setValues([rowValues]);
-  } else {
-    sheet.appendRow(rowValues);
-  }
+    if (rowIndex > 0) {
+      sheet.getRange(rowIndex, 1, 1, 10).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+    savedCount++;
+  });
 
-  return { success: true, message: `Slot jadwal ${payload.mapel} (Kelas ${payload.rombel}, ${payload.hari} Jam ${payload.jamKe}) berhasil disimpan!`, id: id };
+  return { success: true, message: `Berhasil menyimpan ${savedCount} slot jadwal pelajaran!`, count: savedCount };
 }
 
 function handleDeleteJadwal(ss, payload) {
@@ -1812,14 +1844,19 @@ function handleGetPermohonanSurat(ss, payload) {
   const list = [];
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
+    const namaWali = String(r[5] || "");
+    const hpWali = String(r[6] || "");
     list.push({
       id: String(r[0] || ""),
       createdAt: String(r[1] || ""),
       nisn: String(r[2] || ""),
       nama: String(r[3] || ""),
       kelas: String(r[4] || ""),
-      namaOrtu: String(r[5] || ""),
-      hpOrtu: String(r[6] || ""),
+      namaOrtu: namaWali,
+      namaPemohon: namaWali,
+      hpOrtu: hpWali,
+      noWhatsApp: hpWali,
+      noHp: hpWali,
       jenisSurat: String(r[7] || ""),
       keperluan: String(r[8] || ""),
       status: String(r[9] || "Menunggu Verifikasi TU"),
@@ -1843,14 +1880,17 @@ function handleSubmitPermohonanSurat(ss, payload) {
   const id = payload.id || `REQ-${year}-${String(nextNum).padStart(4, "0")}`;
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
 
+  const namaPemohonFinal = String(payload.namaPemohon || payload.namaOrtu || "");
+  const hpPemohonFinal = String(payload.noWhatsApp || payload.hpOrtu || payload.noHp || "");
+
   const rowValues = [
     id,
     String(payload.createdAt || nowStr),
     String(payload.nisn || ""),
     String(payload.nama || ""),
     String(payload.kelas || ""),
-    String(payload.namaOrtu || ""),
-    String(payload.hpOrtu || ""),
+    namaPemohonFinal,
+    hpPemohonFinal,
     String(payload.jenisSurat || "Surat Keterangan Aktif"),
     String(payload.keperluan || ""),
     String(payload.status || "Menunggu Verifikasi TU"),
@@ -1866,9 +1906,12 @@ function handleSubmitPermohonanSurat(ss, payload) {
     nisn: String(payload.nisn || ""),
     nama: String(payload.nama || ""),
     kelas: String(payload.kelas || ""),
-    namaPemohon: String(payload.namaPemohon || payload.namaOrtu || ""),
+    namaPemohon: namaPemohonFinal,
+    namaOrtu: namaPemohonFinal,
     hubunganPemohon: String(payload.hubunganPemohon || "Orang Tua / Wali"),
-    noWhatsApp: String(payload.noWhatsApp || payload.hpOrtu || ""),
+    noWhatsApp: hpPemohonFinal,
+    hpOrtu: hpPemohonFinal,
+    noHp: hpPemohonFinal,
     jenisSurat: String(payload.jenisSurat || "Surat Keterangan Aktif"),
     keperluan: String(payload.keperluan || ""),
     status: String(payload.status || "Menunggu Verifikasi TU"),
@@ -2006,6 +2049,36 @@ function handleUpdateStudentFields(ss, payload) {
   }
 
   return { success: false, message: `Siswa dengan NISN ${nisn} tidak ditemukan di Google Sheets.` };
+}
+
+/**
+ * ==========================================================================
+ * HANDLER: SINKRONISASI HARI LIBUR DARI KALENDER HUSNIADIL.COM
+ * ==========================================================================
+ */
+function handleGetCalendarHolidays(ss, payload) {
+  const year = payload && payload.year ? Number(payload.year) : new Date().getFullYear();
+  try {
+    const url = `https://husniadil.com/calendar/${year}/`;
+    const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() === 200) {
+      const html = res.getContentText();
+      const match = html.match(/data-holidays=['"]([^'"]+)['"]/);
+      if (match && match[1]) {
+        const rawJson = decodeURIComponent(match[1].replace(/&quot;/g, '"'));
+        const parsed = JSON.parse(rawJson);
+        const list = [];
+        Object.keys(parsed).forEach(d => {
+          list.push({ tanggal: d, ket: parsed[d] });
+        });
+        return { success: true, count: list.length, data: list, source: url };
+      }
+    }
+  } catch (e) {
+    Logger.log("Fetch holidays error: " + e.message);
+  }
+
+  return { success: true, count: 0, data: [], source: "fallback" };
 }
 
 

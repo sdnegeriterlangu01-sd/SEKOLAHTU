@@ -277,9 +277,8 @@ const ModulCetak = {
             baseUrl = PUBLIC_ONLINE_URL;
         }
 
-        // REKAYASA ULANG QR CODE: Menggunakan Minimal Lightweight Query Parameter
-        // Menghindari enkripsi JSON ratusan karakter yang membuat modul QR terlalu padat dan sulit dibaca kamera HP
-        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}&nisn=${encodeURIComponent(student.nisn)}`;
+        // REKAYASA ULANG QR CODE: Menggunakan nomor surat saja tanpa nisn (sesuai instruksi revisi)
+        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}`;
 
         // Format alamat dan kontak kop surat
         const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";

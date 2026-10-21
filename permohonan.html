@@ -310,7 +310,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
         <div class="max-w-4xl mx-auto px-4">
-            SIM-TAS-SD Versi 2.3.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
+            SIM-TAS-SD Versi 2.4.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
         </div>
     </footer>
 
@@ -410,8 +410,10 @@
                 jenisSurat,
                 keperluan,
                 namaPemohon,
+                namaOrtu: namaPemohon,
                 hubunganPemohon,
-                noWhatsApp
+                noWhatsApp,
+                hpOrtu: noWhatsApp
             };
 
             const res = await ApiClient.request("submitPermohonanSurat", payload);

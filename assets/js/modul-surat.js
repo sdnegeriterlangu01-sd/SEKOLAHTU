@@ -688,8 +688,8 @@ const ModulSurat = {
                         <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-1 italic">${p.keperluan || "-"}</div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="font-semibold text-slate-700">${p.namaOrtu || "-"}</div>
-                        <div class="text-[11px] font-mono text-slate-500">${p.hpOrtu || "-"}</div>
+                        <div class="font-semibold text-slate-700">${p.namaOrtu || p.namaPemohon || "-"}</div>
+                        <div class="text-[11px] font-mono text-slate-500">${p.hpOrtu || p.noWhatsApp || p.noHp || "-"}</div>
                     </td>
                     <td class="px-4 py-3 text-center">
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadge}">
@@ -780,17 +780,21 @@ const ModulSurat = {
 
     sendWhatsAppPermohonan(id) {
         const item = DataStore.getPermohonanSurat().find(p => p.id === id);
-        if (!item || !item.hpOrtu) {
-            App.showToast("Nomor HP orang tua tidak tersedia!", "warning");
+        if (!item) return;
+
+        const phoneRaw = item.hpOrtu || item.noWhatsApp || item.noHp;
+        if (!phoneRaw) {
+            App.showToast("Nomor WhatsApp/HP orang tua tidak tersedia!", "warning");
             return;
         }
 
-        let phone = String(item.hpOrtu).replace(/\D/g, "");
+        let phone = String(phoneRaw).replace(/\D/g, "");
         if (phone.startsWith("0")) phone = "62" + phone.substring(1);
         if (!phone.startsWith("62")) phone = "62" + phone;
 
         const school = DataStore.getConfig()?.namaSekolah || "SD Negeri Terlangu 01";
-        const message = `Yth. Bapak/Ibu ${item.namaOrtu || "Orang Tua Siswa"},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.\n\n` +
+        const namaOrtu = item.namaOrtu || item.namaPemohon || "Orang Tua Siswa";
+        const message = `Yth. Bapak/Ibu ${namaOrtu},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.\n\n` +
             (item.status === "Siap Diambil" 
                 ? `Surat resmi telah dicetak dan ditandatangani. Silakan mengambil surat fisik di Ruang Tata Usaha ${school} pada jam operasional sekolah (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
                 : `Anda dapat memantau status secara berkala melalui tautan portal kami.\n\n`) +

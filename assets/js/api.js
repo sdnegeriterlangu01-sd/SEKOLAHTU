@@ -544,12 +544,25 @@ const ApiClient = {
 
             case "saveJadwal": {
                 const current = DataStore.getJadwalAll();
-                const newItems = payload.items || (payload.item ? [payload.item] : []);
+                const newItems = payload.items || (payload.item ? [payload.item] : (payload.rombel || payload.kelas ? [payload] : []));
                 const map = new Map();
-                current.forEach(j => map.set(j.id || `${j.kelas}_${j.hari}_${j.jamKe}`, j));
+                current.forEach(j => {
+                    const id = j.id || `JDW-${String(j.kelas || j.rombel || '1').replace(/\s+/g, '_')}-${(j.hari || 'SEN').substring(0, 3).toUpperCase()}-${j.jamKe}`;
+                    map.set(id, j);
+                });
                 newItems.forEach(j => {
-                    const id = j.id || `JDW-${j.kelas}-${(j.hari || 'SEN').substring(0, 3).toUpperCase()}-${j.jamKe}`;
-                    map.set(id, { ...j, id, updatedAt: new Date().toISOString() });
+                    const k = String(j.kelas || j.rombel || "1");
+                    const g = j.guru || j.namaGuru || "";
+                    const id = j.id || `JDW-${k.replace(/\s+/g, '_')}-${(j.hari || 'SEN').substring(0, 3).toUpperCase()}-${j.jamKe}`;
+                    map.set(id, { 
+                        ...j, 
+                        id, 
+                        kelas: k, 
+                        rombel: k, 
+                        guru: g, 
+                        namaGuru: g, 
+                        updatedAt: new Date().toISOString() 
+                    });
                 });
                 const updatedList = Array.from(map.values());
                 DataStore.saveJadwalAll(updatedList);
@@ -558,9 +571,21 @@ const ApiClient = {
 
             case "deleteJadwal": {
                 let current = DataStore.getJadwalAll();
-                current = current.filter(j => j.id !== payload.id);
+                const targetId = payload.id;
+                current = current.filter(j => j.id !== targetId && !(payload.rombel && String(j.kelas || j.rombel) === String(payload.rombel) && j.hari === payload.hari && Number(j.jamKe) === Number(payload.jamKe)));
                 DataStore.saveJadwalAll(current);
                 return { success: true, message: "Jadwal pelajaran berhasil dihapus!" };
+            }
+
+            case "getCalendarHolidays": {
+                const year = Number(payload.year) || new Date().getFullYear();
+                const configHolidays = DataStore.getConfig().hariLibur || [];
+                const filtered = configHolidays.filter(h => h.tanggal && h.tanggal.startsWith(String(year)));
+                return { 
+                    success: true, 
+                    source: `https://husniadil.com/calendar/${year}/`,
+                    data: filtered.length > 0 ? filtered : configHolidays 
+                };
             }
 
             // ================== MODUL PIP KEMENDIKBUD ==================
@@ -642,9 +667,12 @@ const ApiClient = {
                     kelas: payload.kelas,
                     jenisSurat: payload.jenisSurat,
                     keperluan: payload.keperluan,
-                    namaPemohon: payload.namaPemohon,
+                    namaPemohon: payload.namaPemohon || payload.namaOrtu || "",
+                    namaOrtu: payload.namaOrtu || payload.namaPemohon || "",
                     hubunganPemohon: payload.hubunganPemohon || "Orang Tua / Wali",
-                    noWhatsApp: payload.noWhatsApp || payload.noHp,
+                    noWhatsApp: payload.noWhatsApp || payload.hpOrtu || payload.noHp || "",
+                    hpOrtu: payload.hpOrtu || payload.noWhatsApp || payload.noHp || "",
+                    noHp: payload.noWhatsApp || payload.hpOrtu || payload.noHp || "",
                     status: "Menunggu",
                     nomorSuratTerbit: "",
                     keteranganTindak: ""

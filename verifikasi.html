@@ -170,9 +170,9 @@
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-900 to-indigo-700 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-900/20">
                     <i class="fa-solid fa-qrcode text-3xl"></i>
                 </div>
-                <h2 class="text-lg font-black text-slate-900">Validasi Keabsahan Dokumen & Surat</h2>
+                <h2 class="text-lg font-black text-slate-900">Validasi Keabsahan Surat Keluar</h2>
                 <p class="text-xs text-slate-500 leading-relaxed">
-                    Pindai kode QR barcode pada lembar fisik surat atau masukkan Nomor Registrasi Surat untuk memeriksa keasliannya secara langsung.
+                    Pindai kode QR barcode pada lembar fisik surat atau masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi secara langsung.
                 </p>
             </div>
 
@@ -187,14 +187,14 @@
                 </button>
 
                 <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2 flex flex-col justify-center">
-                    <label class="block text-xs font-bold text-slate-700">Cari Berdasarkan Nomor Surat</label>
+                    <label class="block text-xs font-bold text-slate-700">Cari Berdasarkan Nomor Surat Keluar</label>
                     <div class="flex gap-2">
-                        <input type="text" id="input-search-nomor" onkeydown="if(event.key==='Enter') searchByNomorManual()" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/033/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
+                        <input type="text" id="input-search-nomor" onkeydown="if(event.key==='Enter') searchByNomorManual()" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/004/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
                         <button type="button" onclick="searchByNomorManual()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition">
                             Cek
                         </button>
                     </div>
-                    <span class="text-[10px] text-slate-400">Masukkan Nomor Registrasi Surat untuk memeriksa keabsahan dokumen</span>
+                    <span class="text-[10px] text-slate-400">Masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi</span>
                 </div>
             </div>
 
@@ -225,7 +225,7 @@
             </div>
             <h3 class="text-lg font-black text-rose-800">DOKUMEN TIDAK TERDAFTAR / TIDAK VALID</h3>
             <p id="invalid-reason-text" class="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                Nomor surat yang diperiksa tidak ditemukan pada pangkalan data SIM-TAS-SD. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
+                Nomor surat keluar yang diperiksa tidak ditemukan pada Buku Register Surat Keluar SIM-TAS-SD. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
             </p>
             <div class="pt-2 flex justify-center gap-3">
                 <button type="button" onclick="startQrScanner()" class="px-4 py-2 bg-blue-900 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
@@ -420,19 +420,26 @@
         /**
          * Ekstraksi Nomor Registrasi Surat Bersih
          * Mampu mengekstrak nomor surat valid dari:
-         * 1. Nomor langsung: "421.2/004/SD/2026"
-         * 2. Hash portal: "#verifikasi.html/421.2/004/SD/2026", "#/verifikasi.html/...", "verifikasi.html#..."
-         * 3. Full URL publik: "https://.../verifikasi.html#verifikasi.html/421.2/004/SD/2026"
-         * 4. Query parameter: "https://.../verifikasi.html?no=421.2%2F004%2FSD%2F2026" atau "?nomor=..."
-         * 5. String URL-encoded berulang (%252F, %2F)
-         * 6. Format teks scanner: "url #verifikasi.html/{noSurat}"
-         * 7. JSON payload QR Code: {"no":"421.2/004/SD/2026"}
+         * 1. URL lengkap: "https://sdnegeriterlangu01-sd.github.io/SIM-TAS-SD/verifikasi.html?no=421.2%2F004%2FX%2F2026"
+         * 2. URL relatif: "verifikasi.html?no=421.2%2F004%2FSD%2F2026"
+         * 3. Query string murni: "?no=421.2%2F004%2FX%2F2026" atau "no=421.2%2F004%2FX%2F2026"
+         * 4. Hash URL: "#verifikasi.html/421.2/004/SD/2026" atau "#421.2/004/SD/2026"
+         * 5. Nomor surat murni: "421.2/004/SD/2026" atau "421.2/004/X/2026"
+         * 6. String ter-encode URL: "421.2%2F004%2FSD%2F2026"
          */
         function extractCleanNomorSurat(raw) {
             if (!raw) return "";
             let str = String(raw).trim();
 
-            // 1. Decode URI berulang jika ada double/triple encoding (%252F, %2F)
+            // 1. Ekstrak query parameter "no" atau "nomor" jika input berupa URL atau ada "?no="
+            if (str.includes("?no=") || str.includes("&no=") || str.includes("?nomor=") || str.includes("&nomor=")) {
+                const match = str.match(/[?&](?:no|nomor)=([^&#]+)/i);
+                if (match && match[1]) {
+                    str = match[1].trim();
+                }
+            }
+
+            // 2. Decode URI component berulang hingga string benar-benar ter-decode murni (%252F -> %2F -> /)
             for (let i = 0; i < 3; i++) {
                 try {
                     const dec = decodeURIComponent(str);
@@ -443,42 +450,28 @@
                 }
             }
 
-            // 2. Parse JSON jika payload berupa stringified JSON
-            if (str.startsWith("{") && str.endsWith("}")) {
-                try {
-                    const parsed = JSON.parse(str);
-                    if (parsed && (parsed.no || parsed.nomorSurat || parsed.nomor)) {
-                        return String(parsed.no || parsed.nomorSurat || parsed.nomor).trim();
-                    }
-                } catch (e) {}
-            }
-
-            // 3. Ekstrak query parameter (?no=..., &no=..., ?nomor=..., &nomor=...)
-            if (str.includes("?no=") || str.includes("&no=") || str.includes("?nomor=") || str.includes("&nomor=")) {
-                const match = str.match(/[?&](?:no|nomor)=([^&#]+)/i);
-                if (match && match[1]) {
-                    try {
-                        return decodeURIComponent(match[1]).trim();
-                    } catch (e) {
-                        return match[1].trim();
-                    }
-                }
-            }
-
-            // 4. Jika ada fragment hash (#...)
+            // 3. Jika masih memuat tanda hash (#), ambil bagian setelah hash
             if (str.includes("#")) {
                 const parts = str.split("#");
                 str = parts.slice(1).join("#").trim();
             }
 
-            // 5. Bersihkan awalan URL, host domain, nama file halaman, dan repo
-            str = str.replace(/^https?:\/\/[^/]+/i, ""); // hapus protokol & domain (misal https://sdnegeriterlangu01-sd.github.io)
-            str = str.replace(/^.*?SIM-TAS-SD\/?/i, ""); // hapus sub-path repo jika ada
-            str = str.replace(/^.*?verifikasi(?:\.html)?\/?/i, ""); // hapus path sampai verifikasi.html/ atau verifikasi/
-            str = str.replace(/^(?:url\s*:?\s*)/i, ""); // hapus prefix "url " atau "url:"
-            str = str.replace(/^(?:no|nomor)\s*[:=]\s*/i, ""); // hapus prefix "no=" atau "no:"
-            
-            // 6. Bersihkan karakter pagar dan slash di awal & akhir string
+            // 4. Periksa kembali jika di dalam hash ada query parameter (?no=...)
+            if (str.includes("?no=") || str.includes("&no=") || str.includes("?nomor=") || str.includes("&nomor=")) {
+                const match = str.match(/[?&](?:no|nomor)=([^&#]+)/i);
+                if (match && match[1]) {
+                    try { str = decodeURIComponent(match[1]).trim(); } catch (e) { str = match[1].trim(); }
+                }
+            }
+
+            // 5. Bersihkan awalan URL, host domain, file verifikasi.html, dan repo jika masih menempel
+            str = str.replace(/^https?:\/\/[^/]+/i, "");
+            str = str.replace(/^.*?SIM-TAS-SD\/?/i, "");
+            str = str.replace(/^.*?verifikasi(?:\.html)?\/?/i, "");
+            str = str.replace(/^(?:url\s*:?\s*)/i, "");
+            str = str.replace(/^(?:no|nomor)\s*[:=]\s*/i, "");
+
+            // 6. Bersihkan karakter pagar dan slash di awal dan akhir string
             str = str.replace(/^[#/]+/, "").replace(/[#/]+$/, "").trim();
 
             // 7. Decode sekali lagi untuk memastikan tidak ada simbol encoding tertinggal
@@ -490,13 +483,40 @@
         function processUrlParams() {
             const params = new URLSearchParams(window.location.search);
             
-            // 1. Cek payload encoded 'd'
+            // 1. Cek query parameter "no" atau "nomor" (contoh: ?no=421.2%2F004%2FSD%2F2026)
+            let rawNomor = (params.get("no") || params.get("nomor") || "").trim();
+            
+            // 2. Cek fragment hash (#...)
+            if (!rawNomor && window.location.hash) {
+                rawNomor = window.location.hash.substring(1).trim();
+            }
+
+            // 3. Fallback jika seluruh window.location.href memuat parameter ?no=
+            if (!rawNomor && window.location.href.includes("?no=")) {
+                rawNomor = window.location.href;
+            }
+
+            if (rawNomor) {
+                const cleanNo = extractCleanNomorSurat(rawNomor);
+                if (cleanNo) {
+                    const inp = document.getElementById("input-search-nomor");
+                    if (inp) inp.value = cleanNo;
+                    // Langsung otomatis jalankan pemeriksaan Buku Register Surat Keluar
+                    searchByNomorManual(cleanNo);
+                    return;
+                }
+            }
+
+            // Cek payload encoded 'd' (jika ada surat lama dengan payload mandiri)
             const rawPayload = params.get("d");
             if (rawPayload) {
                 try {
                     const parsed = JSON.parse(decodeURIComponent(rawPayload));
-                    if (parsed && (parsed.no || parsed.nama || parsed.tujuan)) {
-                        renderVerifiedData(parsed);
+                    if (parsed && (parsed.no || parsed.nomorSurat)) {
+                        const cleanDNo = extractCleanNomorSurat(parsed.no || parsed.nomorSurat);
+                        const inp = document.getElementById("input-search-nomor");
+                        if (inp) inp.value = cleanDNo;
+                        searchByNomorManual(cleanDNo);
                         return;
                     }
                 } catch (e) {
@@ -504,64 +524,7 @@
                 }
             }
 
-            // 2. Cek query parameter individual atau fragment hash
-            let nomor = (params.get("no") || params.get("nomor") || "").trim();
-            if (!nomor && window.location.hash) {
-                nomor = window.location.hash.substring(1).trim();
-            }
-
-            if (nomor) {
-                const cleanNo = extractCleanNomorSurat(nomor);
-                if (cleanNo) {
-                    const inp = document.getElementById("input-search-nomor");
-                    if (inp) inp.value = cleanNo;
-                    searchByNomorManual(cleanNo);
-                    return;
-                }
-            }
-
-            const nisn = (params.get("nisn") || "").trim();
-            const nama = (params.get("nama") || "").trim();
-
-            if (nisn || nama) {
-                let config = {};
-                let students = [];
-                try {
-                    if (typeof DataStore !== "undefined") {
-                        DataStore.init();
-                        config = DataStore.getConfig() || {};
-                        students = DataStore.getSiswa() || [];
-                    }
-                } catch (e) {}
-
-                const student = students.find(s => 
-                    (nisn && s.nisn === nisn) || 
-                    (nama && s.nama && s.nama.toLowerCase().includes(nama.toLowerCase()))
-                );
-
-                if (student) {
-                    renderVerifiedData({
-                        isSiswa: true,
-                        no: nomor || "421.2/004/SD/2026",
-                        nama: student.nama,
-                        nisn: student.nisn,
-                        nik: student.nik || "-",
-                        kelas: student.kelas || student.rombel || "Aktif",
-                        jenis: "Surat Keterangan Sekolah",
-                        tgl: typeof Util !== "undefined" ? Util.today() : "Aktif",
-                        sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
-                        npsn: config.npsn || "20326713",
-                        kepsek: config.namaKepalaSekolah || "-",
-                        nipKepsek: config.nipKepalaSekolah || "-"
-                    });
-                    return;
-                }
-
-                renderInvalid(`Dokumen dengan identitas "${nisn || nama}" tidak terdaftar pada pangkalan data SIM-TAS-SD.`, nisn || nama);
-                return;
-            }
-
-            // Tampilan awal (landing)
+            // Tampilan awal (landing portal pencarian surat keluar)
             document.getElementById("box-portal-landing").classList.remove("hidden");
             document.getElementById("box-result-verified").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
@@ -574,35 +537,30 @@
 
             val = extractCleanNomorSurat(val);
             if (!val) {
-                alert("Silakan masukkan Nomor Registrasi Surat terlebih dahulu!");
+                alert("Silakan masukkan Nomor Registrasi Surat Keluar terlebih dahulu!");
                 return;
             }
 
-            // Selalu perbarui input search dengan nomor bersih
+            // Selalu tampilkan nomor surat bersih murni di kolom input pencarian
             const inp = document.getElementById("input-search-nomor");
             if (inp) inp.value = val;
 
             let config = {};
-            let students = [];
             let suratKeluar = [];
             let tendikList = [];
-            let permohonanList = [];
 
             try {
                 if (typeof DataStore !== "undefined") {
                     DataStore.init();
                     config = DataStore.getConfig() || {};
-                    students = DataStore.getSiswa() || [];
                     suratKeluar = DataStore.getSuratKeluar() || [];
                     tendikList = DataStore.getTendik() || [];
-                    if (typeof DataStore.getPermohonanSurat === "function") {
-                        permohonanList = DataStore.getPermohonanSurat() || [];
-                    }
                 }
             } catch (e) {
                 console.warn("Gagal inisialisasi DataStore:", e);
             }
 
+            // Fallback ke data seed surat keluar jika database local storage belum terisi
             if (!suratKeluar.length && typeof SEED_SURAT_KELUAR !== "undefined") {
                 suratKeluar = SEED_SURAT_KELUAR;
             }
@@ -611,7 +569,7 @@
             const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
             const targetNorm = norm(cleanVal);
 
-            // 1. Cari di Database Agenda Surat Keluar
+            // Pencarian HANYA memeriksa Buku Register Surat Keluar (DataStore.getSuratKeluar())
             const sk = suratKeluar.find(s => {
                 if (!s) return false;
                 const sNo = (s.nomorSurat || s.nomorSuratManual || s.noSurat || "").toLowerCase().trim();
@@ -622,29 +580,16 @@
                     (targetNorm && norm(sId) === targetNorm);
             });
 
-            // 2. Fallback cek Database Permohonan Surat Online jika berasal dari nomor surat terbit
-            let pFound = null;
-            if (!sk && targetNorm && permohonanList.length) {
-                pFound = permohonanList.find(p => {
-                    if (!p) return false;
-                    const pNo = (p.nomorSuratTerbit || "").toLowerCase().trim();
-                    const pResi = (p.trackingCode || p.kodeTracking || p.id || "").toLowerCase().trim();
-                    return pNo === cleanVal || pResi === cleanVal ||
-                        (targetNorm && norm(pNo) === targetNorm) ||
-                        (targetNorm && norm(pResi) === targetNorm);
-                });
-            }
-
-            // 3. Fallback cek Data Siswa jika input adalah NISN atau Nama
-            const student = students.find(s => s.nisn === val || (s.nama && s.nama.toLowerCase() === cleanVal));
-
             if (sk) {
                 let nipSigner = config.nipKepalaSekolah || "-";
                 if (sk.penandatangan) {
                     const foundTendik = tendikList.find(t => t.nama && (t.nama === sk.penandatangan || sk.penandatangan.includes(t.nama)));
                     if (foundTendik && foundTendik.nip) nipSigner = foundTendik.nip;
                 }
-                const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-");
+
+                // Deteksi format surat keluar: apakah ditujukan untuk siswa (Surat Keterangan Siswa/PIP) atau kedinasan umum
+                const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-") ||
+                    (sk.perihal && (sk.perihal.toLowerCase().includes("keterangan") || sk.perihal.toLowerCase().includes("aktif") || sk.perihal.toLowerCase().includes("pip")));
 
                 renderVerifiedData({
                     isSiswa: isSiswa,
@@ -670,43 +615,8 @@
                 return;
             }
 
-            if (pFound) {
-                renderVerifiedData({
-                    isSiswa: true,
-                    no: pFound.nomorSuratTerbit || pFound.trackingCode,
-                    nama: pFound.nama || pFound.namaSiswa,
-                    nisn: pFound.nisn || "-",
-                    nik: pFound.nik || "-",
-                    kelas: pFound.kelas || "Aktif",
-                    jenis: pFound.jenisSurat || "Surat Keterangan Sekolah",
-                    tgl: pFound.tanggalMasuk || pFound.tanggalSurat || (typeof Util !== "undefined" ? Util.today() : "Aktif"),
-                    sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
-                    npsn: config.npsn || "20326713",
-                    kepsek: config.namaKepalaSekolah || "-",
-                    nipKepsek: config.nipKepalaSekolah || "-"
-                });
-                return;
-            }
-
-            if (student) {
-                renderVerifiedData({
-                    isSiswa: true,
-                    no: `REG-${val}`,
-                    nama: student.nama,
-                    nisn: student.nisn,
-                    nik: student.nik || "-",
-                    kelas: student.kelas || student.rombel || "Aktif",
-                    jenis: "Surat Keterangan Sekolah",
-                    tgl: typeof Util !== "undefined" ? Util.today() : "Aktif",
-                    sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
-                    npsn: config.npsn || "20326713",
-                    kepsek: config.namaKepalaSekolah || "-",
-                    nipKepsek: config.nipKepalaSekolah || "-"
-                });
-                return;
-            }
-
-            renderInvalid(`Dokumen dengan nomor registrasi "${val}" tidak terdaftar atau tidak ditemukan pada pangkalan data SIM-TAS-SD.`, val);
+            // Jika nomor tidak ada di Buku Register Surat Keluar
+            renderInvalid(`Dokumen dengan nomor registrasi "${val}" tidak terdaftar atau tidak ditemukan pada Buku Register Surat Keluar SIM-TAS-SD.`, val);
         }
 
         async function startQrScanner() {
@@ -724,16 +634,17 @@
                     { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
                         stopQrScanner();
+                        // Ambil dan bersihkan nomor surat dari hasil scan QR Code
                         const cleanNo = extractCleanNomorSurat(decodedText);
                         
-                        // Masukkan nomor surat hasil scan ke input box pencarian
+                        // Masukkan nomor surat bersih ke input box pencarian
                         const inp = document.getElementById("input-search-nomor");
                         if (inp) {
                             inp.value = cleanNo;
                             inp.focus();
                         }
 
-                        // Langsung verifikasi ke database
+                        // Langsung otomatis cek keabsahan surat keluar ke Buku Register
                         searchByNomorManual(cleanNo);
                     },
                     (errorMessage) => {

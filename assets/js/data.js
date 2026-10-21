@@ -57,15 +57,17 @@ const SEED_SISWA = [
         nisn: "0134567890",
         nis: "20240101",
         nama: "Ahmad Rayhan Pratama",
-        nik: "3374011205130001",
-        tempatLahir: "Semarang",
+        nik: "3329091205140001",
+        noKk: "3329091204080002",
+        tglTerbitKk: "15 Januari 2021",
+        tempatLahir: "Brebes",
         tanggalLahir: "2014-05-12",
         jk: "Laki-laki",
         kelas: "5",
         namaOrtu: "Bambang Pratama",
         pekerjaanOrtu: "Wiraswasta",
         noHp: "081234567891",
-        alamat: "Jl. Melati No. 12, RT 02/RW 04, Cempaka Indah",
+        alamat: "Jl. Raya Terlangu RT 02/RW 01, Terlangu",
         berkas: {
             kk: { uploaded: true, filename: "0134567890_KK_2026.pdf", date: "2026-02-10", url: "https://drive.google.com/file/d/sample-kk-ahmad/view" },
             akta: { uploaded: true, filename: "0134567890_AKTA_2026.pdf", date: "2026-02-10", url: "https://drive.google.com/file/d/sample-akta-ahmad/view" },
@@ -77,15 +79,17 @@ const SEED_SISWA = [
         nisn: "0142345678",
         nis: "20240102",
         nama: "Siti Nur Haliza",
-        nik: "3374015609140003",
-        tempatLahir: "Solo",
+        nik: "3329095609140003",
+        noKk: "3329091204080005",
+        tglTerbitKk: "20 Februari 2020",
+        tempatLahir: "Brebes",
         tanggalLahir: "2014-09-16",
         jk: "Perempuan",
         kelas: "5",
         namaOrtu: "Muhammad Halim",
         pekerjaanOrtu: "Pegawai Negeri Sipil (PNS)",
         noHp: "081398765432",
-        alamat: "Jl. Anggrek Raya Blok B/4, Cempaka Indah",
+        alamat: "Desa Terlangu RT 03/RW 01, Terlangu",
         berkas: {
             kk: { uploaded: true, filename: "0142345678_KK_2026.pdf", date: "2026-01-15", url: "https://drive.google.com/file/d/sample-kk-siti/view" },
             akta: { uploaded: true, filename: "0142345678_AKTA_2026.pdf", date: "2026-01-15", url: "https://drive.google.com/file/d/sample-akta-siti/view" },
@@ -97,15 +101,17 @@ const SEED_SISWA = [
         nisn: "0151122334",
         nis: "20250115",
         nama: "Bima Arya Wijaya",
-        nik: "3374020301150002",
-        tempatLahir: "Semarang",
+        nik: "3329090301150002",
+        noKk: "3329091005120008",
+        tglTerbitKk: "08 Mei 2022",
+        tempatLahir: "Brebes",
         tanggalLahir: "2015-01-03",
         jk: "Laki-laki",
         kelas: "4",
         namaOrtu: "Danang Wijaya",
         pekerjaanOrtu: "Karyawan Swasta",
         noHp: "082155667788",
-        alamat: "Perumahan Cempaka Asri No. 18",
+        alamat: "Dukuh Sigempol RT 01/RW 03, Terlangu",
         berkas: {
             kk: { uploaded: true, filename: "0151122334_KK_2026.pdf", date: "2026-03-01", url: "https://drive.google.com/file/d/sample-kk-bima/view" },
             akta: { uploaded: true, filename: "0151122334_AKTA_2026.pdf", date: "2026-03-01", url: "https://drive.google.com/file/d/sample-akta-bima/view" },
@@ -117,15 +123,17 @@ const SEED_SISWA = [
         nisn: "0169876543",
         nis: "20250201",
         nama: "Dewi Lestari Putri",
-        nik: "3374016708150005",
-        tempatLahir: "Demak",
+        nik: "3329096708150005",
+        noKk: "3329091508110003",
+        tglTerbitKk: "12 Agustus 2019",
+        tempatLahir: "Brebes",
         tanggalLahir: "2015-08-27",
         jk: "Perempuan",
         kelas: "4",
         namaOrtu: "Agus Santosa",
-        pekerjaanOrtu: "Petani / Pedagang",
+        pekerjaanOrtu: "Petani / Buruh",
         noHp: "085712345678",
-        alamat: "Desa Karangsari RT 01/RW 02",
+        alamat: "Desa Terlangu RT 04/RW 02, Brebes",
         berkas: {
             kk: { uploaded: true, filename: "0169876543_KK_2026.pdf", date: "2026-02-20", url: "https://drive.google.com/file/d/sample-kk-dewi/view" },
             akta: { uploaded: false, filename: null, date: null, url: null },
@@ -137,15 +145,17 @@ const SEED_SISWA = [
         nisn: "0172233445",
         nis: "20260010",
         nama: "Muhammad Faiz Al-Fatih",
-        nik: "3374011403160004",
-        tempatLahir: "Semarang",
+        nik: "3329091403160004",
+        noKk: "3329092209140001",
+        tglTerbitKk: "10 September 2021",
+        tempatLahir: "Brebes",
         tanggalLahir: "2016-03-14",
         jk: "Laki-laki",
         kelas: "3",
         namaOrtu: "Farhan Hakim",
         pekerjaanOrtu: "Guru",
         noHp: "081299887766",
-        alamat: "Jl. Dahlia IV No. 7, Cempaka Indah",
+        alamat: "Jl. Pemuda No. 12, Terlangu",
         berkas: {
             kk: { uploaded: true, filename: "0172233445_KK_2026.pdf", date: "2026-01-05", url: "https://drive.google.com/file/d/sample-kk-faiz/view" },
             akta: { uploaded: true, filename: "0172233445_AKTA_2026.pdf", date: "2026-01-05", url: "https://drive.google.com/file/d/sample-akta-faiz/view" },
@@ -157,15 +167,17 @@ const SEED_SISWA = [
         nisn: "0185566778",
         nis: "20260025",
         nama: "Zahra Anindya Kirana",
-        nik: "3374026511170001",
-        tempatLahir: "Kudus",
+        nik: "3329096511170001",
+        noKk: "3329090104160007",
+        tglTerbitKk: "18 Oktober 2022",
+        tempatLahir: "Brebes",
         tanggalLahir: "2017-11-25",
         jk: "Perempuan",
         kelas: "2",
         namaOrtu: "Dodi Kirana",
         pekerjaanOrtu: "Wiraswasta",
         noHp: "081322446688",
-        alamat: "Jl. Pahlawan No. 89, Cempaka Indah",
+        alamat: "Desa Terlangu RT 01/RW 01",
         berkas: {
             kk: { uploaded: true, filename: "0185566778_KK_2026.pdf", date: "2026-02-18", url: "https://drive.google.com/file/d/sample-kk-zahra/view" },
             akta: { uploaded: true, filename: "0185566778_AKTA_2026.pdf", date: "2026-02-18", url: "https://drive.google.com/file/d/sample-akta-zahra/view" },
@@ -177,17 +189,19 @@ const SEED_SISWA = [
         nisn: "0199988776",
         nis: "20260040",
         nama: "Kenzo Rafandra Pratama",
-        nik: "3374011808180002",
-        tempatLahir: "Semarang",
+        nik: "3329091808180002",
+        noKk: "",
+        tglTerbitKk: "",
+        tempatLahir: "Brebes",
         tanggalLahir: "2018-08-18",
         jk: "Laki-laki",
         kelas: "1",
         namaOrtu: "Rudi Pratama",
         pekerjaanOrtu: "Karyawan BUMN",
         noHp: "085233669911",
-        alamat: "Pondok Hijau Residence Kav. 14",
+        alamat: "Desa Terlangu RT 05/RW 02",
         berkas: {
-            kk: { uploaded: true, filename: "0199988776_KK_2026.pdf", date: "2026-03-10", url: "https://drive.google.com/file/d/sample-kk-kenzo/view" },
+            kk: { uploaded: false, filename: null, date: null, url: null },
             akta: { uploaded: true, filename: "0199988776_AKTA_2026.pdf", date: "2026-03-10", url: "https://drive.google.com/file/d/sample-akta-kenzo/view" },
             kip: { uploaded: false, filename: null, date: null, url: null },
             foto: { uploaded: false, filename: null, date: null, url: null }
@@ -197,21 +211,275 @@ const SEED_SISWA = [
         nisn: "0123344556",
         nis: "20230005",
         nama: "Nabila Syakira Ramadhani",
-        nik: "3374015007130007",
-        tempatLahir: "Semarang",
+        nik: "3329095007130007",
+        noKk: "3329091402100004",
+        tglTerbitKk: "05 Maret 2021",
+        tempatLahir: "Brebes",
         tanggalLahir: "2013-07-10",
         jk: "Perempuan",
         kelas: "6",
         namaOrtu: "Irwan Ramadhani",
         pekerjaanOrtu: "Arsitek",
         noHp: "081267890123",
-        alamat: "Jl. Flamboyan Indah No. 5",
+        alamat: "Jl. Flamboyan Terlangu No. 5",
         berkas: {
             kk: { uploaded: true, filename: "0123344556_KK_2026.pdf", date: "2026-01-20", url: "https://drive.google.com/file/d/sample-kk-nabila/view" },
             akta: { uploaded: true, filename: "0123344556_AKTA_2026.pdf", date: "2026-01-20", url: "https://drive.google.com/file/d/sample-akta-nabila/view" },
             kip: { uploaded: false, filename: null, date: null, url: null },
             foto: { uploaded: true, filename: "0123344556_FOTO_3x4.jpg", date: "2026-01-20", url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop&q=80" }
         }
+    }
+];
+
+// Seed Matriks Jadwal Pelajaran (Senin s/d Sabtu, Jam 1-8 per kelas)
+const SEED_JADWAL = [
+    // Kelas 1 (Guru: Dewi Kurniasih, S.Pd.)
+    { id: "JDW-1-SEN-1", kelas: "1", hari: "Senin", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Upacara Bendera", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SEN-2", kelas: "1", hari: "Senin", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Pendidikan Pancasila", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SEN-3", kelas: "1", hari: "Senin", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Bahasa Indonesia", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SEN-4", kelas: "1", hari: "Senin", jamKe: 4, waktuMulai: "09:05", waktuSelesai: "09:40", mapel: "Bahasa Indonesia", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SEN-5", kelas: "1", hari: "Senin", jamKe: 5, waktuMulai: "09:40", waktuSelesai: "10:15", mapel: "Matematika", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SEL-1", kelas: "1", hari: "Selasa", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-1-SEL-2", kelas: "1", hari: "Selasa", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-1-SEL-3", kelas: "1", hari: "Selasa", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Bahasa Indonesia", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-RAB-1", kelas: "1", hari: "Rabu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-1-RAB-2", kelas: "1", hari: "Rabu", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-1-KAM-1", kelas: "1", hari: "Kamis", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Matematika", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-JUM-1", kelas: "1", hari: "Jumat", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Senam Pagi & Kebersihan", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+    { id: "JDW-1-SAB-1", kelas: "1", hari: "Sabtu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Pramuka Siaga / Seni Budaya", guru: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+
+    // Kelas 4 (Guru: Endang Susilowati, S.Pd.)
+    { id: "JDW-4-SEN-1", kelas: "4", hari: "Senin", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Upacara Bendera", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEN-2", kelas: "4", hari: "Senin", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Bahasa Indonesia", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEN-3", kelas: "4", hari: "Senin", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Bahasa Indonesia", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEN-4", kelas: "4", hari: "Senin", jamKe: 4, waktuMulai: "09:05", waktuSelesai: "09:40", mapel: "IPAS (Ilmu Pengetahuan Alam & Sosial)", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEN-5", kelas: "4", hari: "Senin", jamKe: 5, waktuMulai: "09:40", waktuSelesai: "10:15", mapel: "IPAS", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEL-1", kelas: "4", hari: "Selasa", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Matematika", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEL-2", kelas: "4", hari: "Selasa", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Matematika", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SEL-3", kelas: "4", hari: "Selasa", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-4-SEL-4", kelas: "4", hari: "Selasa", jamKe: 4, waktuMulai: "09:05", waktuSelesai: "09:40", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-4-RAB-1", kelas: "4", hari: "Rabu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-4-RAB-2", kelas: "4", hari: "Rabu", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-4-RAB-3", kelas: "4", hari: "Rabu", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Bahasa Jawa", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-KAM-1", kelas: "4", hari: "Kamis", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Pendidikan Pancasila", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-KAM-2", kelas: "4", hari: "Kamis", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Seni Rupa / Budaya", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-JUM-1", kelas: "4", hari: "Jumat", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Senam Kesegaran Jasmani & Dhuha", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-JUM-2", kelas: "4", hari: "Jumat", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Projek P5 (Kearifan Lokal)", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SAB-1", kelas: "4", hari: "Sabtu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Bahasa Inggris", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+    { id: "JDW-4-SAB-2", kelas: "4", hari: "Sabtu", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Pramuka Penggalang", guru: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+
+    // Kelas 5 (Guru: Budi Hartono, S.Pd.)
+    { id: "JDW-5-SEN-1", kelas: "5", hari: "Senin", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Upacara Bendera", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SEN-2", kelas: "5", hari: "Senin", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Matematika", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SEN-3", kelas: "5", hari: "Senin", jamKe: 3, waktuMulai: "08:10", waktuSelesai: "08:45", mapel: "Matematika", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SEN-4", kelas: "5", hari: "Senin", jamKe: 4, waktuMulai: "09:05", waktuSelesai: "09:40", mapel: "IPAS", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SEL-1", kelas: "5", hari: "Selasa", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Bahasa Indonesia", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SEL-2", kelas: "5", hari: "Selasa", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Bahasa Indonesia", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-RAB-1", kelas: "5", hari: "Rabu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-5-RAB-2", kelas: "5", hari: "Rabu", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "Pendidikan Agama Islam", guru: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" },
+    { id: "JDW-5-KAM-1", kelas: "5", hari: "Kamis", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-5-KAM-2", kelas: "5", hari: "Kamis", jamKe: 2, waktuMulai: "07:35", waktuSelesai: "08:10", mapel: "PJOK", guru: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" },
+    { id: "JDW-5-JUM-1", kelas: "5", hari: "Jumat", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "P5 & Pembiasaan Karakter", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+    { id: "JDW-5-SAB-1", kelas: "5", hari: "Sabtu", jamKe: 1, waktuMulai: "07:00", waktuSelesai: "07:35", mapel: "Pramuka / Ekstrakurikuler", guru: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" }
+];
+
+// Seed Data Pengusulan PIP (Sesuai format Dapodik/Puslapdik 2026 SDN Terlangu 01)
+const SEED_PIP_PENGUSULAN = [
+    {
+        nisn: "0169876543",
+        nama: "Dewi Lestari Putri",
+        kelas: "4",
+        namaFase: "Fase B",
+        desil: 1,
+        skAtasNama: "Dewi Lestari Putri (Siswa)",
+        statusSK: "Sudah SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "Pemegang KIP Aktif / Desil 1 (Sangat Miskin Ekstrem)"
+    },
+    {
+        nisn: "0134567890",
+        nama: "Ahmad Rayhan Pratama",
+        kelas: "5",
+        namaFase: "Fase C",
+        desil: 2,
+        skAtasNama: "Ahmad Rayhan Pratama (Siswa)",
+        statusSK: "Sudah SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "Padan DTKS Kemensos - Desil 2"
+    },
+    {
+        nisn: "0185566778",
+        nama: "Zahra Anindya Kirana",
+        kelas: "2",
+        namaFase: "Fase A",
+        desil: 2,
+        skAtasNama: "Zahra Anindya Kirana (Siswa)",
+        statusSK: "Sudah SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "KIP Jenjang SD - Desil 2"
+    },
+    {
+        nisn: "0151122334",
+        nama: "Bima Arya Wijaya",
+        kelas: "4",
+        namaFase: "Fase B",
+        desil: 3,
+        skAtasNama: "Bima Arya Wijaya (Siswa)",
+        statusSK: "Sudah SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "P3KE Desil 3 / Usulan Sekolah"
+    },
+    {
+        nisn: "0142345678",
+        nama: "Siti Nur Haliza",
+        kelas: "5",
+        namaFase: "Fase C",
+        desil: 4,
+        skAtasNama: "Siti Nur Haliza (Siswa)",
+        statusSK: "Sudah SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "P3KE Desil 4 (Prioritas 1)"
+    },
+    {
+        nisn: "0199988776",
+        nama: "Kenzo Rafandra Pratama",
+        kelas: "1",
+        namaFase: "Fase A",
+        desil: 5,
+        skAtasNama: "Rudi Pratama (Orang Tua)",
+        statusSK: "Belum Masuk SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "Rentan Miskin - Menunggu Validasi Kuota Tambahan"
+    },
+    {
+        nisn: "0172233445",
+        nama: "Muhammad Faiz Al-Fatih",
+        kelas: "3",
+        namaFase: "Fase B",
+        desil: 6,
+        skAtasNama: "Farhan Hakim (Orang Tua)",
+        statusSK: "Belum Masuk SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "Rentan Miskin Desil 6"
+    },
+    {
+        nisn: "0123344556",
+        nama: "Nabila Syakira Ramadhani",
+        kelas: "6",
+        namaFase: "Fase C",
+        desil: 8,
+        skAtasNama: "Nabila Syakira Ramadhani (Siswa)",
+        statusSK: "Belum Masuk SK",
+        tahunUsulan: "2026",
+        catatanDapodik: "Keluarga Menengah - Rekomendasi Verifikasi Faktual"
+    }
+];
+
+// Seed Data Siswa Penerima PIP (Sesuai SK Kemendikbud 2026 SDN Terlangu 01)
+const SEED_PIP_PENERIMA = [
+    {
+        nisn: "0169876543",
+        nama: "Dewi Lestari Putri",
+        kelas: "4",
+        nomorSK: "0345/P3KE/PIP/2026",
+        tahap: "Tahap 1",
+        nominal: 450000,
+        bankPenyalur: "BRI",
+        nomorRekening: "0109-01-045678-50-2",
+        statusRekening: "Sudah Aktivasi",
+        statusCair: "Sudah Cair",
+        tanggalCair: "2026-03-12",
+        tahunAnggaran: "2026"
+    },
+    {
+        nisn: "0134567890",
+        nama: "Ahmad Rayhan Pratama",
+        kelas: "5",
+        nomorSK: "0345/P3KE/PIP/2026",
+        tahap: "Tahap 1",
+        nominal: 450000,
+        bankPenyalur: "BRI",
+        nomorRekening: "0109-01-045679-50-8",
+        statusRekening: "Sudah Aktivasi",
+        statusCair: "Belum Cair",
+        tanggalCair: "-",
+        tahunAnggaran: "2026"
+    },
+    {
+        nisn: "0185566778",
+        nama: "Zahra Anindya Kirana",
+        kelas: "2",
+        nomorSK: "0588/P3KE/PIP/2026",
+        tahap: "Tahap 2",
+        nominal: 450000,
+        bankPenyalur: "BRI",
+        nomorRekening: "0109-01-089123-50-1",
+        statusRekening: "Sudah Aktivasi",
+        statusCair: "Sudah Cair",
+        tanggalCair: "2026-04-05",
+        tahunAnggaran: "2026"
+    },
+    {
+        nisn: "0151122334",
+        nama: "Bima Arya Wijaya",
+        kelas: "4",
+        nomorSK: "0588/P3KE/PIP/2026",
+        tahap: "Tahap 2",
+        nominal: 450000,
+        bankPenyalur: "BRI",
+        nomorRekening: "0109-01-089124-50-7",
+        statusRekening: "Belum Aktivasi",
+        statusCair: "Belum Cair",
+        tanggalCair: "-",
+        tahunAnggaran: "2026"
+    },
+    {
+        nisn: "0142345678",
+        nama: "Siti Nur Haliza",
+        kelas: "5",
+        nomorSK: "0790/P3KE/PIP/2026",
+        tahap: "Tahap 3",
+        nominal: 450000,
+        bankPenyalur: "BRI",
+        nomorRekening: "0109-01-098765-50-3",
+        statusRekening: "Sudah Aktivasi",
+        statusCair: "Belum Cair",
+        tanggalCair: "-",
+        tahunAnggaran: "2026"
+    }
+];
+
+// Seed Data Permohonan Surat Online Orang Tua (Layanan Mandiri Publik)
+const SEED_PERMOHONAN_SURAT = [
+    {
+        id: "REQ-2026-0001",
+        tanggalMasuk: "2026-10-18 09:15",
+        nisn: "0169876543",
+        nama: "Dewi Lestari Putri",
+        kelas: "4",
+        jenisSurat: "Surat Pengantar / Rekomendasi Pencairan PIP Bank BRI",
+        keperluan: "Pencairan dana PIP di Bank BRI Unit Jatibarang / Brebes",
+        namaPemohon: "Agus Santosa",
+        hubunganPemohon: "Ayah Kandung",
+        noWhatsApp: "085712345678",
+        status: "Menunggu", // Menunggu, Diproses, Selesai, Ditolak
+        nomorSuratTerbit: "",
+        keteranganTindak: ""
+    },
+    {
+        id: "REQ-2026-0002",
+        tanggalMasuk: "2026-10-19 14:30",
+        nisn: "0172233445",
+        nama: "Muhammad Faiz Al-Fatih",
+        kelas: "3",
+        jenisSurat: "Surat Keterangan Aktif Belajar",
+        keperluan: "Persyaratan perpanjangan BPJS Kesehatan PBI Balai Desa Terlangu",
+        namaPemohon: "Farhan Hakim",
+        hubunganPemohon: "Ayah Kandung",
+        noWhatsApp: "081299887766",
+        status: "Disetujui",
+        nomorSuratTerbit: "421.2/015/SD/2026",
+        keteranganTindak: "Surat sudah dicetak, siap diambil di ruang TU"
     }
 ];
 
@@ -392,7 +660,11 @@ const DataStore = {
         ABSENSI: "sim_tas_absensi",
         ABSENSI_TENDIK: "sim_tas_absensi_tendik",
         ABSENSI_SISWA_BULAN: "sim_tas_absensi_siswa_bulan",
-        HISTORI_BULANAN: "sim_tas_histori_bulanan"
+        HISTORI_BULANAN: "sim_tas_histori_bulanan",
+        JADWAL: "sim_tas_jadwal",
+        PIP_PENGUSULAN: "sim_tas_pip_pengusulan",
+        PIP_PENERIMA: "sim_tas_pip_penerima",
+        PERMOHONAN_SURAT: "sim_tas_permohonan_surat"
     },
 
     init() {
@@ -460,6 +732,10 @@ const DataStore = {
             localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(cloud ? [] : generateSeedAbsensi()));
         }
         seed(this.KEYS.HISTORI_BULANAN, SEED_HISTORI_BULANAN);
+        seed(this.KEYS.JADWAL, SEED_JADWAL);
+        seed(this.KEYS.PIP_PENGUSULAN, SEED_PIP_PENGUSULAN);
+        seed(this.KEYS.PIP_PENERIMA, SEED_PIP_PENERIMA);
+        seed(this.KEYS.PERMOHONAN_SURAT, SEED_PERMOHONAN_SURAT);
     },
 
     isCloudConfigured() {
@@ -618,6 +894,66 @@ const DataStore = {
 
     getHistoriBulanan() {
         return JSON.parse(localStorage.getItem(this.KEYS.HISTORI_BULANAN)) || SEED_HISTORI_BULANAN;
+    },
+
+    // ================= MODUL JADWAL PELAJARAN =================
+    getJadwalAll() {
+        try { return JSON.parse(localStorage.getItem(this.KEYS.JADWAL)) || []; } catch (e) { return []; }
+    },
+
+    saveJadwalAll(list) {
+        localStorage.setItem(this.KEYS.JADWAL, JSON.stringify(list));
+    },
+
+    getJadwal(kelas, ta) {
+        const list = this.getJadwalAll();
+        return list.filter(j => {
+            if (kelas && kelas !== "Semua" && String(j.kelas) !== String(kelas)) return false;
+            if (ta && j.tahunAjaran && j.tahunAjaran !== ta) return false;
+            return true;
+        });
+    },
+
+    saveJadwal(list) {
+        this.saveJadwalAll(list);
+    },
+
+    // ================= MODUL PIP (PENGUSULAN & PENERIMA) =================
+    getPIPPengusulan() {
+        try { return JSON.parse(localStorage.getItem(this.KEYS.PIP_PENGUSULAN)) || []; } catch (e) { return []; }
+    },
+
+    savePIPPengusulan(list) {
+        localStorage.setItem(this.KEYS.PIP_PENGUSULAN, JSON.stringify(list));
+    },
+
+    getPIPPenerima() {
+        try { return JSON.parse(localStorage.getItem(this.KEYS.PIP_PENERIMA)) || []; } catch (e) { return []; }
+    },
+
+    savePIPPenerima(list) {
+        localStorage.setItem(this.KEYS.PIP_PENERIMA, JSON.stringify(list));
+    },
+
+    // ================= MODUL PERMOHONAN SURAT ONLINE ORTU =================
+    getPermohonanSurat() {
+        try { return JSON.parse(localStorage.getItem(this.KEYS.PERMOHONAN_SURAT)) || []; } catch (e) { return []; }
+    },
+
+    savePermohonanSurat(list) {
+        localStorage.setItem(this.KEYS.PERMOHONAN_SURAT, JSON.stringify(list));
+    },
+
+    // ================= PEMBARUAN FIELD SISWA (NO HP ORTU, KK, DLL) =================
+    updateStudentField(nisn, fields = {}) {
+        const all = this.getSiswaAll();
+        const student = all.find(s => s.nisn === nisn);
+        if (student) {
+            Object.assign(student, fields);
+            this.saveSiswaAll(all);
+            return { success: true, student };
+        }
+        return { success: false, message: "Siswa tidak ditemukan" };
     },
 
     resetToDefault() {

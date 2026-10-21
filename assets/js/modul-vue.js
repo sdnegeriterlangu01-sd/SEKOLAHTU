@@ -81,12 +81,15 @@ const ModulVue = {
 
                 const allMenuItems = [
                     { id: "dashboard", route: "dashboard", label: "Beranda & Ringkasan", icon: "fa-gauge-high", section: "main" },
+                    { id: "jadwal", route: "jadwal", label: "Jadwal Pelajaran", icon: "fa-calendar-days", badge: "Jadwal", badgeColor: "bg-emerald-100 text-emerald-800", section: "main" },
                     { id: "berkas", route: "berkas", label: "Bangkas Digital Siswa", icon: "fa-folder-closed", badge: "M1", badgeColor: "bg-blue-100 text-blue-800", section: "main" },
-                    { id: "surat", route: "surat", label: "Penomoran & Surat", icon: "fa-envelopes-bulk", badge: "SRIKANDI", badgeColor: "bg-amber-100 text-amber-800", section: "main" },
+                    { id: "pip", route: "pip", label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", badge: "PIP", badgeColor: "bg-amber-100 text-amber-800", section: "main" },
+                    { id: "surat", route: "surat", label: "Penomoran & Surat", icon: "fa-envelopes-bulk", badge: "SRIKANDI", badgeColor: "bg-purple-100 text-purple-800", section: "main" },
                     { id: "cetak", route: "cetak", label: "Cetak Surat Otomatis", icon: "fa-file-invoice", badge: "<5 Detik", badgeColor: "bg-teal-100 text-teal-800", section: "main" },
                     { id: "scan-absensi", route: "scan-absensi", label: "Scan Absensi (Datang/Pulang)", icon: "fa-qrcode", iconColor: "text-indigo-600", badge: "Scan QR", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
                     { id: "absensi", route: "absensi", label: "Presensi & Absensi", icon: "fa-clipboard-user", badge: "M4", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
                     { id: "pengaturan", route: "pengaturan", label: "Pengaturan & Backend GAS", icon: "fa-sliders", section: "settings" },
+                    { id: "permohonan", url: "permohonan.html", label: "Portal Permohonan Ortu", icon: "fa-paper-plane", iconColor: "text-blue-600", isExternal: true, section: "settings" },
                     { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-check", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
                 ];
 
@@ -327,10 +330,21 @@ const ModulVue = {
             setup() {
                 const activeTab = computed(() => store.suratSubTab);
 
-                const tabs = [
+                const pendingPermohonan = computed(() => {
+                    const list = (window.DataStore && DataStore.getPermohonanSurat) ? DataStore.getPermohonanSurat() : [];
+                    return list.filter(p => p.status === "Menunggu Verifikasi TU").length;
+                });
+
+                const tabs = computed(() => [
                     { id: "keluar", label: "Surat Keluar", icon: "fa-paper-plane" },
-                    { id: "masuk", label: "Surat Masuk", icon: "fa-inbox" }
-                ];
+                    { id: "masuk", label: "Surat Masuk", icon: "fa-inbox" },
+                    { 
+                        id: "permohonan", 
+                        label: "Pengajuan Ortu (Online)", 
+                        icon: "fa-inbox-in", 
+                        badge: pendingPermohonan.value > 0 ? String(pendingPermohonan.value) : null 
+                    }
+                ]);
 
                 const switchTab = (tabId) => {
                     store.suratSubTab = tabId;

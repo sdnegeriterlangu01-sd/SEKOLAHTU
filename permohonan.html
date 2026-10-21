@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Layanan Mandiri Publik Pengajuan Surat - SDN Terlangu 01</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'xs': '380px'
+                    },
+                    colors: {
+                        primary: '#1e3a8a',
+                        secondary: '#0d9488',
+                        accent: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- Top Header Bar -->
+    <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <img src="assets/img/logo-brebes.svg" 
+                    onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
+                    alt="Logo Kabupaten Brebes" class="w-9 h-9 object-contain drop-shadow flex-shrink-0">
+                <div class="min-w-0">
+                    <h1 class="text-sm font-extrabold tracking-wide flex items-center gap-2 truncate">
+                        SDN TERLANGU 01 <span class="bg-amber-400 text-blue-950 text-[10px] px-2 py-0.5 rounded-full font-black flex-shrink-0">LAYANAN MANDIRI</span>
+                    </h1>
+                    <p class="text-[11px] text-blue-200 truncate">Portal Pengajuan Surat Keterangan Online Orang Tua / Wali Siswa</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Masuk</span> Sistem TU
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-3xl w-full mx-auto px-4 py-6 md:py-8 flex-grow space-y-6">
+
+        <!-- Hero Card -->
+        <div class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
+            <div class="relative z-10 max-w-xl">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white/15 backdrop-blur-md border border-white/25 text-amber-300 mb-2">
+                    <i class="fa-solid fa-paper-plane"></i> Layanan Cepat & 100% Bebas Biaya
+                </span>
+                <h2 class="text-xl md:text-2xl font-black tracking-tight leading-snug">
+                    Permohonan Surat Keterangan Sekolah Online
+                </h2>
+                <p class="text-xs md:text-sm text-blue-100 mt-2 leading-relaxed">
+                    Bapak/Ibu orang tua murid kini dapat mengajukan Surat Keterangan Aktif, Surat Rekomendasi Pencairan PIP Bank BRI, maupun Surat Mutasi langsung dari rumah.
+                </p>
+            </div>
+            <div class="absolute right-4 -bottom-6 opacity-10 hidden sm:block pointer-events-none">
+                <i class="fa-solid fa-file-signature text-[160px]"></i>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs (Ajukan Baru vs Cek Status Resi) -->
+        <div class="flex items-center p-1.5 bg-slate-200/80 rounded-2xl gap-1">
+            <button type="button" id="tab-btn-ajukan" onclick="switchPortalTab('ajukan')" 
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm">
+                <i class="fa-solid fa-file-circle-plus"></i> Ajukan Permohonan Baru
+            </button>
+            <button type="button" id="tab-btn-tracking" onclick="switchPortalTab('tracking')" 
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Lacak Status Resi Pengajuan
+            </button>
+        </div>
+
+        <!-- SECTION 1: FORMULIR PENGAJUAN BARU -->
+        <div id="section-ajukan" class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 space-y-6">
+            <form id="form-permohonan-publik" onsubmit="handlePublicSubmit(event)" class="space-y-6">
+
+                <!-- Step 1: Cari Data Siswa via NISN -->
+                <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-3">
+                    <div class="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wide">
+                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+                        Identitas Peserta Didik
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Induk Siswa Nasional (NISN) <span class="text-rose-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="text" id="req-nisn" required maxlength="10" placeholder="Contoh: 0134567890 (10 digit angka)"
+                                class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                            <button type="button" onclick="verifyStudentByNISN()" 
+                                class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0">
+                                <i class="fa-solid fa-magnifying-glass"></i> Cek Data
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">NISN dapat dilihat pada Rapor siswa, Kartu Identitas Anak (KIA), atau ditanyakan ke wali kelas.</p>
+                    </div>
+
+                    <!-- Verified Student Preview Card -->
+                    <div id="verified-student-card" class="hidden p-3.5 bg-white border border-emerald-300 rounded-xl space-y-2 animate-fade-in">
+                        <div class="flex items-center justify-between">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Siswa Terverifikasi di SDN Terlangu 01
+                            </span>
+                            <span id="card-verified-kelas" class="font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">Kelas -</span>
+                        </div>
+                        <div class="text-sm font-black text-slate-900" id="card-verified-nama">-</div>
+                        <div class="text-[11px] text-slate-500" id="card-verified-ortu">Orang Tua: -</div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Jenis Surat & Keperluan -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wide">
+                        <span class="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px]">2</span>
+                        Detail Permohonan Surat
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Surat yang Dibutuhkan <span class="text-rose-500">*</span></label>
+                        <select id="req-jenis" required class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                            <option value="">-- Pilih Jenis Surat --</option>
+                            <option value="Surat Keterangan Aktif Belajar">Surat Keterangan Aktif Belajar (Umum)</option>
+                            <option value="Surat Keterangan Aktif Belajar (Persyaratan PIP)">Surat Keterangan Aktif Belajar (Persyaratan PIP / Bansos)</option>
+                            <option value="Surat Pengantar / Rekomendasi Pencairan PIP Bank BRI">Surat Pengantar / Rekomendasi Pencairan PIP Bank BRI</option>
+                            <option value="Surat Keterangan Pindah Sekolah (Mutasi)">Surat Keterangan Pindah Sekolah (Mutasi Keluar)</option>
+                            <option value="Surat Keterangan Kelakuan Baik">Surat Keterangan Kelakuan Baik</option>
+                            <option value="Surat Rekomendasi Lomba / Beasiswa">Surat Rekomendasi Lomba / Beasiswa</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Alasan / Keperluan Permohonan <span class="text-rose-500">*</span></label>
+                        <textarea id="req-keperluan" required rows="2" placeholder="Contoh: Pencairan dana PIP di Bank BRI Unit Jatibarang / Persyaratan perpanjangan PKH Desa"
+                            class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 3: Identitas Pemohon & Nomor WhatsApp -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wide">
+                        <span class="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px]">3</span>
+                        Kontak Orang Tua / Pemohon
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Orang Tua / Wali Pemohon <span class="text-rose-500">*</span></label>
+                            <input type="text" id="req-pemohon-nama" required placeholder="Nama lengkap ayah/ibu"
+                                class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Hubungan dengan Siswa <span class="text-rose-500">*</span></label>
+                            <select id="req-pemohon-hubungan" required class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                                <option value="Ayah Kandung">Ayah Kandung</option>
+                                <option value="Ibu Kandung">Ibu Kandung</option>
+                                <option value="Wali Siswa">Wali Siswa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <i class="fa-brands fa-whatsapp absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 text-sm"></i>
+                            <input type="tel" id="req-pemohon-wa" required placeholder="081234567890 (Wajib aktif untuk pemberitahuan saat surat selesai)"
+                                class="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Petugas TU akan mengirimkan pesan WhatsApp saat surat telah selesai ditandatangani dan siap diambil.</p>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btn-submit-public-req"
+                    class="w-full py-3.5 bg-gradient-to-r from-blue-900 to-indigo-900 hover:from-blue-800 hover:to-indigo-800 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-blue-900/25 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Permohonan Surat Sekarang
+                </button>
+            </form>
+
+            <!-- Success Receipt Modal Box -->
+            <div id="box-receipt-success" class="hidden p-6 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-4 animate-fade-in">
+                <div class="w-16 h-16 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto text-2xl shadow-md">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-emerald-950">Permohonan Surat Berhasil Dikirim!</h3>
+                    <p class="text-xs text-emerald-800 mt-1">Permohonan Anda telah masuk ke sistem antrean Tata Usaha SDN Terlangu 01.</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-white border border-emerald-200 inline-block text-left max-w-sm w-full mx-auto shadow-xs">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">KODE RESI LACAK SURAT</span>
+                    <div id="receipt-tracking-code" class="text-lg font-mono font-black text-blue-900">REQ-2026-0001</div>
+                    <div class="text-xs text-slate-600 mt-1" id="receipt-student-name">Siswa: -</div>
+                    <div class="text-[11px] text-slate-400" id="receipt-doc-type">Jenis: -</div>
+                </div>
+
+                <p class="text-xs text-slate-600">Simpan atau salin kode resi di atas untuk memantau proses verifikasi permohonan Anda.</p>
+
+                <div class="flex items-center justify-center gap-2">
+                    <button type="button" onclick="copyReceiptCode()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-copy"></i> Salin Resi
+                    </button>
+                    <button type="button" onclick="switchPortalTab('tracking')" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-magnifying-glass"></i> Lacak Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: LIVE TRACKING RESI PERMOHONAN -->
+        <div id="section-tracking" class="hidden bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 space-y-6">
+            <div class="max-w-md mx-auto text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center mx-auto text-xl font-bold">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Cek Status & Lacak Resi Surat</h3>
+                <p class="text-xs text-slate-500">Masukkan Kode Resi (contoh: REQ-2026-0001) atau nomor telepon yang digunakan saat pengajuan.</p>
+                <div class="flex gap-2 pt-2">
+                    <input type="text" id="input-track-code" placeholder="Kode Resi (REQ-2026-0001)" 
+                        class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none uppercase">
+                    <button type="button" onclick="searchTrackingResi()"
+                        class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-search"></i> Lacak
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tracking Result Display Container -->
+            <div id="tracking-result-box" class="hidden space-y-6 pt-4 border-t border-slate-100 animate-fade-in">
+                <!-- Meta Card -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Kode Resi Permohonan</span>
+                        <div class="text-base font-mono font-black text-blue-900" id="res-track-code">-</div>
+                        <div class="text-slate-600 font-bold mt-0.5" id="res-track-nama">-</div>
+                        <div class="text-[11px] text-slate-400" id="res-track-jenis">-</div>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Status Saat Ini</span>
+                        <span id="res-track-badge" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            Menunggu Tinjauan
+                        </span>
+                        <div class="text-[11px] text-slate-400 mt-1" id="res-track-time">-</div>
+                    </div>
+                </div>
+
+                <!-- Stepper Progress Tracker (Inovasi 5) -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-4">Linimasa Proses Pengurusan Surat</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                        <!-- Step 1 -->
+                        <div id="step-1" class="p-3 rounded-2xl border transition bg-emerald-50 border-emerald-300 text-emerald-900">
+                            <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <strong class="block text-xs">1. Terkirim</strong>
+                            <span class="text-[10px] opacity-75">Tercatat di sistem</span>
+                        </div>
+                        <!-- Step 2 -->
+                        <div id="step-2" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                                2
+                            </div>
+                            <strong class="block text-xs">2. Verifikasi TU</strong>
+                            <span class="text-[10px] opacity-75">Pengecekan berkas</span>
+                        </div>
+                        <!-- Step 3 -->
+                        <div id="step-3" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                                3
+                            </div>
+                            <strong class="block text-xs">3. Disetujui</strong>
+                            <span class="text-[10px] opacity-75">Penomoran surat</span>
+                        </div>
+                        <!-- Step 4 -->
+                        <div id="step-4" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                                4
+                            </div>
+                            <strong class="block text-xs">4. Siap Diambil</strong>
+                            <span class="text-[10px] opacity-75">Dicetak & stempel</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Box Keterangan TU -->
+                <div id="res-tindak-box" class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-900 leading-relaxed">
+                    <strong>Catatan Petugas Tata Usaha:</strong>
+                    <p id="res-tindak-text" class="mt-1">Permohonan Anda sedang dalam antrean verifikasi staf TU SDN Terlangu 01.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        <div class="max-w-4xl mx-auto px-4">
+            SIM-TAS-SD Versi 2.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
+        </div>
+    </footer>
+
+    <!-- App JavaScript Dependencies -->
+    <script src="assets/js/security.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script>
+        let verifiedStudent = null;
+
+        function showToast(msg, type = "info") {
+            const container = document.getElementById("toast-container");
+            if (!container) return;
+            const toast = document.createElement("div");
+            toast.className = `p-3 rounded-xl shadow-lg text-xs font-bold pointer-events-auto flex items-center gap-2 transition animate-fade-in ${type === 'error' ? 'bg-rose-600 text-white' : (type === 'success' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-white')}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-triangle-exclamation' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info')}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        window.App = { showToast };
+
+        function switchPortalTab(tab) {
+            const secAjukan = document.getElementById("section-ajukan");
+            const secTracking = document.getElementById("section-tracking");
+            const btnAjukan = document.getElementById("tab-btn-ajukan");
+            const btnTracking = document.getElementById("tab-btn-tracking");
+
+            if (tab === "ajukan") {
+                secAjukan.classList.remove("hidden");
+                secTracking.classList.add("hidden");
+                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm";
+                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800";
+            } else {
+                secAjukan.classList.add("hidden");
+                secTracking.classList.remove("hidden");
+                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm";
+                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800";
+            }
+        }
+
+        function verifyStudentByNISN() {
+            const nisnInput = document.getElementById("req-nisn").value.trim();
+            if (!nisnInput) {
+                showToast("Silakan masukkan NISN siswa terlebih dahulu!", "warning");
+                return;
+            }
+
+            const students = DataStore.getSiswa();
+            const found = students.find(s => s.nisn === nisnInput);
+            const card = document.getElementById("verified-student-card");
+
+            if (found) {
+                verifiedStudent = found;
+                document.getElementById("card-verified-nama").textContent = found.nama;
+                document.getElementById("card-verified-kelas").textContent = `Kelas ${found.rombel || found.kelas}`;
+                document.getElementById("card-verified-ortu").textContent = `Orang Tua / Wali: ${found.namaOrtu || '-'}`;
+                if (found.namaOrtu && !document.getElementById("req-pemohon-nama").value) {
+                    document.getElementById("req-pemohon-nama").value = found.namaOrtu;
+                }
+                if (found.noHp && !document.getElementById("req-pemohon-wa").value) {
+                    document.getElementById("req-pemohon-wa").value = found.noHp;
+                }
+                card.classList.remove("hidden");
+                showToast(`Data siswa ditemukan: ${found.nama}`, "success");
+            } else {
+                verifiedStudent = null;
+                card.classList.add("hidden");
+                showToast("NISN tidak ditemukan pada database siswa SDN Terlangu 01.", "error");
+            }
+        }
+
+        async function handlePublicSubmit(event) {
+            event.preventDefault();
+            if (!verifiedStudent) {
+                showToast("Silakan lakukan verifikasi NISN siswa terlebih dahulu!", "warning");
+                document.getElementById("req-nisn").focus();
+                return;
+            }
+
+            const jenisSurat = document.getElementById("req-jenis").value;
+            const keperluan = document.getElementById("req-keperluan").value.trim();
+            const namaPemohon = document.getElementById("req-pemohon-nama").value.trim();
+            const hubunganPemohon = document.getElementById("req-pemohon-hubungan").value;
+            const noWhatsApp = document.getElementById("req-pemohon-wa").value.trim();
+
+            const btn = document.getElementById("btn-submit-public-req");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mengirimkan Permohonan...`;
+
+            const payload = {
+                nisn: verifiedStudent.nisn,
+                nama: verifiedStudent.nama,
+                kelas: verifiedStudent.rombel || verifiedStudent.kelas,
+                jenisSurat,
+                keperluan,
+                namaPemohon,
+                hubunganPemohon,
+                noWhatsApp
+            };
+
+            const res = await ApiClient.request("submitPermohonanSurat", payload);
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Permohonan Surat Sekarang`;
+
+            if (res && res.success) {
+                document.getElementById("form-permohonan-publik").reset();
+                document.getElementById("verified-student-card").classList.add("hidden");
+                document.getElementById("receipt-tracking-code").textContent = res.trackingCode;
+                document.getElementById("receipt-student-name").textContent = `Siswa: ${verifiedStudent.nama} (${verifiedStudent.nisn})`;
+                document.getElementById("receipt-doc-type").textContent = `Jenis: ${jenisSurat}`;
+                document.getElementById("box-receipt-success").classList.remove("hidden");
+                document.getElementById("box-receipt-success").scrollIntoView({ behavior: 'smooth' });
+                verifiedStudent = null;
+            } else {
+                showToast("Gagal mengirim permohonan surat. Coba lagi.", "error");
+            }
+        }
+
+        function copyReceiptCode() {
+            const code = document.getElementById("receipt-tracking-code").textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast(`Kode resi ${code} berhasil disalin!`, "success");
+            });
+        }
+
+        function searchTrackingResi() {
+            const query = document.getElementById("input-track-code").value.trim().toUpperCase();
+            if (!query) {
+                showToast("Masukkan Kode Resi terlebih dahulu", "warning");
+                return;
+            }
+
+            const list = DataStore.getPermohonanSurat();
+            const found = list.find(r => r.id === query || (r.noWhatsApp && r.noWhatsApp.includes(query)) || (r.nisn && r.nisn === query));
+            const box = document.getElementById("tracking-result-box");
+
+            if (!found) {
+                box.classList.add("hidden");
+                showToast("Kode resi permohonan tidak ditemukan pada sistem.", "error");
+                return;
+            }
+
+            document.getElementById("res-track-code").textContent = found.id;
+            document.getElementById("res-track-nama").textContent = `${found.nama} (Kelas ${found.kelas})`;
+            document.getElementById("res-track-jenis").textContent = found.jenisSurat;
+            document.getElementById("res-track-time").textContent = `Masuk: ${found.tanggalMasuk}`;
+
+            const badge = document.getElementById("res-track-badge");
+            const st = (found.status || "Menunggu").toLowerCase();
+
+            // Reset steppers
+            const s1 = document.getElementById("step-1");
+            const s2 = document.getElementById("step-2");
+            const s3 = document.getElementById("step-3");
+            const s4 = document.getElementById("step-4");
+
+            const activeClass = "p-3 rounded-2xl border transition bg-emerald-50 border-emerald-300 text-emerald-900";
+            const inactiveClass = "p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400";
+            const currentStepClass = "p-3 rounded-2xl border transition bg-blue-50 border-blue-300 text-blue-900 ring-2 ring-blue-500/20";
+
+            s1.className = activeClass;
+            s2.className = inactiveClass;
+            s3.className = inactiveClass;
+            s4.className = inactiveClass;
+
+            if (st === "menunggu") {
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+                badge.innerHTML = `<i class="fa-solid fa-clock"></i> Menunggu Tinjauan`;
+                s2.className = currentStepClass;
+                document.getElementById("res-tindak-text").textContent = "Permohonan Anda telah tercatat dan sedang menunggu verifikasi oleh staf Tata Usaha.";
+            } else if (st === "diproses") {
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
+                badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sedang Diproses TU`;
+                s2.className = activeClass;
+                s3.className = currentStepClass;
+                document.getElementById("res-tindak-text").textContent = "Data siswa telah divalidasi dengan buku induk. Surat sedang diajukan tanda tangan Kepala Sekolah.";
+            } else if (st === "disetujui" || st === "selesai") {
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+                badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Siap Diambil di Sekolah`;
+                s2.className = activeClass;
+                s3.className = activeClass;
+                s4.className = activeClass;
+                document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${found.nomorSuratTerbit || '421.2/SD/2026'}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
+            } else if (st === "ditolak") {
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+                badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Permohonan Ditolak`;
+                document.getElementById("res-tindak-text").textContent = `Permohonan ditolak dengan alasan: ${found.keteranganTindak || 'Data tidak sesuai atau berkas persyaratan belum lengkap.'}`;
+            }
+
+            box.classList.remove("hidden");
+            box.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

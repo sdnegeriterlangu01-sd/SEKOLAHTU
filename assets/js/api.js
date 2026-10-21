@@ -534,6 +534,142 @@ const ApiClient = {
                 return { success: true, message: `Absensi kelas ${kelas} bulan ${Util.labelBulan(bulan)} berhasil disimpan.` };
             }
 
+            // ================== MODUL JADWAL PELAJARAN ==================
+            case "getJadwal": {
+                const list = DataStore.getJadwal(payload.kelas, payload.tahunAjaran);
+                return { success: true, data: list };
+            }
+
+            case "saveJadwal": {
+                const current = DataStore.getJadwalAll();
+                const newItems = payload.items || (payload.item ? [payload.item] : []);
+                const map = new Map();
+                current.forEach(j => map.set(j.id || `${j.kelas}_${j.hari}_${j.jamKe}`, j));
+                newItems.forEach(j => {
+                    const id = j.id || `JDW-${j.kelas}-${(j.hari || 'SEN').substring(0, 3).toUpperCase()}-${j.jamKe}`;
+                    map.set(id, { ...j, id, updatedAt: new Date().toISOString() });
+                });
+                const updatedList = Array.from(map.values());
+                DataStore.saveJadwalAll(updatedList);
+                return { success: true, message: "Jadwal pelajaran berhasil disimpan!", data: updatedList };
+            }
+
+            case "deleteJadwal": {
+                let current = DataStore.getJadwalAll();
+                current = current.filter(j => j.id !== payload.id);
+                DataStore.saveJadwalAll(current);
+                return { success: true, message: "Jadwal pelajaran berhasil dihapus!" };
+            }
+
+            // ================== MODUL PIP KEMENDIKBUD ==================
+            case "getPIP": {
+                return {
+                    success: true,
+                    data: {
+                        pengusulan: DataStore.getPIPPengusulan(),
+                        penerima: DataStore.getPIPPenerima()
+                    }
+                };
+            }
+
+            case "savePIP": {
+                if (payload.tipe === "pengusulan" || payload.pengusulan) {
+                    const list = payload.list || payload.pengusulan;
+                    DataStore.savePIPPengusulan(list);
+                    return { success: true, message: "Data pengusulan PIP berhasil disimpan!" };
+                } else {
+                    const list = payload.list || payload.penerima;
+                    DataStore.savePIPPenerima(list);
+                    return { success: true, message: "Data penerima PIP berhasil disimpan!" };
+                }
+            }
+
+            case "updatePIPStatus": {
+                const list = DataStore.getPIPPenerima();
+                const item = list.find(p => p.nisn === payload.nisn);
+                if (item) {
+                    if (payload.statusCair !== undefined) item.statusCair = payload.statusCair;
+                    if (payload.tanggalCair !== undefined) item.tanggalCair = payload.tanggalCair;
+                    if (payload.statusRekening !== undefined) item.statusRekening = payload.statusRekening;
+                    DataStore.savePIPPenerima(list);
+                    return { success: true, message: `Status PIP ${item.nama} berhasil diperbarui!`, data: item };
+                }
+                return { success: false, message: "Data penerima PIP tidak ditemukan." };
+            }
+
+            case "importPIP": {
+                const { jenis, rows } = payload;
+                if (!Array.isArray(rows) || rows.length === 0) return { success: false, message: "Data impor kosong." };
+                if (jenis === "pengusulan") {
+                    const current = DataStore.getPIPPengusulan();
+                    const map = new Map();
+                    current.forEach(item => map.set(item.nisn, item));
+                    rows.forEach(r => map.set(r.nisn, { ...r, tahunUsulan: r.tahunUsulan || "2026" }));
+                    DataStore.savePIPPengusulan(Array.from(map.values()));
+                    return { success: true, message: `Berhasil mengimpor ${rows.length} data pengusulan PIP!`, count: rows.length };
+                } else {
+                    const current = DataStore.getPIPPenerima();
+                    const map = new Map();
+                    current.forEach(item => map.set(item.nisn, item));
+                    rows.forEach(r => map.set(r.nisn, { ...r, tahunAnggaran: r.tahunAnggaran || "2026" }));
+                    DataStore.savePIPPenerima(Array.from(map.values()));
+                    return { success: true, message: `Berhasil mengimpor ${rows.length} data penerima PIP!`, count: rows.length };
+                }
+            }
+
+            // ================== LAYANAN MANDIRI PERMOHONAN SURAT ==================
+            case "getPermohonanSurat": {
+                return { success: true, data: DataStore.getPermohonanSurat() };
+            }
+
+            case "submitPermohonanSurat": {
+                const list = DataStore.getPermohonanSurat();
+                const now = new Date();
+                const y = now.getFullYear();
+                const code = `REQ-${y}-${String(list.length + 1).padStart(4, "0")}`;
+                const newReq = {
+                    id: code,
+                    tanggalMasuk: `${Util.today()} ${Util.nowTime()}`,
+                    nisn: payload.nisn,
+                    nama: payload.nama || payload.namaSiswa,
+                    kelas: payload.kelas,
+                    jenisSurat: payload.jenisSurat,
+                    keperluan: payload.keperluan,
+                    namaPemohon: payload.namaPemohon,
+                    hubunganPemohon: payload.hubunganPemohon || "Orang Tua / Wali",
+                    noWhatsApp: payload.noWhatsApp || payload.noHp,
+                    status: "Menunggu",
+                    nomorSuratTerbit: "",
+                    keteranganTindak: ""
+                };
+                list.unshift(newReq);
+                DataStore.savePermohonanSurat(list);
+                return { success: true, message: "Permohonan surat berhasil dikirim!", trackingCode: code, data: newReq };
+            }
+
+            case "updatePermohonanSurat": {
+                const list = DataStore.getPermohonanSurat();
+                const item = list.find(r => r.id === payload.id);
+                if (item) {
+                    if (payload.status) item.status = payload.status;
+                    if (payload.nomorSuratTerbit) item.nomorSuratTerbit = payload.nomorSuratTerbit;
+                    if (payload.keteranganTindak !== undefined) item.keteranganTindak = payload.keteranganTindak;
+                    DataStore.savePermohonanSurat(list);
+                    return { success: true, message: `Status permohonan ${item.id} berhasil diperbarui!`, data: item };
+                }
+                return { success: false, message: "Permohonan surat tidak ditemukan." };
+            }
+
+            // ================== PEMBARUAN DATA SISWA (NO HP ORTU, KK, OCR) ==================
+            case "updateStudentPhone":
+            case "updateStudentFields": {
+                const nisn = payload.nisn;
+                const fields = payload.fields || payload;
+                delete fields.nisn;
+                const res = DataStore.updateStudentField(nisn, fields);
+                return res.success ? { success: true, message: "Data siswa berhasil diperbarui!", data: res.student } : res;
+            }
+
             // ================== ADMIN (hanya cloud) ==================
             case "setupDatabase":
             case "backupNow":
@@ -558,6 +694,12 @@ const Sync = {
         tendik: { action: "getTendik", payload: {}, save: d => DataStore.saveTendik(d) },
         suratKeluar: { action: "getSuratKeluar", payload: {}, save: d => DataStore.saveSuratKeluar(d) },
         suratMasuk: { action: "getSuratMasuk", payload: {}, save: d => DataStore.saveSuratMasuk(d) },
+        jadwal: { action: "getJadwal", payload: { kelas: "Semua" }, save: d => { if (Array.isArray(d)) DataStore.saveJadwalAll(d); } },
+        pip: { action: "getPIP", payload: {}, save: d => {
+            if (d && d.pengusulan) DataStore.savePIPPengusulan(d.pengusulan);
+            if (d && d.penerima) DataStore.savePIPPenerima(d.penerima);
+        }},
+        permohonan: { action: "getPermohonanSurat", payload: {}, save: d => { if (Array.isArray(d)) DataStore.savePermohonanSurat(d); } },
         absensi: { 
             action: "getAbsensi", 
             payload: { tanggal: Util.today() }, 
@@ -598,12 +740,21 @@ const Sync = {
         saveStudent: ["siswa"],
         importStudents: ["siswa"],
         uploadStudentDoc: ["siswa"],
+        updateStudentPhone: ["siswa"],
+        updateStudentFields: ["siswa"],
         saveSuratKeluar: ["suratKeluar"],
         deleteSuratKeluar: ["suratKeluar"],
         saveSuratMasuk: ["suratMasuk"],
         deleteSuratMasuk: ["suratMasuk"],
         saveTendik: ["tendik"],
         deleteTendik: ["tendik"],
+        saveJadwal: ["jadwal"],
+        deleteJadwal: ["jadwal"],
+        savePIP: ["pip"],
+        importPIP: ["pip"],
+        updatePIPStatus: ["pip"],
+        submitPermohonanSurat: ["permohonan"],
+        updatePermohonanSurat: ["permohonan"],
         saveAbsensiBatch: ["absensi", "absensiSiswaBulan"],
         saveAbsensiSiswaBulan: ["absensiSiswaBulan"]
     },

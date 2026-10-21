@@ -24,9 +24,26 @@ const ModulBerkas = {
         return null;
     },
 
+    showKontakColumn: true,
+    filterKontak: "Semua", // Semua, Ada, Belum
+
     populateKelasFilter() {
         const filterEl = document.getElementById("filter-kelas-berkas");
         if (!filterEl) return;
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+
+        // Isolasi Rombel Akun Guru Kelas
+        if (role === "guru" && gInfo && gInfo.isGuruKelas) {
+            const k = String(gInfo.kelas).replace(/\D/g, "") || "1";
+            filterEl.innerHTML = `<option value="${k}">Kelas ${k} (Rombel Binaan)</option>`;
+            filterEl.value = k;
+            filterEl.disabled = true;
+            this.currentFilterKelas = k;
+            return;
+        }
+
+        filterEl.disabled = false;
         const rombels = DataStore.getRombels();
         const curVal = filterEl.value || this.currentFilterKelas || "Semua";
         filterEl.innerHTML = `<option value="Semua">Semua Tingkat Kelas</option>` +
@@ -46,12 +63,6 @@ const ModulBerkas = {
 
     init() {
         this.populateKelasFilter();
-        const gk = this.detectGuruKelas();
-        if (gk) {
-            this.currentFilterKelas = gk;
-            const filterEl = document.getElementById("filter-kelas-berkas");
-            if (filterEl) filterEl.value = gk;
-        }
         this.renderTable();
         this.bindEvents();
     },
@@ -80,18 +91,61 @@ const ModulBerkas = {
                 this.renderTable();
             });
         }
+
+        const filterKontakEl = document.getElementById("filter-kontak-berkas");
+        if (filterKontakEl) {
+            filterKontakEl.addEventListener("change", (e) => {
+                this.filterKontak = e.target.value;
+                this.renderTable();
+            });
+        }
+    },
+
+    toggleKontakColumn() {
+        this.showKontakColumn = !this.showKontakColumn;
+        const btn = document.getElementById("btn-toggle-kontak-col");
+        if (btn) {
+            btn.classList.toggle("bg-blue-900", this.showKontakColumn);
+            btn.classList.toggle("text-white", this.showKontakColumn);
+            btn.classList.toggle("bg-slate-100", !this.showKontakColumn);
+            btn.classList.toggle("text-slate-700", !this.showKontakColumn);
+        }
+        this.renderTable();
     },
 
     getFilteredData() {
         const students = DataStore.getSiswa();
-        return students.filter(s => {
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+
+        // 1. Isolasi Data Rombel
+        let baseStudents = students;
+        if (role === "guru" && gInfo) {
+            if (gInfo.isGuruKelas) {
+                const kStr = String(gInfo.kelas).replace(/\D/g, "");
+                baseStudents = students.filter(s => {
+                    const sk = String(s.rombel || s.kelas || "").replace(/\D/g, "");
+                    return sk === kStr || String(s.rombel || s.kelas || "").toLowerCase().includes(gInfo.kelas.toLowerCase());
+                });
+            } else if (gInfo.isGuruMapel && this.currentFilterKelas !== "Semua") {
+                const targetKls = String(this.currentFilterKelas).replace(/\D/g, "");
+                baseStudents = students.filter(s => {
+                    const sk = String(s.rombel || s.kelas || "").replace(/\D/g, "");
+                    return sk === targetKls;
+                });
+            }
+        }
+
+        return baseStudents.filter(s => {
             // Filter Search
             const matchSearch = !this.searchQuery ||
                 s.nisn.toLowerCase().includes(this.searchQuery) ||
                 s.nama.toLowerCase().includes(this.searchQuery) ||
-                (s.nis && s.nis.toLowerCase().includes(this.searchQuery));
+                (s.nis && s.nis.toLowerCase().includes(this.searchQuery)) ||
+                (s.namaOrtu && s.namaOrtu.toLowerCase().includes(this.searchQuery)) ||
+                (s.noHp && s.noHp.includes(this.searchQuery));
 
-            // Filter Kelas (cocokkan s.rombel atau s.kelas secara fleksibel)
+            // Filter Kelas (jika admin/tu atau guru mapel)
             const targetKls = String(this.currentFilterKelas || "Semua").trim();
             let matchKelas = targetKls === "Semua";
             if (!matchKelas) {
@@ -107,17 +161,50 @@ const ModulBerkas = {
                 }
             }
 
-            // Filter Status Berkas
-            const isComplete = s.berkas && s.berkas.kk?.uploaded && s.berkas.akta?.uploaded;
+            // Filter Status Berkas Diperluas
+            const berkas = s.berkas || {};
+            const kk = !!berkas.kk?.uploaded;
+            const akta = !!berkas.akta?.uploaded;
+            const kip = !!berkas.kip?.uploaded;
+            const foto = !!berkas.foto?.uploaded;
+            const isFull = kk && akta;
+
             let matchStatus = true;
             if (this.currentFilterStatus === "Lengkap") {
-                matchStatus = isComplete;
+                matchStatus = isFull;
             } else if (this.currentFilterStatus === "Belum Lengkap") {
-                matchStatus = !isComplete;
+                matchStatus = !isFull;
+            } else if (this.currentFilterStatus === "Belum KK") {
+                matchStatus = !kk;
+            } else if (this.currentFilterStatus === "Belum Akta") {
+                matchStatus = !akta;
+            } else if (this.currentFilterStatus === "Ada KIP") {
+                matchStatus = kip;
+            } else if (this.currentFilterStatus === "Belum Foto") {
+                matchStatus = !foto;
             }
 
-            return matchSearch && matchKelas && matchStatus;
+            // Filter Nomor HP Ortu
+            let matchKontak = true;
+            const hasPhone = !!(s.noHp && s.noHp !== "-" && s.noHp.trim().length >= 8);
+            if (this.filterKontak === "Ada") matchKontak = hasPhone;
+            else if (this.filterKontak === "Belum") matchKontak = !hasPhone;
+
+            return matchSearch && matchKelas && matchStatus && matchKontak;
         });
+    },
+
+    getWhatsAppReminderLink(student) {
+        if (!student.noHp || student.noHp === "-") return "#";
+        const cleanPhone = String(student.noHp).replace(/\D/g, "");
+        const intlPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.substring(1) : cleanPhone;
+        const missing = [];
+        if (!student.berkas?.kk?.uploaded) missing.push("Kartu Keluarga (KK)");
+        if (!student.berkas?.akta?.uploaded) missing.push("Akta Kelahiran");
+        
+        const namaSekolah = DataStore.getConfig().namaSekolah || "SD Negeri Terlangu 01";
+        const msg = `Yth. Bapak/Ibu Wali dari Ananda *${student.nama}* (Kelas ${student.rombel || student.kelas} ${namaSekolah}).\n\nBerdasarkan rekap data bangkas sekolah, berkas *${missing.join(" dan ") || "kelengkapan administrasi"}* ananda belum terunggah di sistem SIM-TAS-SD. Mohon kesediaannya mengirimkan foto/scan berkas fisik tersebut demi kelancaran administrasi Dapodik dan verifikasi bantuan sosial PIP.\n\nTerima kasih atas kerja samanya.\n*${namaSekolah}*`;
+        return `https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`;
     },
 
     renderTable() {
@@ -149,9 +236,8 @@ const ModulBerkas = {
             const akta = berkas.akta?.uploaded;
             const kip = berkas.kip?.uploaded;
             const foto = berkas.foto?.uploaded;
-
-            const totalUploaded = [kk, akta, kip, foto].filter(Boolean).length;
-            const isFull = kk && akta; // Syarat wajib minimal KK + Akta
+            const isFull = kk && akta;
+            const hasPhone = s.noHp && s.noHp !== "-" && s.noHp.trim().length >= 8;
 
             return `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
@@ -216,12 +302,32 @@ const ModulBerkas = {
                             </span>
                         `}
                     </td>
-                    <td class="px-4 py-3.5 text-xs text-slate-600">
-                        <div>${s.namaOrtu || '-'}</div>
-                        <div class="text-slate-400 text-[11px] font-mono">${s.noHp || '-'}</div>
-                    </td>
+                    ${this.showKontakColumn ? `
+                        <td class="px-4 py-3.5 text-xs text-slate-600">
+                            <div class="font-semibold text-slate-800 flex items-center justify-between">
+                                <span>${s.namaOrtu || '-'}</span>
+                                <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="text-slate-400 hover:text-blue-600 ml-1 p-0.5" title="Edit Kontak Ortu">
+                                    <i class="fa-solid fa-pencil text-[10px]"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="font-mono text-[11px] ${hasPhone ? 'text-blue-900 font-bold' : 'text-slate-400 italic'}">${s.noHp || 'Belum ada'}</span>
+                                ${hasPhone && !isFull ? `
+                                    <a href="${this.getWhatsAppReminderLink(s)}" target="_blank" class="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition text-[11px]" title="Kirim Pengingat Berkas via WhatsApp">
+                                        <i class="fa-brands fa-whatsapp font-bold"></i>
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </td>
+                    ` : ''}
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kk')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Pindai & Ekstrak Data (OCR)">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </button>
+                            <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Kontak Orang Tua">
+                                <i class="fa-solid fa-phone"></i>
+                            </button>
                             ${Auth.canDo("uploadStudentDoc") ? `<button onclick="ModulBerkas.openUploadModal('${s.nisn}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Unggah / Perbarui Berkas">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
                             </button>` : ""}
@@ -236,6 +342,48 @@ const ModulBerkas = {
                 </tr>
             `;
         }).join("");
+    },
+
+    // Modal Edit Cepat Kontak Orang Tua
+    openEditKontakModal(nisn) {
+        const student = DataStore.getSiswa().find(s => s.nisn === nisn);
+        if (!student) return;
+
+        this.selectedStudent = student;
+        const modal = document.getElementById("modal-edit-kontak-ortu");
+        if (!modal) return;
+
+        document.getElementById("modal-kontak-student-name").textContent = `${student.nama} (Kelas ${student.rombel || student.kelas})`;
+        document.getElementById("modal-kontak-nama-ortu").value = student.namaOrtu || "";
+        document.getElementById("modal-kontak-pekerjaan-ortu").value = student.pekerjaanOrtu || "";
+        document.getElementById("modal-kontak-no-hp").value = student.noHp || "";
+
+        modal.classList.remove("hidden");
+    },
+
+    closeEditKontakModal() {
+        const modal = document.getElementById("modal-edit-kontak-ortu");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    async saveKontakOrtu() {
+        if (!this.selectedStudent) return;
+        const namaOrtu = document.getElementById("modal-kontak-nama-ortu")?.value?.trim() || "-";
+        const pekerjaanOrtu = document.getElementById("modal-kontak-pekerjaan-ortu")?.value?.trim() || "-";
+        const noHp = document.getElementById("modal-kontak-no-hp")?.value?.trim() || "-";
+
+        const res = await ApiClient.request("updateStudentFields", {
+            nisn: this.selectedStudent.nisn,
+            fields: { namaOrtu, pekerjaanOrtu, noHp }
+        });
+
+        if (res && res.success) {
+            App.showToast("Kontak orang tua berhasil diperbarui!", "success");
+            this.closeEditKontakModal();
+            this.renderTable();
+        } else {
+            App.showToast("Gagal memperbarui kontak", "error");
+        }
     },
 
     previewOrUpload(nisn, docType) {
@@ -443,10 +591,22 @@ const ModulBerkas = {
             const row = (label, val) => `<div class="p-3 bg-slate-50 rounded-xl"><span class="text-slate-400 text-[11px] block">${label}</span><span class="font-bold text-slate-800">${val || "-"}</span></div>`;
             const wil = [student.dusun, student.rt ? `RT ${student.rt}` : "", student.rw ? `RW ${student.rw}` : "", student.kelurahan, student.kecamatan, student.kodePos].filter(Boolean).join(", ");
             extra.innerHTML = [
+                row("Nomor Kartu Keluarga (KK)", student.noKk || '<em class="text-amber-600 font-normal">Belum direkam (Pindai OCR)</em>'),
+                row("Tanggal Terbit KK", student.tglTerbitKk || "-"),
                 row("Tahun Ajaran / Rombel", `${student.tahunAjaran || DataStore.getActiveTA()} • ${student.rombel || student.kelas}`),
                 row("NIPD / Agama", `${student.nipd || student.nis || "-"} / ${student.agama || "-"}`),
                 row("Ayah", [student.ayahNama, student.ayahTahunLahir, student.ayahPendidikan, student.ayahPekerjaan].filter(Boolean).join(" • ")),
                 row("Ibu", [student.ibuNama, student.ibuTahunLahir, student.ibuPendidikan, student.ibuPekerjaan].filter(Boolean).join(" • ")),
+                `<div class="col-span-2 p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                    <div>
+                        <span class="text-slate-400 text-[11px] block">Otomasi Cerdas Berkas</span>
+                        <span class="font-bold text-xs text-slate-800">Ekstraksi Teks Otomatis via AI/OCR</span>
+                    </div>
+                    <button type="button" onclick="ModulBerkas.closeDetailModal(); ModulOCR.openScanModal('${student.nisn}', 'kk')" 
+                        class="px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Pindai Scan KK (OCR)
+                    </button>
+                </div>`,
                 `<div class="col-span-2 p-3 bg-slate-50 rounded-xl"><span class="text-slate-400 text-[11px] block">Wilayah (Dusun/RT/RW/Kelurahan/Kecamatan/Kode Pos)</span><span class="font-medium text-slate-800">${wil || "-"}</span></div>`
             ].join("");
         }

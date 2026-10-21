@@ -23,6 +23,11 @@ const Util = {
     daysInMonth(year, month1) { return new Date(year, month1, 0).getDate(); },
 
     NAMA_BULAN: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
+    NAMA_HARI: ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"],
+
+    getHariIndonesia(d = new Date()) {
+        return this.NAMA_HARI[d.getDay()];
+    },
 
     // "2027-01" -> "JANUARI 2027"
     labelBulan(key) {
@@ -92,6 +97,21 @@ const ACL = {
         saveStudent: ["admin", "tu"],
         importStudents: ["admin", "tu"],
         uploadStudentDoc: ["admin", "tu", "guru"],
+        updateStudentPhone: ["admin", "tu", "guru"],
+        updateStudentFields: ["admin", "tu", "guru"],
+        // Jadwal Pelajaran
+        getJadwal: ["admin", "kepsek", "tu", "guru"],
+        saveJadwal: ["admin", "tu", "guru"],
+        deleteJadwal: ["admin", "tu"],
+        // Program PIP
+        getPIP: ["admin", "kepsek", "tu", "guru"],
+        savePIP: ["admin", "tu"],
+        importPIP: ["admin", "tu"],
+        updatePIPStatus: ["admin", "tu", "guru"],
+        // Permohonan Surat Online
+        getPermohonanSurat: ["admin", "kepsek", "tu"],
+        submitPermohonanSurat: ["*"],
+        updatePermohonanSurat: ["admin", "tu"],
         // Surat
         getSuratKeluar: ["admin", "kepsek", "tu"],
         getNextNomorSuratKeluar: ["admin", "kepsek", "tu"],
@@ -127,6 +147,8 @@ const ACL = {
         dashboard: ["admin", "kepsek", "tu", "guru"],
         "scan-absensi": ["admin", "kepsek", "tu", "guru", "kiosk"],
         berkas: ["admin", "kepsek", "tu", "guru"],
+        jadwal: ["admin", "kepsek", "tu", "guru"],
+        pip: ["admin", "kepsek", "tu", "guru"],
         surat: ["admin", "kepsek", "tu"],
         cetak: ["admin", "kepsek", "tu"],
         absensi: ["admin", "kepsek", "tu", "guru", "kiosk"],

@@ -82,25 +82,32 @@ const ModulSurat = {
     renderSubTab() {
         const btnKeluar = document.getElementById("btn-tab-surat-keluar");
         const btnMasuk = document.getElementById("btn-tab-surat-masuk");
+        const btnPermohonan = document.getElementById("btn-tab-surat-permohonan");
         const viewKeluar = document.getElementById("view-surat-keluar");
         const viewMasuk = document.getElementById("view-surat-masuk");
+        const viewPermohonan = document.getElementById("view-surat-permohonan");
+
+        [btnKeluar, btnMasuk, btnPermohonan].forEach(b => {
+            b?.classList.remove("bg-white", "text-blue-700", "shadow-sm");
+            b?.classList.add("text-slate-600");
+        });
+        [viewKeluar, viewMasuk, viewPermohonan].forEach(v => v?.classList.add("hidden"));
 
         if (this.activeSubTab === "keluar") {
             btnKeluar?.classList.add("bg-white", "text-blue-700", "shadow-sm");
             btnKeluar?.classList.remove("text-slate-600");
-            btnMasuk?.classList.remove("bg-white", "text-blue-700", "shadow-sm");
-            btnMasuk?.classList.add("text-slate-600");
             viewKeluar?.classList.remove("hidden");
-            viewMasuk?.classList.add("hidden");
             this.renderSuratKeluarTable();
-        } else {
+        } else if (this.activeSubTab === "masuk") {
             btnMasuk?.classList.add("bg-white", "text-blue-700", "shadow-sm");
             btnMasuk?.classList.remove("text-slate-600");
-            btnKeluar?.classList.remove("bg-white", "text-blue-700", "shadow-sm");
-            btnKeluar?.classList.add("text-slate-600");
             viewMasuk?.classList.remove("hidden");
-            viewKeluar?.classList.add("hidden");
             this.renderSuratMasukTable();
+        } else if (this.activeSubTab === "permohonan") {
+            btnPermohonan?.classList.add("bg-white", "text-blue-700", "shadow-sm");
+            btnPermohonan?.classList.remove("text-slate-600");
+            viewPermohonan?.classList.remove("hidden");
+            this.renderPermohonanTable();
         }
     },
 
@@ -578,5 +585,206 @@ const ModulSurat = {
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-check"></i> Catat Surat Masuk`;
         }
+    },
+
+    // ==================== PENGAJUAN ONLINE ORTU (PERMOHONAN MANDIRI) ====================
+    searchQueryPermohonan: "",
+    filterStatusPermohonan: "Semua",
+
+    renderPermohonanTable() {
+        const container = document.getElementById("table-surat-permohonan-body");
+        if (!container) return;
+
+        const list = DataStore.getPermohonanSurat();
+        const searchInput = document.getElementById("search-surat-permohonan");
+        if (searchInput && !searchInput.dataset.bound) {
+            searchInput.dataset.bound = "true";
+            searchInput.addEventListener("input", (e) => {
+                this.searchQueryPermohonan = e.target.value.toLowerCase();
+                this.renderPermohonanTable();
+            });
+        }
+
+        const filterSelect = document.getElementById("filter-status-permohonan");
+        if (filterSelect && !filterSelect.dataset.bound) {
+            filterSelect.dataset.bound = "true";
+            filterSelect.addEventListener("change", (e) => {
+                this.filterStatusPermohonan = e.target.value;
+                this.renderPermohonanTable();
+            });
+        }
+
+        const filtered = list.filter(p => {
+            const matchSearch = !this.searchQueryPermohonan ||
+                (p.id && p.id.toLowerCase().includes(this.searchQueryPermohonan)) ||
+                (p.nama && p.nama.toLowerCase().includes(this.searchQueryPermohonan)) ||
+                (p.nisn && p.nisn.toLowerCase().includes(this.searchQueryPermohonan)) ||
+                (p.namaOrtu && p.namaOrtu.toLowerCase().includes(this.searchQueryPermohonan));
+            const matchStatus = this.filterStatusPermohonan === "Semua" || p.status === this.filterStatusPermohonan;
+            return matchSearch && matchStatus;
+        });
+
+        const countEl = document.getElementById("total-surat-permohonan-count");
+        if (countEl) countEl.textContent = `${filtered.length} Pengajuan Surat Terdata`;
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-12 text-center text-slate-400">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="fa-solid fa-inbox text-4xl mb-3 text-slate-300"></i>
+                            <p class="font-medium text-slate-600">Belum ada pengajuan surat online dari orang tua</p>
+                            <p class="text-xs text-slate-400 mt-1">Orang tua siswa dapat mengajukan surat mandiri melalui portal publik <code>permohonan.html</code></p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map((p, idx) => {
+            let statusBadge = "bg-amber-100 text-amber-800 border-amber-300";
+            let statusIcon = "fa-hourglass-half";
+            if (p.status === "Disetujui TU" || p.status === "Diproses") {
+                statusBadge = "bg-blue-100 text-blue-800 border-blue-300";
+                statusIcon = "fa-spinner fa-spin";
+            } else if (p.status === "Siap Diambil") {
+                statusBadge = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                statusIcon = "fa-circle-check";
+            } else if (p.status === "Selesai") {
+                statusBadge = "bg-slate-100 text-slate-700 border-slate-300";
+                statusIcon = "fa-check-double";
+            } else if (p.status === "Ditolak") {
+                statusBadge = "bg-rose-100 text-rose-800 border-rose-300";
+                statusIcon = "fa-circle-xmark";
+            }
+
+            return `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 transition text-xs">
+                    <td class="px-4 py-3">
+                        <div class="font-mono font-bold text-blue-900">${p.id}</div>
+                        <div class="text-[10px] text-slate-400">${p.createdAt || "-"}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-slate-800">${p.nama}</div>
+                        <div class="text-[11px] text-slate-500 font-mono">NISN: ${p.nisn} • Kelas ${p.kelas}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-block px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-800 border border-slate-200">
+                            ${p.jenisSurat}
+                        </span>
+                        <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-1 italic">${p.keperluan || "-"}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="font-semibold text-slate-700">${p.namaOrtu || "-"}</div>
+                        <div class="text-[11px] font-mono text-slate-500">${p.hpOrtu || "-"}</div>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadge}">
+                            <i class="fa-solid ${statusIcon}"></i> ${p.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <select onchange="ModulSurat.updateStatusPermohonan('${p.id}', this.value)"
+                            class="px-2 py-1 text-[11px] border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white">
+                            <option value="Menunggu Verifikasi TU" ${p.status === "Menunggu Verifikasi TU" ? "selected" : ""}>Menunggu Verifikasi</option>
+                            <option value="Disetujui TU" ${p.status === "Disetujui TU" ? "selected" : ""}>Disetujui TU</option>
+                            <option value="Siap Diambil" ${p.status === "Siap Diambil" ? "selected" : ""}>Siap Diambil</option>
+                            <option value="Selesai" ${p.status === "Selesai" ? "selected" : ""}>Selesai / Diterima</option>
+                            <option value="Ditolak" ${p.status === "Ditolak" ? "selected" : ""}>Tolak</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="ModulSurat.prosesPermohonan('${p.id}')"
+                                title="Terbitkan & Cetak Surat Sekarang"
+                                class="p-1.5 px-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition shadow-xs">
+                                <i class="fa-solid fa-print"></i> Cetak
+                            </button>
+                            <button onclick="ModulSurat.sendWhatsAppPermohonan('${p.id}')"
+                                title="Kirim Notifikasi Status ke WhatsApp Ortu"
+                                class="p-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition shadow-xs">
+                                <i class="fa-brands fa-whatsapp"></i> WA
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    },
+
+    async updateStatusPermohonan(id, newStatus) {
+        try {
+            const res = await ApiClient.request("updatePermohonanSurat", { id, status: newStatus });
+            if (res.success) {
+                App.showToast(`Status permohonan ${id} diperbarui: ${newStatus}`, "success");
+                this.renderPermohonanTable();
+                if (window.VueStore) VueStore.refresh();
+            } else {
+                App.showToast(res.message || "Gagal memperbarui status", "error");
+            }
+        } catch (e) {
+            App.showToast(`Error: ${e.message}`, "error");
+        }
+    },
+
+    prosesPermohonan(id) {
+        const item = DataStore.getPermohonanSurat().find(p => p.id === id);
+        if (!item) return;
+
+        App.navigateTo("cetak");
+        const selectSiswa = document.getElementById("cetak-select-siswa");
+        if (selectSiswa && item.nisn) {
+            selectSiswa.value = item.nisn;
+            ModulCetak.loadStudentData(item.nisn);
+        }
+
+        const templateSelect = document.getElementById("cetak-select-template");
+        if (templateSelect) {
+            if (item.jenisSurat.includes("PIP") && item.jenisSurat.includes("Rekomendasi")) {
+                templateSelect.value = "pip_pencairan";
+            } else if (item.jenisSurat.includes("PIP")) {
+                templateSelect.value = "pip_aktif";
+            } else if (item.jenisSurat.includes("Pindah") || item.jenisSurat.includes("Mutasi")) {
+                templateSelect.value = "mutasi";
+            } else if (item.jenisSurat.includes("Prestasi")) {
+                templateSelect.value = "rekomendasi";
+            } else if (item.jenisSurat.includes("Kelakuan")) {
+                templateSelect.value = "kelakuan";
+            } else {
+                templateSelect.value = "aktif";
+            }
+            ModulCetak.onSelectTemplate(templateSelect.value);
+        }
+
+        const keperluanInput = document.getElementById("cetak-keperluan");
+        if (keperluanInput && item.keperluan) {
+            keperluanInput.value = item.keperluan;
+        }
+
+        ModulCetak.generatePreview();
+        App.showToast(`Memuat data permohonan ${item.id} untuk ${item.nama}`, "info");
+    },
+
+    sendWhatsAppPermohonan(id) {
+        const item = DataStore.getPermohonanSurat().find(p => p.id === id);
+        if (!item || !item.hpOrtu) {
+            App.showToast("Nomor HP orang tua tidak tersedia!", "warning");
+            return;
+        }
+
+        let phone = String(item.hpOrtu).replace(/\D/g, "");
+        if (phone.startsWith("0")) phone = "62" + phone.substring(1);
+        if (!phone.startsWith("62")) phone = "62" + phone;
+
+        const school = DataStore.getConfig()?.namaSekolah || "SD Negeri Terlangu 01";
+        const message = `Yth. Bapak/Ibu ${item.namaOrtu || "Orang Tua Siswa"},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.\n\n` +
+            (item.status === "Siap Diambil" 
+                ? `Surat resmi telah dicetak dan ditandatangani. Silakan mengambil surat fisik di Ruang Tata Usaha ${school} pada jam operasional sekolah (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
+                : `Anda dapat memantau status secara berkala melalui tautan portal kami.\n\n`) +
+            `Terima kasih.\n_Tata Usaha ${school}_`;
+
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, "_blank");
     }
 };

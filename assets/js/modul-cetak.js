@@ -252,9 +252,19 @@ const ModulCetak = {
         } else if (type === "kelakuan") {
             judulSurat = "SURAT KETERANGAN KELAKUAN BAIK";
             kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
+        } else if (type === "pip_pencairan") {
+            judulSurat = "SURAT REKOMENDASI PENCAIRAN DANA PIP";
+            const pipRec = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []).find(p => p.nisn === student.nisn) || {};
+            const noRek = pipRec.nomorRekening || student.noRekSimpel || "0109-01-xxxxxx-50-x";
+            const noSK = pipRec.nomorSK || "0345/P3KE/PIP/2026";
+            const bank = pipRec.bankPenyalur || "BRI";
+            kalimatIsi = `Menerangkan bahwa siswa tersebut di atas adalah benar-benar peserta didik aktif di satuan pendidikan kami dan tercatat secara sah sebagai <strong>Penerima Bantuan Program Indonesia Pintar (PIP) Tahun 2026</strong> sesuai Surat Keputusan Puslapdik Kemendikbudristek Nomor: <strong>${noSK}</strong> dengan Nomor Rekening SimPel: <strong>${noRek}</strong> pada <strong>Bank Penyalur (${bank})</strong>.<br><br>Surat rekomendasi ini diterbitkan resmi dari satuan pendidikan untuk kelengkapan administrasi <strong>Aktivasi Rekening / Pencairan Dana Bantuan PIP</strong> bagi siswa yang bersangkutan.`;
+        } else if (type === "pip_aktif") {
+            judulSurat = "SURAT KETERANGAN AKTIF BELAJAR (PERSYARATAN PIP)";
+            kalimatIsi = `Adalah benar-benar siswa aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran 2025/2026 dan berasal dari keluarga layak menerima bantuan sosial pendidikan. Surat keterangan ini diterbitkan sebagai pemenuhan berkas usulan / aktivasi <strong>Program Indonesia Pintar (PIP) Kemendikbudristek</strong>.`;
         }
 
-        // Basis URL Verifikasi Publik Online agar langsung dapat dibuka via scan kamera HP publik
+        // Basis URL Verifikasi Publik Online
         const PUBLIC_ONLINE_URL = "https://sdnegeriterlangu01-sd.github.io/SIM-TAS-SD/verifikasi.html";
         let baseUrl = PUBLIC_ONLINE_URL;
         try {
@@ -267,24 +277,9 @@ const ModulCetak = {
             baseUrl = PUBLIC_ONLINE_URL;
         }
 
-        const verifyPayload = {
-            no: this.generatedNomorSurat,
-            nama: student.nama,
-            nisn: student.nisn,
-            nik: student.nik || "-",
-            kelas: student.rombel || student.kelas || "1",
-            jenis: judulSurat,
-            keperluan: keperluan || "-",
-            tgl: tglStr,
-            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
-            npsn: config.npsn || "20326713",
-            kepsek: config.namaKepalaSekolah || "-",
-            nipKepsek: config.nipKepalaSekolah || "-",
-            isSiswa: true
-        };
-
-        const encodedData = encodeURIComponent(JSON.stringify(verifyPayload));
-        const verifyUrl = `${baseUrl}?d=${encodedData}&no=${encodeURIComponent(this.generatedNomorSurat)}&nisn=${encodeURIComponent(student.nisn)}`;
+        // REKAYASA ULANG QR CODE: Menggunakan Minimal Lightweight Query Parameter
+        // Menghindari enkripsi JSON ratusan karakter yang membuat modul QR terlalu padat dan sulit dibaca kamera HP
+        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}&nisn=${encodeURIComponent(student.nisn)}`;
 
         // Format alamat dan kontak kop surat
         const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";
@@ -386,12 +381,12 @@ const ModulCetak = {
             <!-- Tanda Tangan & QR Code -->
             <div class="surat-ttd-container">
                 <!-- QR Code Verifikasi Standar Dokumen Elektronik -->
-                <div class="qr-verification-badge">
-                    <div id="qrcode-container"></div>
-                    <div class="qr-text">
-                        <strong style="color: #1e3a8a; display: block; font-size: 8.5pt;">DOKUMEN RESMI TERVERIFIKASI</strong>
-                        Pindai QR-Code untuk memvalidasi keabsahan data surat pada SIM-TAS-SD.<br>
-                        <span style="font-family: monospace; font-size: 7.5pt; color: #64748b;">ID: ${this.generatedNomorSurat}</span>
+                <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 10px;">
+                    <div id="qrcode-container" style="background: #ffffff; padding: 4px; border: 1px solid #cbd5e1; border-radius: 8px; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                    <div class="qr-text" style="max-width: 160px; text-align: left;">
+                        <strong style="color: #0f172a; display: block; font-size: 8.5pt;">DOKUMEN RESMI TERVERIFIKASI</strong>
+                        <span style="font-size: 7.5pt; color: #475569; display: block; margin-top: 2px;">Pindai QR-Code dengan kamera HP untuk cek keaslian surat pada portal resmi.</span>
+                        <span style="font-family: monospace; font-size: 7pt; color: #1e3a8a; font-weight: bold; display: block; margin-top: 4px;">No: ${this.generatedNomorSurat}</span>
                     </div>
                 </div>
 
@@ -416,15 +411,15 @@ const ModulCetak = {
             </div>
         `;
 
-        // Render QR Code di dalam Dokumen
+        // Render QR Code di dalam Dokumen (Rekayasa Ulang: Ukuran 105px x 105px, Warna Hitam Maksimum #000000)
         const qrBox = document.getElementById("qrcode-container");
         if (qrBox && typeof QRCode !== "undefined") {
             qrBox.innerHTML = "";
             new QRCode(qrBox, {
                 text: verifyUrl,
-                width: 60,
-                height: 60,
-                colorDark: "#1e3a8a",
+                width: 102,
+                height: 102,
+                colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.M
             });

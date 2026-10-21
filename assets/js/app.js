@@ -78,6 +78,8 @@ const App = {
         ModulCetak.init();
         ModulAbsensi.init();
         ModulPresensi.init();
+        if (window.ModulJadwal) ModulJadwal.init();
+        if (window.ModulPIP) ModulPIP.init();
     },
 
     renderTASelector() {
@@ -90,6 +92,8 @@ const App = {
         else if (this.currentRoute === "cetak") ModulCetak.populateStudentSelect();
         else if (this.currentRoute === "absensi") ModulPresensi.onShow();
         else if (this.currentRoute === "scan-absensi") ModulPresensi.renderScanView();
+        else if (this.currentRoute === "jadwal" && window.ModulJadwal) ModulJadwal.renderGrid();
+        else if (this.currentRoute === "pip" && window.ModulPIP) ModulPIP.renderTab();
     },
 
     navigateTo(route) {
@@ -140,6 +144,10 @@ const App = {
             ModulPresensi.renderScanView();
         } else if (route === "berkas") {
             ModulBerkas.renderTable();
+        } else if (route === "jadwal") {
+            if (window.ModulJadwal) ModulJadwal.renderGrid();
+        } else if (route === "pip") {
+            if (window.ModulPIP) ModulPIP.renderTab();
         } else if (route === "surat") {
             ModulSurat.renderSubTab();
         } else if (route === "cetak") {
@@ -317,8 +325,338 @@ const App = {
         const stemSection = document.getElementById("dashboard-stem-section");
         if (stemSection) stemSection.classList.toggle("hidden", role === "guru");
 
+        // Role-Aware Dashboard Widgets
+        this.renderRoleDashboardWidgets(role, u, gInfo, targetStudents);
+
         // Render Recent Activity on Dashboard
         this.renderRecentActivities(suratKeluar, suratMasuk, targetStudents);
+    },
+
+    _berkasChartInstance: null,
+
+    renderRoleDashboardWidgets(role, user, gInfo, targetStudents) {
+        const guruSection = document.getElementById("dashboard-guru-section");
+        const adminSection = document.getElementById("dashboard-admin-section");
+
+        if (role === "guru") {
+            if (guruSection) guruSection.classList.remove("hidden");
+            if (adminSection) adminSection.classList.add("hidden");
+
+            this.renderGuruScheduleToday(user, gInfo);
+            this.renderGuruIncompleteDocs(targetStudents);
+            this.renderGuruPIPStatus(targetStudents);
+        } else {
+            if (guruSection) guruSection.classList.add("hidden");
+            if (adminSection) adminSection.classList.remove("hidden");
+
+            this.renderAdminBerkasChart();
+            this.renderAdminPIPStats();
+            this.renderPendingPermohonanAlert();
+        }
+    },
+
+    renderGuruScheduleToday(user, gInfo) {
+        const container = document.getElementById("guru-jadwal-hari-ini-body");
+        const dayBadge = document.getElementById("guru-jadwal-hari-label");
+        if (!container) return;
+
+        let todayHari = Util.getHariIndonesia();
+        if (todayHari === "Minggu") todayHari = "Senin"; // Pratinjau hari kerja
+        if (dayBadge) dayBadge.textContent = todayHari;
+
+        const allJadwal = DataStore.getJadwalAll();
+        let slots = [];
+
+        if (gInfo && gInfo.isGuruKelas) {
+            const rombel = String(gInfo.kelas || "1");
+            slots = allJadwal.filter(j => String(j.rombel) === rombel && j.hari === todayHari);
+        } else if (gInfo && gInfo.isGuruMapel) {
+            const myName = (user?.nama || "").toLowerCase();
+            const myMapel = (gInfo.namaMapel || "").toLowerCase();
+            slots = allJadwal.filter(j => {
+                const matchHari = j.hari === todayHari;
+                const matchGuru = myName && j.namaGuru && j.namaGuru.toLowerCase().includes(myName);
+                const matchMapel = myMapel && j.mapel && j.mapel.toLowerCase().includes(myMapel);
+                return matchHari && (matchGuru || matchMapel);
+            });
+        } else {
+            slots = allJadwal.filter(j => j.hari === todayHari && String(j.rombel) === "1");
+        }
+
+        slots.sort((a, b) => Number(a.jamKe) - Number(b.jamKe));
+
+        if (slots.length === 0) {
+            container.innerHTML = `
+                <div class="py-6 text-center text-slate-400">
+                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300"></i>
+                    <p class="text-xs font-semibold text-slate-600">Tidak ada jadwal mengajar pada hari ${todayHari}</p>
+                    <a href="#jadwal" onclick="App.navigateTo('jadwal')" class="text-[11px] text-blue-600 underline mt-1 inline-block">Lihat Seluruh Matriks Jadwal</a>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = slots.map(s => {
+            const isBreak = s.mapel && s.mapel.toLowerCase().includes("istirahat");
+            if (isBreak) {
+                return `
+                    <div class="flex items-center gap-3 p-2 bg-amber-50/70 border border-amber-200 rounded-xl text-xs">
+                        <span class="w-14 font-mono font-bold text-amber-800 text-center text-[11px]">Jam ${s.jamKe}</span>
+                        <div class="flex-grow font-semibold text-amber-900 flex items-center gap-2">
+                            <i class="fa-solid fa-mug-hot text-amber-600"></i> ${s.mapel}
+                        </div>
+                        <span class="text-[10px] text-amber-700 font-mono">${s.waktuMulai || ""}-${s.waktuSelesai || ""}</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 hover:border-blue-400 rounded-xl text-xs transition shadow-xs">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-12 py-1 px-1.5 bg-blue-50 text-blue-800 font-black rounded-lg text-center font-mono text-[11px] border border-blue-200 flex-shrink-0">
+                            Jam ${s.jamKe}
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-800 truncate">${s.mapel || "Mata Pelajaran"}</div>
+                            <div class="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                                <span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>Kelas ${s.rombel}</span>
+                                <span>•</span>
+                                <span class="truncate">${s.namaGuru || "Guru"}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0 pl-2">
+                        <span class="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${s.waktuMulai || ""}-${s.waktuSelesai || ""}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    },
+
+    renderGuruIncompleteDocs(targetStudents) {
+        const container = document.getElementById("guru-incomplete-docs-body");
+        const countBadge = document.getElementById("guru-incomplete-docs-count");
+        if (!container) return;
+
+        const incomplete = targetStudents.filter(s => !s.berkas?.kk?.uploaded || !s.berkas?.akta?.uploaded);
+        if (countBadge) countBadge.textContent = `${incomplete.length} Siswa`;
+
+        if (incomplete.length === 0) {
+            container.innerHTML = `
+                <div class="py-6 text-center text-emerald-600">
+                    <i class="fa-solid fa-circle-check text-3xl mb-2 text-emerald-500"></i>
+                    <p class="text-xs font-bold">Luar biasa! Berkas seluruh siswa di kelas Anda sudah 100% lengkap.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = incomplete.slice(0, 5).map(s => {
+            const missingKK = !s.berkas?.kk?.uploaded;
+            const missingAkta = !s.berkas?.akta?.uploaded;
+            const waLink = ModulBerkas.getWhatsAppReminderLink(s);
+
+            return `
+                <div class="flex items-center justify-between p-2.5 bg-rose-50/40 border border-rose-100 hover:border-rose-300 rounded-xl text-xs transition">
+                    <div class="min-w-0 flex-grow pr-2">
+                        <div class="font-bold text-slate-800 truncate">${s.nama}</div>
+                        <div class="flex items-center gap-1 mt-1 flex-wrap">
+                            ${missingKK ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">Belum KK</span>' : ''}
+                            ${missingAkta ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Belum Akta</span>' : ''}
+                            <span class="text-[10px] text-slate-400 font-mono">NISN: ${s.nisn}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        ${waLink ? `
+                            <a href="${waLink}" target="_blank"
+                                title="Kirim Pengingat Berkas ke WA Orang Tua"
+                                class="p-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold inline-flex items-center gap-1 shadow-xs transition">
+                                <i class="fa-brands fa-whatsapp"></i> Ingatkan
+                            </a>
+                        ` : `
+                            <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')"
+                                title="Lengkapi No HP Orang Tua"
+                                class="p-1.5 px-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 transition">
+                                <i class="fa-solid fa-phone-plus"></i> Isi No HP
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join("");
+    },
+
+    renderGuruPIPStatus(targetStudents) {
+        const container = document.getElementById("guru-pip-summary-body");
+        if (!container) return;
+
+        const nisnSet = new Set(targetStudents.map(s => s.nisn));
+        const allPenerima = DataStore.getPIPPenerima();
+        const myPenerima = allPenerima.filter(p => nisnSet.has(p.nisn) || targetStudents.some(s => s.nama.toLowerCase() === p.nama.toLowerCase()));
+
+        if (myPenerima.length === 0) {
+            container.innerHTML = `
+                <div class="py-4 text-center text-slate-400 text-xs">
+                    <p>Tidak ada siswa penerima PIP SK di rombel ini</p>
+                </div>
+            `;
+            return;
+        }
+
+        const countCair = myPenerima.filter(p => p.statusPencairan === "Sudah Cair").length;
+        const countBelum = myPenerima.length - countCair;
+
+        container.innerHTML = `
+            <div class="flex items-center justify-between mb-3 text-xs">
+                <span class="font-bold text-slate-700">${myPenerima.length} Siswa Penerima PIP</span>
+                <span class="text-[11px] text-slate-500">${countCair} Cair • ${countBelum} Belum</span>
+            </div>
+            <div class="space-y-1.5">
+                ${myPenerima.slice(0, 3).map(p => `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                        <div class="truncate pr-2">
+                            <span class="font-bold text-slate-800">${p.nama}</span>
+                            <span class="text-[10px] text-slate-400 ml-1">Rp ${(p.nominal || 450000).toLocaleString('id-ID')}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.statusPencairan === 'Sudah Cair' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${p.statusPencairan || 'Belum Cair'}
+                        </span>
+                    </div>
+                `).join("")}
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-right">
+                <a href="#pip" onclick="App.navigateTo('pip')" class="text-xs text-blue-600 font-bold hover:underline">Buka Modul PIP Lengkap &rarr;</a>
+            </div>
+        `;
+    },
+
+    renderAdminBerkasChart() {
+        const canvas = document.getElementById("chart-berkas-kelengkapan");
+        if (!canvas || typeof Chart === "undefined") return;
+
+        const students = DataStore.getSiswa();
+        let lengkap = 0;
+        let hanyaKK = 0;
+        let hanyaAkta = 0;
+        let belumKeduanya = 0;
+
+        students.forEach(s => {
+            const hasKK = !!s.berkas?.kk?.uploaded;
+            const hasAkta = !!s.berkas?.akta?.uploaded;
+
+            if (hasKK && hasAkta) lengkap++;
+            else if (hasKK && !hasAkta) hanyaKK++;
+            else if (!hasKK && hasAkta) hanyaAkta++;
+            else belumKeduanya++;
+        });
+
+        if (this._berkasChartInstance) {
+            this._berkasChartInstance.destroy();
+        }
+
+        const ctx = canvas.getContext("2d");
+        this._berkasChartInstance = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: ["Lengkap (KK + Akta)", "Hanya KK", "Hanya Akta", "Belum Keduanya"],
+                datasets: [{
+                    data: [lengkap, hanyaKK, hanyaAkta, belumKeduanya],
+                    backgroundColor: ["#10b981", "#3b82f6", "#f59e0b", "#f43f5e"],
+                    borderWidth: 2,
+                    borderColor: "#ffffff"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 10, family: "sans-serif" }
+                        }
+                    }
+                },
+                cutout: "68%"
+            }
+        });
+    },
+
+    renderAdminPIPStats() {
+        const container = document.getElementById("dashboard-admin-pip-summary");
+        if (!container) return;
+
+        const pengusulan = DataStore.getPIPPengusulan();
+        const penerima = DataStore.getPIPPenerima();
+
+        const desil1_4 = pengusulan.filter(p => Number(p.desil) >= 1 && Number(p.desil) <= 4).length;
+        const desil5_7 = pengusulan.filter(p => Number(p.desil) >= 5 && Number(p.desil) <= 7).length;
+        const desil8_10 = pengusulan.filter(p => Number(p.desil) >= 8 && Number(p.desil) <= 10).length;
+
+        const totalDana = penerima.reduce((acc, curr) => acc + (Number(curr.nominal) || 450000), 0);
+        const cairCount = penerima.filter(p => p.statusPencairan === "Sudah Cair").length;
+
+        container.innerHTML = `
+            <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                <div class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
+                    <div class="text-xs font-bold text-rose-700">Desil 1-4</div>
+                    <div class="text-lg font-black text-rose-900">${desil1_4}</div>
+                    <div class="text-[9px] text-rose-600">Sangat Miskin</div>
+                </div>
+                <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div class="text-xs font-bold text-amber-700">Desil 5-7</div>
+                    <div class="text-lg font-black text-amber-900">${desil5_7}</div>
+                    <div class="text-[9px] text-amber-600">Miskin</div>
+                </div>
+                <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="text-xs font-bold text-blue-700">Desil 8-10</div>
+                    <div class="text-lg font-black text-blue-900">${desil8_10}</div>
+                    <div class="text-[9px] text-blue-600">Rentan Miskin</div>
+                </div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex items-center justify-between">
+                <div>
+                    <span class="text-slate-500 text-[11px]">Total Alokasi SK PIP:</span>
+                    <div class="font-extrabold text-slate-800">Rp ${totalDana.toLocaleString('id-ID')}</div>
+                </div>
+                <div class="text-right">
+                    <span class="text-slate-500 text-[11px]">Pencairan Dana:</span>
+                    <div class="font-extrabold text-emerald-600">${cairCount} / ${penerima.length} Siswa</div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderPendingPermohonanAlert() {
+        const alertEl = document.getElementById("dashboard-pending-permohonan-alert");
+        if (!alertEl) return;
+
+        const list = DataStore.getPermohonanSurat();
+        const pending = list.filter(p => p.status === "Menunggu Verifikasi TU");
+
+        if (pending.length > 0) {
+            alertEl.classList.remove("hidden");
+            alertEl.innerHTML = `
+                <div class="p-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white shadow-md flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg flex-shrink-0">
+                            <i class="fa-solid fa-bell animate-bounce"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm">Ada ${pending.length} Permohonan Surat Online Baru dari Orang Tua!</h4>
+                            <p class="text-[11px] text-amber-100">Permohonan mandiri via portal publik membutuhkan verifikasi dan penerbitan nomor surat resmi.</p>
+                        </div>
+                    </div>
+                    <button onclick="App.navigateTo('surat'); ModulSurat.switchSubTab('permohonan');"
+                        class="px-4 py-2 bg-white hover:bg-slate-100 text-amber-900 rounded-xl font-bold text-xs shadow transition whitespace-nowrap">
+                        Buka Antrean &rarr;
+                    </button>
+                </div>
+            `;
+        } else {
+            alertEl.classList.add("hidden");
+        }
     },
 
     renderRecentActivities(skList, smList, siswaList) {

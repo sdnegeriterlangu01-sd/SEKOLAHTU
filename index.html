@@ -340,6 +340,109 @@
                         </div>
                     </div>
 
+                    <!-- Online Letter Application Alert Container -->
+                    <div id="dashboard-pending-permohonan-alert" class="hidden"></div>
+
+                    <!-- ROLE-AWARE SECTION A: KHUSUS GURU (Jadwal Hari Ini, Peringatan Berkas, PIP Rombel) -->
+                    <div id="dashboard-guru-section" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <!-- Left: Jadwal Mengajar Hari Ini -->
+                            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                            <i class="fa-solid fa-calendar-day text-emerald-600"></i> Jadwal Mengajar Hari Ini (<span id="guru-jadwal-hari-label">Hari</span>)
+                                        </h3>
+                                        <p class="text-xs text-slate-400 mt-0.5">Urutan jam pelajaran otomatis disesuaikan dengan rombel binaan Anda</p>
+                                    </div>
+                                    <button onclick="App.navigateTo('jadwal')"
+                                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5">
+                                        <i class="fa-solid fa-calendar-days"></i> Matriks Lengkap
+                                    </button>
+                                </div>
+                                <div id="guru-jadwal-hari-ini-body" class="space-y-2">
+                                    <!-- Populated by App.renderGuruScheduleToday -->
+                                </div>
+                            </div>
+
+                            <!-- Right: Peringatan Dokumen Belum Lengkap & PIP Kelas -->
+                            <div class="lg:col-span-5 space-y-6">
+                                <!-- Incomplete Docs Card -->
+                                <div class="bg-white rounded-2xl border border-rose-200/80 p-5 shadow-xs space-y-3">
+                                    <div class="flex items-center justify-between border-b border-rose-100 pb-2.5">
+                                        <h3 class="font-bold text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Berkas Siswa Belum Lengkap
+                                        </h3>
+                                        <span id="guru-incomplete-docs-count" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">0 Siswa</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">Klik tombol WA untuk mengirim pesan sopan pengingat berkas langsung ke nomor orang tua.</p>
+                                    <div id="guru-incomplete-docs-body" class="space-y-2">
+                                        <!-- Populated by App.renderGuruIncompleteDocs -->
+                                    </div>
+                                </div>
+
+                                <!-- Class PIP Summary Card -->
+                                <div class="bg-white rounded-2xl border border-amber-200/80 p-5 shadow-xs space-y-3">
+                                    <div class="flex items-center justify-between border-b border-amber-100 pb-2.5">
+                                        <h3 class="font-bold text-xs uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                                            <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i> Penerima PIP di Kelas Anda
+                                        </h3>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">Kemendikbud</span>
+                                    </div>
+                                    <div id="guru-pip-summary-body">
+                                        <!-- Populated by App.renderGuruPIPStatus -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROLE-AWARE SECTION B: KHUSUS ADMIN, TU, KEPSEK (Doughnut Chart Berkas & Analitik PIP) -->
+                    <div id="dashboard-admin-section" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <!-- Left: Berkas Doughnut Chart -->
+                            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                                        <div>
+                                            <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                                <i class="fa-solid fa-chart-pie text-blue-600"></i> Analisis Kelengkapan Berkas
+                                            </h3>
+                                            <p class="text-xs text-slate-400 mt-0.5">Proporsi kepemilikan KK & Akta seluruh sekolah</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative h-48 w-full flex items-center justify-center">
+                                        <canvas id="chart-berkas-kelengkapan"></canvas>
+                                    </div>
+                                </div>
+                                <div class="pt-3 border-t border-slate-100 text-center">
+                                    <button onclick="App.navigateTo('berkas')" class="text-xs text-blue-600 font-bold hover:underline">
+                                        Kelola Arsip Bangkas Digital &rarr;
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right: PIP Desil Analytics & Quick Action -->
+                            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div>
+                                        <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                            <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i> Indikator Program PIP & Kerentanan Kemiskinan
+                                        </h3>
+                                        <p class="text-xs text-slate-400 mt-0.5">Distribusi desil pengusulan bansos pendidikan & status pencairan bank</p>
+                                    </div>
+                                    <button onclick="App.navigateTo('pip')"
+                                        class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Modul PIP
+                                    </button>
+                                </div>
+                                <div id="dashboard-admin-pip-summary">
+                                    <!-- Populated by App.renderAdminPIPStats -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Dashboard Bottom Layout: Architecture Infographic & Recent Activity -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -470,9 +573,9 @@
 
                     <!-- Search & Filter Bar -->
                     <div
-                        class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                        class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                         <!-- Search Box -->
-                        <div class="md:col-span-2 relative">
+                        <div class="md:col-span-4 relative">
                             <i
                                 class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                             <input type="text" id="search-berkas-siswa"
@@ -481,7 +584,7 @@
                         </div>
 
                         <!-- Filter Kelas -->
-                        <div>
+                        <div class="md:col-span-2">
                             <select id="filter-kelas-berkas"
                                 class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
                                 <option value="Semua">Semua Tingkat Kelas</option>
@@ -494,14 +597,34 @@
                             </select>
                         </div>
 
-                        <!-- Filter Status Berkas -->
-                        <div>
+                        <!-- Filter Status Berkas Lengkap/Belum -->
+                        <div class="md:col-span-3">
                             <select id="filter-status-berkas"
                                 class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
                                 <option value="Semua">Semua Status Berkas</option>
                                 <option value="Lengkap">Wajib Lengkap (KK + Akta)</option>
                                 <option value="Belum Lengkap">Belum Lengkap</option>
+                                <option value="Belum KK">Belum Upload KK</option>
+                                <option value="Belum Akta">Belum Upload Akta</option>
+                                <option value="Ada KIP">Penerima KIP / PKH</option>
+                                <option value="Belum Foto">Belum Upload Pas Foto</option>
                             </select>
+                        </div>
+
+                        <!-- Filter Kontak HP Ortu & Toggle Button -->
+                        <div class="md:col-span-3 flex items-center gap-2">
+                            <select id="filter-kontak-berkas"
+                                class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                                <option value="Semua">Semua Kontak</option>
+                                <option value="Ada">Ada No HP</option>
+                                <option value="Belum">Belum Ada HP</option>
+                            </select>
+                            <button id="btn-toggle-kontak-col" onclick="ModulBerkas.toggleKontakColumn()"
+                                title="Sembunyikan atau tampilkan kolom kontak orang tua"
+                                class="p-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 flex-shrink-0">
+                                <i class="fa-solid fa-phone"></i>
+                                <span id="label-toggle-kontak" class="hidden sm:inline">No HP</span>
+                            </button>
                         </div>
                     </div>
 
@@ -666,6 +789,62 @@
                                     </tbody>
                                 </table>
                             </div>
+                    </div>
+
+                    <!-- ================= SUB VIEW: PENGAJUAN ONLINE ORTU ================= -->
+                    <div id="view-surat-permohonan" class="hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 flex-grow max-w-xl">
+                                <div class="relative flex-grow">
+                                    <i
+                                        class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="search-surat-permohonan"
+                                        placeholder="Cari kode tiket, nama siswa, NISN, atau orang tua..."
+                                        class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <select id="filter-status-permohonan"
+                                    class="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Status</option>
+                                    <option value="Menunggu Verifikasi TU">Menunggu Verifikasi</option>
+                                    <option value="Disetujui TU">Disetujui TU</option>
+                                    <option value="Siap Diambil">Siap Diambil</option>
+                                    <option value="Selesai">Selesai</option>
+                                    <option value="Ditolak">Ditolak</option>
+                                </select>
+                            </div>
+                            <a href="permohonan.html" target="_blank"
+                                class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs whitespace-nowrap">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Portal Publik Ortu
+                            </a>
+                        </div>
+
+                        <!-- Table Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <span id="total-surat-permohonan-count" class="text-xs font-bold text-slate-600">0 Pengajuan Surat Terdata</span>
+                                <div class="text-[11px] text-slate-400">
+                                    Portal Self-Service: <span class="font-mono font-semibold text-slate-600">permohonan.html</span>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr
+                                            class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                            <th class="px-4 py-3">Tiket & Tanggal</th>
+                                            <th class="px-4 py-3">Nama Siswa & NISN</th>
+                                            <th class="px-4 py-3">Jenis Surat & Keperluan</th>
+                                            <th class="px-4 py-3">Orang Tua & WhatsApp</th>
+                                            <th class="px-4 py-3 text-center">Status</th>
+                                            <th class="px-4 py-3 text-center">Verifikasi TU</th>
+                                            <th class="px-4 py-3 text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-surat-permohonan-body">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -778,7 +957,9 @@
                                     Resmi</label>
                                 <select id="cetak-jenis-surat"
                                     class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
-                                    <option value="aktif">Surat Keterangan Aktif Belajar (PIP / Beasiswa)</option>
+                                    <option value="aktif">Surat Keterangan Aktif Belajar (Umum)</option>
+                                    <option value="pip_pencairan">Surat Rekomendasi Pencairan PIP Bank BRI</option>
+                                    <option value="pip_aktif">Surat Keterangan Aktif Belajar (Persyaratan PIP)</option>
                                     <option value="mutasi">Surat Keterangan Pindah / Mutasi Siswa</option>
                                     <option value="rekomendasi">Surat Rekomendasi Siswa Berprestasi</option>
                                     <option value="kelakuan">Surat Keterangan Kelakuan Baik Siswa</option>
@@ -1279,6 +1460,310 @@
                                 </div>
 
                     </form>
+                </section>
+
+
+                <!-- ==============================================================
+                     VIEW: JADWAL PELAJARAN (MATRIKS TEMATIK & MATA PELAJARAN)
+                     ============================================================== -->
+                <section id="view-jadwal" class="app-view hidden space-y-5">
+
+                    <!-- Header & Controls -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-days text-emerald-600"></i> Jadwal Pelajaran Sekolah Dasar
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Matriks jadwal mingguan (Senin - Sabtu, Jam 1-8). Tersedia cetak A4 landscape & kartu jadwal saku ID.</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="ModulJadwal.applyPresetMerdeka()" data-need="saveJadwal"
+                                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Preset Merdeka
+                            </button>
+                            <button onclick="ModulJadwal.printLandscape()"
+                                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                                <i class="fa-solid fa-print text-blue-600"></i> Cetak A4 Landscape
+                            </button>
+                            <button onclick="ModulJadwal.printPocketCard()"
+                                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                                <i class="fa-solid fa-id-card-clip text-purple-600"></i> Cetak Kartu Saku
+                            </button>
+                            <button id="jadwal-btn-add-slot" onclick="ModulJadwal.openModal()" data-need="saveJadwal"
+                                class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Tambah / Edit Slot
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar Filter Kelas & Hari -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-slate-600 whitespace-nowrap">Tingkat Rombel:</label>
+                                <select id="jadwal-select-kelas"
+                                    class="px-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-slate-800">
+                                    <option value="1">Kelas 1 (Fase A)</option>
+                                    <option value="2">Kelas 2 (Fase A)</option>
+                                    <option value="3">Kelas 3 (Fase B)</option>
+                                    <option value="4">Kelas 4 (Fase B)</option>
+                                    <option value="5">Kelas 5 (Fase C)</option>
+                                    <option value="6">Kelas 6 (Fase C)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-slate-600 whitespace-nowrap">Filter Hari:</label>
+                                <select id="jadwal-select-hari"
+                                    class="px-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800">
+                                    <option value="Semua">Semua Hari (Senin - Sabtu)</option>
+                                    <option value="Senin">Senin</option>
+                                    <option value="Selasa">Selasa</option>
+                                    <option value="Rabu">Rabu</option>
+                                    <option value="Kamis">Kamis</option>
+                                    <option value="Jumat">Jumat</option>
+                                    <option value="Sabtu">Sabtu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="jadwal-badge-kelas" class="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                            Memuat data jadwal...
+                        </div>
+                    </div>
+
+                    <!-- Timetable Grid Container -->
+                    <div id="jadwal-grid-container" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 overflow-x-auto min-h-[400px]">
+                        <!-- Populated by ModulJadwal.renderGrid -->
+                    </div>
+
+                </section>
+
+
+                <!-- ==============================================================
+                     VIEW: PROGRAM INDONESIA PINTAR (PIP) & BEASISWA
+                     ============================================================== -->
+                <section id="view-pip" class="app-view hidden space-y-5">
+
+                    <!-- Header & Sub-Tabs -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i> Program Indonesia Pintar (PIP)
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Integrasi pengusulan bansos, desil kemiskinan (1-10), impor Excel SK Kemendikbud, & cetak surat rekomendasi bank.</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="ModulPIP.runSmartAudit()"
+                                class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
+                                <i class="fa-solid fa-shield-virus text-purple-600"></i> Audit DB Siswa
+                            </button>
+                            <button onclick="ModulPIP.renderRadarKemiskinan()"
+                                class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
+                                <i class="fa-solid fa-radar text-rose-600"></i> Radar Kemiskinan
+                            </button>
+                            <button onclick="document.getElementById('pip-file-input').click()" data-need="importPIP"
+                                class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
+                                <i class="fa-solid fa-file-import"></i> Impor Excel SK (SheetJS)
+                            </button>
+                            <input type="file" id="pip-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="ModulPIP.handleFileImport(event)">
+                            <button onclick="ModulPIP.exportPenerimaCSV()"
+                                class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Sub-Tabs -->
+                    <div class="bg-slate-200/80 p-1 rounded-xl inline-flex items-center gap-1">
+                        <button id="pip-btn-tab-dasbor" onclick="ModulPIP.switchTab('dasbor')"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 bg-white text-amber-700 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-chart-simple"></i> Dasbor & Analitik
+                        </button>
+                        <button id="pip-btn-tab-pengusulan" onclick="ModulPIP.switchTab('pengusulan')"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                            <i class="fa-solid fa-clipboard-question"></i> Data Pengusulan (Desil)
+                        </button>
+                        <button id="pip-btn-tab-penerima" onclick="ModulPIP.switchTab('penerima')"
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                            <i class="fa-solid fa-id-card-clip"></i> Siswa Penerima SK PIP
+                        </button>
+                    </div>
+
+                    <!-- SUB-VIEW 1: DASBOR & ANALITIK -->
+                    <div id="pip-tab-dasbor" class="space-y-5">
+                        <!-- 4 Stat Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <div class="glass-card rounded-2xl p-4 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Penerima SK</span>
+                                <div id="pip-stat-total-penerima" class="text-2xl font-black text-slate-900 mt-1">0</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">Siswa Penerima Resmi</div>
+                            </div>
+                            <div class="glass-card rounded-2xl p-4 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Dana Bantuan</span>
+                                <div id="pip-stat-total-dana" class="text-2xl font-black text-amber-600 mt-1">Rp 0</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">Alokasi Puslapdik Dikbud</div>
+                            </div>
+                            <div class="glass-card rounded-2xl p-4 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sudah Cair</span>
+                                <div id="pip-stat-total-cair" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">Rekening Bank Teraktivasi</div>
+                            </div>
+                            <div class="glass-card rounded-2xl p-4 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Persentase Realisasi</span>
+                                <div id="pip-stat-persen-cair" class="text-2xl font-black text-indigo-600 mt-1">0%</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">Target 100% Tersalurkan</div>
+                            </div>
+                        </div>
+
+                        <!-- Chart Desil & Distribusi -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column text-amber-600"></i> Distribusi Desil Kemiskinan Siswa
+                                </h3>
+                                <div class="relative h-60 w-full flex items-center justify-center">
+                                    <canvas id="pip-chart-desil"></canvas>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-info text-blue-600"></i> Kriteria Kelayakan & Alur Bank
+                                    </h3>
+                                    <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+                                        <li class="flex items-start gap-2">
+                                            <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                                            <span><strong>Desil 1 - 4:</strong> Prioritas utama penerima bansos (Sangat Miskin / Miskin). Wajib diusulkan dan diverifikasi berkas KK & KIP.</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                                            <span><strong>Desil 5 - 7:</strong> Kategori Miskin & Rentan Miskin. Diusulkan jika kuota sekolah masih tersedia.</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                                            <span><strong>Aktivasi Rekening SimPel:</strong> Cetak Surat Rekomendasi Kepala Sekolah untuk dibawa orang tua ke Bank BRI terdekat.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
+                                    <span>Butuh mencetak surat rekomendasi pencairan bank?</span>
+                                    <button onclick="App.navigateTo('cetak'); ModulCetak.onSelectTemplate('pip_pencairan');" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] shadow-xs">
+                                        Cetak Surat Rekomendasi &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 2: DATA PENGUSULAN -->
+                    <div id="pip-tab-pengusulan" class="hidden space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                            <div class="md:col-span-6 relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="pip-search-pengusulan"
+                                    placeholder="Cari nama siswa, NISN, atau orang tua pengusulan..."
+                                    class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-3">
+                                <select id="pip-filter-desil"
+                                    class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Kategori Desil</option>
+                                    <option value="1-4">Desil 1 - 4 (Sangat Miskin)</option>
+                                    <option value="5-7">Desil 5 - 7 (Miskin)</option>
+                                    <option value="8-10">Desil 8 - 10 (Rentan Miskin)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <select id="pip-filter-layak"
+                                    class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Status Kelayakan</option>
+                                    <option value="Layak">Status Layak PIP</option>
+                                    <option value="Perlu Verifikasi">Perlu Verifikasi Berkas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <span id="pip-total-pengusulan-count" class="text-xs font-bold text-slate-600">0 Data Pengusulan</span>
+                                <div class="text-[11px] text-slate-400">Sinkronisasi: <span class="font-mono font-semibold text-slate-600">Dapodik & P3KE</span></div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                            <th class="px-4 py-3">Nama Siswa & NISN</th>
+                                            <th class="px-4 py-3">Kelas</th>
+                                            <th class="px-4 py-3">Kategori Desil</th>
+                                            <th class="px-4 py-3">Nama Orang Tua</th>
+                                            <th class="px-4 py-3">Nominal Usulan</th>
+                                            <th class="px-4 py-3 text-center">Status Kelayakan</th>
+                                            <th class="px-4 py-3 text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-pip-pengusulan-body">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VIEW 3: SISWA PENERIMA SK -->
+                    <div id="pip-tab-penerima" class="hidden space-y-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                            <div class="md:col-span-5 relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="pip-search-penerima"
+                                    placeholder="Cari penerima SK, nomor rekening SimPel, atau SK..."
+                                    class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-3">
+                                <select id="pip-filter-kelas-penerima"
+                                    class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Tingkat Kelas</option>
+                                    <option value="1">Kelas 1</option>
+                                    <option value="2">Kelas 2</option>
+                                    <option value="3">Kelas 3</option>
+                                    <option value="4">Kelas 4</option>
+                                    <option value="5">Kelas 5</option>
+                                    <option value="6">Kelas 6</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-4">
+                                <select id="pip-filter-cair"
+                                    class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Status Pencairan</option>
+                                    <option value="Sudah Cair">Sudah Cair / Diterima</option>
+                                    <option value="Belum Cair">Belum Cair (Perlu Rekomendasi)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <span id="pip-total-penerima-count" class="text-xs font-bold text-slate-600">0 Siswa Penerima SK</span>
+                                <div class="text-[11px] text-slate-400">Penyalur: <span class="font-bold text-slate-700">Bank Rakyat Indonesia (BRI)</span></div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                            <th class="px-4 py-3">Nama Siswa & NISN</th>
+                                            <th class="px-4 py-3">Nomor SK Kemendikbud</th>
+                                            <th class="px-4 py-3">Rekening SimPel</th>
+                                            <th class="px-4 py-3">Nominal Bantuan</th>
+                                            <th class="px-4 py-3 text-center">Status Pencairan</th>
+                                            <th class="px-4 py-3 text-right">Surat & Cetak</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-pip-penerima-body">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </section>
 
             </main>
@@ -2174,6 +2659,205 @@
         </div>
     </div>
 
+    <!-- MODAL 8: Edit Slot Jadwal Pelajaran -->
+    <div id="modal-edit-jadwal"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 id="jadwal-modal-title" class="font-bold text-sm text-slate-900">Tambah / Edit Slot Jadwal Pelajaran</h3>
+                <button type="button" onclick="ModulJadwal.closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="ModulJadwal.saveSlot(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tingkat Rombel</label>
+                        <select id="jadwal-form-rombel" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-bold">
+                            <option value="1">Kelas 1</option>
+                            <option value="2">Kelas 2</option>
+                            <option value="3">Kelas 3</option>
+                            <option value="4">Kelas 4</option>
+                            <option value="5">Kelas 5</option>
+                            <option value="6">Kelas 6</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Hari</label>
+                        <select id="jadwal-form-hari" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-bold">
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Jam Ke-</label>
+                        <select id="jadwal-form-jam" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-bold">
+                            <option value="1">Jam 1</option>
+                            <option value="2">Jam 2</option>
+                            <option value="3">Jam 3</option>
+                            <option value="4">Jam 4</option>
+                            <option value="5">Jam 5</option>
+                            <option value="6">Jam 6</option>
+                            <option value="7">Jam 7</option>
+                            <option value="8">Jam 8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mulai</label>
+                        <input type="text" id="jadwal-form-mulai" placeholder="07:00" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Selesai</label>
+                        <input type="text" id="jadwal-form-selesai" placeholder="07:35" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mata Pelajaran</label>
+                    <input type="text" id="jadwal-form-mapel" placeholder="Pendidikan Pancasila / Bahasa Indonesia" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Guru Pengampu</label>
+                        <select id="jadwal-form-guru" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ruang / Keterangan</label>
+                        <input type="text" id="jadwal-form-ruang" placeholder="Ruang Kelas 1" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <button type="button" onclick="ModulJadwal.deleteSlot()" id="jadwal-btn-delete" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-trash"></i> Hapus Slot
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="ModulJadwal.closeModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Slot
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 9: Quick Edit Kontak Orang Tua -->
+    <div id="modal-edit-kontak-ortu"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 id="edit-kontak-title" class="font-bold text-sm text-slate-900">Perbarui Kontak Orang Tua Siswa</h3>
+                    <p id="edit-kontak-nama-siswa" class="text-xs text-slate-500 mt-0.5">Nama Siswa</p>
+                </div>
+                <button type="button" onclick="ModulBerkas.closeEditKontakModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="ModulBerkas.saveKontakOrtu(event)" class="space-y-3">
+                <input type="hidden" id="edit-kontak-nisn">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Ayah / Ibu / Wali</label>
+                    <input type="text" id="edit-kontak-nama-ortu" placeholder="Nama Orang Tua Siswa" required
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Handphone / WhatsApp</label>
+                    <input type="tel" id="edit-kontak-hp-ortu" placeholder="08xxxxxxxxxx" required
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Nomor ini digunakan untuk pengiriman notifikasi berkas & surat sekolah otomatis.</p>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="ModulBerkas.closeEditKontakModal()"
+                        class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Kontak
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 10: OCR Scanner & Diff Sync (Tesseract.js) -->
+    <div id="modal-ocr-scanner"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass-chart text-blue-600"></i> OCR Scanner & Ekstraksi Cerdas Dokumen
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        <span id="modal-ocr-student-info" class="font-bold text-slate-700">Nama Siswa</span> • Dokumen: <span id="modal-ocr-doc-type" class="font-semibold text-blue-700">Kartu Keluarga</span>
+                    </p>
+                </div>
+                <button type="button" onclick="ModulOCR.closeScanModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Upload Area & Preprocessing -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas Scan Dokumen (Format Gambar JPG/PNG/WEBP)</label>
+                    <input type="file" id="ocr-file-input" accept="image/*" onchange="ModulOCR.handleFileSelected(event)"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Image Preview Container -->
+                <div id="ocr-preview-container" class="hidden p-3 bg-slate-100 rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
+                    <img id="ocr-image-preview" src="" alt="Pratinjau Dokumen" class="max-h-64 object-contain rounded-lg shadow-sm">
+                    <button type="button" id="btn-start-ocr" onclick="ModulOCR.startOCR()"
+                        class="mt-3 px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-md transition">
+                        <i class="fa-solid fa-bolt-lightning text-amber-400"></i> Mulai Ekstraksi Teks (Tesseract.js OCR)
+                    </button>
+                </div>
+
+                <!-- Progress & Extraction Status -->
+                <div id="ocr-progress-box" class="hidden p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-2">
+                    <div class="flex items-center justify-between text-xs font-semibold text-blue-900">
+                        <span id="ocr-progress-status">Memuat engine OCR...</span>
+                        <span id="ocr-progress-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-2">
+                        <div id="ocr-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Diff Comparison Container (Populated by ModulOCR.renderDiffView) -->
+                <div id="ocr-diff-container" class="hidden space-y-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                <span class="text-[11px] text-slate-400">Tekan Sinkronisasi untuk memperbarui data siswa di database.</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="ModulOCR.closeScanModal()"
+                        class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                        Tutup
+                    </button>
+                    <button type="button" id="btn-apply-ocr" onclick="ModulOCR.applyOCRToDatabase()"
+                        class="hidden px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Terapkan & Sinkronkan ke Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==========================================================================
          APPLICATION JAVASCRIPT MODULES
          ========================================================================== -->
@@ -2185,6 +2869,9 @@
     <script src="assets/js/modul-berkas.js"></script>
     <script src="assets/js/modul-surat.js"></script>
     <script src="assets/js/modul-cetak.js"></script>
+    <script src="assets/js/modul-jadwal.js"></script>
+    <script src="assets/js/modul-pip.js"></script>
+    <script src="assets/js/modul-ocr.js"></script>
     <script src="assets/js/modul-absensi.js"></script>
     <script src="assets/js/modul-import.js"></script>
     <script src="assets/js/modul-presensi.js"></script>

@@ -41,6 +41,10 @@ const TAB_TENDIK = "DB_Tendik";
 const TAB_ABSENSI_TENDIK = "DB_AbsensiTendik";
 const TAB_ABSENSI_SISWA_BULAN = "DB_AbsensiSiswaBulan";
 const TAB_CONFIG = "Config";
+const TAB_JADWAL = "DB_JadwalPelajaran";
+const TAB_PIP_PENGUSULAN = "DB_PIP_Pengusulan";
+const TAB_PIP_PENERIMA = "DB_PIP_Penerima";
+const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
 
 /**
  * Handle GET Requests (Health Check & Direct Info)
@@ -204,6 +208,58 @@ function doPost(e) {
         responseData = handleSaveConfig(ss, payload);
         break;
 
+      // ==================== JADWAL PELAJARAN ====================
+      case "getJadwal":
+        responseData = handleGetJadwal(ss, payload);
+        break;
+
+      case "saveJadwal":
+        responseData = handleSaveJadwal(ss, payload);
+        break;
+
+      case "deleteJadwal":
+        responseData = handleDeleteJadwal(ss, payload);
+        break;
+
+      // ==================== PROGRAM PIP ====================
+      case "getPIP":
+        responseData = handleGetPIP(ss, payload);
+        break;
+
+      case "savePIP":
+        responseData = handleSavePIP(ss, payload);
+        break;
+
+      case "updatePIPStatus":
+        responseData = handleUpdatePIPStatus(ss, payload);
+        break;
+
+      case "importPIP":
+        responseData = handleImportPIP(ss, payload);
+        break;
+
+      // ==================== PERMOHONAN SURAT ONLINE ====================
+      case "getPermohonanSurat":
+        responseData = handleGetPermohonanSurat(ss, payload);
+        break;
+
+      case "submitPermohonanSurat":
+        responseData = handleSubmitPermohonanSurat(ss, payload);
+        break;
+
+      case "updatePermohonanSurat":
+        responseData = handleUpdatePermohonanSurat(ss, payload);
+        break;
+
+      // ==================== UPDATE DATA SISWA / KONTAK ====================
+      case "updateStudentPhone":
+        responseData = handleUpdateStudentPhone(ss, payload);
+        break;
+
+      case "updateStudentFields":
+        responseData = handleUpdateStudentFields(ss, payload);
+        break;
+
       default:
         responseData = { success: false, message: "Aksi tidak dikenali: " + action };
     }
@@ -360,7 +416,47 @@ function setupDatabaseAndFolders() {
     sheetCfg.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#f3f3f3");
   }
 
-  // 9. Struktur Folder di Google Drive
+  // 9. Tab DB_JadwalPelajaran
+  let sheetJadwal = ss.getSheetByName(TAB_JADWAL);
+  if (!sheetJadwal) sheetJadwal = ss.insertSheet(TAB_JADWAL);
+  if (sheetJadwal.getLastRow() === 0) {
+    sheetJadwal.appendRow([
+      "ID", "ROMBEL", "HARI", "JAM_KE", "MAPEL", "NAMA_GURU", "WAKTU_MULAI", "WAKTU_SELESAI", "RUANG", "UPDATED_AT"
+    ]);
+    sheetJadwal.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#d9ead3");
+  }
+
+  // 10. Tab DB_PIP_Pengusulan
+  let sheetPIPU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
+  if (!sheetPIPU) sheetPIPU = ss.insertSheet(TAB_PIP_PENGUSULAN);
+  if (sheetPIPU.getLastRow() === 0) {
+    sheetPIPU.appendRow([
+      "ID", "TAHUN", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "DESIL", "NOMINAL", "STATUS_KELAYAKAN", "KETERANGAN", "UPDATED_AT"
+    ]);
+    sheetPIPU.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#fff2cc");
+  }
+
+  // 11. Tab DB_PIP_Penerima
+  let sheetPIPP = ss.getSheetByName(TAB_PIP_PENERIMA);
+  if (!sheetPIPP) sheetPIPP = ss.insertSheet(TAB_PIP_PENERIMA);
+  if (sheetPIPP.getLastRow() === 0) {
+    sheetPIPP.appendRow([
+      "ID", "TAHUN", "NISN", "NAMA", "KELAS", "NOMOR_SK", "TANGGAL_SK", "REKENING_SIMPEL", "BANK_PENYALUR", "NOMINAL", "STATUS_PENCAIRAN", "TGL_CAIR", "KETERANGAN", "UPDATED_AT"
+    ]);
+    sheetPIPP.getRange(1, 1, 1, 14).setFontWeight("bold").setBackground("#cfe2f3");
+  }
+
+  // 12. Tab DB_PermohonanSurat
+  let sheetPermohonan = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheetPermohonan) sheetPermohonan = ss.insertSheet(TAB_PERMOHONAN_SURAT);
+  if (sheetPermohonan.getLastRow() === 0) {
+    sheetPermohonan.appendRow([
+      "ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT"
+    ]);
+    sheetPermohonan.getRange(1, 1, 1, 12).setFontWeight("bold").setBackground("#fce5cd");
+  }
+
+  // 13. Struktur Folder di Google Drive
   const rootFolder = getOrCreateSubFolder(DriveApp.getRootFolder(), ROOT_FOLDER_NAME);
   getOrCreateSubFolder(rootFolder, FOLDER_BERKAS_SISWA);
   getOrCreateSubFolder(rootFolder, FOLDER_SURAT_MASUK);
@@ -371,7 +467,7 @@ function setupDatabaseAndFolders() {
 
   return {
     success: true,
-    message: "Inisialisasi Database Google Sheets (7 Tab) & Folder Google Drive (/SIM-TAS/) berhasil diselesaikan!",
+    message: "Inisialisasi Database Google Sheets (12 Tab) & Folder Google Drive (/SIM-TAS/) berhasil diselesaikan!",
     rootFolderId: rootFolder.getId()
   };
 }
@@ -1410,4 +1506,425 @@ function handleSaveConfig(ss, payload) {
   });
   return { success: true, message: "Konfigurasi identitas sekolah & Kepala Sekolah berhasil disimpan ke cloud!" };
 }
+
+/**
+ * ==========================================================================
+ * HANDLERS: JADWAL PELAJARAN (MATRIKS TEMATIK & MATA PELAJARAN)
+ * ==========================================================================
+ */
+function handleGetJadwal(ss, payload) {
+  let sheet = ss.getSheetByName(TAB_JADWAL);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_JADWAL);
+    sheet.appendRow(["ID", "ROMBEL", "HARI", "JAM_KE", "MAPEL", "NAMA_GURU", "WAKTU_MULAI", "WAKTU_SELESAI", "RUANG", "UPDATED_AT"]);
+    return { success: true, data: [] };
+  }
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { success: true, data: [] };
+
+  const list = [];
+  const targetRombel = payload && payload.rombel ? String(payload.rombel) : null;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rombel = String(row[1]);
+    if (targetRombel && targetRombel !== "Semua" && rombel !== targetRombel) continue;
+
+    list.push({
+      id: String(row[0] || ""),
+      rombel: rombel,
+      hari: String(row[2] || ""),
+      jamKe: Number(row[3]) || 1,
+      mapel: String(row[4] || ""),
+      namaGuru: String(row[5] || ""),
+      waktuMulai: String(row[6] || ""),
+      waktuSelesai: String(row[7] || ""),
+      ruang: String(row[8] || ""),
+      updatedAt: String(row[9] || "")
+    });
+  }
+
+  return { success: true, data: list };
+}
+
+function handleSaveJadwal(ss, payload) {
+  let sheet = ss.getSheetByName(TAB_JADWAL);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_JADWAL);
+    sheet.appendRow(["ID", "ROMBEL", "HARI", "JAM_KE", "MAPEL", "NAMA_GURU", "WAKTU_MULAI", "WAKTU_SELESAI", "RUANG", "UPDATED_AT"]);
+  }
+
+  const id = payload.id || `JADWAL_${payload.rombel}_${payload.hari}_${payload.jamKe}`;
+  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  const data = sheet.getDataRange().getValues();
+  let rowIndex = -1;
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === id || (String(data[i][1]) === String(payload.rombel) && String(data[i][2]) === String(payload.hari) && String(data[i][3]) === String(payload.jamKe))) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+
+  const rowValues = [
+    id,
+    String(payload.rombel || "1"),
+    String(payload.hari || "Senin"),
+    Number(payload.jamKe) || 1,
+    String(payload.mapel || ""),
+    String(payload.namaGuru || ""),
+    String(payload.waktuMulai || ""),
+    String(payload.waktuSelesai || ""),
+    String(payload.ruang || `Kelas ${payload.rombel || 1}`),
+    nowStr
+  ];
+
+  if (rowIndex > 0) {
+    sheet.getRange(rowIndex, 1, 1, 10).setValues([rowValues]);
+  } else {
+    sheet.appendRow(rowValues);
+  }
+
+  return { success: true, message: `Slot jadwal ${payload.mapel} (Kelas ${payload.rombel}, ${payload.hari} Jam ${payload.jamKe}) berhasil disimpan!`, id: id };
+}
+
+function handleDeleteJadwal(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_JADWAL);
+  if (!sheet) return { success: false, message: "Tab jadwal tidak ditemukan." };
+
+  const id = String(payload.id || "");
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === id) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: `Slot jadwal ${id} berhasil dihapus.` };
+    }
+  }
+
+  return { success: false, message: `Slot jadwal dengan ID ${id} tidak ditemukan.` };
+}
+
+/**
+ * ==========================================================================
+ * HANDLERS: PROGRAM INDONESIA PINTAR (PIP)
+ * ==========================================================================
+ */
+function handleGetPIP(ss, payload) {
+  // 1. Data Pengusulan
+  let sheetU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
+  const pengusulan = [];
+  if (sheetU && sheetU.getLastRow() > 1) {
+    const dataU = sheetU.getDataRange().getValues();
+    for (let i = 1; i < dataU.length; i++) {
+      const r = dataU[i];
+      pengusulan.push({
+        id: String(r[0] || ""),
+        tahun: String(r[1] || ""),
+        nisn: String(r[2] || ""),
+        nama: String(r[3] || ""),
+        kelas: String(r[4] || ""),
+        namaOrtu: String(r[5] || ""),
+        desil: Number(r[6]) || 1,
+        nominal: Number(r[7]) || 450000,
+        statusKelayakan: String(r[8] || "Layak"),
+        keterangan: String(r[9] || ""),
+        updatedAt: String(r[10] || "")
+      });
+    }
+  }
+
+  // 2. Data Siswa Penerima SK
+  let sheetP = ss.getSheetByName(TAB_PIP_PENERIMA);
+  const penerima = [];
+  if (sheetP && sheetP.getLastRow() > 1) {
+    const dataP = sheetP.getDataRange().getValues();
+    for (let i = 1; i < dataP.length; i++) {
+      const r = dataP[i];
+      penerima.push({
+        id: String(r[0] || ""),
+        tahun: String(r[1] || ""),
+        nisn: String(r[2] || ""),
+        nama: String(r[3] || ""),
+        kelas: String(r[4] || ""),
+        nomorSK: String(r[5] || ""),
+        tanggalSK: String(r[6] || ""),
+        nomorRekening: String(r[7] || ""),
+        bankPenyalur: String(r[8] || "BRI"),
+        nominal: Number(r[9]) || 450000,
+        statusPencairan: String(r[10] || "Belum Cair"),
+        tglCair: String(r[11] || ""),
+        keterangan: String(r[12] || ""),
+        updatedAt: String(r[13] || "")
+      });
+    }
+  }
+
+  return {
+    success: true,
+    data: {
+      pengusulan: pengusulan,
+      penerima: penerima
+    }
+  };
+}
+
+function handleSavePIP(ss, payload) {
+  const isPenerima = payload.kategori === "penerima" || !!payload.nomorSK;
+  const tabName = isPenerima ? TAB_PIP_PENERIMA : TAB_PIP_PENGUSULAN;
+  let sheet = ss.getSheetByName(tabName);
+  if (!sheet) {
+    setupDatabaseAndFolders();
+    sheet = ss.getSheetByName(tabName);
+  }
+
+  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  const id = payload.id || `PIP_${payload.nisn}_${new Date().getFullYear()}`;
+  const data = sheet.getDataRange().getValues();
+  let rowIndex = -1;
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === id || String(data[i][2]) === String(payload.nisn)) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+
+  if (isPenerima) {
+    const rowValues = [
+      id,
+      String(payload.tahun || "2026"),
+      String(payload.nisn || ""),
+      String(payload.nama || ""),
+      String(payload.kelas || ""),
+      String(payload.nomorSK || ""),
+      String(payload.tanggalSK || ""),
+      String(payload.nomorRekening || ""),
+      String(payload.bankPenyalur || "BRI"),
+      Number(payload.nominal) || 450000,
+      String(payload.statusPencairan || "Belum Cair"),
+      String(payload.tglCair || ""),
+      String(payload.keterangan || ""),
+      nowStr
+    ];
+    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, 14).setValues([rowValues]);
+    else sheet.appendRow(rowValues);
+  } else {
+    const rowValues = [
+      id,
+      String(payload.tahun || "2026"),
+      String(payload.nisn || ""),
+      String(payload.nama || ""),
+      String(payload.kelas || ""),
+      String(payload.namaOrtu || ""),
+      Number(payload.desil) || 1,
+      Number(payload.nominal) || 450000,
+      String(payload.statusKelayakan || "Layak"),
+      String(payload.keterangan || ""),
+      nowStr
+    ];
+    if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, 11).setValues([rowValues]);
+    else sheet.appendRow(rowValues);
+  }
+
+  return { success: true, message: `Data PIP untuk siswa ${payload.nama} berhasil disimpan ke ${tabName}!`, id: id };
+}
+
+function handleUpdatePIPStatus(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_PIP_PENERIMA);
+  if (!sheet) return { success: false, message: "Tab penerima PIP tidak ditemukan." };
+
+  const id = String(payload.id || "");
+  const newStatus = String(payload.status || "Sudah Cair");
+  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === id || String(data[i][2]) === String(payload.nisn)) {
+      sheet.getRange(i + 1, 11).setValue(newStatus);
+      if (newStatus === "Sudah Cair") {
+        sheet.getRange(i + 1, 12).setValue(nowStr);
+      }
+      sheet.getRange(i + 1, 14).setValue(nowStr);
+      return { success: true, message: `Status pencairan PIP ${id} diperbarui menjadi: ${newStatus}` };
+    }
+  }
+
+  return { success: false, message: `Data penerima PIP dengan ID ${id} tidak ditemukan.` };
+}
+
+function handleImportPIP(ss, payload) {
+  const items = payload.items || [];
+  if (!Array.isArray(items) || items.length === 0) {
+    return { success: false, message: "Tidak ada baris data untuk diimpor." };
+  }
+
+  let successCount = 0;
+  items.forEach(item => {
+    try {
+      handleSavePIP(ss, item);
+      successCount++;
+    } catch (e) {}
+  });
+
+  return { success: true, message: `Berhasil mengimpor ${successCount} data PIP ke Google Sheets!` };
+}
+
+/**
+ * ==========================================================================
+ * HANDLERS: PENGAJUAN SURAT MANDIRI ONLINE (PORTAL ORANG TUA)
+ * ==========================================================================
+ */
+function handleGetPermohonanSurat(ss, payload) {
+  let sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_PERMOHONAN_SURAT);
+    sheet.appendRow(["ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT"]);
+    return { success: true, data: [] };
+  }
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { success: true, data: [] };
+
+  const list = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    list.push({
+      id: String(r[0] || ""),
+      createdAt: String(r[1] || ""),
+      nisn: String(r[2] || ""),
+      nama: String(r[3] || ""),
+      kelas: String(r[4] || ""),
+      namaOrtu: String(r[5] || ""),
+      hpOrtu: String(r[6] || ""),
+      jenisSurat: String(r[7] || ""),
+      keperluan: String(r[8] || ""),
+      status: String(r[9] || "Menunggu Verifikasi TU"),
+      keterangan: String(r[10] || ""),
+      updatedAt: String(r[11] || "")
+    });
+  }
+
+  return { success: true, data: list };
+}
+
+function handleSubmitPermohonanSurat(ss, payload) {
+  let sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_PERMOHONAN_SURAT);
+    sheet.appendRow(["ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT"]);
+  }
+
+  const year = new Date().getFullYear();
+  const nextNum = sheet.getLastRow(); // urutan
+  const id = payload.id || `REQ-${year}-${String(nextNum).padStart(4, "0")}`;
+  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+
+  const rowValues = [
+    id,
+    String(payload.createdAt || nowStr),
+    String(payload.nisn || ""),
+    String(payload.nama || ""),
+    String(payload.kelas || ""),
+    String(payload.namaOrtu || ""),
+    String(payload.hpOrtu || ""),
+    String(payload.jenisSurat || "Surat Keterangan Aktif"),
+    String(payload.keperluan || ""),
+    String(payload.status || "Menunggu Verifikasi TU"),
+    String(payload.keterangan || ""),
+    nowStr
+  ];
+
+  sheet.appendRow(rowValues);
+
+  return {
+    success: true,
+    message: `Permohonan surat berhasil dikirim! Simpan kode tracking Anda: ${id}`,
+    ticketId: id
+  };
+}
+
+function handleUpdatePermohonanSurat(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet) return { success: false, message: "Tab permohonan surat tidak ditemukan." };
+
+  const id = String(payload.id || "");
+  const newStatus = String(payload.status || "Disetujui TU");
+  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === id) {
+      sheet.getRange(i + 1, 10).setValue(newStatus);
+      if (payload.keterangan) sheet.getRange(i + 1, 11).setValue(String(payload.keterangan));
+      sheet.getRange(i + 1, 12).setValue(nowStr);
+      return { success: true, message: `Status permohonan ${id} berhasil diubah menjadi: ${newStatus}` };
+    }
+  }
+
+  return { success: false, message: `Permohonan dengan ID ${id} tidak ditemukan.` };
+}
+
+/**
+ * ==========================================================================
+ * HANDLERS: UPDATE KONTAK ORTU & FIELD SISWA (OCR SYNC)
+ * ==========================================================================
+ */
+function handleUpdateStudentPhone(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_SISWA);
+  if (!sheet) return { success: false, message: "Tab DB_Siswa tidak ditemukan." };
+
+  const nisn = String(payload.nisn || "");
+  const phone = String(payload.noHp || payload.phone || "");
+  const namaOrtu = payload.namaOrtu ? String(payload.namaOrtu) : null;
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === nisn) {
+      sheet.getRange(i + 1, 11).setValue(phone); // Column 11 = NO_HP
+      if (namaOrtu) {
+        sheet.getRange(i + 1, 9).setValue(namaOrtu); // Column 9 = NAMA_ORTU
+      }
+      sheet.getRange(i + 1, 21).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
+      return { success: true, message: `Kontak orang tua siswa NISN ${nisn} berhasil diperbarui ke Google Sheets!` };
+    }
+  }
+
+  return { success: false, message: `Siswa dengan NISN ${nisn} tidak ditemukan di Google Sheets.` };
+}
+
+function handleUpdateStudentFields(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_SISWA);
+  if (!sheet) return { success: false, message: "Tab DB_Siswa tidak ditemukan." };
+
+  const nisn = String(payload.nisn || "");
+  const fields = payload.fields || {};
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === nisn) {
+      // Perbarui metadata JSON jika ada (Col 23)
+      let meta = {};
+      try {
+        meta = JSON.parse(data[i][22] || "{}");
+      } catch (e) {}
+
+      Object.keys(fields).forEach(k => {
+        meta[k] = fields[k];
+        if (k === "nik" && fields.nik) sheet.getRange(i + 1, 4).setValue(String(fields.nik)); // Col 4 = NIK
+        if (k === "noKk" && fields.noKk) meta.noKk = String(fields.noKk);
+        if (k === "tglTerbitKk" && fields.tglTerbitKk) meta.tglTerbitKk = String(fields.tglTerbitKk);
+        if (k === "namaAyah" && fields.namaAyah) meta.namaAyah = String(fields.namaAyah);
+        if (k === "namaIbu" && fields.namaIbu) meta.namaIbu = String(fields.namaIbu);
+      });
+
+      sheet.getRange(i + 1, 23).setValue(JSON.stringify(meta)); // Col 23 = METADATA_JSON
+      sheet.getRange(i + 1, 21).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
+      return { success: true, message: `Data pokok siswa NISN ${nisn} berhasil disinkronkan ke Google Sheets!` };
+    }
+  }
+
+  return { success: false, message: `Siswa dengan NISN ${nisn} tidak ditemukan di Google Sheets.` };
+}
+
 

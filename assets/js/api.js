@@ -76,13 +76,19 @@ const ApiClient = {
 
         if (this.isCloudActive()) {
             const isDemo = (typeof Auth !== "undefined" && Auth.session) ? Auth.session.demo : false;
-            // Jika sesi demo aktif, simpan secara lokal agar tidak tertolak token Supabase
-            if (!isDemo) {
+            const isPublicAction = (action === "ping" || action === "submitPermohonanSurat" || action === "trackPermohonanSurat");
+
+            // Aksi portal publik (permohonan mandiri & tracking) selalu diproses ke Cloud tanpa terhalang sesi demo
+            if (!isDemo || isPublicAction) {
                 const res = await this.cloudCall(action, payload);
                 if (res && res.success) {
                     if (typeof Sync !== "undefined" && Sync.PULL_AFTER && Sync.PULL_AFTER[action]) {
                         await Promise.all(Sync.PULL_AFTER[action].map(kind => Sync.pull(kind)));
                     }
+                    return res;
+                }
+                // Jika aksi publik gagal di cloud, kembalikan respon kegagalan secara transparan agar user tidak tertipu nomor lokal
+                if (isPublicAction) {
                     return res;
                 }
                 if (res && res.code === "AUTH") {
@@ -683,13 +689,23 @@ const ApiClient = {
             }
 
             case "trackPermohonanSurat": {
-                const query = String(payload.query || payload.code || payload.id || "").trim().toUpperCase();
+                const rawQuery = String(payload.query || payload.code || payload.id || "").trim();
+                const queryUpper = rawQuery.toUpperCase();
+                const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
+                const queryHp = rawQuery.replace(/[^0-9]/g, "");
                 const list = DataStore.getPermohonanSurat();
-                const found = list.find(r => 
-                    (r.id && r.id.toUpperCase() === query) ||
-                    (r.nisn && r.nisn === query) ||
-                    (r.noWhatsApp && r.noWhatsApp.includes(query))
-                );
+                const found = list.find(r => {
+                    if (!r) return false;
+                    const id = String(r.id || "").toUpperCase().trim();
+                    const idClean = id.replace(/[^A-Z0-9]/g, "");
+                    const nisn = String(r.nisn || "").trim();
+                    const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
+                    return (id === queryUpper) ||
+                           (idClean && idClean === queryClean) ||
+                           (queryClean.length >= 4 && idClean.endsWith(queryClean)) ||
+                           (nisn && nisn === rawQuery) ||
+                           (queryHp.length >= 8 && hp.includes(queryHp));
+                });
                 if (found) {
                     return { success: true, message: "Data permohonan surat ditemukan.", data: found };
                 }

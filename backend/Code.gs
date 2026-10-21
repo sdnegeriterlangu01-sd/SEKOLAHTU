@@ -2070,18 +2070,32 @@ function handleSubmitPermohonanSurat(ss, payload) {
 
 function handleTrackPermohonanSurat(ss, payload) {
   const sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
-  if (!sheet) return { success: false, message: "Tab DB_PermohonanSurat tidak ditemukan." };
+  if (!sheet) return { success: false, message: "Tab DB_PermohonanSurat belum tersedia di spreadsheet." };
 
-  const query = String(payload.query || payload.code || payload.id || "").trim().toUpperCase();
-  if (!query) return { success: false, message: "Kode resi atau parameter pencarian kosong." };
+  const rawQuery = String(payload.query || payload.code || payload.id || "").trim();
+  if (!rawQuery) return { success: false, message: "Kode resi atau parameter pencarian kosong." };
+
+  const queryUpper = rawQuery.toUpperCase();
+  const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
+  const queryHp = rawQuery.replace(/[^0-9]/g, "");
 
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
-    const id = String(r[0] || "").trim().toUpperCase();
+    const id = String(r[0] || "").trim();
+    const idUpper = id.toUpperCase();
+    const idClean = idUpper.replace(/[^A-Z0-9]/g, "");
     const nisn = String(r[2] || "").trim();
-    const hp = String(r[6] || "").trim();
-    if (id === query || nisn === query || (query.length >= 8 && hp.includes(query))) {
+    const hp = String(r[6] || "").replace(/[^0-9]/g, "");
+
+    // Pencocokan fleksibel: ID persis, ID bersih tanpa simbol, 4 digit akhir, NISN siswa, atau nomor WhatsApp
+    const isIdMatch = (idUpper === queryUpper) || 
+                      (idClean && idClean === queryClean) ||
+                      (queryClean.length >= 4 && idClean.endsWith(queryClean));
+    const isNisnMatch = (nisn && nisn === rawQuery);
+    const isHpMatch = (queryHp.length >= 8 && hp.includes(queryHp));
+
+    if (isIdMatch || isNisnMatch || isHpMatch) {
       return {
         success: true,
         message: "Data permohonan surat ditemukan.",

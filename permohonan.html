@@ -229,9 +229,9 @@
                     <i class="fa-solid fa-magnifying-glass-chart"></i>
                 </div>
                 <h3 class="text-base font-extrabold text-slate-900">Cek Status & Lacak Resi Surat</h3>
-                <p class="text-xs text-slate-500">Masukkan Kode Resi (contoh: REQ-2026-0001) atau nomor telepon yang digunakan saat pengajuan.</p>
+                <p class="text-xs text-slate-500">Masukkan Kode Resi (contoh: REQ-2026-0001 atau 0001), nomor NISN siswa, atau nomor WhatsApp yang didaftarkan.</p>
                 <div class="flex gap-2 pt-2">
-                    <input type="text" id="input-track-code" placeholder="Kode Resi (REQ-2026-0001)" 
+                    <input type="text" id="input-track-code" placeholder="Kode Resi / NISN / No WhatsApp" 
                         class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none uppercase">
                     <button type="button" onclick="searchTrackingResi()"
                         class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
@@ -466,18 +466,35 @@
 
         async function searchTrackingResi() {
             const input = document.getElementById("input-track-code");
-            const query = input ? input.value.trim().toUpperCase() : "";
-            if (!query) {
-                showToast("Masukkan Kode Resi terlebih dahulu", "warning");
+            const rawQuery = input ? input.value.trim() : "";
+            if (!rawQuery) {
+                showToast("Masukkan Kode Resi / NISN / No WA terlebih dahulu", "warning");
                 return;
             }
 
-            // 1. Cek di local store
-            let list = DataStore.getPermohonanSurat();
-            let found = list.find(r => (r.id && r.id.toUpperCase() === query) || (r.noWhatsApp && r.noWhatsApp.includes(query)) || (r.nisn && r.nisn === query));
+            const queryUpper = rawQuery.toUpperCase();
+            const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
+            const queryHp = rawQuery.replace(/[^0-9]/g, "");
 
-            // 2. Jika belum ditemukan di lokal dan cloud aktif, cari ke cloud
-            if (!found && ApiClient.isCloudActive()) {
+            const matchRecord = r => {
+                if (!r) return false;
+                const id = String(r.id || "").toUpperCase().trim();
+                const idClean = id.replace(/[^A-Z0-9]/g, "");
+                const nisn = String(r.nisn || "").trim();
+                const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
+                return (id === queryUpper) ||
+                       (idClean && idClean === queryClean) ||
+                       (queryClean.length >= 4 && idClean.endsWith(queryClean)) ||
+                       (nisn && nisn === rawQuery) ||
+                       (queryHp.length >= 8 && hp.includes(queryHp));
+            };
+
+            // 1. Cek di local store terlebih dahulu
+            let list = DataStore.getPermohonanSurat();
+            let found = list.find(matchRecord);
+
+            // 2. Jika cloud aktif, selalu tanyakan ke cloud untuk status valid dan terbaru dari staf TU
+            if (ApiClient.isCloudActive()) {
                 const searchBtn = document.querySelector("#section-tracking button");
                 const oldText = searchBtn ? searchBtn.innerHTML : "";
                 if (searchBtn) {
@@ -486,14 +503,17 @@
                 }
 
                 try {
-                    const cloudRes = await ApiClient.request("trackPermohonanSurat", { query });
+                    const cloudRes = await ApiClient.request("trackPermohonanSurat", { query: rawQuery });
                     if (cloudRes && cloudRes.success && cloudRes.data) {
                         found = cloudRes.data;
-                        // Simpan ke cache lokal
-                        if (!list.some(r => r.id === found.id)) {
+                        // Simpan / update ke cache lokal
+                        const idx = list.findIndex(r => r.id === found.id);
+                        if (idx >= 0) {
+                            list[idx] = found;
+                        } else {
                             list.unshift(found);
-                            DataStore.savePermohonanSurat(list);
                         }
+                        DataStore.savePermohonanSurat(list);
                     }
                 } catch (e) {
                     console.warn("[Tracking] Cloud track error:", e);

@@ -226,7 +226,7 @@ const ModulPIP = {
 
         const elTotalPenerima = document.getElementById("pip-stat-total-penerima");
         if (elTotalPenerima) elTotalPenerima.textContent = totalPenerima;
-        const elSudahCair = document.getElementById("pip-stat-sudah-cair");
+        const elSudahCair = document.getElementById("pip-stat-sudah-cair") || document.getElementById("pip-stat-total-cair");
         if (elSudahCair) elSudahCair.textContent = sudahCair;
         const elBelumCair = document.getElementById("pip-stat-belum-cair");
         if (elBelumCair) elBelumCair.textContent = belumCair;
@@ -880,15 +880,30 @@ const ModulPIP = {
         const pengusulan = DataStore.getPIPPengusulan();
         const students = DataStore.getSiswa();
         let matchCount = 0;
-        let notFoundCount = 0;
+        const notFoundList = [];
 
         pengusulan.forEach(p => {
             const found = students.some(s => s.nisn === p.nisn);
-            if (found) matchCount++;
-            else notFoundCount++;
+            if (found) {
+                matchCount++;
+            } else {
+                notFoundList.push(p);
+            }
         });
 
-        App.showToast(`Audit Selesai: ${matchCount} siswa valid padan dengan Dapodik, ${notFoundCount} belum tercatat di DB Siswa.`, "info");
+        if (notFoundList.length > 0) {
+            const detailText = notFoundList.map(s => `• ${s.nama} (NISN: ${s.nisn}, Kelas: ${s.kelas || '-'})`).join("\n");
+            App.showToast(`Audit Selesai: ${matchCount} valid padan Dapodik, ${notFoundList.length} belum tercatat di DB Siswa.`, "warning");
+            alert(`Laporan Smart Audit PIP x Data Siswa (Dapodik):\n\n` +
+                  `✅ ${matchCount} Siswa Valid & Padan dengan Database Siswa.\n` +
+                  `⚠️ ${notFoundList.length} Siswa Pengusulan Belum Tercatat di DB Siswa Sekolah:\n\n` +
+                  detailText + `\n\n` +
+                  `💡 Rekomendasi Tindak Lanjut:\n` +
+                  `1. Periksa apakah siswa tersebut baru mutasi/pindah ke SDN Terlangu 01 dan belum terdaftar di menu Data Siswa.\n` +
+                  `2. Periksa kesesuaian penulisan 10 digit NISN pada file usulan PIP.`);
+        } else {
+            App.showToast(`Audit Selesai: Seluruh ${matchCount} siswa usulan PIP 100% valid padan dengan DB Siswa.`, "success");
+        }
     },
 
     renderRadarKemiskinan() {

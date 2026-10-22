@@ -3,6 +3,21 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.5.3] - 2026-10-22
+
+### Perbaikan Responsif Header Permohonan Mandiri & Sinkronisasi Realisasi PIP
+- **Responsivitas Header Portal Permohonan Mandiri (`permohonan.html`):**
+  - Mengatasi teks judul sekolah yang terpotong pada tampilan ponsel pintar (lebar layar sempit ~393px seperti iPhone 16).
+  - Menyembunyikan badge `LAYANAN MANDIRI` secara dinamis pada layar kecil (`hidden sm:inline-block`) agar judul `SDN TERLANGU 01` dan tombol navigasi `Sistem TU` memiliki ruang yang lega, rapi, dan tidak saling tumpang tindih.
+  - Memperpendek placeholder kotak input NISN (`Contoh: 0134567890`) agar teks contoh tidak terpotong di dalam form input pada layar ponsel.
+- **Penyelarasan Kartu Statistik "Sudah Cair" Modul PIP (`index.html` & `assets/js/modul-pip.js`):**
+  - Memperbaiki ketidaksesuaian penamaan ID elemen HTML (`pip-stat-total-cair` diselaraskan menjadi `pip-stat-sudah-cair`) serta menambahkan selector fallback ganda pada fungsi `renderDasbor`.
+  - Mengatasi kendala angka kartu "Sudah Cair" yang sempat macet di nilai `0`, sehingga kini secara akurat menampilkan jumlah siswa yang telah mencairkan dana (70 siswa / 74% realisasi).
+- **Peningkatan Rincian Fitur Smart Audit DB Siswa (`assets/js/modul-pip.js`):**
+  - Mengembangkan keluaran fungsi `runSmartAudit()` agar tidak hanya menampilkan angka rekapitulasi, tetapi juga menyajikan dialog interaktif berisi rincian lengkap siswa usulan PIP yang belum tercatat pada Database Siswa Sekolah (Dapodik) beserta petunjuk solusinya.
+
+---
+
 ## [v2.5.2] - 2026-10-22
 
 ### Revisi Modul PIP & Alur Penomoran Surat Permohonan Mandiri

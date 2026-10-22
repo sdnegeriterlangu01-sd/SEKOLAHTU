@@ -35,20 +35,23 @@
 
     <!-- Top Header Bar -->
     <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
+        <div class="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <img src="assets/img/logo-brebes.svg" 
                     onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
-                    alt="Logo Kabupaten Brebes" class="w-9 h-9 object-contain drop-shadow flex-shrink-0">
+                    alt="Logo Kabupaten Brebes" class="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow flex-shrink-0">
                 <div class="min-w-0">
-                    <h1 class="text-sm font-extrabold tracking-wide flex items-center gap-2 truncate">
-                        SDN TERLANGU 01 <span class="bg-amber-400 text-blue-950 text-[10px] px-2 py-0.5 rounded-full font-black flex-shrink-0">LAYANAN MANDIRI</span>
-                    </h1>
-                    <p class="text-[11px] text-blue-200 truncate">Portal Pengajuan Surat Keterangan Online Orang Tua / Wali Siswa</p>
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <h1 class="text-xs sm:text-sm font-extrabold tracking-wide truncate">
+                            SDN TERLANGU 01
+                        </h1>
+                        <span class="bg-amber-400 text-blue-950 text-[10px] px-2 py-0.5 rounded-full font-black flex-shrink-0 hidden sm:inline-block">LAYANAN MANDIRI</span>
+                    </div>
+                    <p class="text-[10px] sm:text-[11px] text-blue-200 truncate">Portal Pengajuan Surat Keterangan Online</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold">
+                <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Masuk</span> Sistem TU
                 </a>
             </div>
@@ -101,7 +104,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Induk Siswa Nasional (NISN) <span class="text-rose-500">*</span></label>
                         <div class="flex gap-2">
-                            <input type="text" id="req-nisn" required maxlength="10" placeholder="Contoh: 0134567890 (10 digit angka)"
+                            <input type="text" id="req-nisn" required maxlength="10" placeholder="Contoh: 0134567890"
                                 class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
                             <button type="button" onclick="verifyStudentByNISN()" 
                                 class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0">

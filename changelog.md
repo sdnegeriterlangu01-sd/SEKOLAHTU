@@ -3,6 +3,44 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.6.0] - 2026-10-22
+
+### Pembaruan Format Cetak Persuratan, OCR KTA Pramuka, Status Multi-Opsi PIP & Penomoran Otomatis Tertinggi
+- **Format Tanggal Lahir Indonesia Lengkap (Full Date) pada Cetak Surat:**
+  - Mengonversi format tanggal lahir siswa di seluruh template cetak surat dinas dan permohonan mandiri menjadi format tanggal penuh resmi Indonesia (contoh: *15 Agustus 2012*).
+- **Penyederhanaan Tabel Identitas Siswa pada Body Surat:**
+  - Menghapus baris NIK, Pekerjaan Orang Tua, dan Alamat Tempat Tinggal pada tabel keterangan siswa di body surat dinas standar agar lebih ringkas, fokus, dan rapi sesuai tata naskah dinas.
+- **Konsolidasi Format Surat Keterangan PIP:**
+  - Menghapus opsi terpisah *Surat Keterangan Aktif Belajar (Persyaratan PIP)* yang redundan.
+  - Memperbarui format *Surat Rekomendasi Pencairan Dana PIP* menjadi: **"SURAT KETERANGAN AKTIF BELAJAR DAN SURAT REKOMENDASI PENCAIRAN DANA PIP"**.
+  - Menyertakan data validasi SK PIP otomatis dari database penerima PIP (Nomor SK, Tanggal SK PIP, Tahap, Nomor Rekening, dan Virtual Account).
+- **Modal Pop-Up & Dropdown Status Siswa Penerima PIP:**
+  - Mengganti tombol status biner pada tabel Siswa Penerima SK PIP dengan tombol/modal interaktif yang menyediakan 4 pilihan status: **Belum Cair**, **Sudah Cair**, **Belum Aktivasi**, dan **Sudah Aktivasi**.
+  - Menyelaraskan filter status dasbor dan tabel PIP untuk menyaring ke-4 status tersebut secara akurat.
+- **Generator Penomoran Surat Otomatis Berdasarkan Nomor Tertinggi Terakhir:**
+  - Penomoran surat keluar otomatis (`getNextNomorSuratKeluar` dan `saveSuratKeluar`) kini memindai seluruh data nomor surat keluar pada tahun bersangkutan baik dari field `noUrut` maupun hasil ekstraksi regex string nomor surat resmi untuk menemukan nomor urut tertinggi (`maxNo`) dan otomatis melanjutkan ke nomor berikutnya (`maxNo + 1`), mencegah nomor tumpang tindih.
+- **Kode Klasifikasi Surat Baru: 428 - Kepramukaan:**
+  - Menambahkan kode klasifikasi dinas `428 - Kepramukaan` pada seluruh opsi penomoran surat keluar dan pencatatan arsip SRIKANDI.
+- **Status Kepegawaian & Gol/Jabatan pada Kartu ID Presensi QR Tendik:**
+  - Menambahkan opsi status kepegawaian (PNS, PPPK, PPPK PW, PTT, GTT) dan kolom input *Gol/Jabatan* (contoh: *Penata Muda / IIIa* atau *IX / Guru Kelas* atau *IX / Guru PAI*).
+  - Tampilan kartu ID QR interaktif dan lembar cetak fisik kini menyajikan lencana status dan keterangan jabatan/golongan secara jelas.
+  - Menyelaraskan data bawaan (seed) tendik dan template unduhan Excel.
+- **Bangkas Siswa Digital: Unggah Berkas & OCR KTA Pramuka:**
+  - Menambahkan tombol unggah berkas KTA Pramuka pada modul Bangkas Digital Siswa.
+  - Menambahkan kapabilitas OCR Tesseract.js khusus KTA Pramuka untuk mendeteksi Nomor Tanda Anggota (NTA) secara otomatis dengan diff view pembanding data dan 1-klik sinkronisasi ke database siswa.
+- **Format Baku Surat Keterangan Pindah Sekolah (Mutasi):**
+  - Menerapkan format baku resmi Surat Keterangan Pindah Sekolah sesuai layout kedinasan:
+    - 12 kotak NSS di sudut kanan atas (`1 0 1 0 3 2 9 1 6 0 5 2`).
+    - Format kelas dalam angka Romawi dan teks huruf (contoh: *V ( Lima )*).
+    - Identitas permohonan orang tua/wali serta sekolah tujuan dan alasan mutasi.
+    - Garis potong bertanda gunting (`✂`).
+    - Slip konfirmasi penerimaan siswa oleh sekolah tujuan dengan 12 kotak kosong NSS dan kolom pengesahan kepala sekolah penerima.
+- **Penyelarasan Backend Google Apps Script (GAS v2.6.0):**
+  - Algoritma penomoran nomor surat tertinggi diterapkan pada `handleGetNextNomorSuratKeluar`.
+  - Penyelarasan penyimpanan metadata siswa untuk nomor NTA Pramuka dan berkas KTA.
+
+---
+
 ## [v2.5.4] - 2026-10-22
 
 ### Pemisahan Role Guru Mapel & Penyempurnaan Cetak Presensi

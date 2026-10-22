@@ -54,7 +54,10 @@ const ModulOCR = {
         if (!modal) return;
 
         document.getElementById("modal-ocr-student-info").textContent = `${student.nama} (NISN: ${student.nisn} • Kelas ${student.rombel || student.kelas})`;
-        document.getElementById("modal-ocr-doc-type").textContent = docType === "kk" ? "Kartu Keluarga (KK)" : "Akta Kelahiran";
+        let docTitle = "Kartu Keluarga (KK)";
+        if (docType === "akta") docTitle = "Akta Kelahiran";
+        else if (docType === "kta") docTitle = "Kartu Tanda Anggota (KTA) Pramuka";
+        document.getElementById("modal-ocr-doc-type").textContent = docTitle;
         
         // Reset state
         document.getElementById("ocr-file-input").value = "";
@@ -176,6 +179,11 @@ const ModulOCR = {
 
     // Parsing teks mentah hasil OCR dengan regex cerdas
     parseExtractedText(text) {
+        if (this.currentDocType === "kta") {
+            this.parseKTAText(text);
+            return;
+        }
+
         const student = DataStore.getSiswa().find(s => s.nisn === this.currentNisn) || {};
         const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
@@ -237,6 +245,119 @@ const ModulOCR = {
         };
 
         this.renderDiffView(student, this.ocrResult);
+    },
+
+    // Parsing khusus Kartu Tanda Anggota (KTA) Pramuka
+    parseKTAText(text) {
+        const student = DataStore.getSiswa().find(s => s.nisn === this.currentNisn) || {};
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+        // Ekstraksi Nomor Tanda Anggota (NTA) Pramuka
+        let detectedNTA = "";
+        const ntaMatch = text.match(/(?:NTA|NOMOR\s*(?:TANDA\s*)?ANGGOTA|NO\.?\s*(?:TANDA\s*)?ANGGOTA|NO\.?\s*KTA|KTA)\s*[:=.]*\s*([0-9.\-\/]+)/i);
+        if (ntaMatch && ntaMatch[1].replace(/[\D]/g, '').length >= 5) {
+            detectedNTA = ntaMatch[1].trim();
+        } else {
+            const patternMatch = text.match(/\b(11\.\d{2}[\d.\-\/]{4,20})\b/)
+                || text.match(/\b(\d{2}\.\d{2}\.[\d.\-\/]{4,20})\b/)
+                || text.match(/\b(\d{8,16})\b/);
+            if (patternMatch) {
+                detectedNTA = patternMatch[1].trim();
+            }
+        }
+
+        if (!detectedNTA) {
+            for (const l of lines) {
+                if (/nta|anggota|pramuka/i.test(l)) {
+                    const digits = l.replace(/[^0-9.\-\/]/g, '').trim();
+                    if (digits.replace(/\D/g, '').length >= 5) {
+                        detectedNTA = digits;
+                        break;
+                    }
+                }
+            }
+        }
+
+        this.ocrResult = {
+            nisn: student.nisn,
+            nama: student.nama,
+            nta: detectedNTA || student.nta || ""
+        };
+
+        this.renderKTADiffView(student, this.ocrResult);
+    },
+
+    // Diff View Khusus KTA Pramuka
+    renderKTADiffView(dbData, ocrData) {
+        const diffBox = document.getElementById("ocr-diff-container");
+        if (!diffBox) return;
+
+        diffBox.classList.remove("hidden");
+        document.getElementById("btn-apply-ocr").classList.remove("hidden");
+
+        const fields = [
+            { key: "nta", label: "Nomor Tanda Anggota (NTA) Pramuka" },
+            { key: "nama", label: "Nama Anggota / Siswa" },
+            { key: "nisn", label: "NISN Siswa" }
+        ];
+
+        let html = `
+            <div class="rounded-2xl border border-amber-200 overflow-hidden bg-white shadow-sm">
+                <div class="grid grid-cols-2 bg-amber-50 text-xs font-bold border-b border-amber-200 divide-x divide-amber-200">
+                    <div class="p-3 text-amber-950 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-amber-600"></i> Data Eksisting di Database
+                    </div>
+                    <div class="p-3 text-amber-900 bg-amber-100/50 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i> Hasil Deteksi OCR KTA Pramuka
+                    </div>
+                </div>
+                <div class="divide-y divide-slate-100 text-xs">
+        `;
+
+        fields.forEach(f => {
+            const dbVal = dbData[f.key] || "";
+            const ocrVal = ocrData[f.key] || "";
+            const isMatch = dbVal && ocrVal && dbVal.toLowerCase().trim() === ocrVal.toLowerCase().trim();
+
+            let rowBg = "";
+            let matchBadge = "";
+            if (!dbVal && ocrVal) {
+                rowBg = "bg-emerald-50/50";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-plus"></i> Data Baru</span>`;
+            } else if (isMatch) {
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-check"></i> Cocok</span>`;
+            } else if (dbVal && ocrVal && dbVal !== ocrVal) {
+                rowBg = "bg-amber-50/50";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-triangle-exclamation"></i> Perbedaan</span>`;
+            }
+
+            const isEditable = f.key === "nta";
+
+            html += `
+                <div class="grid grid-cols-2 divide-x divide-slate-100 ${rowBg}">
+                    <div class="p-3">
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${f.label}</label>
+                        <div class="font-mono font-semibold text-slate-800 text-xs break-all">${Sec.esc(dbVal) || '<em class="text-slate-400 font-sans">Belum ada data</em>'}</div>
+                    </div>
+                    <div class="p-3 bg-amber-50/20">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[10px] uppercase font-bold text-amber-900">${f.label}</label>
+                            ${matchBadge}
+                        </div>
+                        ${isEditable ? `
+                            <input type="text" id="ocr-field-${f.key}" value="${Sec.esc(ocrVal)}" 
+                                class="w-full px-2.5 py-1.5 text-xs font-mono font-bold text-amber-900 bg-white border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Masukkan NTA Pramuka">
+                        ` : `
+                            <div class="font-mono font-semibold text-slate-800 text-xs py-1.5">${Sec.esc(ocrVal)}</div>
+                        `}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
+        diffBox.innerHTML = html;
+        diffBox.scrollIntoView({ behavior: 'smooth' });
     },
 
     // Menampilkan Jendela Pembanding Side-by-Side (Diff View)
@@ -350,6 +471,55 @@ const ModulOCR = {
     // 1-Klik Terapkan & Sinkronkan ke Database
     async applyOCRToDatabase() {
         if (!this.ocrResult || !this.currentNisn) return;
+
+        // Penanganan Khusus Berkas KTA Pramuka
+        if (this.currentDocType === "kta") {
+            const updatedNTA = document.getElementById("ocr-field-nta")?.value?.trim() || "";
+            const btn = document.getElementById("btn-apply-ocr");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan NTA...`;
+
+            const student = DataStore.getSiswa().find(s => s.nisn === this.currentNisn);
+            if (student) {
+                student.nta = updatedNTA;
+                if (!student.berkas) student.berkas = {};
+                student.berkas.kta = {
+                    uploaded: true,
+                    filename: `KTA_${student.nisn}.jpg`,
+                    verified: true,
+                    verifiedDate: new Date().toISOString().split("T")[0],
+                    size: "245 KB"
+                };
+            }
+
+            DataStore.updateStudentField(this.currentNisn, {
+                nta: updatedNTA,
+                berkas: student?.berkas
+            });
+
+            await ApiClient.request("updateStudentFields", {
+                nisn: this.currentNisn,
+                fields: {
+                    nta: updatedNTA,
+                    berkas: student?.berkas
+                }
+            });
+
+            App.showToast(`Nomor NTA Pramuka (${updatedNTA || "-"}) berhasil disimpan ke database!`, "success");
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Terapkan & Sinkronkan ke Database`;
+
+            this.closeScanModal();
+            if (window.ModulBerkas) {
+                ModulBerkas.renderTable();
+                if (ModulBerkas.selectedStudent && ModulBerkas.selectedStudent.nisn === this.currentNisn) {
+                    ModulBerkas.openDetailModal(this.currentNisn);
+                }
+            }
+            App.updateDashboardStats();
+            return;
+        }
 
         const updatedFields = {
             noKk: document.getElementById("ocr-field-noKk")?.value?.trim() || "",

@@ -109,6 +109,7 @@ const KODE_KLASIFIKASI_SURAT = [
     { kode: "421.2", nama: "Administrasi Sekolah Dasar (SD)" },
     { kode: "421.3", nama: "Kurikulum, Pembelajaran & Ujian" },
     { kode: "421.7", nama: "Kesiswaan, Ekstrakurikuler & Prestasi" },
+    { kode: "428", nama: "Kepramukaan" },
     { kode: "800", nama: "Kepegawaian Guru & Tenaga Kependidikan" },
     { kode: "005", nama: "Undangan Pertemuan / Rapat Dinas / Komite" },
     { kode: "090", nama: "Perjalanan Dinas (SPPD) & Tugas Guru" },
@@ -550,16 +551,16 @@ const SEED_PERMOHONAN_SURAT = [
 
 // Data Tenaga Pendidik & Kependidikan (Tendik / Guru)
 const SEED_TENDIK = [
-    { nip: "19690808 199201 2 002", nama: "Aisah Suciati, S.Pd.SD., M.Pd.", jabatan: "Kepala Sekolah", jk: "Perempuan", statusKepegawaian: "PNS" },
-    { nip: "19750314 199802 2 001", nama: "Sri Wahyuni, S.Pd.SD", jabatan: "Guru Kelas 6", jk: "Perempuan", statusKepegawaian: "PNS" },
-    { nip: "19820820 200604 1 008", nama: "Budi Hartono, S.Pd.", jabatan: "Guru Kelas 5", jk: "Laki-laki", statusKepegawaian: "PNS" },
-    { nip: "19890115 201101 2 012", nama: "Endang Susilowati, S.Pd.", jabatan: "Guru Kelas 4", jk: "Perempuan", statusKepegawaian: "PNS" },
-    { nip: "19920409 201902 2 005", nama: "Nurul Aini, S.Pd.", jabatan: "Guru Kelas 3", jk: "Perempuan", statusKepegawaian: "PPPK" },
-    { nip: "19941128 202203 1 003", nama: "Rizky Fauzan, S.Pd.", jabatan: "Guru Kelas 2", jk: "Laki-laki", statusKepegawaian: "PPPK" },
-    { nip: "19960719 202301 2 009", nama: "Dewi Kurniasih, S.Pd.", jabatan: "Guru Kelas 1", jk: "Perempuan", statusKepegawaian: "PPPK" },
-    { nip: "19850904 201001 1 015", nama: "Agus Triyono, S.Pd.Jas", jabatan: "Guru PJOK", jk: "Laki-laki", statusKepegawaian: "PNS" },
-    { nip: "19910214 201708 2 004", nama: "Siti Fatimah, S.Pd.I", jabatan: "Guru PAI & Budi Pekerti", jk: "Perempuan", statusKepegawaian: "PNS" },
-    { nip: "19930811 202012 1 002", nama: "Hendra Wijaya, S.Kom.", jabatan: "Pengelola TU & Operator Sekolah", jk: "Laki-laki", statusKepegawaian: "Honorer" }
+    { nip: "19690808 199201 2 002", nama: "Aisah Suciati, S.Pd.SD., M.Pd.", jabatan: "Kepala Sekolah", jk: "Perempuan", statusKepegawaian: "PNS", golJabatan: "Pembina / IVa / Kepala Sekolah" },
+    { nip: "19750314 199802 2 001", nama: "Sri Wahyuni, S.Pd.SD", jabatan: "Guru Kelas 6", jk: "Perempuan", statusKepegawaian: "PNS", golJabatan: "Penata Tk.I / IIId / Guru Kelas" },
+    { nip: "19820820 200604 1 008", nama: "Budi Hartono, S.Pd.", jabatan: "Guru Kelas 5", jk: "Laki-laki", statusKepegawaian: "PNS", golJabatan: "Penata / IIIc / Guru Kelas" },
+    { nip: "19890115 201101 2 012", nama: "Endang Susilowati, S.Pd.", jabatan: "Guru Kelas 4", jk: "Perempuan", statusKepegawaian: "PNS", golJabatan: "Penata Muda Tk.I / IIIb / Guru Kelas" },
+    { nip: "19920409 201902 2 005", nama: "Nurul Aini, S.Pd.", jabatan: "Guru Kelas 3", jk: "Perempuan", statusKepegawaian: "PPPK", golJabatan: "IX / Guru Kelas" },
+    { nip: "19941128 202203 1 003", nama: "Rizky Fauzan, S.Pd.", jabatan: "Guru Kelas 2", jk: "Laki-laki", statusKepegawaian: "PPPK", golJabatan: "IX / Guru Kelas" },
+    { nip: "19960719 202301 2 009", nama: "Dewi Kurniasih, S.Pd.", jabatan: "Guru Kelas 1", jk: "Perempuan", statusKepegawaian: "PPPK", golJabatan: "IX / Guru Kelas" },
+    { nip: "19850904 201001 1 015", nama: "Agus Triyono, S.Pd.Jas", jabatan: "Guru PJOK", jk: "Laki-laki", statusKepegawaian: "PNS", golJabatan: "Penata Muda / IIIa / Guru PJOK" },
+    { nip: "19910214 201708 2 004", nama: "Siti Fatimah, S.Pd.I", jabatan: "Guru PAI & Budi Pekerti", jk: "Perempuan", statusKepegawaian: "PNS", golJabatan: "Penata Muda / IIIa atau IX / Guru PAI" },
+    { nip: "19930811 202012 1 002", nama: "Hendra Wijaya, S.Kom.", jabatan: "Pengelola TU & Operator Sekolah", jk: "Laki-laki", statusKepegawaian: "PTT", golJabatan: "PTT / Pengelola TU" }
 ];
 
 // Data Surat Keluar (SRIKANDI Auto-Numbering Seed)

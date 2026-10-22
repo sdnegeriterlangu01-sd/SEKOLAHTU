@@ -247,8 +247,28 @@ const ApiClient = {
                 const tahun = tgl.getFullYear();
                 const bulanRomawi = ROMAWI_BULAN[tgl.getMonth()];
 
-                const suratTahunIni = list.filter(s => s.tahun === tahun);
-                const nextNo = suratTahunIni.length > 0 ? Math.max(...suratTahunIni.map(s => s.noUrut || 0)) + 1 : 1;
+                // Ekstrak nomor urut tertinggi terakhir dari database (memeriksa noUrut maupun string nomorSurat)
+                const maxNo = list.reduce((max, s) => {
+                    let sTahun = s.tahun;
+                    if (!sTahun && s.tanggalSurat) sTahun = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
+                    if (!sTahun && s.nomorSurat) {
+                        const mYear = String(s.nomorSurat).match(/\b(20\d{2})\b/);
+                        if (mYear) sTahun = parseInt(mYear[1], 10);
+                    }
+                    if (sTahun && sTahun !== tahun) return max;
+
+                    let cand = parseInt(s.noUrut, 10);
+                    if (isNaN(cand) || cand <= 0) {
+                        const parts = String(s.nomorSurat || "").split("/").map(p => p.trim());
+                        if (parts.length >= 2) {
+                            const pNo = parseInt(parts[1], 10);
+                            if (!isNaN(pNo)) cand = pNo;
+                        }
+                    }
+                    return (!isNaN(cand) && cand > max) ? cand : max;
+                }, 0);
+
+                const nextNo = maxNo + 1;
                 const nomorSurat = `${kode}/${String(nextNo).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
                 return { success: true, data: { nextNo, nomorSurat, kodeKlasifikasi: kode, bulan: bulanRomawi, tahun } };
             }
@@ -259,9 +279,29 @@ const ApiClient = {
                 const tahun = tgl.getFullYear();
                 const bulanRomawi = ROMAWI_BULAN[tgl.getMonth()];
 
-                const suratTahunIni = list.filter(s => s.tahun === tahun);
-                const noUrut = payload.noUrut || (suratTahunIni.length > 0 ? Math.max(...suratTahunIni.map(s => s.noUrut || 0)) + 1 : 1);
-                const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || `${payload.kodeKlasifikasi}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
+                // Ekstrak nomor tertinggi untuk auto-increment jika noUrut belum ditentukan
+                const maxNo = list.reduce((max, s) => {
+                    let sTahun = s.tahun;
+                    if (!sTahun && s.tanggalSurat) sTahun = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
+                    if (!sTahun && s.nomorSurat) {
+                        const mYear = String(s.nomorSurat).match(/\b(20\d{2})\b/);
+                        if (mYear) sTahun = parseInt(mYear[1], 10);
+                    }
+                    if (sTahun && sTahun !== tahun) return max;
+
+                    let cand = parseInt(s.noUrut, 10);
+                    if (isNaN(cand) || cand <= 0) {
+                        const parts = String(s.nomorSurat || "").split("/").map(p => p.trim());
+                        if (parts.length >= 2) {
+                            const pNo = parseInt(parts[1], 10);
+                            if (!isNaN(pNo)) cand = pNo;
+                        }
+                    }
+                    return (!isNaN(cand) && cand > max) ? cand : max;
+                }, 0);
+
+                const noUrut = payload.noUrut || (maxNo + 1);
+                const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || `${payload.kodeKlasifikasi || "421.2"}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
 
                 const existingIdx = list.findIndex(s => (payload.id && s.id === payload.id) || (payload.oldNomorSurat && s.nomorSurat === payload.oldNomorSurat));
 

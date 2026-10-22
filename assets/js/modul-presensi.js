@@ -180,8 +180,9 @@ const ModulPresensi = {
                 .ttd div{text-align:center;min-width:220px}
                 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}
                 .card{border:1px solid #111;border-radius:6px;padding:5mm;text-align:center;page-break-inside:avoid;width:100%}
-                .card img{width:34mm;height:34mm}
                 .card .n{font-weight:700;font-size:12px;margin-top:2mm}
+                .card .st{display:inline-block;padding:1px 6px;border-radius:4px;font-size:8px;font-weight:700;border:1px solid #334155;margin:1.5mm 0 1mm 0}
+                .card .gj{font-size:9.5px;font-weight:600;color:#1e293b;margin-bottom:1mm}
                 .card .j{font-size:10px}
                 .card .id{font-family:monospace;font-size:9px;margin-top:1mm}
                 .card .s{font-size:9px;font-weight:700;border-bottom:1px solid #111;margin-bottom:2mm;padding-bottom:1mm}
@@ -1199,8 +1200,11 @@ const ModulPresensi = {
             card.innerHTML = `
                 <img src="${url}" alt="QR ${Sec.esc(t.nama)}" class="w-36 h-36 mx-auto">
                 <div class="font-bold text-xs text-slate-900 mt-2">${Sec.esc(t.nama)}</div>
-                <div class="text-[11px] text-slate-500">${Sec.esc(t.jabatan || "")}</div>
-                <div class="font-mono text-[10px] text-slate-400 mt-0.5">${Sec.esc(this.qrPayload(t))}</div>
+                <div class="mt-1 flex items-center justify-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">${Sec.esc(t.statusKepegawaian || "PNS")}</span>
+                    <span class="text-[11px] text-slate-700 font-semibold">${Sec.esc(t.golJabatan || t.golongan || t.jabatan || "-")}</span>
+                </div>
+                <div class="font-mono text-[10px] text-slate-400 mt-1">${Sec.esc(this.qrPayload(t))}</div>
                 <div class="flex justify-center gap-1.5 mt-3">
                     <a href="${url}" download="QR_${Sec.esc(Util.cleanId(t.nip))}.png" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-download"></i> PNG</a>
                     <button type="button" onclick="ModulPresensi.openTendikForm('${Sec.esc(Util.cleanId(t.nip))}')" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-pen"></i> Ubah</button>
@@ -1218,9 +1222,14 @@ const ModulPresensi = {
         const cards = [];
         for (const t of aktif) {
             const url = await this.qrDataUrl(this.qrPayload(t), 300);
-            cards.push(`<div class="card"><div class="s">${Sec.esc(String(c.namaSekolah || "").toUpperCase())}<br>KARTU PRESENSI</div>
-                <img src="${url}" alt="QR"><div class="n">${Sec.esc(t.nama)}</div><div class="j">${Sec.esc(t.jabatan || "")}</div>
-                <div class="id">${Sec.esc(this.qrPayload(t))}</div></div>`);
+            cards.push(`<div class="card">
+                <div class="s">${Sec.esc(String(c.namaSekolah || "").toUpperCase())}<br>KARTU PRESENSI PEGAWAI</div>
+                <img src="${url}" alt="QR">
+                <div class="n">${Sec.esc(t.nama)}</div>
+                <div><span class="st">${Sec.esc(t.statusKepegawaian || "PNS")}</span></div>
+                <div class="gj">${Sec.esc(t.golJabatan || t.golongan || t.jabatan || "-")}</div>
+                <div class="id">${Sec.esc(this.qrPayload(t))}</div>
+            </div>`);
         }
         this.printHtml("Kartu ID QR", `<div class="cards">${cards.join("")}</div>`, false);
     },
@@ -1261,13 +1270,29 @@ const ModulPresensi = {
                     <p class="text-[10px] text-slate-400 mt-0.5">4–40 karakter huruf/angka (spasi diabaikan pada QR). Guru honorer tanpa NIP: gunakan ID unik, mis. GTT001.</p></div>
                 <div><label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
                     <input id="td-nama" value="${v("nama")}" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
-                <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan</label>
-                    <input id="td-jabatan" value="${v("jabatan")}" placeholder="Guru Kelas 3" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                 <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status Kepegawaian</label>
+                        <select id="td-status" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-bold text-slate-800">
+                            <option value="PNS" ${(v("statusKepegawaian") === "PNS" || !t) ? "selected" : ""}>PNS</option>
+                            <option value="PPPK" ${v("statusKepegawaian") === "PPPK" ? "selected" : ""}>PPPK</option>
+                            <option value="PTT" ${v("statusKepegawaian") === "PTT" ? "selected" : ""}>PTT</option>
+                            <option value="GTT" ${v("statusKepegawaian") === "GTT" ? "selected" : ""}>GTT</option>
+                            <option value="Honorer" ${v("statusKepegawaian") === "Honorer" ? "selected" : ""}>Honorer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Gol / Jabatan</label>
+                        <input id="td-gol-jabatan" value="${v("golJabatan") || v("golongan") || v("jabatan")}" 
+                            placeholder="Contoh: Penata Muda / IIIa atau IX / Guru Kelas" 
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-medium text-slate-800">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan Spesifik</label>
+                        <input id="td-jabatan" value="${v("jabatan")}" placeholder="Guru Kelas 3 / Pengelola TU" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                     <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
                         <select id="td-jk" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"><option ${t && t.jk === "Perempuan" ? "" : "selected"}>Laki-laki</option><option ${t && t.jk === "Perempuan" ? "selected" : ""}>Perempuan</option></select></div>
-                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-                        <input id="td-status" value="${v("statusKepegawaian") || v("golongan")}" placeholder="PNS / PPPK / Honorer" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                 </div>
                 <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="td-aktif" ${!t || t.aktif !== false ? "checked" : ""}> Aktif (ikut presensi)</label>
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
@@ -1290,10 +1315,11 @@ const ModulPresensi = {
         const tendikData = {
             nip,
             nama: g("td-nama"),
-            jabatan: g("td-jabatan"),
+            jabatan: g("td-jabatan") || g("td-gol-jabatan"),
+            golJabatan: g("td-gol-jabatan"),
+            golongan: g("td-gol-jabatan"),
             jk: g("td-jk"),
             statusKepegawaian: g("td-status"),
-            golongan: g("td-status"),
             aktif: document.getElementById("td-aktif").checked
         };
 
@@ -1354,10 +1380,11 @@ const ModulPresensi = {
         try {
             const XLSX = await ModulImport.loadXlsx();
             const sampleData = [
-                ["NIP/ID", "Nama Lengkap", "Jabatan", "Jenis Kelamin", "Status Kepegawaian", "Aktif"],
-                ["19750810 200501 1 003", "Siti Rahayu, S.Pd.SD", "Guru Kelas 1", "Perempuan", "PNS", "Ya"],
-                ["19820315 200902 2 008", "Ahmad Fauzi, S.Pd", "Guru PJOK", "Laki-laki", "PPPK", "Ya"],
-                ["GTT001", "Budi Santoso, S.Pd", "Guru Kelas 4", "Laki-laki", "Honorer", "Ya"]
+                ["NIP/ID", "Nama Lengkap", "Status Kepegawaian (PNS/PPPK/PTT/GTT)", "Gol/Jabatan", "Jabatan", "Jenis Kelamin", "Aktif"],
+                ["19750810 200501 1 003", "Siti Rahayu, S.Pd.SD", "PNS", "Penata Muda / IIIa", "Guru Kelas 1", "Perempuan", "Ya"],
+                ["19820315 200902 2 008", "Ahmad Fauzi, S.Pd", "PPPK", "IX / Guru Kelas", "Guru PJOK", "Laki-laki", "Ya"],
+                ["GTT001", "Budi Santoso, S.Pd", "GTT", "IX / Guru PAI", "Guru PAI", "Laki-laki", "Ya"],
+                ["PTT002", "Hendra Wijaya, S.Kom.", "PTT", "PTT / Pengelola TU", "Pengelola TU", "Laki-laki", "Ya"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(sampleData);
             const wb = XLSX.utils.book_new();

@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.5.1
+ * Backend REST API - Google Apps Script (GAS) v2.6.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -95,7 +95,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.5.1",
+    version: "2.6.0",
     timestamp: new Date().toISOString(),
     message: "Google Apps Script Backend berjalan normal. Portal mandiri aktif tanpa login."
   };
@@ -1007,13 +1007,24 @@ function handleGetNextNomorSuratKeluar(ss, payload) {
 
   let nextNo = 1;
   if (sheet && sheet.getLastRow() > 1) {
-    const values = sheet.getRange(2, 4, sheet.getLastRow() - 1, 2).getValues();
+    const values = sheet.getRange(2, 2, sheet.getLastRow() - 1, 4).getValues();
     let maxNo = 0;
     values.forEach(row => {
-      const rNo = parseInt(row[0], 10);
-      const rThn = parseInt(row[1], 10);
-      if (rThn === tahun && rNo > maxNo) {
-        maxNo = rNo;
+      const nomorSurat = String(row[0] || "");
+      let rNo = parseInt(row[2], 10); // col 4 is NO_URUT
+      let rThn = parseInt(row[3], 10); // col 5 is TAHUN
+      if (!rThn && nomorSurat.indexOf(String(tahun)) !== -1) rThn = tahun;
+      if (rThn === tahun) {
+        if (!rNo || isNaN(rNo)) {
+          const parts = nomorSurat.split("/").map(function(p){ return p.trim(); });
+          if (parts.length >= 2) {
+            const pNo = parseInt(parts[1], 10);
+            if (!isNaN(pNo)) rNo = pNo;
+          }
+        }
+        if (rNo > maxNo) {
+          maxNo = rNo;
+        }
       }
     });
     nextNo = maxNo + 1;
@@ -1250,11 +1261,10 @@ function handleGenerateSuratPDF(ss, payload) {
   const tableData = [
     ["1. Nama Lengkap", ": " + payload.nama],
     ["2. NISN / NIS", ": " + payload.nisn + " / " + (payload.nis || "-")],
-    ["3. Tempat, Tanggal Lahir", ": " + payload.tempatLahir + ", " + payload.tanggalLahir],
+    ["3. Tempat, Tanggal Lahir", ": " + payload.tempatLahir + ", " + (payload.tanggalLahirFull || payload.tanggalLahir)],
     ["4. Jenis Kelamin", ": " + payload.jk],
     ["5. Kelas", ": " + payload.kelas + " (Sekolah Dasar)"],
-    ["6. Nama Orang Tua / Wali", ": " + payload.namaOrtu],
-    ["7. Alamat Siswa", ": " + payload.alamat]
+    ["6. Nama Orang Tua / Wali", ": " + (payload.namaOrtu || "-")]
   ];
 
   const table = body.appendTable(tableData);

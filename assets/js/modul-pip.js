@@ -120,14 +120,11 @@ const ModulPIP = {
             };
         }
 
-        // Filter Status Pencairan
+        // Filter Status Pencairan / Aktivasi
         const selCair = document.getElementById("pip-filter-cair");
         if (selCair) {
             selCair.onchange = (e) => {
-                const v = e.target.value;
-                if (v.includes("Sudah")) this.filterStatusCair = "Sudah";
-                else if (v.includes("Belum")) this.filterStatusCair = "Belum";
-                else this.filterStatusCair = "Semua";
+                this.filterStatusCair = e.target.value;
                 this.renderPenerima();
             };
         }
@@ -486,8 +483,8 @@ const ModulPIP = {
                         <div class="text-[9px] text-slate-500 mt-0.5 truncate max-w-[120px]" title="${Sec.esc(item.skAtasNama || item.nama)}">${Sec.esc(item.skAtasNama || item.nama)}</div>
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_aktif')" 
-                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar PIP">
+                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'aktif')" 
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar Siswa">
                             <i class="fa-solid fa-print"></i> Aktif Belajar
                         </button>
                     </td>
@@ -521,8 +518,11 @@ const ModulPIP = {
                 String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
             const matchT = this.filterTahap === "Semua" || String(p.tahap) === this.filterTahap;
             let matchC = true;
-            if (this.filterStatusCair === "Sudah") matchC = p.statusCair && p.statusCair.toLowerCase().includes("sudah");
-            else if (this.filterStatusCair === "Belum") matchC = !p.statusCair || !p.statusCair.toLowerCase().includes("sudah");
+            if (this.filterStatusCair !== "Semua") {
+                const itemSt = (p.statusCair || "Belum Cair").toLowerCase().trim();
+                const filterSt = this.filterStatusCair.toLowerCase().trim();
+                matchC = itemSt === filterSt || itemSt.includes(filterSt);
+            }
 
             return matchQ && matchK && matchT && matchC;
         });
@@ -543,7 +543,20 @@ const ModulPIP = {
         }
 
         tbody.innerHTML = data.map((item, idx) => {
-            const isSudahCair = item.statusCair && item.statusCair.toLowerCase().includes("sudah");
+            const currentStatus = item.statusCair || "Belum Cair";
+            let statusBadgeClass = "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100";
+            let statusIcon = "fa-clock text-amber-600";
+            if (currentStatus === "Sudah Cair") {
+                statusBadgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100";
+                statusIcon = "fa-circle-check text-emerald-600";
+            } else if (currentStatus === "Sudah Aktivasi") {
+                statusBadgeClass = "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100";
+                statusIcon = "fa-bolt text-blue-600";
+            } else if (currentStatus === "Belum Aktivasi") {
+                statusBadgeClass = "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100";
+                statusIcon = "fa-triangle-exclamation text-rose-600";
+            }
+
             const nominal = Number(item.nominal) || 450000;
             const rombelText = item.rombel || `Kelas ${item.kelas || '1'}`;
             const noRekDisplay = item.nomorRekening && item.nomorRekening !== '-' ? item.nomorRekening : (item.virtualAcc || '-');
@@ -571,16 +584,18 @@ const ModulPIP = {
                         <div class="text-[10px] text-slate-400">${item.virtualAcc && item.virtualAcc !== '-' ? `VA: ${Sec.esc(item.virtualAcc)} • ` : ''}Bank ${Sec.esc(item.bankPenyalur || 'BRI')}</div>
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="ModulPIP.toggleStatusCair('${item.nisn}')" 
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer ${isSudahCair ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
-                            <i class="fa-solid ${isSudahCair ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
-                            ${isSudahCair ? 'Sudah Cair' : 'Belum Cair'}
+                        <!-- Revisi Item 5: Tombol status berupa dropdown yang membuka popup pilihan status -->
+                        <button onclick="ModulPIP.openStatusModal('${item.nisn}')" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition cursor-pointer shadow-xs ${statusBadgeClass}" title="Klik untuk ubah status: Belum Cair, Sudah Cair, Belum Aktivasi, Sudah Aktivasi">
+                            <i class="fa-solid ${statusIcon}"></i>
+                            <span>${Sec.esc(currentStatus)}</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] opacity-70 ml-0.5"></i>
                         </button>
                         ${item.tanggalCair && item.tanggalCair !== '-' ? `<div class="text-[9px] text-slate-400 mt-0.5 font-mono">${item.tanggalCair}</div>` : ''}
                     </td>
                     <td class="p-3 text-right">
                         <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_pencairan')" 
-                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Keterangan / Rekomendasi Pencairan BRI">
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Keterangan Aktif Belajar & Rekomendasi Pencairan BRI">
                             <i class="fa-solid fa-print"></i> Cetak Rekomendasi
                         </button>
                     </td>
@@ -590,30 +605,95 @@ const ModulPIP = {
     },
 
     // -------------------------------------------------------------------------
-    // AKSI CEPAT & TOGGLE CAIR
+    // REVISI ITEM 5: POP-UP PILIH STATUS PIP (DROPDOWN MODAL)
     // -------------------------------------------------------------------------
-    async toggleStatusCair(nisn) {
+    openStatusModal(nisn) {
+        const item = DataStore.getPIPPenerima().find(p => p.nisn === nisn);
+        if (!item) return;
+
+        let m = document.getElementById("modal-pip-status-picker");
+        if (!m) {
+            m = document.createElement("div");
+            m.id = "modal-pip-status-picker";
+            m.className = "fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden";
+            document.body.appendChild(m);
+        }
+
+        const current = item.statusCair || "Belum Cair";
+        const statuses = [
+            { id: "Belum Cair", label: "Belum Cair", desc: "Rekening sudah aktif tetapi bantuan belum ditarik oleh siswa/wali", icon: "fa-clock", color: "amber", border: "border-amber-300", bg: "bg-amber-50", text: "text-amber-800" },
+            { id: "Sudah Cair", label: "Sudah Cair", desc: "Dana bantuan PIP telah berhasil dicairkan di bank penyalur", icon: "fa-circle-check", color: "emerald", border: "border-emerald-300", bg: "bg-emerald-50", text: "text-emerald-800" },
+            { id: "Belum Aktivasi", label: "Belum Aktivasi", desc: "Buku tabungan SimPel belum diaktivasi di Bank Penyalur", icon: "fa-triangle-exclamation", color: "rose", border: "border-rose-300", bg: "bg-rose-50", text: "text-rose-800" },
+            { id: "Sudah Aktivasi", label: "Sudah Aktivasi", desc: "Rekening SimPel telah aktif dan siap menerima penyaluran", icon: "fa-bolt", color: "blue", border: "border-blue-300", bg: "bg-blue-50", text: "text-blue-800" }
+        ];
+
+        m.innerHTML = `
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-600"></i> Pilih Status Penerima PIP
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">${Sec.esc(item.nama)} (NISN: ${item.nisn} • Kelas ${item.kelas || '1'})</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('modal-pip-status-picker').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    ${statuses.map(st => {
+                        const isCurrent = current === st.id;
+                        return `
+                            <button type="button" onclick="ModulPIP.selectStatus('${item.nisn}', '${st.id}')"
+                                class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 cursor-pointer ${isCurrent ? `${st.border} ${st.bg} ring-2 ring-indigo-500` : 'border-slate-200 hover:bg-slate-50'}">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${st.bg} ${st.text}">
+                                    <i class="fa-solid ${st.icon} text-sm"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-xs ${st.text}">${st.label}</span>
+                                        ${isCurrent ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">Status Saat Ini</span>` : ''}
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">${st.desc}</p>
+                                </div>
+                            </button>
+                        `;
+                    }).join("")}
+                </div>
+
+                <div class="flex justify-end pt-2 border-t border-slate-100">
+                    <button type="button" onclick="document.getElementById('modal-pip-status-picker').classList.add('hidden')"
+                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        `;
+        m.classList.remove("hidden");
+    },
+
+    async selectStatus(nisn, newStatus) {
         const list = DataStore.getPIPPenerima();
         const item = list.find(p => p.nisn === nisn);
         if (!item) return;
 
-        const isCurrentlyCair = item.statusCair && item.statusCair.toLowerCase().includes("sudah");
-        const nextStatus = isCurrentlyCair ? "Belum Cair" : "Sudah Cair";
-        const nextDate = isCurrentlyCair ? "-" : Util.today();
+        const nextDate = (newStatus === "Sudah Cair" || newStatus === "Sudah Aktivasi") ? Util.today() : "-";
+        item.statusCair = newStatus;
+        item.tanggalCair = nextDate;
+        DataStore.savePIPPenerima(list);
+
+        document.getElementById("modal-pip-status-picker")?.classList.add("hidden");
 
         const res = await ApiClient.request("updatePIPStatus", {
             nisn,
-            statusCair: nextStatus,
+            statusCair: newStatus,
             tanggalCair: nextDate
         });
 
-        if (res && res.success) {
-            App.showToast(`Status pencairan ${item.nama} diubah menjadi: ${nextStatus}`, "success");
-            this.renderActiveTab();
-            App.updateDashboardStats();
-        } else {
-            App.showToast("Gagal memperbarui status pencairan", "error");
-        }
+        App.showToast(`Status PIP ${item.nama} berhasil diubah menjadi: ${newStatus}`, "success");
+        this.renderActiveTab();
+        if (window.App && App.updateDashboardStats) App.updateDashboardStats();
     },
 
     quickPrintSurat(nisn, templateType = "pip_pencairan") {

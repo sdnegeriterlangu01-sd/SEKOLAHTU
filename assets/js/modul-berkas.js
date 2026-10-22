@@ -236,6 +236,7 @@ const ModulBerkas = {
             const akta = berkas.akta?.uploaded;
             const kip = berkas.kip?.uploaded;
             const foto = berkas.foto?.uploaded;
+            const kta = (berkas.kta?.uploaded) || !!s.nta;
             const isFull = kk && akta;
             const hasPhone = s.noHp && s.noHp !== "-" && s.noHp.trim().length >= 8;
 
@@ -284,6 +285,12 @@ const ModulBerkas = {
                                 <i class="fa-solid ${kip ? 'fa-circle-check text-indigo-600' : 'fa-circle-plus'}"></i> KIP
                             </button>
 
+                            <!-- KTA Pramuka Tag (Revisi Item 10) -->
+                            <button onclick="ModulBerkas.previewOrUpload('${s.nisn}', 'kta')" 
+                                class="px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition ${kta ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' : 'bg-slate-100 text-slate-400 border border-dashed border-slate-300 hover:bg-slate-200'}" title="${kta ? ((berkas.kta?.filename || 'KTA Pramuka') + (s.nta ? ` (NTA: ${s.nta})` : '')) : 'Klik untuk unggah KTA Pramuka'}">
+                                <i class="fa-solid ${kta ? 'fa-circle-check text-amber-700' : 'fa-circle-plus'}"></i> KTA${s.nta ? ` <span class="font-mono text-[9px] bg-amber-200 text-amber-900 px-1 rounded font-bold ml-0.5">NTA</span>` : ''}
+                            </button>
+
                             <!-- Foto Tag -->
                             <button onclick="ModulBerkas.previewOrUpload('${s.nisn}', 'foto')" 
                                 class="px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition ${foto ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100' : 'bg-slate-100 text-slate-400 border border-dashed border-slate-300 hover:bg-slate-200'}" title="${foto ? berkas.foto.filename : 'Pas Foto Siswa'}">
@@ -322,8 +329,11 @@ const ModulBerkas = {
                     ` : ''}
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
-                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kk')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Pindai & Ekstrak Data (OCR)">
+                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kk')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Pindai & Ekstrak Data KK (OCR)">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </button>
+                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kta')" class="p-2 text-amber-700 hover:bg-amber-50 rounded-lg transition" title="Pindai & Ekstrak No. NTA KTA Pramuka (OCR)">
+                                <i class="fa-solid fa-id-badge"></i>
                             </button>
                             <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Kontak Orang Tua">
                                 <i class="fa-solid fa-phone"></i>
@@ -592,20 +602,27 @@ const ModulBerkas = {
             const wil = [student.dusun, student.rt ? `RT ${student.rt}` : "", student.rw ? `RW ${student.rw}` : "", student.kelurahan, student.kecamatan, student.kodePos].filter(Boolean).join(", ");
             extra.innerHTML = [
                 row("Nomor Kartu Keluarga (KK)", student.noKk || '<em class="text-amber-600 font-normal">Belum direkam (Pindai OCR)</em>'),
+                row("Nomor NTA Pramuka", student.nta ? `<span class="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">${student.nta}</span>` : '<em class="text-amber-600 font-normal">Belum direkam (Pindai OCR KTA)</em>'),
                 row("Tanggal Terbit KK", student.tglTerbitKk || "-"),
                 row("Tahun Ajaran / Rombel", `${student.tahunAjaran || DataStore.getActiveTA()} • ${student.rombel || student.kelas}`),
                 row("NIPD / Agama", `${student.nipd || student.nis || "-"} / ${student.agama || "-"}`),
                 row("Ayah", [student.ayahNama, student.ayahTahunLahir, student.ayahPendidikan, student.ayahPekerjaan].filter(Boolean).join(" • ")),
                 row("Ibu", [student.ibuNama, student.ibuTahunLahir, student.ibuPendidikan, student.ibuPekerjaan].filter(Boolean).join(" • ")),
-                `<div class="col-span-2 p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                `<div class="col-span-2 p-3 bg-slate-50 rounded-xl flex items-center justify-between flex-wrap gap-2">
                     <div>
                         <span class="text-slate-400 text-[11px] block">Otomasi Cerdas Berkas</span>
                         <span class="font-bold text-xs text-slate-800">Ekstraksi Teks Otomatis via AI/OCR</span>
                     </div>
-                    <button type="button" onclick="ModulBerkas.closeDetailModal(); ModulOCR.openScanModal('${student.nisn}', 'kk')" 
-                        class="px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Pindai Scan KK (OCR)
-                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="ModulBerkas.closeDetailModal(); ModulOCR.openScanModal('${student.nisn}', 'kk')" 
+                            class="px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Pindai KK (OCR)
+                        </button>
+                        <button type="button" onclick="ModulBerkas.closeDetailModal(); ModulOCR.openScanModal('${student.nisn}', 'kta')" 
+                            class="px-3 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-id-badge"></i> Pindai KTA Pramuka (OCR)
+                        </button>
+                    </div>
                 </div>`,
                 `<div class="col-span-2 p-3 bg-slate-50 rounded-xl"><span class="text-slate-400 text-[11px] block">Wilayah (Dusun/RT/RW/Kelurahan/Kecamatan/Kode Pos)</span><span class="font-medium text-slate-800">${wil || "-"}</span></div>`
             ].join("");

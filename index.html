@@ -2426,7 +2426,12 @@
                     <select id="new-user-role" required onchange="Auth.onRoleChange(this.value)"
                         class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
                         <option value="tu">Tata Usaha (TU) - Akses Penuh Tata Usaha</option>
-                        <option value="guru">Guru (Kelas / Mapel) - Akses Berkas Siswa & Presensi</option>
+                        <option value="guru_kelas">Guru Kelas</option>
+                        <option value="guru_pjok">Guru Mapel PJOK</option>
+                        <option value="guru_pai">Guru Mapel PAI (Pendidikan Agama Islam)</option>
+                        <option value="guru_inggris">Guru Mapel Bahasa Inggris</option>
+                        <option value="guru_seni">Guru Mapel Seni Budaya</option>
+                        <option value="guru_mapel">Guru Mapel Lainnya...</option>
                         <option value="kepsek">Kepala Sekolah - Akses Monitoring & Cetak</option>
                         <option value="admin">Administrator - Pengelola Penuh Sistem</option>
                     </select>
@@ -2436,16 +2441,13 @@
                     class="p-3 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2 hidden">
                     <label class="block text-xs font-semibold text-blue-900">Penugasan Mengajar Guru</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[11px] text-slate-600 mb-1">Tipe Guru</label>
-                            <select id="new-user-guru-tipe"
+                        <div id="new-user-mapel-custom-box" class="hidden">
+                            <label class="block text-[11px] text-slate-600 mb-1">Nama Mata Pelajaran</label>
+                            <input type="text" id="new-user-guru-mapel-nama" placeholder="Contoh: Bahasa Jawa / IPAS"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
-                                <option value="kelas">Guru Kelas</option>
-                                <option value="mapel">Guru Mata Pelajaran (PJOK/PAI/dll)</option>
-                            </select>
                         </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
+                        <div id="new-user-guru-kelas-box">
+                            <label id="new-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
                             <select id="new-user-guru-kelas"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                                 <option value="Semua">Semua Kelas (Guru Mapel)</option>
@@ -2560,7 +2562,12 @@
                         <select id="edit-user-role" required onchange="Auth.onEditRoleChange(this.value)"
                             class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
                             <option value="tu">Tata Usaha (TU)</option>
-                            <option value="guru">Guru (Kelas / Mapel)</option>
+                            <option value="guru_kelas">Guru Kelas</option>
+                            <option value="guru_pjok">Guru Mapel PJOK</option>
+                            <option value="guru_pai">Guru Mapel PAI (Pendidikan Agama Islam)</option>
+                            <option value="guru_inggris">Guru Mapel Bahasa Inggris</option>
+                            <option value="guru_seni">Guru Mapel Seni Budaya</option>
+                            <option value="guru_mapel">Guru Mapel Lainnya...</option>
                             <option value="kepsek">Kepala Sekolah</option>
                             <option value="admin">Administrator</option>
                             <option value="kiosk">Terminal Kiosk</option>
@@ -2577,19 +2584,16 @@
                 </div>
 
                 <div id="edit-guru-extra-container"
-                    class="p-3 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2">
+                    class="p-3 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2 hidden">
                     <label class="block text-xs font-semibold text-blue-900">Penugasan Mengajar Guru</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[11px] text-slate-600 mb-1">Tipe Guru</label>
-                            <select id="edit-user-guru-tipe"
+                        <div id="edit-user-mapel-custom-box" class="hidden">
+                            <label class="block text-[11px] text-slate-600 mb-1">Nama Mata Pelajaran</label>
+                            <input type="text" id="edit-user-guru-mapel-nama" placeholder="Contoh: Bahasa Jawa / IPAS"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
-                                <option value="kelas">Guru Kelas</option>
-                                <option value="mapel">Guru Mata Pelajaran (PJOK/PAI/dll)</option>
-                            </select>
                         </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
+                        <div id="edit-user-guru-kelas-box">
+                            <label id="edit-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
                             <select id="edit-user-guru-kelas"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                                 <option value="Semua">Semua Kelas (Guru Mapel)</option>

@@ -3,6 +3,24 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.5.4] - 2026-10-22
+
+### Pemisahan Role Guru Mapel & Penyempurnaan Cetak Presensi
+- **Pemisahan Role Guru Mapel di Manajemen Akun Pengguna:**
+  - Memisahkan opsi pendaftaran dan edit akun pengguna guru secara spesifik: Guru Kelas, Guru Mapel PJOK, Guru Mapel PAI (Pendidikan Agama Islam), Guru Mapel Bahasa Inggris, Guru Mapel Seni Budaya, dan Guru Mapel Lainnya.
+  - Tampilan daftar akun kini menyajikan lencana (badge) peran terpisah yang jelas dan berwarna (misal: *Guru Mapel PJOK*, *Guru Mapel PAI*, *Guru Kelas 1*), tidak lagi digabung menjadi satu kategori umum.
+  - Menambahkan akun demo bawaan untuk `guru_pjok` dan `guru_pai` dengan kredensial instan.
+- **Header & TTD Cetak Rekap Siswa Bulanan Otomatis:**
+  - Header lembar cetak absensi bulanan siswa kini dinamis menyesuaikan peran guru yang sedang login atau dipilih di toolbar (misal: *ABSENSI GURU MAPEL PJOK*, *ABSENSI GURU MAPEL PAI*, atau *ABSENSI GURU KELAS*).
+  - Data nama lengkap guru dan NIP pada blok tanda tangan (kiri bawah) kini terisi secara otomatis dari database profil/tendik (menggantikan baris titik-titik kosong `(........)`).
+  - Menyediakan selector dinamis *"Guru / TTD Absen"* pada toolbar rekap siswa bulanan sehingga Admin/TU dapat memilih dan mengganti penandatangan antara Guru Kelas maupun Guru Mapel terkait.
+- **Standar Format Kehadiran Penuh ("-") Rekap Siswa Bulanan:**
+  - Jika siswa atau seluruh kelas hadir penuh (nilai Sakit = 0, Izin = 0, Alpa = 0), kolom `S`, `I`, `A`, dan `JML` kini diisi garis strip `"-"` sesuai standar baku buku absensi sekolah dasar, baik pada tampilan tabel interaktif, berkas ekspor CSV, maupun lembar cetak PDF.
+- **Pengosongan Baris Paraf Rekap Guru & Tendik untuk Tanda Tangan Basah:**
+  - Mengosongkan baris tanda paraf pada rekap kehadiran guru & tendik (menghapus tanda centang otomatis `✓`) agar lembar cetak siap untuk tanda tangan / paraf basah manual menggunakan pena saat diprint.
+
+---
+
 ## [v2.5.3] - 2026-10-22
 
 ### Perbaikan Responsif Header Permohonan Mandiri & Sinkronisasi Realisasi PIP

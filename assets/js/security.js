@@ -87,6 +87,12 @@ const ACL = {
         kepsek: "Kepala Sekolah",
         tu: "Tata Usaha / Operator",
         guru: "Guru / Tendik",
+        guru_kelas: "Guru Kelas",
+        guru_pjok: "Guru Mapel PJOK",
+        guru_pai: "Guru Mapel PAI",
+        guru_inggris: "Guru Mapel B. Inggris",
+        guru_seni: "Guru Mapel Seni Budaya",
+        guru_mapel: "Guru Mapel",
         kiosk: "Terminal Scan Presensi"
     },
 
@@ -155,7 +161,12 @@ const ACL = {
         pengaturan: ["admin", "kepsek", "tu"]
     },
 
-    check(list, role) { return !!list && (list.includes("*") || list.includes(role)); }
+    check(list, role) {
+        if (!list) return false;
+        if (list.includes("*") || list.includes(role)) return true;
+        if (list.includes("guru") && typeof role === "string" && role.startsWith("guru")) return true;
+        return false;
+    }
 };
 
 const Sec = {

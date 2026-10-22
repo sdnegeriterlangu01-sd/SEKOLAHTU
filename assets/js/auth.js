@@ -24,7 +24,9 @@ const Auth = {
         kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
         tu: { pw: "tu123", nama: "Staf TU (Demo)", role: "tu" },
         guru: { pw: "guru123", nama: "Guru Kelas 1 (Demo)", role: "guru", tipeGuru: "kelas", kelasGuru: "1" },
-        guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", kelasGuru: "Semua" },
+        guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
+        guru_pjok: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
+        guru_pai: { pw: "guru123", nama: "Guru Mapel PAI (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PAI", kelasGuru: "Semua" },
         kiosk: { pw: "kiosk123", nama: "Terminal Scan (Demo)", role: "kiosk" }
     },
 
@@ -107,11 +109,18 @@ const Auth = {
         const m = jabatan.match(/kelas\s*(\d+[a-zA-Z]?)/i);
 
         // Deteksi bidang mata pelajaran jika guru mapel
-        let namaMapel = mapping.namaMapel || "";
-        const jabLow = jabatan.toLowerCase();
+        let namaMapel = u.namaMapel || mapping.namaMapel || mapping.mapel_guru || "";
+        const userOrMapRole = u.rawRole || u.role || mapping.rawRole || mapping.role || "";
+        if (!namaMapel) {
+            if (userOrMapRole === "guru_pjok") namaMapel = "PJOK";
+            else if (userOrMapRole === "guru_pai") namaMapel = "PAI";
+            else if (userOrMapRole === "guru_inggris") namaMapel = "Bahasa Inggris";
+            else if (userOrMapRole === "guru_seni") namaMapel = "Seni Budaya";
+        }
+        const jabLow = (jabatan + " " + (u.nama || "")).toLowerCase();
         if (!namaMapel) {
             if (jabLow.includes("pjok") || jabLow.includes("penjas") || jabLow.includes("olahraga")) namaMapel = "PJOK";
-            else if (jabLow.includes("pai") || jabLow.includes("agama") || jabLow.includes("budi pekerti")) namaMapel = "PAI & Budi Pekerti";
+            else if (jabLow.includes("pai") || jabLow.includes("agama") || jabLow.includes("budi pekerti")) namaMapel = "PAI";
             else if (jabLow.includes("inggris")) namaMapel = "Bahasa Inggris";
             else if (jabLow.includes("seni") || jabLow.includes("sbk")) namaMapel = "Seni Budaya";
             else if (jabLow.includes("mapel")) namaMapel = "Mata Pelajaran";
@@ -567,17 +576,129 @@ const Auth = {
         }
     },
 
+    parseRoleInputs(roleVal, tipeGuruVal, kelasGuruVal, mapelNamaVal) {
+        let baseRole = roleVal || "tu";
+        let rawRole = roleVal || "tu";
+        let tipeGuru = tipeGuruVal || "";
+        let kelasGuru = kelasGuruVal || "";
+        let namaMapel = "";
+
+        if (roleVal && roleVal.startsWith("guru")) {
+            baseRole = "guru";
+            if (roleVal === "guru_kelas") {
+                tipeGuru = "kelas";
+                kelasGuru = (kelasGuruVal && kelasGuruVal !== "Semua") ? kelasGuruVal : "1";
+                namaMapel = "";
+            } else if (roleVal === "guru_pjok") {
+                tipeGuru = "mapel";
+                namaMapel = "PJOK";
+                kelasGuru = kelasGuruVal || "Semua";
+            } else if (roleVal === "guru_pai") {
+                tipeGuru = "mapel";
+                namaMapel = "PAI";
+                kelasGuru = kelasGuruVal || "Semua";
+            } else if (roleVal === "guru_inggris") {
+                tipeGuru = "mapel";
+                namaMapel = "Bahasa Inggris";
+                kelasGuru = kelasGuruVal || "Semua";
+            } else if (roleVal === "guru_seni") {
+                tipeGuru = "mapel";
+                namaMapel = "Seni Budaya";
+                kelasGuru = kelasGuruVal || "Semua";
+            } else if (roleVal === "guru_mapel") {
+                tipeGuru = "mapel";
+                namaMapel = mapelNamaVal ? mapelNamaVal.trim() : "Mata Pelajaran";
+                kelasGuru = kelasGuruVal || "Semua";
+            } else {
+                tipeGuru = tipeGuruVal || "kelas";
+                kelasGuru = kelasGuruVal || "1";
+            }
+        }
+        return { baseRole, rawRole, tipeGuru, kelasGuru, namaMapel };
+    },
+
+    getRoleBadge(userObj) {
+        if (!userObj) return "";
+        const r = userObj.rawRole || userObj.role;
+        const mapping = this.getUserMapping(userObj.email || userObj.id || userObj.usr) || {};
+        const tipe = userObj.tipe_guru || userObj.tipeGuru || mapping.tipeGuru || mapping.tipe_guru || "";
+        const kls = userObj.kelas_guru || userObj.kelasGuru || mapping.kelasGuru || mapping.kelas_guru || "";
+        let mapel = userObj.nama_mapel || userObj.namaMapel || mapping.namaMapel || "";
+        const combined = ((userObj.nama || "") + " " + (userObj.usr || "") + " " + mapel).toLowerCase();
+
+        if (r === "admin") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800"><i class="fa-solid fa-shield-halved mr-1"></i>Administrator</span>`;
+        if (r === "kepsek") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-user-tie mr-1"></i>Kepala Sekolah</span>`;
+        if (r === "tu") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-folder-closed mr-1"></i>Tata Usaha</span>`;
+        if (r === "kiosk") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800"><i class="fa-solid fa-qrcode mr-1"></i>Terminal Kiosk</span>`;
+
+        if (r === "guru" || (typeof r === "string" && r.startsWith("guru"))) {
+            if (r === "guru_pjok" || mapel.toLowerCase().includes("pjok") || combined.includes("pjok") || combined.includes("penjas")) {
+                return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-800"><i class="fa-solid fa-person-running mr-1"></i>Guru Mapel PJOK</span>`;
+            }
+            if (r === "guru_pai" || mapel.toLowerCase().includes("pai") || combined.includes("pai") || combined.includes("agama")) {
+                return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-book-quran mr-1"></i>Guru Mapel PAI</span>`;
+            }
+            if (r === "guru_inggris" || mapel.toLowerCase().includes("inggris") || combined.includes("inggris")) {
+                return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800"><i class="fa-solid fa-language mr-1"></i>Guru Mapel B. Inggris</span>`;
+            }
+            if (r === "guru_seni" || mapel.toLowerCase().includes("seni") || combined.includes("seni")) {
+                return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-100 text-pink-800"><i class="fa-solid fa-palette mr-1"></i>Guru Mapel Seni Budaya</span>`;
+            }
+            if (r === "guru_mapel" || tipe === "mapel" || kls === "Semua" || mapel) {
+                const label = mapel ? `Guru Mapel ${mapel}` : "Guru Mapel";
+                return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800"><i class="fa-solid fa-chalkboard-user mr-1"></i>${Sec.esc(label)}</span>`;
+            }
+            return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-graduation-cap mr-1"></i>Guru Kelas ${Sec.esc(kls || '1')}</span>`;
+        }
+
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">${Sec.esc(ACL.ROLES[r] || r)}</span>`;
+    },
+
     onRoleChange(role) {
         const container = document.getElementById("guru-extra-container");
-        if (container) {
-            container.classList.toggle("hidden", role !== "guru");
+        const mapelCustomBox = document.getElementById("new-user-mapel-custom-box");
+        const kelasLabel = document.getElementById("new-user-guru-kelas-label");
+        const selKelas = document.getElementById("new-user-guru-kelas");
+        if (!container) return;
+
+        const isGuru = role && (role === "guru" || role.startsWith("guru"));
+        container.classList.toggle("hidden", !isGuru);
+        if (!isGuru) return;
+
+        if (role === "guru_kelas") {
+            if (mapelCustomBox) mapelCustomBox.classList.add("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Kelas yang Diampu (Wajib)";
+            if (selKelas && selKelas.value === "Semua") selKelas.value = "1";
+        } else if (role === "guru_mapel") {
+            if (mapelCustomBox) mapelCustomBox.classList.remove("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Jangkauan Kelas";
+        } else {
+            if (mapelCustomBox) mapelCustomBox.classList.add("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Jangkauan Kelas";
         }
     },
 
     onEditRoleChange(role) {
         const container = document.getElementById("edit-guru-extra-container");
-        if (container) {
-            container.classList.toggle("hidden", role !== "guru");
+        const mapelCustomBox = document.getElementById("edit-user-mapel-custom-box");
+        const kelasLabel = document.getElementById("edit-user-guru-kelas-label");
+        const selKelas = document.getElementById("edit-user-guru-kelas");
+        if (!container) return;
+
+        const isGuru = role && (role === "guru" || role.startsWith("guru"));
+        container.classList.toggle("hidden", !isGuru);
+        if (!isGuru) return;
+
+        if (role === "guru_kelas") {
+            if (mapelCustomBox) mapelCustomBox.classList.add("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Kelas yang Diampu (Wajib)";
+            if (selKelas && selKelas.value === "Semua") selKelas.value = "1";
+        } else if (role === "guru_mapel") {
+            if (mapelCustomBox) mapelCustomBox.classList.remove("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Jangkauan Kelas";
+        } else {
+            if (mapelCustomBox) mapelCustomBox.classList.add("hidden");
+            if (kelasLabel) kelasLabel.textContent = "Jangkauan Kelas";
         }
     },
 
@@ -587,13 +708,16 @@ const Auth = {
         const email = document.getElementById("new-user-email")?.value.trim();
         const password = document.getElementById("new-user-password")?.value;
         const role = document.getElementById("new-user-role")?.value;
-        const tipeGuru = document.getElementById("new-user-guru-tipe")?.value || "";
         const kelasGuru = document.getElementById("new-user-guru-kelas")?.value || "";
+        const mapelNama = document.getElementById("new-user-guru-mapel-nama")?.value?.trim() || "";
 
         if (!nama || !email || !password || !role) {
             App.showToast("Semua kolom bertanda bintang wajib diisi!", "error");
             return;
         }
+
+        const parsed = this.parseRoleInputs(role, "", kelasGuru, mapelNama);
+        const { baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel } = parsed;
 
         const btn = document.getElementById("btn-save-new-user");
         btn.disabled = true;
@@ -606,7 +730,7 @@ const Auth = {
                     body: JSON.stringify({
                         email,
                         password,
-                        data: { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru }
+                        data: { nama, role: baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel, tipe_guru: tipeGuru, kelas_guru: klsG }
                     })
                 });
 
@@ -622,20 +746,22 @@ const Auth = {
                 if (j.user && j.user.id) {
                     await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(j.user.id)}`, {
                         method: "PATCH",
-                        body: JSON.stringify({ nama, role, aktif: true, tipe_guru: tipeGuru, kelas_guru: kelasGuru })
+                        body: JSON.stringify({ nama, role: baseRole, aktif: true, tipe_guru: tipeGuru, kelas_guru: klsG })
                     }, this.session.token).catch(() => {});
                 }
 
-                this.saveUserMapping(email, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
-                if (j.user && j.user.id) this.saveUserMapping(j.user.id, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+                const userMappingData = { nama, role: baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel, tipe_guru: tipeGuru, kelas_guru: klsG };
+                this.saveUserMapping(email, userMappingData);
+                if (j.user && j.user.id) this.saveUserMapping(j.user.id, userMappingData);
 
-                App.showToast(`Akun ${nama} (${ACL.ROLES[role] || role}) berhasil didaftarkan!`, "success");
+                const roleLabel = ACL.ROLES[rawRole] || (namaMapel ? `Guru Mapel ${namaMapel}` : (ACL.ROLES[baseRole] || baseRole));
+                App.showToast(`Akun ${nama} (${roleLabel}) berhasil didaftarkan!`, "success");
                 document.getElementById("form-add-user")?.reset();
                 this.switchUserTab("list");
             } else {
                 // Mode Demo (Lokal)
                 const username = email.split("@")[0].toLowerCase().trim();
-                const newUserObj = { pw: password, nama: nama, role: role, tipeGuru: tipeGuru, kelasGuru: kelasGuru };
+                const newUserObj = { pw: password, nama: nama, role: baseRole, rawRole, tipeGuru: tipeGuru, kelasGuru: klsG, namaMapel };
                 this.DEMO_USERS[username] = newUserObj;
                 this.DEMO_USERS[email.toLowerCase().trim()] = newUserObj;
                 
@@ -646,10 +772,12 @@ const Auth = {
                     localStorage.setItem(this.CUSTOM_USERS_KEY, JSON.stringify(customUsers));
                 } catch (e) {}
 
-                this.saveUserMapping(email, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
-                this.saveUserMapping(username, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+                const userMappingData = { nama, role: baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel, tipe_guru: tipeGuru, kelas_guru: klsG };
+                this.saveUserMapping(email, userMappingData);
+                this.saveUserMapping(username, userMappingData);
 
-                App.showToast(`(Mode Demo) Akun ${username} (${ACL.ROLES[role]}) berhasil ditambahkan!`, "success");
+                const roleLabel = ACL.ROLES[rawRole] || (namaMapel ? `Guru Mapel ${namaMapel}` : (ACL.ROLES[baseRole] || baseRole));
+                App.showToast(`(Mode Demo) Akun ${username} (${roleLabel}) berhasil ditambahkan!`, "success");
                 document.getElementById("form-add-user")?.reset();
                 this.switchUserTab("list");
             }
@@ -668,17 +796,42 @@ const Auth = {
 
         document.getElementById("edit-user-id").value = userObj.id || userObj.usr || "";
         document.getElementById("edit-user-nama").value = userObj.nama || "";
+
+        const mapping = this.getUserMapping(userObj.id || userObj.usr || userObj.email) || {};
+        let roleValue = userObj.rawRole || userObj.role || mapping.rawRole || mapping.role || "guru_kelas";
+        const mapel = (userObj.nama_mapel || userObj.namaMapel || mapping.namaMapel || "").toLowerCase();
+        const combined = ((userObj.nama || "") + " " + (userObj.usr || "") + " " + mapel).toLowerCase();
+        const tipe = userObj.tipe_guru || userObj.tipeGuru || mapping.tipeGuru || "";
+
+        if (roleValue === "guru" || (typeof roleValue === "string" && roleValue.startsWith("guru"))) {
+            if (roleValue === "guru_pjok" || mapel.includes("pjok") || combined.includes("pjok") || combined.includes("penjas")) {
+                roleValue = "guru_pjok";
+            } else if (roleValue === "guru_pai" || mapel.includes("pai") || combined.includes("pai") || combined.includes("agama")) {
+                roleValue = "guru_pai";
+            } else if (roleValue === "guru_inggris" || mapel.includes("inggris") || combined.includes("inggris")) {
+                roleValue = "guru_inggris";
+            } else if (roleValue === "guru_seni" || mapel.includes("seni") || combined.includes("seni")) {
+                roleValue = "guru_seni";
+            } else if (tipe === "mapel" || mapel) {
+                roleValue = "guru_mapel";
+            } else {
+                roleValue = "guru_kelas";
+            }
+        }
+
         const roleSel = document.getElementById("edit-user-role");
-        if (roleSel) roleSel.value = userObj.role || "guru";
+        if (roleSel) roleSel.value = roleValue;
+
         const aktifSel = document.getElementById("edit-user-aktif");
         if (aktifSel) aktifSel.value = (userObj.aktif !== false) ? "true" : "false";
 
-        const tipeSel = document.getElementById("edit-user-guru-tipe");
-        if (tipeSel) tipeSel.value = userObj.tipe_guru || userObj.tipeGuru || (userObj.kelas_guru === "Semua" ? "mapel" : "kelas");
-        const kelasSel = document.getElementById("edit-user-guru-kelas");
-        if (kelasSel) kelasSel.value = userObj.kelas_guru || userObj.kelasGuru || "1";
+        const mapelInput = document.getElementById("edit-user-guru-mapel-nama");
+        if (mapelInput) mapelInput.value = userObj.nama_mapel || userObj.namaMapel || mapping.namaMapel || "";
 
-        this.onEditRoleChange(userObj.role || "guru");
+        const kelasSel = document.getElementById("edit-user-guru-kelas");
+        if (kelasSel) kelasSel.value = userObj.kelas_guru || userObj.kelasGuru || mapping.kelasGuru || (roleValue === "guru_kelas" ? "1" : "Semua");
+
+        this.onEditRoleChange(roleValue);
     },
 
     async handleUpdateUser(e) {
@@ -687,13 +840,16 @@ const Auth = {
         const nama = document.getElementById("edit-user-nama")?.value.trim();
         const role = document.getElementById("edit-user-role")?.value;
         const aktif = document.getElementById("edit-user-aktif")?.value === "true";
-        const tipeGuru = document.getElementById("edit-user-guru-tipe")?.value || "";
         const kelasGuru = document.getElementById("edit-user-guru-kelas")?.value || "";
+        const mapelNama = document.getElementById("edit-user-guru-mapel-nama")?.value?.trim() || "";
 
         if (!id || !nama || !role) {
             App.showToast("Semua data wajib terisi!", "error");
             return;
         }
+
+        const parsed = this.parseRoleInputs(role, "", kelasGuru, mapelNama);
+        const { baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel } = parsed;
 
         const btn = document.getElementById("btn-save-edit-user");
         btn.disabled = true;
@@ -703,7 +859,7 @@ const Auth = {
             if (this.usesSupabase()) {
                 const res = await this.sb(`/rest/v1/profiles?id=eq.${encodeURIComponent(id)}`, {
                     method: "PATCH",
-                    body: JSON.stringify({ nama, role, aktif, tipe_guru: tipeGuru, kelas_guru: kelasGuru })
+                    body: JSON.stringify({ nama, role: baseRole, aktif, tipe_guru: tipeGuru, kelas_guru: klsG })
                 }, this.session.token);
 
                 if (!res.ok) {
@@ -714,30 +870,37 @@ const Auth = {
                 // Mode Demo Update
                 if (this.DEMO_USERS[id]) {
                     this.DEMO_USERS[id].nama = nama;
-                    this.DEMO_USERS[id].role = role;
+                    this.DEMO_USERS[id].role = baseRole;
+                    this.DEMO_USERS[id].rawRole = rawRole;
                     this.DEMO_USERS[id].tipeGuru = tipeGuru;
-                    this.DEMO_USERS[id].kelasGuru = kelasGuru;
+                    this.DEMO_USERS[id].kelasGuru = klsG;
+                    this.DEMO_USERS[id].namaMapel = namaMapel;
                 }
                 try {
                     const customUsers = JSON.parse(localStorage.getItem(this.CUSTOM_USERS_KEY)) || {};
                     if (customUsers[id]) {
                         customUsers[id].nama = nama;
-                        customUsers[id].role = role;
+                        customUsers[id].role = baseRole;
+                        customUsers[id].rawRole = rawRole;
                         customUsers[id].tipeGuru = tipeGuru;
-                        customUsers[id].kelasGuru = kelasGuru;
+                        customUsers[id].kelasGuru = klsG;
+                        customUsers[id].namaMapel = namaMapel;
                         localStorage.setItem(this.CUSTOM_USERS_KEY, JSON.stringify(customUsers));
                     }
                 } catch (e) {}
             }
 
-            this.saveUserMapping(id, { nama, role, tipeGuru, kelasGuru, tipe_guru: tipeGuru, kelas_guru: kelasGuru });
+            const userMappingData = { nama, role: baseRole, rawRole, tipeGuru, kelasGuru: klsG, namaMapel, tipe_guru: tipeGuru, kelas_guru: klsG };
+            this.saveUserMapping(id, userMappingData);
 
             // Jika mengedit akun yang sedang login saat ini, perbarui sesi dan tampilan seketika
             if (this.session && this.session.user && (this.session.user.id === id || this.session.user.email?.includes(id))) {
                 this.session.user.nama = nama;
-                this.session.user.role = role;
+                this.session.user.role = baseRole;
+                this.session.user.rawRole = rawRole;
                 this.session.user.tipeGuru = tipeGuru;
-                this.session.user.kelasGuru = kelasGuru;
+                this.session.user.kelasGuru = klsG;
+                this.session.user.namaMapel = namaMapel;
                 this.saveSession();
                 if (window.VueStore && window.VueStore.refresh) window.VueStore.refresh();
                 if (App.updateDashboardStats) App.updateDashboardStats();
@@ -769,7 +932,6 @@ const Auth = {
                     return;
                 }
                 tbody.innerHTML = list.map(u => {
-                    const guruDetail = u.role === "guru" ? (u.tipe_guru === "mapel" || u.kelas_guru === "Semua" ? " • Mapel" : ` • Kls ${u.kelas_guru || '1'}`) : "";
                     const uDataJson = Sec.esc(JSON.stringify(u));
                     return `
                     <tr class="hover:bg-slate-50 transition-colors">
@@ -778,13 +940,7 @@ const Auth = {
                             <div class="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">${Sec.esc(u.id)}</div>
                         </td>
                         <td class="px-3 py-2.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                                u.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
-                                u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
-                            }">
-                                ${(ACL.ROLES[u.role] || u.role) + guruDetail}
-                            </span>
+                            ${this.getRoleBadge(u)}
                         </td>
                         <td class="px-3 py-2.5 text-center">
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${u.aktif !== false ? 'text-emerald-600' : 'text-slate-400'}">
@@ -807,8 +963,7 @@ const Auth = {
                 // Mode Demo List
                 const entries = Object.entries(this.DEMO_USERS);
                 tbody.innerHTML = entries.map(([usr, u]) => {
-                    const guruDetail = u.role === "guru" ? (u.tipeGuru === "mapel" || u.kelasGuru === "Semua" ? " • Mapel" : ` • Kls ${u.kelasGuru || '1'}`) : "";
-                    const demoObj = { id: usr, usr, nama: u.nama, role: u.role, tipe_guru: u.tipeGuru, kelas_guru: u.kelasGuru, aktif: true };
+                    const demoObj = { id: usr, usr, nama: u.nama, role: u.role, rawRole: u.rawRole, tipeGuru: u.tipeGuru, kelasGuru: u.kelasGuru, namaMapel: u.namaMapel, tipe_guru: u.tipeGuru, kelas_guru: u.kelasGuru, aktif: true };
                     const demoJson = Sec.esc(JSON.stringify(demoObj));
                     return `
                     <tr class="hover:bg-slate-50 transition-colors">
@@ -817,13 +972,7 @@ const Auth = {
                             <div class="text-[10px] text-slate-400 font-mono">User Demo: ${usr}</div>
                         </td>
                         <td class="px-3 py-2.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                                u.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                u.role === 'guru' ? 'bg-emerald-100 text-emerald-800' :
-                                u.role === 'kepsek' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
-                            }">
-                                ${(ACL.ROLES[u.role] || u.role) + guruDetail}
-                            </span>
+                            ${this.getRoleBadge(demoObj)}
                         </td>
                         <td class="px-3 py-2.5 text-center">
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">

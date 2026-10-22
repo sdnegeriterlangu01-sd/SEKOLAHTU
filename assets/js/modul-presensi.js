@@ -190,10 +190,16 @@ const ModulPresensi = {
         w.document.close();
     },
 
-    ttdBlok(kiriLabel) {
+    ttdBlok(kiriLabel, namaGuru, nipGuru) {
         const c = DataStore.getConfig();
+        const ttdKiri = kiriLabel ? `
+            <div>
+                ${Sec.esc(kiriLabel)}<br><br><br><br>
+                <b><u>${namaGuru ? Sec.esc(namaGuru) : "(................................)"}</u></b><br>
+                ${nipGuru ? `NIP. ${Sec.esc(nipGuru)}` : ""}
+            </div>` : "";
         return `<div class="ttd">
-            <div>${kiriLabel ? `${Sec.esc(kiriLabel)}<br><br><br><br>(................................)` : ""}</div>
+            ${ttdKiri}
             <div>Mengetahui,<br>Kepala Sekolah<br><br><br><br><b><u>${Sec.esc(c.namaKepalaSekolah || "")}</u></b><br>NIP. ${Sec.esc(c.nipKepalaSekolah || "")}</div>
         </div>`;
     },
@@ -648,9 +654,9 @@ const ModulPresensi = {
                     extra = ` mk-${L}`;
                 } else if (r) {
                     if (kind === "dp") inner = r.jamDatang ? Util.formatTime(r.jamDatang) : "";
-                    if (kind === "da") inner = r.jamDatang ? "✓" : "";
+                    if (kind === "da") inner = ""; // Dikosongkan untuk tanda tangan / paraf basah saat dicetak
                     if (kind === "pp") inner = r.jamPulang ? Util.formatTime(r.jamPulang) : "";
-                    if (kind === "pa") inner = r.jamPulang ? "✓" : "";
+                    if (kind === "pa") inner = ""; // Dikosongkan untuk tanda tangan / paraf basah saat dicetak
                 }
                 const tcls = (kind === "dp" || kind === "pp") ? " t" : (inner === "✓" ? " ok" : "");
                 let a = attrs;
@@ -791,6 +797,154 @@ const ModulPresensi = {
         }).sort((a, b) => a.nama.localeCompare(b.nama, "id"));
     },
 
+
+    getTeacherForClass(kelasName) {
+        const cleanK = String(kelasName || "").replace(/kelas\s*/i, "").trim();
+        const tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+        
+        // 1. Cari di master tendik berdasarkan jabatan 'Guru Kelas {cleanK}'
+        const found = tendikList.find(t => {
+            const j = String(t.jabatan || "").toLowerCase();
+            return j.includes("kelas") && (
+                j.includes(`kelas ${cleanK}`) ||
+                (cleanK && j.match(new RegExp(`kelas\\s*${cleanK}\\b`, 'i')))
+            );
+        });
+        if (found) return { nama: found.nama, nip: found.nip, jabatan: found.jabatan || `Guru Kelas ${cleanK}` };
+
+        // 2. Cari di pemetaan akun pengguna (sim_tas_user_mappings)
+        try {
+            const mappings = JSON.parse(localStorage.getItem(Auth.USER_MAPPINGS_KEY)) || {};
+            for (const key in mappings) {
+                const m = mappings[key];
+                if (m && (m.tipeGuru === "kelas" || m.tipe_guru === "kelas") && String(m.kelasGuru || m.kelas_guru) === cleanK) {
+                    return { nama: m.nama, nip: m.nip || "", jabatan: `Guru Kelas ${cleanK}` };
+                }
+            }
+        } catch (e) {}
+
+        return { nama: "", nip: "", jabatan: `Guru Kelas ${cleanK}` };
+    },
+
+    getPenandatanganInfo() {
+        const u = Auth.user();
+        const isGuru = Auth.role() === "guru";
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        const cleanK = String(this.kelasSiswa || "").replace(/kelas\s*/i, "").trim();
+
+        // 1. Jika pengguna saat ini login sebagai akun Guru
+        if (isGuru && gInfo) {
+            let roleTitle = "";
+            let headerJudul = "";
+            if (gInfo.isGuruMapel) {
+                const mapelName = gInfo.namaMapel || "PJOK";
+                roleTitle = `Guru Mapel ${mapelName}`;
+                headerJudul = `ABSENSI GURU MAPEL ${mapelName.toUpperCase()}`;
+            } else {
+                roleTitle = `Guru Kelas ${gInfo.kelas || cleanK || "1"}`;
+                headerJudul = "ABSENSI GURU KELAS";
+            }
+            return {
+                headerJudul,
+                roleTitle,
+                nama: gInfo.nama || u?.nama || "Guru",
+                nip: gInfo.nip || u?.nip || ""
+            };
+        }
+
+        // 2. Jika login sebagai Admin / TU / Kepsek, periksa pilihan dropdown penandatangan
+        const selGuru = document.getElementById("rs-guru-penandatangan");
+        const val = selGuru ? selGuru.value : "kelas";
+
+        if (val === "pjok") {
+            const tendik = ((typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [])
+                .find(t => String(t.jabatan || "").toLowerCase().includes("pjok") || String(t.jabatan || "").toLowerCase().includes("penjas"));
+            return {
+                headerJudul: "ABSENSI GURU MAPEL PJOK",
+                roleTitle: "Guru Mapel PJOK",
+                nama: tendik ? tendik.nama : "Agus Triyono, S.Pd.Jas",
+                nip: tendik ? tendik.nip : ""
+            };
+        } else if (val === "pai") {
+            const tendik = ((typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [])
+                .find(t => String(t.jabatan || "").toLowerCase().includes("pai") || String(t.jabatan || "").toLowerCase().includes("agama"));
+            return {
+                headerJudul: "ABSENSI GURU MAPEL PAI",
+                roleTitle: "Guru Mapel PAI",
+                nama: tendik ? tendik.nama : "Siti Fatimah, S.Pd.I",
+                nip: tendik ? tendik.nip : ""
+            };
+        } else if (val && val.startsWith("mapel_")) {
+            const mapelName = val.replace("mapel_", "").toUpperCase();
+            const opt = selGuru ? selGuru.options[selGuru.selectedIndex] : null;
+            return {
+                headerJudul: `ABSENSI GURU MAPEL ${mapelName}`,
+                roleTitle: `Guru Mapel ${mapelName}`,
+                nama: opt?.dataset?.nama || `Guru Mapel ${mapelName}`,
+                nip: opt?.dataset?.nip || ""
+            };
+        }
+
+        // Default: Guru Kelas sesuai rombel yang sedang dibuka
+        const gk = this.getTeacherForClass(this.kelasSiswa);
+        return {
+            headerJudul: "ABSENSI GURU KELAS",
+            roleTitle: `Guru Kelas ${cleanK}`,
+            nama: gk.nama || "",
+            nip: gk.nip || ""
+        };
+    },
+
+    updatePenandatanganOptions() {
+        const sel = document.getElementById("rs-guru-penandatangan");
+        if (!sel) return;
+        const isGuru = Auth.role() === "guru";
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+
+        if (isGuru && gInfo) {
+            const label = gInfo.isGuruMapel 
+                ? `${gInfo.jabatan} - ${gInfo.nama}` 
+                : `Guru Kelas ${gInfo.kelas || ''} - ${gInfo.nama}`;
+            sel.innerHTML = `<option value="current" selected>${Sec.esc(label)}</option>`;
+            sel.disabled = true;
+            return;
+        }
+
+        sel.disabled = false;
+        const cleanK = String(this.kelasSiswa || "").replace(/kelas\s*/i, "").trim();
+        const gk = this.getTeacherForClass(this.kelasSiswa);
+        const gkLabel = gk.nama ? `Guru Kelas ${cleanK} (${gk.nama})` : `Guru Kelas ${cleanK}`;
+
+        const tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+        const pjok = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pjok") || String(t.jabatan || "").toLowerCase().includes("penjas"));
+        const pai = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pai") || String(t.jabatan || "").toLowerCase().includes("agama"));
+
+        let optsHtml = `<option value="kelas" selected>${Sec.esc(gkLabel)}</option>`;
+        if (pjok) {
+            optsHtml += `<option value="pjok" data-nama="${Sec.esc(pjok.nama)}" data-nip="${Sec.esc(pjok.nip)}">Guru Mapel PJOK (${Sec.esc(pjok.nama)})</option>`;
+        } else {
+            optsHtml += `<option value="pjok">Guru Mapel PJOK</option>`;
+        }
+        if (pai) {
+            optsHtml += `<option value="pai" data-nama="${Sec.esc(pai.nama)}" data-nip="${Sec.esc(pai.nip)}">Guru Mapel PAI (${Sec.esc(pai.nama)})</option>`;
+        } else {
+            optsHtml += `<option value="pai">Guru Mapel PAI</option>`;
+        }
+
+        // Tambahkan guru mapel lain dari data akun pengguna jika ada
+        try {
+            const mappings = JSON.parse(localStorage.getItem(Auth.USER_MAPPINGS_KEY)) || {};
+            for (const key in mappings) {
+                const m = mappings[key];
+                if (m && m.tipeGuru === "mapel" && m.namaMapel && !["pjok", "pai"].includes(m.namaMapel.toLowerCase())) {
+                    optsHtml += `<option value="mapel_${Sec.esc(m.namaMapel.toLowerCase())}" data-nama="${Sec.esc(m.nama)}" data-nip="${Sec.esc(m.nip || "")}">Guru Mapel ${Sec.esc(m.namaMapel)} (${Sec.esc(m.nama)})</option>`;
+                }
+            }
+        } catch (e) {}
+
+        sel.innerHTML = optsHtml;
+    },
+
     async renderSiswa() {
         const el = document.getElementById("abs-tab-siswa");
         if (!el) return;
@@ -829,6 +983,8 @@ const ModulPresensi = {
                             <select id="rs-kelas" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></select></div>
                         <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bulan</label>
                             <input type="month" id="rs-bulan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Guru / TTD Absen</label>
+                            <select id="rs-guru-penandatangan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium bg-white"></select></div>
                         <div class="text-[11px] text-slate-500 pb-1.5"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1"></span> Minggu / libur
                             <span class="mx-2">•</span> kosong = hadir; klik sel: <b>S</b> → <b>I</b> → <b>A</b> → kosong</div>
                     </div>
@@ -839,8 +995,14 @@ const ModulPresensi = {
                     </div>
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rs-grid" class="p-3"></div></div>`;
-            el.querySelector("#rs-kelas").addEventListener("change", (e) => { this.kelasSiswa = e.target.value; this.renderSiswa(); });
-            el.querySelector("#rs-bulan").addEventListener("change", (e) => { if (e.target.value) { this.bulanSiswa = e.target.value; this.renderSiswa(); } });
+            el.querySelector("#rs-kelas").addEventListener("change", (e) => {
+                this.kelasSiswa = e.target.value;
+                this.updatePenandatanganOptions();
+                this.renderSiswa();
+            });
+            el.querySelector("#rs-bulan").addEventListener("change", (e) => {
+                if (e.target.value) { this.bulanSiswa = e.target.value; this.renderSiswa(); }
+            });
         }
         const sel = document.getElementById("rs-kelas");
         sel.innerHTML = opts.map(k => {
@@ -849,6 +1011,8 @@ const ModulPresensi = {
         }).join("") || `<option value="">(belum ada siswa)</option>`;
         document.getElementById("rs-bulan").value = this.bulanSiswa;
         document.getElementById("rs-save").classList.toggle("hidden", !canEdit);
+
+        this.updatePenandatanganOptions();
 
         const grid = document.getElementById("rs-grid");
         grid.innerHTML = `<div class="p-6 text-center text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin"></i> Memuat…</div>`;
@@ -866,7 +1030,6 @@ const ModulPresensi = {
         });
 
         // 2. AUTO-MERGE: Gabungkan langsung data presensi harian siswa (DB_Absensi / DataStore.getAbsensi())
-        // Ini memastikan setiap kali presensi harian disimpan, hari tersebut langsung tampil di tabel rekap bulanan!
         const dailyAbs = (typeof DataStore !== "undefined" && DataStore.getAbsensi) ? DataStore.getAbsensi().filter(a =>
             a.kategori === "Siswa" &&
             a.tanggal && a.tanggal.startsWith(this.bulanSiswa)
@@ -877,7 +1040,6 @@ const ModulPresensi = {
             const dd = String(a.tanggal).substring(8, 10);
             if (!this.siswaMarks[nisn]) this.siswaMarks[nisn] = {};
             const st = a.status;
-            // Catat tanda: S, I, A, atau H (Hadir)
             this.siswaMarks[nisn][dd] = st === "Sakit" ? "S" : (st === "Izin" ? "I" : (st === "Alpa" ? "A" : "H"));
         });
 
@@ -910,8 +1072,15 @@ const ModulPresensi = {
                 const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
                 return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
             }).join("");
+
+            // Jika hadir semua (S=0, I=0, A=0), kolom S/I/A dan Jumlah diisi garis "-"
+            const sVal = S > 0 ? S : "-";
+            const iVal = I > 0 ? I : "-";
+            const aVal = A > 0 ? A : "-";
+            const jVal = (S + I + A) > 0 ? (S + I + A) : "-";
+
             html += `<tr><td class="sticky-col sticky-no">${i + 1}</td><td class="nama sticky-col sticky-nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
-                <td data-sum="S">${S || ""}</td><td data-sum="I">${I || ""}</td><td data-sum="A">${A || ""}</td><td data-sum="J"><b>${(S + I + A) || ""}</b></td></tr>`;
+                <td data-sum="S">${sVal}</td><td data-sum="I">${iVal}</td><td data-sum="A">${aVal}</td><td data-sum="J"><b>${jVal}</b></td></tr>`;
         });
         return html + `</tbody></table></div>`;
     },
@@ -928,15 +1097,20 @@ const ModulPresensi = {
         td.className = `cell${next === "H" ? " mk-H" : (next ? " mk-" + next : "")}`;
         this.siswaDirty = true;
 
-        // perbarui total baris
+        // perbarui total baris dengan simbol "-" jika 0
         const tr = td.parentElement;
         const marks = this.siswaMarks[nisn];
         const cnt = k => Object.values(marks).filter(v => v === k).length;
         const [S, I, A] = [cnt("S"), cnt("I"), cnt("A")];
-        tr.querySelector('[data-sum="S"]').textContent = S || "";
-        tr.querySelector('[data-sum="I"]').textContent = I || "";
-        tr.querySelector('[data-sum="A"]').textContent = A || "";
-        tr.querySelector('[data-sum="J"]').innerHTML = `<b>${(S + I + A) || ""}</b>`;
+        const sVal = S > 0 ? S : "-";
+        const iVal = I > 0 ? I : "-";
+        const aVal = A > 0 ? A : "-";
+        const jVal = (S + I + A) > 0 ? (S + I + A) : "-";
+
+        tr.querySelector('[data-sum="S"]').textContent = sVal;
+        tr.querySelector('[data-sum="I"]').textContent = iVal;
+        tr.querySelector('[data-sum="A"]').textContent = aVal;
+        tr.querySelector('[data-sum="J"]').innerHTML = `<b>${jVal}</b>`;
     },
 
     async simpanSiswa() {
@@ -956,9 +1130,11 @@ const ModulPresensi = {
     },
 
     cetakSiswa() {
-        const body = this.kop(["ABSENSI GURU KELAS", `KELAS ${this.kelasSiswa}`, `BULAN : ${Util.labelBulan(this.bulanSiswa)}`])
-            + this.buildSiswaTable() + this.ttdBlok("Guru Kelas");
-        this.printHtml(`Absensi Kelas ${this.kelasSiswa} ${this.bulanSiswa}`, body, true);
+        const info = this.getPenandatanganInfo();
+        const cleanK = String(this.kelasSiswa || "").replace(/kelas\s*/i, "").trim();
+        const body = this.kop([info.headerJudul, `KELAS ${cleanK}`, `BULAN : ${Util.labelBulan(this.bulanSiswa)}`])
+            + this.buildSiswaTable() + this.ttdBlok(info.roleTitle, info.nama, info.nip);
+        this.printHtml(`Absensi ${info.roleTitle} Kelas ${cleanK} ${this.bulanSiswa}`, body, true);
     },
 
     exportSiswaCSV() {
@@ -972,7 +1148,7 @@ const ModulPresensi = {
                 if (m === "S") S++; else if (m === "I") I++; else if (m === "A") A++;
                 return m;
             });
-            lines.push([i + 1, s.nama, s.nisn, ...cells, S, I, A, S + I + A].map(Sec.csvCell).join(","));
+            lines.push([i + 1, s.nama, s.nisn, ...cells, S > 0 ? S : "-", I > 0 ? I : "-", A > 0 ? A : "-", (S + I + A) > 0 ? (S + I + A) : "-"].map(Sec.csvCell).join(","));
         });
         this.download(`ABSENSI_KELAS_${this.kelasSiswa}_${this.bulanSiswa}.csv`, "\uFEFF" + lines.join("\n"));
     },

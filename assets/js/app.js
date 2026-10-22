@@ -180,7 +180,7 @@ const App = {
         }
     },
 
-    VERSION: "2.6.0",
+    VERSION: "2.6.2",
 
     formatJamMenit(w) {
         if (!w) return "";
@@ -778,8 +778,65 @@ const App = {
             document.getElementById("cfg-kepsek").value = config.namaKepalaSekolah;
             document.getElementById("cfg-nip").value = config.nipKepalaSekolah;
             document.getElementById("cfg-pangkat").value = config.pangkatGolongan;
-            document.getElementById("cfg-gas-url").value = config.gasApiUrl || "";
-            document.getElementById("cfg-cloud-mode").checked = !!config.isCloudMode;
+            
+            // Konfigurasi Supabase & GAS
+            const inputSupabaseUrl = document.getElementById("cfg-supabase-url");
+            if (inputSupabaseUrl) {
+                inputSupabaseUrl.value = config.supabaseUrl || (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_URL) || "";
+            }
+            const inputSupabaseKey = document.getElementById("cfg-supabase-anon-key");
+            if (inputSupabaseKey) {
+                inputSupabaseKey.value = config.supabaseAnonKey || (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_ANON_KEY) || "";
+            }
+            const inputGas = document.getElementById("cfg-gas-url");
+            if (inputGas) {
+                inputGas.value = config.gasApiUrl || (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) || "";
+            }
+            const checkCloud = document.getElementById("cfg-cloud-mode");
+            if (checkCloud) {
+                checkCloud.checked = config.isCloudMode !== false;
+                this.renderCloudModeVisual(checkCloud.checked);
+            }
+        }
+    },
+
+    toggleCloudMode(checked) {
+        const config = DataStore.getConfig();
+        config.isCloudMode = !!checked;
+        DataStore.saveConfig(config);
+        this.renderCloudModeVisual(checked);
+        this.updateConnectionStatusBadge();
+
+        if (checked) {
+            App.showToast("Mode Cloud Diaktifkan: Terhubung ke Google Sheets, Drive & Supabase Auth.", "success");
+            if (ApiClient.isCloudActive()) {
+                Sync.pullAll().then(() => {
+                    App.updateDashboardStats();
+                    App.refreshAll();
+                }).catch(e => console.warn("Pull on cloud toggle error:", e));
+            }
+        } else {
+            App.showToast("Mode Lokal Diaktifkan: Sistem beroperasi offline tanpa akses cloud (LocalStorage).", "info");
+        }
+    },
+
+    renderCloudModeVisual(isCloud) {
+        const visualBadge = document.getElementById("cfg-cloud-mode-status-text");
+        const container = document.getElementById("cfg-cloud-mode-card");
+        if (!visualBadge) return;
+
+        if (isCloud) {
+            visualBadge.className = "text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
+            visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode Cloud Aktif (Google Sheets, Drive & Supabase)`;
+            if (container) {
+                container.className = "p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 transition-all shadow-xs";
+            }
+        } else {
+            visualBadge.className = "text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
+            visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Mode Lokal Aktif (Simulasi Offline Browser LocalStorage)`;
+            if (container) {
+                container.className = "p-4 rounded-2xl border-2 border-amber-300 bg-amber-50/50 transition-all shadow-xs";
+            }
         }
     },
 
@@ -799,8 +856,21 @@ const App = {
         config.namaKepalaSekolah = document.getElementById("cfg-kepsek").value.trim();
         config.nipKepalaSekolah = document.getElementById("cfg-nip").value.trim();
         config.pangkatGolongan = document.getElementById("cfg-pangkat").value.trim();
+
+        const supUrlEl = document.getElementById("cfg-supabase-url");
+        if (supUrlEl) config.supabaseUrl = supUrlEl.value.trim();
+        const supKeyEl = document.getElementById("cfg-supabase-anon-key");
+        if (supKeyEl) config.supabaseAnonKey = supKeyEl.value.trim();
+
         config.gasApiUrl = document.getElementById("cfg-gas-url").value.trim();
         config.isCloudMode = document.getElementById("cfg-cloud-mode").checked;
+
+        // Sinkronkan ke objek window.SIMTAS_CONFIG aktif
+        if (window.SIMTAS_CONFIG) {
+            if (config.supabaseUrl) window.SIMTAS_CONFIG.SUPABASE_URL = config.supabaseUrl;
+            if (config.supabaseAnonKey) window.SIMTAS_CONFIG.SUPABASE_ANON_KEY = config.supabaseAnonKey;
+            if (config.gasApiUrl) window.SIMTAS_CONFIG.GAS_API_URL = config.gasApiUrl;
+        }
 
         DataStore.saveConfig(config);
         this.loadSchoolSettings();
@@ -810,7 +880,7 @@ const App = {
             ApiClient.request("saveConfig", config).catch(e => console.warn("Sync config to cloud:", e));
         }
 
-        App.showToast("Pengaturan identitas sekolah & konfigurasi API berhasil disimpan!", "success");
+        App.showToast("Pengaturan identitas sekolah, konfigurasi Supabase & GAS API berhasil disimpan!", "success");
     },
 
     async testGasConnection() {
@@ -829,6 +899,7 @@ const App = {
             App.showToast(res.message, "success");
             // Auto switch cloud mode on if test successful
             document.getElementById("cfg-cloud-mode").checked = true;
+            this.renderCloudModeVisual(true);
             const config = DataStore.getConfig();
             config.gasApiUrl = url;
             config.isCloudMode = true;
@@ -839,7 +910,80 @@ const App = {
         }
 
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-link"></i> Uji Koneksi`;
+        btn.innerHTML = `<i class="fa-solid fa-link"></i> Uji Koneksi GAS`;
+    },
+
+    async testSupabaseConnection() {
+        const urlInput = document.getElementById("cfg-supabase-url");
+        const keyInput = document.getElementById("cfg-supabase-anon-key");
+        const url = urlInput ? urlInput.value.trim() : "";
+        const key = keyInput ? keyInput.value.trim() : "";
+
+        if (!url || !key) {
+            App.showToast("Harap isi URL Supabase dan Anon Key terlebih dahulu!", "warning");
+            return;
+        }
+
+        const btn = document.getElementById("btn-test-supabase");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menguji...`;
+        }
+
+        const res = await ApiClient.testSupabaseConnection(url, key);
+        if (res.success) {
+            App.showToast(res.message, "success");
+            const config = DataStore.getConfig();
+            config.supabaseUrl = url;
+            config.supabaseAnonKey = key;
+            DataStore.saveConfig(config);
+            if (window.SIMTAS_CONFIG) {
+                window.SIMTAS_CONFIG.SUPABASE_URL = url;
+                window.SIMTAS_CONFIG.SUPABASE_ANON_KEY = key;
+            }
+        } else {
+            App.showToast(res.message, "error");
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Uji Supabase`;
+        }
+    },
+
+    resetConfigDefaults() {
+        const defSupUrl = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_URL) || "https://wesuxejtpquzqkojpvpg.supabase.co";
+        const defSupKey = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_ANON_KEY) || "sb_publishable_fz1vTJMm99C7PPNsCKjS_g_dt2DfhVa";
+        const defGasUrl = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) || "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec";
+
+        if (document.getElementById("cfg-supabase-url")) document.getElementById("cfg-supabase-url").value = defSupUrl;
+        if (document.getElementById("cfg-supabase-anon-key")) document.getElementById("cfg-supabase-anon-key").value = defSupKey;
+        if (document.getElementById("cfg-gas-url")) document.getElementById("cfg-gas-url").value = defGasUrl;
+        if (document.getElementById("cfg-cloud-mode")) {
+            document.getElementById("cfg-cloud-mode").checked = true;
+            this.renderCloudModeVisual(true);
+        }
+
+        App.showToast("Nilai default Supabase & GAS URL berhasil dimuat! Klik 'Simpan Seluruh Pengaturan' untuk menerapkan permanen.", "info");
+    },
+
+    togglePasswordVisibility(inputId, btnEl) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const icon = btnEl ? btnEl.querySelector("i") : null;
+        if (input.type === "password") {
+            input.type = "text";
+            if (icon) {
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            }
+        } else {
+            input.type = "password";
+            if (icon) {
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
     },
 
     updateConnectionStatusBadge() {
@@ -848,12 +992,15 @@ const App = {
 
         const isCloud = ApiClient.isCloudActive();
         if (isCloud) {
-            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="hidden sm:inline">Cloud Mode: Google Sheets & Drive</span><span class="sm:hidden font-bold">Cloud</span>`;
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer hover:bg-emerald-200 transition";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="hidden sm:inline">Cloud Mode: Google Sheets, Drive & Supabase</span><span class="sm:hidden font-bold">Cloud</span>`;
+            badge.title = "Mode Cloud Aktif. Klik untuk membuka Pengaturan.";
         } else {
-            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> <span class="hidden sm:inline">Mode Demo (Lokal Browser)</span><span class="sm:hidden font-bold">Demo</span>`;
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs cursor-pointer hover:bg-amber-200 transition";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> <span class="hidden sm:inline">Mode Lokal: Browser LocalStorage (Offline)</span><span class="sm:hidden font-bold">Lokal</span>`;
+            badge.title = "Mode Lokal Aktif. Klik untuk membuka Pengaturan.";
         }
+        badge.onclick = () => App.navigateTo('pengaturan');
     },
 
     renderQuickActions() {

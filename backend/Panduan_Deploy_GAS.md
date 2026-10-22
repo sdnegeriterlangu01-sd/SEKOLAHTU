@@ -1,5 +1,5 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.6.0
+## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.6.2
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.
 
@@ -30,7 +30,8 @@ Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS),
    - Klik **Buka Untitled project (tidak aman)** (`Go to Untitled project (unsafe)`).
    - Klik **Izinkan** (`Allow`).
 4. Script akan otomatis:
-   - Membuat tab tabel lengkap: `DB_Siswa`, `DB_Tendik`, `DB_SuratKeluar`, `DB_SuratMasuk`, `DB_Absensi`, `DB_AbsensiTendik`, `DB_AbsensiSiswaBulan`, dan `Config`.
+   - Membuat tab tabel lengkap: `DB_Siswa`, `DB_Tendik`, `DB_SuratKeluar`, `DB_SuratMasuk`, `DB_Absensi`, `DB_AbsensiTendik`, `DB_AbsensiSiswaBulan`, `Config`, `DB_JadwalPelajaran`, `DB_PIP_Pengusulan`, `DB_PIP_Penerima`, dan `DB_PermohonanSurat`.
+   - Menginisialisasi parameter default `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GAS_API_URL`, dan `IS_CLOUD_MODE` di tab `Config` dan Script Properties.
    - Membuat struktur folder terorganisir di Google Drive:
      ```
      My Drive /
@@ -45,13 +46,15 @@ Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS),
 
 ---
 
-### Langkah 4: Atur Parameter Supabase (Opsional tapi Direkomendasikan)
-Untuk mengaktifkan verifikasi token Zero Trust di sisi server:
+### Langkah 4: Parameter Supabase & Google Apps Script
+Kini backend `Code.gs` telah dilengkapi konstanta bawaan untuk URL Supabase dan GAS API. Anda juga dapat mengubah atau menyesuaikannya langsung dari menu **Pengaturan Sistem** pada aplikasi web `index.html` (tersimpan ke `Config` & `Script Properties`).
+Jika ingin mengatur properti script secara manual di Apps Script:
 1. Di editor Apps Script, klik menu **Pengaturan Project** (ikon roda gigi di menu samping kiri).
 2. Gulir ke bawah ke bagian **Properti Script** (`Script Properties`).
-3. Klik **Tambahkan properti script** dan masukkan:
-   - Properti: `SUPABASE_URL` | Nilai: URL project Supabase Anda (misal `https://xyzcompany.supabase.co`)
+3. Masukkan / periksa nilai:
+   - Properti: `SUPABASE_URL` | Nilai: URL project Supabase Anda (misal `https://wesuxejtpquzqkojpvpg.supabase.co`)
    - Properti: `SUPABASE_ANON_KEY` | Nilai: Anon public key Supabase Anda
+   - Properti: `GAS_API_URL` | Nilai: Web App URL hasil deployment Anda
 4. Klik **Simpan properti script**.
 
 ---
@@ -59,9 +62,9 @@ Untuk mengaktifkan verifikasi token Zero Trust di sisi server:
 ### Langkah 5: Publikasikan sebagai Web App (Penerapan Baru atau Update Versi)
 1. Di pojok kanan atas Apps Script:
    - **Jika baru pertama kali:** Klik **Terapkan** > **Penerapan Baru** (`Deploy` > `New deployment`), pilih jenis **Aplikasi Web** (`Web app`).
-   - **Jika memperbarui kode (Update v2.3.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
+   - **Jika memperbarui kode (Update v2.6.2):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
 2. Konfigurasikan:
-   - **Deskripsi**: `SIM-TAS-SD Production API v2.3.0 (Public Letter Tracking & Full Subtabs Fix)`
+   - **Deskripsi**: `SIM-TAS-SD Production API v2.6.2 (Supabase & GAS URL Config + Cloud/Local Toggle)`
    - **Jalankan sebagai**: `Saya (emailanda@gmail.com)`
    - **Siapa yang memiliki akses**: `Semua orang` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
 3. Klik **Terapkan** (`Deploy`).

@@ -30,8 +30,33 @@ const Auth = {
         kiosk: { pw: "kiosk123", nama: "Terminal Scan (Demo)", role: "kiosk" }
     },
 
-    cfg() { return window.SIMTAS_CONFIG || {}; },
-    usesSupabase() { const c = this.cfg(); return !!(c.SUPABASE_URL && c.SUPABASE_ANON_KEY); },
+    cfg() {
+        let stored = {};
+        try {
+            if (typeof DataStore !== "undefined" && DataStore.getConfig) {
+                stored = DataStore.getConfig() || {};
+            }
+        } catch (e) {}
+        const winCfg = window.SIMTAS_CONFIG || {};
+        return {
+            SUPABASE_URL: stored.supabaseUrl || winCfg.SUPABASE_URL || "",
+            SUPABASE_ANON_KEY: stored.supabaseAnonKey || winCfg.SUPABASE_ANON_KEY || "",
+            GAS_API_URL: stored.gasApiUrl || winCfg.GAS_API_URL || "",
+            IDLE_TIMEOUT_MENIT: winCfg.IDLE_TIMEOUT_MENIT || 30
+        };
+    },
+    usesSupabase() {
+        let stored = {};
+        try {
+            if (typeof DataStore !== "undefined" && DataStore.getConfig) {
+                stored = DataStore.getConfig() || {};
+            }
+        } catch (e) {}
+        // Jika mode cloud dimatikan oleh user (isCloudMode === false), sistem masuk ke mode demo lokal
+        if (stored.isCloudMode === false) return false;
+        const c = this.cfg();
+        return !!(c.SUPABASE_URL && c.SUPABASE_ANON_KEY);
+    },
     user() { return this.session ? this.session.user : null; },
     role() { return this.session && this.session.user ? this.session.user.role : null; },
     isAdmin() { return this.role() === "admin"; },

@@ -19,8 +19,10 @@ const DEFAULT_SCHOOL_CONFIG = {
     namaKepalaSekolah: "Aisah Suciati, S.Pd.SD., M.Pd.",
     nipKepalaSekolah: "19690808 199201 2 002",
     pangkatGolongan: "Pembina / IV-a",
-    gasApiUrl: "", // Isi dengan URL Google Apps Script Web App jika aktif
-    isCloudMode: false,
+    supabaseUrl: (typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_URL) ? window.SIMTAS_CONFIG.SUPABASE_URL : "https://wesuxejtpquzqkojpvpg.supabase.co",
+    supabaseAnonKey: (typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_ANON_KEY) ? window.SIMTAS_CONFIG.SUPABASE_ANON_KEY : "sb_publishable_fz1vTJMm99C7PPNsCKjS_g_dt2DfhVa",
+    gasApiUrl: (typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) ? window.SIMTAS_CONFIG.GAS_API_URL : "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec",
+    isCloudMode: true,
     // --- Periodik Tahun Ajaran ---
     tahunAjaranAktif: "",   // diisi otomatis (mis. "2026/2027")
     daftarTahunAjaran: [],
@@ -805,12 +807,8 @@ const DataStore = {
     },
 
     isCloudConfigured() {
-        const fixed = window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL;
-        if (fixed) return true;
-        try {
-            const c = JSON.parse(localStorage.getItem(this.KEYS.CONFIG)) || {};
-            return !!(c.isCloudMode && c.gasApiUrl);
-        } catch (e) { return false; }
+        const c = this.getConfig();
+        return !!(c.isCloudMode && c.gasApiUrl);
     },
 
     // Hapus cache data (kecuali pengaturan) - dipanggil saat logout di mode cloud
@@ -825,6 +823,18 @@ const DataStore = {
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem(this.KEYS.CONFIG)); } catch (e) { stored = null; }
         const cfg = { ...DEFAULT_SCHOOL_CONFIG, ...(stored || {}) };
+        if (!cfg.supabaseUrl && typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_URL) {
+            cfg.supabaseUrl = window.SIMTAS_CONFIG.SUPABASE_URL;
+        }
+        if (!cfg.supabaseAnonKey && typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_ANON_KEY) {
+            cfg.supabaseAnonKey = window.SIMTAS_CONFIG.SUPABASE_ANON_KEY;
+        }
+        if (!cfg.gasApiUrl && typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) {
+            cfg.gasApiUrl = window.SIMTAS_CONFIG.GAS_API_URL;
+        }
+        if (typeof cfg.isCloudMode === "undefined") {
+            cfg.isCloudMode = !!(cfg.gasApiUrl);
+        }
         if (!cfg.tahunAjaranAktif) cfg.tahunAjaranAktif = Util.defaultTahunAjaran();
         if (!Array.isArray(cfg.daftarTahunAjaran) || cfg.daftarTahunAjaran.length === 0) {
             cfg.daftarTahunAjaran = [cfg.tahunAjaranAktif];

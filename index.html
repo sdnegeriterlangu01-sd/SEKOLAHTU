@@ -68,7 +68,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SIM-TAS-SD
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.6.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.6.2</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -1257,72 +1257,151 @@
 
                     <form onsubmit="App.saveSettings(event)" class="space-y-6">
 
-                        <!-- Panel 1: Backend Google Apps Script API -->
+                        <!-- Panel 1: Mode Operasi Sistem (On/Off Cloud vs Lokal) -->
+                        <div id="cfg-cloud-mode-card" class="p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 transition-all shadow-xs space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                                            <i class="fa-solid fa-tower-broadcast text-blue-600"></i> Mode Operasi Sistem
+                                        </h3>
+                                        <span id="cfg-cloud-mode-status-text" class="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode Cloud Aktif
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Pilih apakah sistem beroperasi online terhubung ke Cloud atau offline lokal di peramban.</p>
+                                </div>
+
+                                <!-- Switch On/Off Button -->
+                                <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-xs self-start sm:self-auto">
+                                    <span class="text-xs font-bold text-slate-700">Lokal</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="cfg-cloud-mode" onchange="App.toggleCloudMode(this.checked)" class="sr-only peer" checked>
+                                        <div class="w-12 h-6.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner">
+                                        </div>
+                                    </label>
+                                    <span class="text-xs font-extrabold text-emerald-700">Cloud (On)</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
+                                <div class="p-3 bg-white/80 rounded-xl border border-emerald-200/60">
+                                    <div class="font-bold text-emerald-900 flex items-center gap-1.5 mb-0.5">
+                                        <i class="fa-solid fa-cloud-check text-emerald-600"></i> Mode Cloud (On / Disarankan):
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        Sinkronisasi multi-perangkat real-time ke <strong>Google Sheets</strong>, pengarsipan berkas ke <strong>Google Drive</strong>, dan otentikasi zero-trust via <strong>Supabase Auth</strong>.
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-white/80 rounded-xl border border-slate-200/60">
+                                    <div class="font-bold text-slate-800 flex items-center gap-1.5 mb-0.5">
+                                        <i class="fa-solid fa-hard-drive text-amber-600"></i> Mode Lokal (Off / Demo Offline):
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        Bekerja tanpa koneksi server cloud. Seluruh data disimpan mandiri di memori browser (<strong>LocalStorage</strong>) cocok untuk demonstrasi dan uji coba cepat.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel 2: Konfigurasi Supabase Cloud Auth & Database -->
                         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                                    <i class="fa-solid fa-cloud text-blue-600"></i> Integrasi Google Apps Script (GAS)
-                                    Web App
-                                </h3>
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Zero
-                                    Cost</span>
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-bolt text-emerald-600"></i> Konfigurasi Supabase (Otentikasi & Database Cloud)
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Kredensial publik Supabase Auth untuk verifikasi sesi staf TU, Kepala Sekolah, dan Guru.</p>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                    Zero Trust Auth
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project URL</label>
+                                    <input type="url" id="cfg-supabase-url"
+                                        placeholder="https://wesuxejtpquzqkojpvpg.supabase.co"
+                                        class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+                                    <p class="text-[10px] text-slate-400 mt-1">URL Project REST & Auth Supabase Anda.</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key (Public Key)</label>
+                                    <div class="relative">
+                                        <input type="password" id="cfg-supabase-anon-key"
+                                            placeholder="sb_publishable_... atau eyJhbGciOi..."
+                                            class="w-full px-3.5 py-2 pr-10 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+                                        <button type="button" onclick="App.togglePasswordVisibility('cfg-supabase-anon-key', this)"
+                                            class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs"
+                                            title="Tampilkan / Sembunyikan Kunci">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1">Anon key bersifat publik & aman karena dilindungi oleh Row Level Security (RLS).</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                                    <span>Token login selalu diverifikasi ulang di sisi server Google Apps Script.</span>
+                                </div>
+                                <button type="button" id="btn-test-supabase" onclick="App.testSupabaseConnection()"
+                                    class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-xs cursor-pointer">
+                                    <i class="fa-solid fa-bolt"></i> Uji Koneksi Supabase
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Panel 3: Integrasi Google Apps Script (GAS) Web App & Drive -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-cloud text-blue-600"></i> Integrasi Google Apps Script (GAS) Web App Endpoint
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Jembatan REST API gratis untuk membaca & menulis basis data Google Sheets dan Google Drive.</p>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                    Zero Cost Serverless
+                                </span>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps
-                                        Script Web App Endpoint</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps Script Web App Endpoint</label>
                                     <input type="url" id="cfg-gas-url"
                                         placeholder="https://script.google.com/macros/s/AKfycb.../exec"
                                         class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono">
-                                    <p class="text-[11px] text-slate-400 mt-1">Dapatkan URL ini setelah menerapkan
-                                        (Deploy) script backend sebagai Web App.</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">Dapatkan URL ini setelah menerapkan (Deploy) script backend sebagai Web App.</p>
                                 </div>
-                                <div>
+                                <div class="flex items-center gap-2">
                                     <button type="button" id="btn-test-gas" onclick="App.testGasConnection()"
-                                        class="w-full px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition shadow-xs">
-                                        <i class="fa-solid fa-link"></i> Uji Koneksi API
+                                        class="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition shadow-xs cursor-pointer">
+                                        <i class="fa-solid fa-link"></i> Uji Koneksi GAS
+                                    </button>
+                                    <button type="button" onclick="App.resetConfigDefaults()"
+                                        class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-flex items-center justify-center transition shadow-xs"
+                                        title="Kembalikan ke Nilai Default Konfigurasi Bawaan">
+                                        <i class="fa-solid fa-arrow-rotate-left"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Toggle Cloud Mode -->
-                            <div class="pt-2 flex items-center gap-3">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="cfg-cloud-mode" class="sr-only peer">
-                                    <div
-                                        class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600">
-                                    </div>
-                                </label>
-                                <div>
-                                    <span class="text-xs font-bold text-slate-800">Aktifkan Sinkronisasi Cloud Google
-                                        Sheets & Drive</span>
-                                    <p class="text-[11px] text-slate-400">Jika dimatikan, sistem akan beroperasi dalam
-                                        Mode Simulasi Lokal (LocalStorage Browser).</p>
-                                </div>
-                            </div>
-
                             <!-- Panduan Singkat Deployment -->
-                            <div
-                                class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1.5">
-                                <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-book text-amber-500"></i> Panduan Cepat Setup Backend:
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1.5">
+                                <div class="font-bold text-slate-800 flex items-center justify-between">
+                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-book text-amber-500"></i> Panduan Cepat Setup Backend Google Apps Script:</span>
+                                    <a href="backend/Panduan_Deploy_GAS.md" target="_blank" class="text-blue-700 hover:underline font-bold text-[11px]">Buka Panduan Lengkap &rarr;</a>
                                 </div>
                                 <ol class="list-decimal list-inside space-y-1 pl-1 text-[11px] leading-relaxed">
-                                    <li>Buka file <code
-                                            class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">backend/Code.gs</code>
-                                        di repo ini dan salin kodenya.</li>
-                                    <li>Buka spreadsheet baru di Google Sheets &rarr; <strong>Ekstensi</strong> &rarr;
-                                        <strong>Apps Script</strong>.
-                                    </li>
-                                    <li>Jalankan fungsi <code
-                                            class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">setupDatabaseAndFolders</code>
-                                        untuk membuat tab & folder Drive otomatis.</li>
-                                    <li>Klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (Execute as:
-                                        <em>Me</em>, Access: <em>Anyone</em>).
-                                    </li>
-                                    <li>Salin URL Web App yang dihasilkan ke kotak di atas!</li>
+                                    <li>Buka file <code class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">backend/Code.gs</code> di repositori ini dan salin seluruh kodenya.</li>
+                                    <li>Buka spreadsheet baru di Google Sheets &rarr; menu <strong>Ekstensi</strong> &rarr; <strong>Apps Script</strong>.</li>
+                                    <li>Jalankan fungsi <code class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">setupDatabaseAndFolders</code> untuk menginisialisasi tabel & folder Drive secara otomatis.</li>
+                                    <li>Klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (Execute as: <em>Me</em>, Access: <em>Anyone</em>).</li>
+                                    <li>Salin URL Web App yang dihasilkan ke kotak input di atas lalu klik <strong>Uji Koneksi GAS</strong>.</li>
                                 </ol>
                             </div>
                         </div>
@@ -1871,7 +1950,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SIM-TAS-SD • Sistem Informasi Manajemen Tata Usaha Sekolah
                         Dasar <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.6.0</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.6.2</span></span>
                     <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>

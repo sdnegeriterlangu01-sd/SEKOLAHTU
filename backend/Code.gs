@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.6.0
+ * Backend REST API - Google Apps Script (GAS) v2.6.2
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -14,6 +14,13 @@
  * 2. Google Drive (Penyimpanan terstruktur berkas PDF/Scan/QR/Backup)
  * 3. Supabase Auth Token Verification (Zero Trust Cloud API)
  */
+
+// ==========================================================================
+// KONFIGURASI DEFAULT SUPABASE & GOOGLE APPS SCRIPT API
+// ==========================================================================
+const DEFAULT_SUPABASE_URL = "https://wesuxejtpquzqkojpvpg.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_fz1vTJMm99C7PPNsCKjS_g_dt2DfhVa";
+const DEFAULT_GAS_API_URL = "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec";
 
 // Konstanta Nama Folder di Google Drive
 const ROOT_FOLDER_NAME = "SIM-TAS";
@@ -92,11 +99,15 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  const backendCfg = getBackendConfig();
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.6.0",
+    version: "2.6.2",
     timestamp: new Date().toISOString(),
+    supabaseConnected: !!backendCfg.supabaseUrl,
+    supabaseUrl: backendCfg.supabaseUrl,
+    gasApiUrl: backendCfg.gasApiUrl,
     message: "Google Apps Script Backend berjalan normal. Portal mandiri aktif tanpa login."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
@@ -353,17 +364,27 @@ function doPost(e) {
  * SUPABASE TOKEN VERIFICATION (ZERO TRUST)
  * ==========================================================================
  */
-function isStrictAuthRequired() {
+function getBackendConfig() {
   const props = PropertiesService.getScriptProperties().getProperties();
-  return !!(props.SUPABASE_URL && (props.SUPABASE_ANON_KEY || props.SUPABASE_JWT_SECRET));
+  return {
+    supabaseUrl: props.SUPABASE_URL || DEFAULT_SUPABASE_URL || "",
+    supabaseAnonKey: props.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY || "",
+    gasApiUrl: props.GAS_API_URL || DEFAULT_GAS_API_URL || "",
+    isCloudMode: props.IS_CLOUD_MODE !== "false"
+  };
+}
+
+function isStrictAuthRequired() {
+  const cfg = getBackendConfig();
+  return !!(cfg.supabaseUrl && (cfg.supabaseAnonKey || cfg.supabaseJwtSecret));
 }
 
 function verifySupabaseToken(token) {
   if (!token) return { valid: false, message: "Token otentikasi tidak disertakan." };
   
-  const props = PropertiesService.getScriptProperties().getProperties();
-  const supabaseUrl = props.SUPABASE_URL;
-  const anonKey = props.SUPABASE_ANON_KEY;
+  const cfg = getBackendConfig();
+  const supabaseUrl = cfg.supabaseUrl;
+  const anonKey = cfg.supabaseAnonKey;
 
   if (!supabaseUrl) {
     // Mode demo (tanpa Supabase terkonfigurasi di server)
@@ -477,7 +498,7 @@ function setupDatabaseAndFolders() {
     sheetAbsenSiswa.getRange(1, 1, 1, 8).setFontWeight("bold").setBackground("#fce5cd");
   }
 
-  // 8. Tab Config
+  // 8. Tab Config & ScriptProperties Initialization
   let sheetCfg = ss.getSheetByName(TAB_CONFIG);
   if (!sheetCfg) sheetCfg = ss.insertSheet(TAB_CONFIG);
   if (sheetCfg.getLastRow() === 0) {
@@ -486,8 +507,19 @@ function setupDatabaseAndFolders() {
     sheetCfg.appendRow(["NPSN", "20326713"]);
     sheetCfg.appendRow(["KEPALA_SEKOLAH", "Aisah Suciati, S.Pd.SD., M.Pd."]);
     sheetCfg.appendRow(["NIP_KEPALA_SEKOLAH", "19690808 199201 2 002"]);
+    sheetCfg.appendRow(["SUPABASE_URL", DEFAULT_SUPABASE_URL]);
+    sheetCfg.appendRow(["SUPABASE_ANON_KEY", DEFAULT_SUPABASE_ANON_KEY]);
+    sheetCfg.appendRow(["GAS_API_URL", DEFAULT_GAS_API_URL]);
+    sheetCfg.appendRow(["IS_CLOUD_MODE", "true"]);
     sheetCfg.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#f3f3f3");
   }
+
+  // Setup Script Properties bawaan jika belum terisi
+  const scriptProps = PropertiesService.getScriptProperties();
+  if (!scriptProps.getProperty("SUPABASE_URL")) scriptProps.setProperty("SUPABASE_URL", DEFAULT_SUPABASE_URL);
+  if (!scriptProps.getProperty("SUPABASE_ANON_KEY")) scriptProps.setProperty("SUPABASE_ANON_KEY", DEFAULT_SUPABASE_ANON_KEY);
+  if (!scriptProps.getProperty("GAS_API_URL")) scriptProps.setProperty("GAS_API_URL", DEFAULT_GAS_API_URL);
+  if (!scriptProps.getProperty("IS_CLOUD_MODE")) scriptProps.setProperty("IS_CLOUD_MODE", "true");
 
   // 9. Tab DB_JadwalPelajaran
   let sheetJadwal = ss.getSheetByName(TAB_JADWAL);
@@ -1634,13 +1666,21 @@ function handleSaveAbsensiSiswaBulan(ss, payload) {
  */
 function handleGetConfig(ss) {
   let sheet = ss.getSheetByName(TAB_CONFIG);
+  const backendCfg = getBackendConfig();
+  const config = {
+    supabaseUrl: backendCfg.supabaseUrl,
+    supabaseAnonKey: backendCfg.supabaseAnonKey,
+    gasApiUrl: backendCfg.gasApiUrl,
+    isCloudMode: backendCfg.isCloudMode
+  };
+
   if (!sheet) {
     sheet = ss.insertSheet(TAB_CONFIG);
     sheet.appendRow(["Key", "Value"]);
-    return { success: true, data: {} };
+    return { success: true, data: config };
   }
+
   const data = sheet.getDataRange().getValues();
-  const config = {};
   for (let i = 1; i < data.length; i++) {
     const k = String(data[i][0]).trim();
     if (k) {
@@ -1652,6 +1692,10 @@ function handleGetConfig(ss) {
       if (k === "KEPALA_SEKOLAH" || k === "NAMA_KEPALA_SEKOLAH") config.namaKepalaSekolah = val;
       if (k === "NIP_KEPALA_SEKOLAH") config.nipKepalaSekolah = val;
       if (k === "ALAMAT") config.alamat = val;
+      if (k === "SUPABASE_URL") config.supabaseUrl = String(val);
+      if (k === "SUPABASE_ANON_KEY") config.supabaseAnonKey = String(val);
+      if (k === "GAS_API_URL") config.gasApiUrl = String(val);
+      if (k === "IS_CLOUD_MODE") config.isCloudMode = (val === true || String(val).toLowerCase() === "true");
     }
   }
   return { success: true, data: config };
@@ -1677,7 +1721,19 @@ function handleSaveConfig(ss, payload) {
       keyRowMap[k] = sheet.getLastRow();
     }
   });
-  return { success: true, message: "Konfigurasi identitas sekolah & Kepala Sekolah berhasil disimpan ke cloud!" };
+
+  // Simpan juga ke Script Properties jika terdapat konfigurasi Supabase / GAS
+  try {
+    const scriptProps = PropertiesService.getScriptProperties();
+    if (payload.supabaseUrl) scriptProps.setProperty("SUPABASE_URL", String(payload.supabaseUrl));
+    if (payload.supabaseAnonKey) scriptProps.setProperty("SUPABASE_ANON_KEY", String(payload.supabaseAnonKey));
+    if (payload.gasApiUrl) scriptProps.setProperty("GAS_API_URL", String(payload.gasApiUrl));
+    if (payload.isCloudMode !== undefined) scriptProps.setProperty("IS_CLOUD_MODE", String(payload.isCloudMode));
+  } catch (e) {
+    Logger.log("Save ScriptProperties warning: " + e.message);
+  }
+
+  return { success: true, message: "Konfigurasi identitas sekolah, Supabase & GAS berhasil disimpan ke cloud!" };
 }
 
 /**

@@ -3,6 +3,28 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.6.2] - 2026-10-22
+
+### Integrasi Konfigurasi Supabase & GAS di Menu Pengaturan, Sakelar On/Off Cloud & Penyelarasan Backend
+- **Konfigurasi Supabase & GAS di Menu Pengaturan Sistem (`index.html` & `assets/js/app.js`):**
+  - Menambahkan panel konfigurasi mandiri untuk `Supabase Project URL` (`cfg-supabase-url`) dan `Supabase Anon Key` (`cfg-supabase-anon-key`) lengkap dengan tombol tampilkan/sembunyikan kunci (ikon mata).
+  - Menambahkan tombol interaktif **"Uji Koneksi Supabase"** (`ApiClient.testSupabaseConnection`) untuk menguji akses endpoint Supabase Cloud Auth secara langsung dari browser pengguna dengan umpan balik status instan.
+  - Menambahkan tombol pemulihan konfigurasi rekomendasi default **"Reset ke Nilai Default"** (`App.resetConfigDefaults`) untuk mengisi ulang parameter Supabase dan GAS URL bawaan dalam 1-klik.
+- **Tombol Interaktif On / Off Mode Cloud vs Mode Lokal:**
+  - Menyediakan kartu visual status dinamis (`cfg-cloud-mode-card`) dengan sakelar tombol (toggle switch) responsif untuk memilih mode operasi: **Mode Cloud (On)** vs **Mode Lokal (Off / Offline Demo)**.
+  - Memperbaiki logika `ApiClient.isCloudActive()` dan `Auth.usesSupabase()` agar sepenuhnya menghormati preferensi sakelar pengguna, sehingga sistem dapat digunakan secara mandiri dan offline tanpa ketergantungan koneksi cloud saat dimatikan.
+  - Menjadikan badge indikator status cloud di header bar atas (`cloud-status-badge`) interaktif dan dapat diklik untuk membuka menu Pengaturan secara cepat.
+- **Penyelarasan Backend Google Apps Script (`backend/Code.gs` v2.6.2):**
+  - Menyematkan konstanta default bawaan `DEFAULT_SUPABASE_URL`, `DEFAULT_SUPABASE_ANON_KEY`, dan `DEFAULT_GAS_API_URL` di sisi backend Apps Script.
+  - Menambahkan fungsi helper `getBackendConfig()` dengan hierarki fallback cerdas (`ScriptProperties` &rarr; tab `Config` &rarr; konstanta bawaan).
+  - Menyelaraskan fungsi `setupDatabaseAndFolders` untuk menginisialisasi parameter konfigurasi Supabase dan GAS URL ke tab `Config` spreadsheet dan `ScriptProperties`.
+  - Menyelaraskan API handler `handleGetConfig` dan `handleSaveConfig` untuk menerima dan menyimpan kredensial Supabase & GAS dari antarmuka Web UI ke `ScriptProperties`.
+  - Memperbarui respon endpoint status `doGet` untuk memuat informasi kesiapan koneksi Supabase dan versi backend `2.6.2`.
+- **Pembaruan Panduan Deploy Backend (`Panduan_Deploy_GAS.md`):**
+  - Memperbarui panduan penerapan GAS ke versi v2.6.2 dengan penjelasan inisialisasi otomatis parameter Supabase dan GAS URL.
+
+---
+
 ## [v2.6.1] - 2026-10-22
 
 ### Perbaikan Responsif Dropdown Template Surat, Kop Surat Mutasi & Harmonisasi Template Persuratan

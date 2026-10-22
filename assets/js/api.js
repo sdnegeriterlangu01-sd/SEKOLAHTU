@@ -16,14 +16,20 @@ const ApiClient = {
     getConfig() { return DataStore.getConfig(); },
 
     getGasUrl() {
+        const cfg = this.getConfig();
+        if (cfg && cfg.gasApiUrl) return cfg.gasApiUrl;
         const fixed = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL) || "";
-        return fixed || this.getConfig().gasApiUrl || "";
+        return fixed || "";
     },
 
     isCloudActive() {
-        const fixed = (window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL);
+        const cfg = this.getConfig();
+        if (cfg && cfg.isCloudMode === false) return false;
         const url = this.getGasUrl();
-        return !!url && url.startsWith("https://script.google.com/") && (!!fixed || !!this.getConfig().isCloudMode);
+        const hasValidUrl = !!url && url.startsWith("https://script.google.com/");
+        const isExplicitlyOn = cfg && cfg.isCloudMode === true;
+        const hasFixedUrl = !!(window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.GAS_API_URL);
+        return hasValidUrl && (isExplicitlyOn || (cfg && cfg.isCloudMode !== false && hasFixedUrl));
     },
 
     // -------- Pemanggilan ke Google Apps Script (membawa token) --------
@@ -124,6 +130,41 @@ const ApiClient = {
             return {
                 success: false,
                 message: `Gagal menghubungi URL Apps Script: ${e.message}. Pastikan deployment diset 'Anyone' (Siapa Saja).`
+            };
+        }
+    },
+
+    async testSupabaseConnection(supabaseUrl, anonKey) {
+        if (!supabaseUrl) return { success: false, message: "URL Supabase tidak boleh kosong." };
+        if (!anonKey) return { success: false, message: "Supabase Anon Key tidak boleh kosong." };
+        try {
+            const cleanUrl = supabaseUrl.replace(/\/$/, "");
+            const res = await fetch(`${cleanUrl}/auth/v1/health`, {
+                method: "GET",
+                headers: {
+                    "apikey": anonKey,
+                    "Authorization": `Bearer ${anonKey}`
+                }
+            });
+            if (res.ok) {
+                return { success: true, message: "Koneksi Supabase Cloud Auth berhasil dan endpoint aktif!", status: res.status };
+            }
+            // Fallback coba ping /rest/v1/
+            const resRest = await fetch(`${cleanUrl}/rest/v1/`, {
+                method: "GET",
+                headers: {
+                    "apikey": anonKey,
+                    "Authorization": `Bearer ${anonKey}`
+                }
+            });
+            if (resRest.ok || resRest.status === 200 || resRest.status === 204) {
+                return { success: true, message: "Koneksi REST Supabase berhasil!", status: resRest.status };
+            }
+            return { success: false, message: `Server Supabase merespon HTTP ${res.status}. Pastikan URL dan Anon Key sesuai.` };
+        } catch (e) {
+            return {
+                success: false,
+                message: `Gagal terhubung ke Supabase: ${e.message}. Periksa URL dan koneksi internet.`
             };
         }
     },

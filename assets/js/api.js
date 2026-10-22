@@ -510,9 +510,20 @@ const ApiClient = {
                 listInput.forEach(p => {
                     const key = Util.cleanId(p.nip);
                     const idx = list.findIndex(t => Util.cleanId(t.nip) === key);
+                    const prev = idx >= 0 ? list[idx] : {};
                     const rec = {
-                        nip: p.nip, nama: p.nama, jabatan: p.jabatan || "-",
-                        jk: p.jk || "-", statusKepegawaian: p.statusKepegawaian || p.golongan || "-",
+                        nip: p.nip,
+                        nama: p.nama,
+                        jabatan: p.jabatan || prev.jabatan || "-",
+                        golJabatan: p.golJabatan || p.golongan || prev.golJabatan || prev.golongan || "-",
+                        golongan: p.golongan || p.golJabatan || prev.golongan || prev.golJabatan || "-",
+                        statusKepegawaian: p.statusKepegawaian || prev.statusKepegawaian || "PNS",
+                        jk: p.jk || prev.jk || "-",
+                        noHp: p.noHp || prev.noHp || "",
+                        kodeQr: p.kodeQr || prev.kodeQr || "",
+                        urlQr: p.urlQr || prev.urlQr || "",
+                        foto: p.foto !== undefined ? p.foto : (prev.foto || ""),
+                        tugasTambahan: p.tugasTambahan !== undefined ? p.tugasTambahan : (prev.tugasTambahan || ""),
                         aktif: p.aktif !== false
                     };
                     if (idx >= 0) list[idx] = { ...list[idx], ...rec }; else list.push(rec);

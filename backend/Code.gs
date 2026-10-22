@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.6.3
+ * Backend REST API - Google Apps Script (GAS) v2.7.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -103,7 +103,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.6.3",
+    version: "2.7.0",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
@@ -441,11 +441,18 @@ function setupDatabaseAndFolders() {
   // 2. Tab DB_Tendik (Guru & Staf)
   let sheetTendik = ss.getSheetByName(TAB_TENDIK);
   if (!sheetTendik) sheetTendik = ss.insertSheet(TAB_TENDIK);
+  const headersTendik = [
+    "NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN"
+  ];
   if (sheetTendik.getLastRow() === 0) {
-    sheetTendik.appendRow([
-      "NIP", "NAMA", "JABATAN", "GOLONGAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF"
-    ]);
-    sheetTendik.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#d0e0e3");
+    sheetTendik.appendRow(headersTendik);
+    sheetTendik.getRange(1, 1, 1, headersTendik.length).setFontWeight("bold").setBackground("#d0e0e3");
+  } else {
+    const curH = sheetTendik.getRange(1, 1, 1, Math.max(sheetTendik.getLastColumn(), 1)).getValues()[0].map(h => String(h).toUpperCase());
+    if (!curH.includes("STATUS_KEPEGAWAIAN")) {
+      sheetTendik.getRange(1, 1, 1, headersTendik.length).setValues([headersTendik]);
+      sheetTendik.getRange(1, 1, 1, headersTendik.length).setFontWeight("bold").setBackground("#d0e0e3");
+    }
   }
 
   // 3. Tab DB_SuratKeluar
@@ -842,29 +849,86 @@ function handleGetTendik(ss) {
   if (!sheet || sheet.getLastRow() <= 1) return { success: true, data: [] };
 
   const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-  const list = values.map(row => ({
-    nip: String(row[0]),
-    nama: String(row[1]),
-    jabatan: String(row[2]),
-    golongan: String(row[3]),
-    statusKepegawaian: String(row[3]),
-    jk: String(row[4]),
-    noHp: String(row[5]),
-    kodeQr: String(row[6]),
-    urlQr: String(row[7]),
-    aktif: row[8] !== false && String(row[8]).toLowerCase() !== "false"
-  }));
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim().toUpperCase());
+
+  const colNip = headers.indexOf("NIP");
+  const colNama = headers.indexOf("NAMA");
+  const colJab = headers.indexOf("JABATAN");
+  const colGol = headers.indexOf("GOLONGAN");
+  const colStatus = headers.indexOf("STATUS_KEPEGAWAIAN");
+  const colJk = headers.indexOf("JK");
+  const colHp = headers.indexOf("NO_HP");
+  const colKodeQr = headers.indexOf("KODE_QR");
+  const colUrlQr = headers.indexOf("URL_QR");
+  const colAktif = headers.indexOf("AKTIF");
+  const colFoto = headers.indexOf("FOTO");
+  const colTugas = headers.indexOf("TUGAS_TAMBAHAN");
+
+  const list = values.map(row => {
+    const nip = colNip >= 0 ? String(row[colNip] || "") : String(row[0] || "");
+    const nama = colNama >= 0 ? String(row[colNama] || "") : String(row[1] || "");
+    const jabatan = colJab >= 0 ? String(row[colJab] || "") : String(row[2] || "");
+    let golongan = colGol >= 0 ? String(row[colGol] || "") : String(row[3] || "");
+    let statusPeg = colStatus >= 0 ? String(row[colStatus] || "") : "";
+
+    // Heuristik perbaikan jika sheet lama menyimpan status PNS/PPPK di kolom GOLONGAN
+    if (!statusPeg && golongan) {
+      if (["PNS", "PPPK", "PTT", "GTT", "Honorer"].includes(golongan.trim())) {
+        statusPeg = golongan.trim();
+        golongan = "";
+      } else {
+        statusPeg = "PNS";
+      }
+    }
+
+    const jk = colJk >= 0 ? String(row[colJk] || "") : String(row[4] || "");
+    const noHp = colHp >= 0 ? String(row[colHp] || "") : String(row[5] || "");
+    const kodeQr = colKodeQr >= 0 ? String(row[colKodeQr] || "") : String(row[6] || "");
+    const urlQr = colUrlQr >= 0 ? String(row[colUrlQr] || "") : String(row[7] || "");
+    const aktifRaw = colAktif >= 0 ? row[colAktif] : row[8];
+    const aktif = aktifRaw !== false && String(aktifRaw).toLowerCase() !== "false";
+    const foto = colFoto >= 0 ? String(row[colFoto] || "") : (row.length > 9 ? String(row[9] || "") : "");
+    const tugasTambahan = colTugas >= 0 ? String(row[colTugas] || "") : (row.length > 10 ? String(row[10] || "") : "");
+
+    return {
+      nip,
+      nama,
+      jabatan,
+      golongan: golongan || "-",
+      golJabatan: golongan || "-",
+      statusKepegawaian: statusPeg || "PNS",
+      jk,
+      noHp,
+      kodeQr,
+      urlQr,
+      aktif,
+      foto,
+      tugasTambahan
+    };
+  });
 
   return { success: true, data: list };
 }
 
 function handleSaveTendik(ss, payload) {
-  const sheet = ss.getSheetByName(TAB_TENDIK);
-  if (!sheet) return { success: false, message: "Tab " + TAB_TENDIK + " tidak ditemukan." };
+  let sheet = ss.getSheetByName(TAB_TENDIK);
+  if (!sheet) sheet = ss.insertSheet(TAB_TENDIK);
 
   const list = payload.list || (payload.tendik ? [payload.tendik] : (payload.nip ? [payload] : []));
   if (!list || list.length === 0) {
     return { success: false, message: "Tidak ada data guru/tendik yang dikirim." };
+  }
+
+  const requiredHeaders = ["NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN"];
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(requiredHeaders);
+    sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
+  } else {
+    const curHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).toUpperCase());
+    if (!curHeaders.includes("STATUS_KEPEGAWAIAN")) {
+      sheet.getRange(1, 1, 1, requiredHeaders.length).setValues([requiredHeaders]);
+      sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
+    }
   }
 
   const existing = sheet.getDataRange().getValues();
@@ -877,17 +941,21 @@ function handleSaveTendik(ss, payload) {
     const nip = String(t.nip || "").trim();
     if (!nip) return;
     const row = nipRowMap[nip];
-    const statusPeg = t.statusKepegawaian || t.golongan || "";
+    const gol = t.golJabatan || t.golongan || "";
+    const statusPeg = t.statusKepegawaian || "PNS";
+    const foto = t.foto || "";
+    const tugas = t.tugasTambahan || "";
+
+    const rowData = [
+      nip, t.nama || "", t.jabatan || "", gol, statusPeg, t.jk || "",
+      t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false,
+      foto, tugas
+    ];
+
     if (row) {
-      sheet.getRange(row, 2, 1, 8).setValues([[
-        t.nama || "", t.jabatan || "", statusPeg, t.jk || "",
-        t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false
-      ]]);
+      sheet.getRange(row, 1, 1, rowData.length).setValues([rowData]);
     } else {
-      sheet.appendRow([
-        nip, t.nama || "", t.jabatan || "", statusPeg, t.jk || "",
-        t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false
-      ]);
+      sheet.appendRow(rowData);
       nipRowMap[nip] = sheet.getLastRow();
     }
   });

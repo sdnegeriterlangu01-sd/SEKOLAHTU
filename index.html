@@ -68,7 +68,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SIM-TAS-SD
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.6.3</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.7.0</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -1952,6 +1952,15 @@
 
                 </section>
 
+                <!-- ==============================================================
+                     VIEW: DATA GURU & TENDIK
+                     ============================================================== -->
+                <section id="view-tendik" class="app-view hidden space-y-5">
+                    <div id="tendik-main-content">
+                        <!-- Rendered dynamically by ModulTendik.renderTable() -->
+                    </div>
+                </section>
+
             </main>
 
             <!-- Bottom Application Footer -->
@@ -1960,7 +1969,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SIM-TAS-SD • Sistem Informasi Manajemen Tata Usaha Sekolah
                         Dasar <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.6.3</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.7.0</span></span>
                     <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -2516,7 +2525,9 @@
                             class="text-red-500">*</span></label>
                     <select id="new-user-role" required onchange="Auth.onRoleChange(this.value)"
                         class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
-                        <option value="tu">Tata Usaha (TU) - Akses Penuh Tata Usaha</option>
+                        <option value="tu">Tenaga Administrasi (TU) - Akses Penuh Administrasi</option>
+                        <option value="perpustakaan">Tenaga Perpustakaan - Berkas, PIP & Presensi</option>
+                        <option value="penjaga">Penjaga Sekolah - Scan Presensi & Rekap Saya</option>
                         <option value="guru_kelas">Guru Kelas</option>
                         <option value="guru_pjok">Guru Mapel PJOK</option>
                         <option value="guru_pai">Guru Mapel PAI (Pendidikan Agama Islam)</option>
@@ -2652,7 +2663,9 @@
                                 class="text-red-500">*</span></label>
                         <select id="edit-user-role" required onchange="Auth.onEditRoleChange(this.value)"
                             class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
-                            <option value="tu">Tata Usaha (TU)</option>
+                            <option value="tu">Tenaga Administrasi (TU)</option>
+                            <option value="perpustakaan">Tenaga Perpustakaan</option>
+                            <option value="penjaga">Penjaga Sekolah</option>
                             <option value="guru_kelas">Guru Kelas</option>
                             <option value="guru_pjok">Guru Mapel PJOK</option>
                             <option value="guru_pai">Guru Mapel PAI (Pendidikan Agama Islam)</option>
@@ -3105,6 +3118,7 @@
     <script src="assets/js/modul-absensi.js"></script>
     <script src="assets/js/modul-import.js"></script>
     <script src="assets/js/modul-presensi.js"></script>
+    <script src="assets/js/modul-tendik.js"></script>
     <script src="assets/js/modul-vue.js"></script>
     <script src="assets/js/app.js"></script>
 </body>

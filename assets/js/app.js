@@ -24,6 +24,7 @@ const App = {
         if (this._isStarted) return;
         this._isStarted = true;
 
+        this.cleanupCorruptedTendikData();
         this.initModules();
         if (window.ModulVue) ModulVue.init();
         this.renderTASelector();
@@ -36,12 +37,35 @@ const App = {
             Sync.pullAll().then(() => {
                 this.updateDashboardStats();
                 if (this.currentRoute === "berkas") ModulBerkas.renderTable();
+                if (this.currentRoute === "tendik" && window.ModulTendik) ModulTendik.renderTable();
             }).catch(e => console.warn("Sync initial error:", e));
         }
 
         // Navigate ke default route sesuai peran akun
         const initial = Auth.defaultRoute();
         this.navigateTo(initial);
+    },
+
+    cleanupCorruptedTendikData() {
+        try {
+            let list = DataStore.getTendik();
+            if (!Array.isArray(list) || list.length === 0) return;
+            let changed = false;
+            list = list.map(t => {
+                let updated = { ...t };
+                // Jika golJabatan / golongan bernilai "PPPK" atau "PNS" (akibat bug lama)
+                if (updated.statusKepegawaian === "PPPK" && (updated.golJabatan === "PPPK" || updated.golongan === "PPPK")) {
+                    const seed = typeof SEED_TENDIK !== "undefined" ? SEED_TENDIK.find(s => Util.cleanId(s.nip) === Util.cleanId(t.nip)) : null;
+                    updated.golJabatan = (seed && seed.golJabatan) ? seed.golJabatan : "IX / Guru Kelas";
+                    updated.golongan = updated.golJabatan;
+                    changed = true;
+                }
+                return updated;
+            });
+            if (changed) {
+                DataStore.saveTendik(list);
+            }
+        } catch (e) {}
     },
 
     bindNavigation() {
@@ -164,6 +188,8 @@ const App = {
             ModulPresensi.onShow();
             ModulAbsensi.renderPresensiInputTable();
             ModulAbsensi.renderRekapitulasi();
+        } else if (route === "tendik") {
+            if (window.ModulTendik) ModulTendik.renderTable();
         } else if (route === "pengaturan") {
             this.loadSchoolSettings();
         }
@@ -180,7 +206,7 @@ const App = {
         }
     },
 
-    VERSION: "2.6.3",
+    VERSION: "2.7.0",
 
     formatJamMenit(w) {
         if (!w) return "";
@@ -348,9 +374,9 @@ const App = {
             }
         }
 
-        // Sembunyikan bagian arsitektur teknis jika role Guru
+        // Sembunyikan bagian arsitektur teknis jika role Guru, Penjaga, atau Perpustakaan
         const stemSection = document.getElementById("dashboard-stem-section");
-        if (stemSection) stemSection.classList.toggle("hidden", role === "guru");
+        if (stemSection) stemSection.classList.toggle("hidden", role === "guru" || role === "penjaga" || role === "perpustakaan");
 
         // Role-Aware Dashboard Widgets
         this.renderRoleDashboardWidgets(role, u, gInfo, targetStudents);
@@ -372,6 +398,15 @@ const App = {
             this.renderGuruScheduleToday(user, gInfo);
             this.renderGuruIncompleteDocs(targetStudents);
             this.renderGuruPIPStatus(targetStudents);
+        } else if (role === "penjaga") {
+            if (guruSection) guruSection.classList.add("hidden");
+            if (adminSection) adminSection.classList.add("hidden");
+        } else if (role === "perpustakaan") {
+            if (guruSection) guruSection.classList.add("hidden");
+            if (adminSection) adminSection.classList.remove("hidden");
+
+            this.renderAdminBerkasChart();
+            this.renderAdminPIPStats();
         } else {
             if (guruSection) guruSection.classList.add("hidden");
             if (adminSection) adminSection.classList.remove("hidden");
@@ -1028,6 +1063,42 @@ const App = {
             return;
         }
 
+        if (role === "penjaga") {
+            container.innerHTML = `
+                <button type="button" onclick="App.navigateTo('scan-absensi');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>
+                    <span>Scan Absensi Datang/Pulang</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>
+                    <span>Rekap Absensi Saya</span>
+                </button>
+            `;
+            return;
+        }
+
+        if (role === "perpustakaan") {
+            container.innerHTML = `
+                <button type="button" onclick="App.navigateTo('berkas');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-folder-closed text-amber-300"></i></span>
+                    <span>Bangkas Digital Siswa</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('pip');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-hand-holding-dollar text-sky-300"></i></span>
+                    <span>Program PIP Siswa</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('scan-absensi');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>
+                    <span>Scan Absensi Datang/Pulang</span>
+                </button>
+                <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>
+                    <span>Rekap Absensi Saya</span>
+                </button>
+            `;
+            return;
+        }
+
         if (isGuru) {
             const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
             const labelKelas = gInfo && gInfo.isGuruKelas ? ` (Kelas ${gInfo.kelas})` : "";
@@ -1054,6 +1125,10 @@ const App = {
 
         if (isKepsek) {
             container.innerHTML = `
+                <button type="button" onclick="App.navigateTo('tendik');" class="${btnClass}">
+                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-chalkboard-user text-sky-300"></i></span>
+                    <span>Data Guru & Tendik</span>
+                </button>
                 <button type="button" onclick="App.navigateTo('absensi'); if (window.ModulPresensi) ModulPresensi.switchTab('tendik');" class="${btnClass}">
                     <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>
                     <span>Rekap Presensi Guru & Tendik</span>
@@ -1076,6 +1151,10 @@ const App = {
 
         // Admin & TU default
         container.innerHTML = `
+            <button type="button" onclick="App.navigateTo('tendik');" class="${btnClass}">
+                <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-chalkboard-user text-purple-300"></i></span>
+                <span>Data Guru & Tendik</span>
+            </button>
             <button type="button" onclick="App.navigateTo('berkas'); if (window.ModulBerkas) ModulBerkas.openAddModal();" class="${btnClass}">
                 <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-user-plus text-sky-300"></i></span>
                 <span>Tambah Siswa Baru</span>

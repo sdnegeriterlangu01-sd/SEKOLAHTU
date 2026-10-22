@@ -68,21 +68,37 @@ const ModulPresensi = {
         this.switchTab(this.tab);
     },
 
-    isAllowed(id) { const t = this.TABS.find(x => x.id === id); return !!t && Auth.canDo(t.need); },
-    firstAllowedTab() { const t = this.TABS.find(x => Auth.canDo(x.need)); return t ? t.id : "harian"; },
+    isAllowed(id) {
+        const role = Auth.role();
+        if ((role === "penjaga" || role === "perpustakaan") && id !== "tendik") return false;
+        const t = this.TABS.find(x => x.id === id);
+        return !!t && Auth.canDo(t.need);
+    },
+    firstAllowedTab() {
+        const role = Auth.role();
+        if (role === "penjaga" || role === "perpustakaan") return "tendik";
+        const t = this.TABS.find(x => Auth.canDo(x.need));
+        return t ? t.id : "harian";
+    },
 
     buildTabs() {
         if (window.ModulVue && ModulVue.apps && ModulVue.apps.absensiTabs) return;
         const bar = document.getElementById("vue-absensi-tabs") || document.getElementById("abs-tabs");
         if (!bar) return;
-        const isGuru = Auth.role() === "guru";
+        const role = Auth.role();
+        const isGuru = role === "guru";
+        const isRestrictedStaff = role === "penjaga" || role === "perpustakaan";
         bar.innerHTML = this.TABS
             .filter(t => Auth.canDo(t.need))
-            .filter(t => !isGuru || (t.id === "harian" || t.id === "tendik" || t.id === "siswa"))
+            .filter(t => {
+                if (isRestrictedStaff) return t.id === "tendik";
+                if (isGuru) return t.id === "harian" || t.id === "tendik" || t.id === "siswa";
+                return true;
+            })
             .map(t => `
             <button type="button" data-abs-tab="${t.id}" onclick="ModulPresensi.switchTab('${t.id}')"
                 class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 ${this.tab === t.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}">
-                <i class="fa-solid ${t.icon}"></i> ${t.id === "tendik" && isGuru ? "Presensi Saya" : t.label}
+                <i class="fa-solid ${t.icon}"></i> ${t.id === "tendik" && (isGuru || isRestrictedStaff) ? "Rekap Absensi Saya" : t.label}
             </button>`).join("");
     },
 
@@ -581,12 +597,13 @@ const ModulPresensi = {
     buildTendikTable(interactive) {
         const hari = this.hariBulan(this.bulanTendik);
         let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
-        const isGuru = Auth.role() === "guru";
+        const role = Auth.role();
+        const isPersonalStaff = role === "guru" || role === "penjaga" || role === "perpustakaan";
         const u = Auth.user();
 
         const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
 
-        if (isGuru && !this._viewAllTendikMode) {
+        if (isPersonalStaff && !this._viewAllTendikMode) {
             const uNameClean = cleanName(u?.nama);
             const uNipClean = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
 
@@ -606,14 +623,14 @@ const ModulPresensi = {
                     return (uNameClean && rNameClean && (rNameClean.includes(uNameClean) || uNameClean.includes(rNameClean)));
                 });
                 if (matchRow) {
-                    filtered = [{ nip: matchRow.nip, nama: matchRow.nama || u.nama, jabatan: "Guru" }];
+                    filtered = [{ nip: matchRow.nip, nama: matchRow.nama || u.nama, jabatan: ACL.ROLES[role] || "Staf" }];
                 }
             }
 
             if (filtered.length > 0) {
                 tendik = filtered;
             } else if (u) {
-                tendik = [{ nip: u.nip || "GURU", nama: u.nama || u.email, jabatan: "Guru" }];
+                tendik = [{ nip: u.nip || u.email?.split("@")[0] || "STAFF", nama: u.nama || u.email, jabatan: ACL.ROLES[role] || "Staf" }];
             }
         }
 
@@ -1250,6 +1267,10 @@ const ModulPresensi = {
 
     // ---- form tambah/ubah guru & tendik ----
     openTendikForm(nip = "") {
+        if (window.ModulTendik && window.ModulTendik.openModal) {
+            window.ModulTendik.openModal(nip);
+            return;
+        }
         const t = nip ? DataStore.getTendik().find(x => Util.cleanId(x.nip) === nip) : null;
         let m = document.getElementById("modal-tendik");
         if (!m) {
@@ -1259,6 +1280,13 @@ const ModulPresensi = {
             document.body.appendChild(m);
         }
         const v = k => Sec.esc(t ? (t[k] || "") : "");
+        let rawGol = t ? (t.golJabatan || t.golongan || "") : "";
+        if (rawGol && rawGol.toUpperCase() === (t?.statusKepegawaian || "").toUpperCase()) {
+            if (t?.statusKepegawaian === "PPPK") rawGol = "IX / Guru Kelas";
+            else if (t?.statusKepegawaian === "PNS") rawGol = "Penata Muda / IIIa";
+        }
+        if (!rawGol && t?.jabatan) rawGol = t.jabatan;
+
         m.innerHTML = `
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1283,14 +1311,14 @@ const ModulPresensi = {
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Gol / Jabatan</label>
-                        <input id="td-gol-jabatan" value="${v("golJabatan") || v("golongan") || v("jabatan")}" 
+                        <input id="td-gol-jabatan" value="${Sec.esc(rawGol)}" 
                             placeholder="Contoh: Penata Muda / IIIa atau IX / Guru Kelas" 
                             class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-medium text-slate-800">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan Spesifik</label>
-                        <input id="td-jabatan" value="${v("jabatan")}" placeholder="Guru Kelas 3 / Pengelola TU" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
+                        <input id="td-jabatan" value="${v("jabatan")}" placeholder="Guru Kelas 3 / Tenaga Administrasi" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                     <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
                         <select id="td-jk" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"><option ${t && t.jk === "Perempuan" ? "" : "selected"}>Laki-laki</option><option ${t && t.jk === "Perempuan" ? "selected" : ""}>Perempuan</option></select></div>
                 </div>

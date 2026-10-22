@@ -81,6 +81,7 @@ const ModulVue = {
 
                 const allMenuItems = [
                     { id: "dashboard", route: "dashboard", label: "Beranda & Ringkasan", icon: "fa-gauge-high", section: "main" },
+                    { id: "tendik", route: "tendik", label: "Data Guru & Tendik", icon: "fa-chalkboard-user", badge: "GTK", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
                     { id: "jadwal", route: "jadwal", label: "Jadwal Pelajaran", icon: "fa-calendar-days", badge: "Jadwal", badgeColor: "bg-emerald-100 text-emerald-800", section: "main" },
                     { id: "berkas", route: "berkas", label: "Bangkas Digital Siswa", icon: "fa-folder-closed", badge: "M1", badgeColor: "bg-blue-100 text-blue-800", section: "main" },
                     { id: "pip", route: "pip", label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", badge: "PIP", badgeColor: "bg-amber-100 text-amber-800", section: "main" },
@@ -115,18 +116,23 @@ const ModulVue = {
 
                 const getMenuLabel = (item) => {
                     const currentRole = role.value || (Auth.role && Auth.role());
-                    if (item.route === "absensi" && currentRole === "guru") {
-                        const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
-                        if (g && g.isGuruKelas) {
-                            const k = String(g.kelas || "1").replace(/kelas\s*/i, "").trim();
-                            return `Absensi Kelas ${k}`;
+                    if (item.route === "absensi") {
+                        if (currentRole === "penjaga" || currentRole === "perpustakaan") {
+                            return "Rekap Absensi Saya";
                         }
-                        if (g && g.isGuruMapel) {
-                            if (g.kelas && g.kelas !== "Semua") {
-                                const k = String(g.kelas).replace(/kelas\s*/i, "").trim();
+                        if (currentRole === "guru") {
+                            const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+                            if (g && g.isGuruKelas) {
+                                const k = String(g.kelas || "1").replace(/kelas\s*/i, "").trim();
                                 return `Absensi Kelas ${k}`;
                             }
-                            return `Absensi Siswa (Mapel)`;
+                            if (g && g.isGuruMapel) {
+                                if (g.kelas && g.kelas !== "Semua") {
+                                    const k = String(g.kelas).replace(/kelas\s*/i, "").trim();
+                                    return `Absensi Kelas ${k}`;
+                                }
+                                return `Absensi Siswa (Mapel)`;
+                            }
                         }
                     }
                     return item.label;
@@ -176,7 +182,9 @@ const ModulVue = {
                 const userRoleLabel = computed(() => {
                     const r = role.value;
                     if (r === "admin") return "Administrator";
-                    if (r === "tu") return "Staf Tata Usaha";
+                    if (r === "tu" || r === "tenaga_administrasi") return "Tenaga Administrasi";
+                    if (r === "perpustakaan") return "Tenaga Perpustakaan";
+                    if (r === "penjaga") return "Penjaga Sekolah";
                     if (r === "kepsek") return "Kepala Sekolah";
                     if (r === "guru") {
                         const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
@@ -231,6 +239,20 @@ const ModulVue = {
                             { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-300", action: () => App.navigateTo("scan-absensi") }
                         ];
                     }
+                    if (r === "penjaga") {
+                        return [
+                            { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-emerald-300", action: () => App.navigateTo("scan-absensi") },
+                            { label: "Rekap Absensi Saya", icon: "fa-clipboard-user", color: "text-indigo-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } }
+                        ];
+                    }
+                    if (r === "perpustakaan") {
+                        return [
+                            { label: "Bangkas Digital Siswa", icon: "fa-folder-closed", color: "text-amber-300", action: () => App.navigateTo("berkas") },
+                            { label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", color: "text-sky-300", action: () => App.navigateTo("pip") },
+                            { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-emerald-300", action: () => App.navigateTo("scan-absensi") },
+                            { label: "Rekap Absensi Saya", icon: "fa-clipboard-user", color: "text-indigo-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } }
+                        ];
+                    }
                     if (r === "guru") {
                         const g = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
                         const kelasLabel = g && g.isGuruKelas ? ` (Kelas ${g.kelas})` : "";
@@ -243,14 +265,16 @@ const ModulVue = {
                     }
                     if (r === "kepsek") {
                         return [
+                            { label: "Data Guru & Tendik", icon: "fa-chalkboard-user", color: "text-sky-300", action: () => App.navigateTo("tendik") },
                             { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } },
                             { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-sky-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
                             { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-300", action: () => App.navigateTo("surat") },
                             { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-300", action: () => App.navigateTo("cetak") }
                         ];
                     }
-                    // Admin & TU default
+                    // Admin & Tenaga Administrasi (TU) default
                     return [
+                        { label: "Data Guru & Tendik", icon: "fa-chalkboard-user", color: "text-purple-300", action: () => App.navigateTo("tendik") },
                         { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-sky-300", action: () => { App.navigateTo("berkas"); if (window.ModulBerkas) ModulBerkas.openAddModal(); } },
                         { label: "Terbitkan Nomor Surat", icon: "fa-paper-plane", color: "text-emerald-300", action: () => { App.navigateTo("surat"); if (window.ModulSurat) ModulSurat.openModalSuratKeluar(); } },
                         { label: "Cetak Surat Keterangan", icon: "fa-file-invoice", color: "text-teal-300", action: () => App.navigateTo("cetak") },
@@ -293,14 +317,19 @@ const ModulVue = {
                 ];
 
                 const visibleTabs = computed(() => {
-                    const isGuru = role.value === "guru";
+                    const r = role.value;
+                    const isGuru = r === "guru";
+                    const isRestrictedStaff = r === "penjaga" || r === "perpustakaan";
                     return allTabs.filter(t => {
                         if (!Auth.canDo(t.need)) return false;
+                        if (isRestrictedStaff) {
+                            return t.id === "tendik";
+                        }
                         if (isGuru && t.id === "qr") return false;
                         return true;
                     }).map(t => {
                         let label = t.label;
-                        if (isGuru && t.id === "tendik") label = "Presensi Saya";
+                        if ((isGuru || isRestrictedStaff) && t.id === "tendik") label = "Rekap Absensi Saya";
                         return { ...t, label };
                     });
                 });

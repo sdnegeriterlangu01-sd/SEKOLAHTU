@@ -22,7 +22,9 @@ const Auth = {
     DEMO_USERS: {
         admin: { pw: "admin123", nama: "Administrator (Demo)", role: "admin" },
         kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
-        tu: { pw: "tu123", nama: "Staf TU (Demo)", role: "tu" },
+        tu: { pw: "tu123", nama: "Tenaga Administrasi (Demo)", role: "tu" },
+        perpustakaan: { pw: "perpus123", nama: "Tenaga Perpustakaan (Demo)", role: "perpustakaan" },
+        penjaga: { pw: "penjaga123", nama: "Penjaga Sekolah (Demo)", role: "penjaga" },
         guru: { pw: "guru123", nama: "Guru Kelas 1 (Demo)", role: "guru", tipeGuru: "kelas", kelasGuru: "1" },
         guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
         guru_pjok: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
@@ -653,7 +655,9 @@ const Auth = {
 
         if (r === "admin") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800"><i class="fa-solid fa-shield-halved mr-1"></i>Administrator</span>`;
         if (r === "kepsek") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-user-tie mr-1"></i>Kepala Sekolah</span>`;
-        if (r === "tu") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-folder-closed mr-1"></i>Tata Usaha</span>`;
+        if (r === "tu" || r === "tenaga_administrasi") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-folder-closed mr-1"></i>Tenaga Administrasi</span>`;
+        if (r === "perpustakaan") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800"><i class="fa-solid fa-book-bookmark mr-1"></i>Tenaga Perpustakaan</span>`;
+        if (r === "penjaga") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800"><i class="fa-solid fa-person-shelter mr-1"></i>Penjaga Sekolah</span>`;
         if (r === "kiosk") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800"><i class="fa-solid fa-qrcode mr-1"></i>Terminal Kiosk</span>`;
 
         if (r === "guru" || (typeof r === "string" && r.startsWith("guru"))) {
@@ -677,6 +681,50 @@ const Auth = {
         }
 
         return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">${Sec.esc(ACL.ROLES[r] || r)}</span>`;
+    },
+
+    // Ambil data jabatan yang sinkron dari manajemen akun
+    getJabatanFromAccount(t) {
+        if (!t) return "";
+        const nipClean = Util.cleanId(t.nip || "");
+        const namaClean = this.cleanPersonName(t.nama || "");
+
+        // Kumpulkan semua akun (custom users dari localStorage + demo users)
+        let allUsers = [];
+        try {
+            const custom = JSON.parse(localStorage.getItem(this.CUSTOM_USERS_KEY)) || {};
+            allUsers = Object.values(custom);
+        } catch (e) {}
+        allUsers = [...allUsers, ...Object.values(this.DEMO_USERS)];
+
+        const matched = allUsers.find(u => {
+            if (!u) return false;
+            const uNip = Util.cleanId(u.nip || (u.email ? u.email.split("@")[0] : (u.usr || "")));
+            if (nipClean && uNip && (uNip === nipClean || uNip.includes(nipClean) || nipClean.includes(uNip))) return true;
+            const uName = this.cleanPersonName(u.nama || "");
+            if (namaClean && uName && (uName.includes(namaClean) || namaClean.includes(uName))) return true;
+            return false;
+        });
+
+        if (matched) {
+            const r = matched.rawRole || matched.role || "";
+            const mapping = this.getUserMapping(matched.email || matched.id || matched.usr) || {};
+            const kls = matched.kelasGuru || mapping.kelasGuru || mapping.kelas_guru || "";
+            const mapel = matched.namaMapel || mapping.namaMapel || "";
+            if (r === "guru_kelas") return `Guru Kelas ${kls || '1'}`;
+            if (r === "guru_pjok") return "Guru Mapel PJOK";
+            if (r === "guru_pai") return "Guru Mapel PAI";
+            if (r === "guru_inggris") return "Guru Mapel Bahasa Inggris";
+            if (r === "guru_seni") return "Guru Mapel Seni Budaya";
+            if (r === "guru_mapel") return mapel ? `Guru Mapel ${mapel}` : "Guru Mapel";
+            if (r === "tu" || r === "tenaga_administrasi") return "Tenaga Administrasi";
+            if (r === "perpustakaan") return "Tenaga Perpustakaan";
+            if (r === "penjaga") return "Penjaga Sekolah";
+            if (r === "kepsek") return "Kepala Sekolah";
+            if (r === "admin") return "Administrator";
+            return ACL.ROLES[r] || r;
+        }
+        return "";
     },
 
     onRoleChange(role) {

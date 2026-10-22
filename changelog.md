@@ -3,6 +3,53 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.7.0] - 2026-10-23
+
+### Modul Baru Data Guru & Tendik, Foto Profil, Pemisahan Status PNS/PPPK & Golongan, Role Tenaga Perpustakaan & Penjaga Sekolah, serta Tombol Pintas Dinamis Dashboard
+
+- **Perbaikan Golongan/Pangkat vs Status Kepegawaian PNS & PPPK (`assets/js/modul-presensi.js`, `assets/js/api.js`, `backend/Code.gs`, `assets/js/app.js`):**
+  - Mengatasi bug saat mengubah status kepegawaian dari PNS ke PPPK yang menyebabkan kolom Gol/Jabatan ikut berubah menjadi string `"PPPK"` dan tidak dapat diubah kembali ke jenjang golongan sebenarnya (misal: `"IX / Guru Kelas"`).
+  - Memisahkan secara tegas dan mandiri kolom `GOLONGAN` (kolom 4) dan `STATUS_KEPEGAWAIAN` (kolom 5) pada struktur tabel `DB_Tendik` di Google Sheets, backend Google Apps Script (`backend/Code.gs`), serta sinkronisasi API lokal (`assets/js/api.js`).
+  - Menambahkan mekanisme *self-healing* pemulihan data otomatis (`App.cleanupCorruptedTendikData`) pada saat inisialisasi aplikasi untuk memulihkan data profil guru/tendik di LocalStorage yang sempat tersimpan dengan nilai golongan cacat.
+  - Memperbarui dialog form Kartu ID QR pada Modul Presensi agar status kepegawaian dan rincian pangkat/golongan tersimpan ke field masing-masing tanpa saling menimpa.
+
+- **Pembaruan Hak Akses & Peran Pengguna (RBAC Overhaul) (`assets/js/security.js`, `assets/js/auth.js`, `index.html`):**
+  - Mengubah penamaan peran **Tata Usaha (TU)** menjadi **Tenaga Administrasi** di seluruh antarmuka, daftar pengguna, dan badge sistem (tetap mempertahankan backward-compatibility kunci role internal `tu` dan alias `tenaga_administrasi`).
+  - Menambahkan 2 peran baru ke dalam sistem:
+    - **Tenaga Perpustakaan (`perpustakaan`):** Dibatasi hanya dapat mengakses menu *Bangkas Digital Siswa*, *Program PIP Siswa*, *Scan Absensi Datang/Pulang*, dan *Rekap Absensi Saya*.
+    - **Penjaga Sekolah (`penjaga`):** Dibatasi secara ketat hanya dapat mengakses *Scan Absensi Datang/Pulang* dan *Rekap Absensi Saya*.
+  - Menyesuaikan routing `ACL.ROUTES` dan aksi `ACL.ACTIONS` agar pengguna dengan peran penjaga dan perpustakaan dicegah mengakses data atau menu di luar wewenangnya (termasuk filter tab pada menu Presensi).
+  - Menambahkan akun uji demo untuk Tenaga Administrasi (`tu / tu123`), Tenaga Perpustakaan (`perpus / perpus123`), dan Penjaga Sekolah (`penjaga / penjaga123`) pada `Auth.DEMO_USERS`.
+
+- **Tombol Pintas (Quick-Actions) Dashboard Menyesuaikan Peran (`assets/js/modul-vue.js` & `assets/js/app.js`):**
+  - Merombak bilah tombol aksi cepat pada hero banner dashboard beranda agar dinamis secara reaktif (`computed`) berdasarkan peran akun yang sedang aktif:
+    - **Penjaga Sekolah:** Tombol *Scan Absensi Datang/Pulang* dan *Rekap Absensi Saya*.
+    - **Tenaga Perpustakaan:** Tombol *Bangkas Digital Siswa*, *Program PIP Siswa*, *Scan Absensi Datang/Pulang*, dan *Rekap Absensi Saya*.
+    - **Guru:** Tombol *Input Presensi Hari Ini*, *Rekap Absensi Bulanan*, *Presensi Datang/Pulang Saya*, dan *Berkas Siswa*.
+    - **Kepala Sekolah:** Tombol *Data Guru & Tendik*, *Rekap Presensi Guru & Tendik*, *Rekap Absensi Siswa*, *Buku Register Surat SRIKANDI*, dan *Cetak Surat Keterangan*.
+    - **Tenaga Administrasi & Administrator:** Tombol *Data Guru & Tendik*, *Tambah Siswa Baru*, *Terbitkan Nomor Surat*, *Cetak Surat Keterangan*, *Input Presensi Harian*, dan *Scan Absensi Datang/Pulang*.
+
+- **Menu Baru "Data Guru & Tendik" (`assets/js/modul-tendik.js`, `index.html`):**
+  - Mengembangkan modul aplikasi mandiri `ModulTendik` yang terhubung langsung ke basis data `DB_Tendik`.
+  - Dilengkapi ringkasan statistik (Total Guru/Tendik, Jumlah PNS, PPPK, Honorer/PTT/GTT, Penugasan Tambahan, dan Foto Terlampir).
+  - Menyediakan filter cepat (Status Kepegawaian, Tugas Tambahan, dan Pencarian Teks Multifield), sakelar mode tampilan Kartu Grid Modern vs Tabel Kompak, serta fitur Cetak Direktori Pegawai Sekolah.
+  - **Dukungan Foto Profil & Tombol Unggah Foto:**
+    - Panel pratinjau avatar interaktif dengan inisial nama otomatis jika belum memiliki foto.
+    - Tombol unggah foto profil lokal dengan kompresi instan sisi peramban (HTML5 Canvas ke DataURL Base64) agar ringan dan hemat ruang penyimpanan.
+  - **Sinkronisasi Jabatan dari Manajemen Akun:**
+    - Tombol *"Ambil dari Akun"* untuk mendeteksi dan menyelaraskan jabatan pokok tendik secara otomatis berdasarkan data akun login pengguna di Manajemen Akun (RBAC).
+
+- **Pengelolaan Tugas Tambahan Guru & Tendik:**
+  - Menyediakan dropdown pilihan preset tugas tambahan resmi:
+    1. *Kepala Sekolah*
+    2. *Bendahara BOS*
+    3. *Pembina Pramuka Siaga / Penggalang*
+    4. *Pembina Drum Band*
+    5. *Tugas Tambahan Lainnya...* (menampilkan kotak teks input khusus untuk tugas kustom, seperti Operator Dapodik, Koordinator UKS, dll.).
+  - Data tugas tambahan tersimpan langsung ke kolom `TUGAS_TAMBAHAN` pada database `DB_Tendik` dan tampil rapi pada badge profil guru/tendik.
+
+---
+
 ## [v2.6.3] - 2026-10-23
 
 ### Dinamisasi Tahun Ajaran Cetak Surat, Tombol Hapus Pengajuan Ortu, Perbaikan Nomor Terbit SRIKANDI & Stepper Tracking Responsif

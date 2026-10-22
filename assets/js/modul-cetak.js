@@ -15,9 +15,29 @@ const ModulCetak = {
 
     init() {
         this.populateStudentSelect();
+        this.populateTASelect();
         this.populateNomorTerbitSelect();
         this.bindEvents();
+        this.cleanupTruncatedNomorSurat();
         this.selectDefaultStudent();
+    },
+
+    cleanupTruncatedNomorSurat() {
+        try {
+            const pList = DataStore.getPermohonanSurat();
+            let changed = false;
+            pList.forEach(p => {
+                if (p.nomorSuratTerbit === "421" || p.nomorSuratTerbit === "421.") {
+                    const rawKet = p.keteranganTindak || p.keterangan || "";
+                    const mS = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+                    if (mS) {
+                        p.nomorSuratTerbit = mS[1].trim().replace(/\.+$/, "");
+                        changed = true;
+                    }
+                }
+            });
+            if (changed) DataStore.savePermohonanSurat(pList);
+        } catch (e) {}
     },
 
     bindEvents() {
@@ -164,8 +184,36 @@ const ModulCetak = {
         }
         const students = DataStore.getSiswa();
         this.selectedStudent = students.find(s => s.nisn === nisn);
+        const selectTA = document.getElementById("cetak-select-ta");
+        if (selectTA && this.selectedStudent && this.selectedStudent.tahunAjaran) {
+            selectTA.value = this.selectedStudent.tahunAjaran;
+        }
         this.updateFormFieldsByTemplate();
         this.generatePreview();
+    },
+
+    populateTASelect() {
+        const select = document.getElementById("cetak-select-ta");
+        if (!select) return;
+
+        const taList = (DataStore.getTAList ? DataStore.getTAList() : []);
+        const activeTA = (DataStore.getActiveTA ? DataStore.getActiveTA() : "") || (DataStore.getConfig && DataStore.getConfig().tahunAjaranAktif) || Util.defaultTahunAjaran();
+        if (!taList.includes(activeTA)) taList.push(activeTA);
+
+        select.innerHTML = taList.map(ta => `
+            <option value="${ta}" ${ta === activeTA ? 'selected' : ''}>Tahun Ajaran ${ta}</option>
+        `).join("");
+
+        if (this.selectedStudent && this.selectedStudent.tahunAjaran && taList.includes(this.selectedStudent.tahunAjaran)) {
+            select.value = this.selectedStudent.tahunAjaran;
+        }
+    },
+
+    getTahunAjaranSurat() {
+        const select = document.getElementById("cetak-select-ta");
+        if (select && select.value) return select.value;
+        if (this.selectedStudent && this.selectedStudent.tahunAjaran) return this.selectedStudent.tahunAjaran;
+        return (DataStore.getActiveTA ? DataStore.getActiveTA() : "") || (DataStore.getConfig && DataStore.getConfig().tahunAjaranAktif) || Util.defaultTahunAjaran();
     },
 
     formatFullDateIndo(dateStr) {
@@ -372,8 +420,9 @@ const ModulCetak = {
         if (!container) return;
 
         // Tentukan Judul Surat dan Konten Tambahan Berdasarkan Template
+        const tahunAjaranSurat = this.getTahunAjaranSurat();
         let judulSurat = "SURAT KETERANGAN AKTIF BELAJAR";
-        let kalimatIsi = `Adalah benar-benar siswa aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran 2025/2026 dan bertingkah laku baik. Surat keterangan ini diterbitkan atas permintaan yang bersangkutan untuk keperluan: <strong>${keperluan}</strong>.`;
+        let kalimatIsi = `Adalah benar-benar siswa aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran ${tahunAjaranSurat} dan bertingkah laku baik. Surat keterangan ini diterbitkan atas permintaan yang bersangkutan untuk keperluan: <strong>${keperluan}</strong>.`;
         let extraPipHtml = "";
 
         if (type === "pip_pencairan") {
@@ -387,7 +436,7 @@ const ModulCetak = {
             const va = pipRec.virtualAcc || "8801090102938450";
             const bank = pipRec.bankPenyalur || "BRI";
 
-            kalimatIsi = `Adalah benar-benar peserta didik aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran 2025/2026, serta tercatat secara sah sebagai <strong>Penerima Bantuan Program Indonesia Pintar (PIP)</strong> dengan data rincian sebagai berikut:`;
+            kalimatIsi = `Adalah benar-benar peserta didik aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran ${tahunAjaranSurat}, serta tercatat secara sah sebagai <strong>Penerima Bantuan Program Indonesia Pintar (PIP)</strong> dengan data rincian sebagai berikut:`;
 
             extraPipHtml = `
                 <table class="surat-table-data" style="margin-left: 20px; width: 95%; margin-top: 6px; margin-bottom: 8px;">
@@ -426,10 +475,10 @@ const ModulCetak = {
         } else if (type === "rekomendasi") {
             judulSurat = "SURAT REKOMENDASI SEKOLAH";
             const bidangPrestasi = document.getElementById("cetak-prestasi")?.value || "Bidang Akademik";
-            kalimatIsi = `Diberikan rekomendasi resmi untuk mengikuti kegiatan / seleksi <strong>${bidangPrestasi}</strong> berdasarkan prestasi akademik, keaktifan belajar, dan integritas kepribadian yang bersangkutan selama menempuh pendidikan di sekolah kami.`;
+            kalimatIsi = `Diberikan rekomendasi resmi untuk mengikuti kegiatan / seleksi <strong>${bidangPrestasi}</strong> berdasarkan prestasi akademik, keaktifan belajar pada Tahun Ajaran ${tahunAjaranSurat}, dan integritas kepribadian yang bersangkutan selama menempuh pendidikan di sekolah kami.`;
         } else if (type === "kelakuan") {
             judulSurat = "SURAT KETERANGAN KELAKUAN BAIK";
-            kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
+            kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami pada Tahun Ajaran ${tahunAjaranSurat}, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
         }
 
         // Payload ringkas verifikasi mandiri QR

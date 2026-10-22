@@ -3,6 +3,29 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.6.3] - 2026-10-23
+
+### Dinamisasi Tahun Ajaran Cetak Surat, Tombol Hapus Pengajuan Ortu, Perbaikan Nomor Terbit SRIKANDI & Stepper Tracking Responsif
+- **Dinamisasi Tahun Ajaran pada Menu Cetak Surat (`index.html` & `assets/js/modul-cetak.js`):**
+  - Menambahkan elemen selektor dropdown Tahun Ajaran (`cetak-select-ta`) pada panel kontrol modul cetak surat mandiri (`view-cetak-controls`).
+  - Menghapus teks statis/hardcoded `"2025/2026"` pada badan naskah Surat Keterangan Aktif Belajar, Surat Rekomendasi Pencairan PIP, Rekomendasi Siswa, dan Kelakuan Baik, menggantikannya dengan nilai dinamis `getTahunAjaranSurat()` yang sinkron dengan data periodik siswa atau tahun ajaran aktif sistem.
+  - Menambahkan metode `ModulCetak.populateTASelect()` untuk mengisi daftar pilihan tahun ajaran secara otomatis dari `DataStore.getTAList()`.
+- **Tombol Hapus pada Tab Pengajuan Ortu di Menu Penomoran Surat (`assets/js/modul-surat.js`, `assets/js/api.js`, `backend/Code.gs`):**
+  - Menambahkan tombol aksi Hapus (`fa-trash`, `bg-rose-600`) pada kolom Tindakan di tabel Pengajuan Surat Mandiri Orang Tua.
+  - Mengimplementasikan fungsi `ModulSurat.deletePermohonan(id)` dengan dialog konfirmasi penghapusan demi keamanan data.
+  - Menambahkan endpoint backend `deletePermohonanSurat` pada Google Apps Script (`backend/Code.gs`), fallback lokal dan pemetaan sinkronisasi di [`assets/js/api.js`](assets/js/api.js), serta hak akses otorisasi RBAC staf TU dan Admin pada [`assets/js/security.js`](assets/js/security.js).
+- **Perbaikan Pemotongan Nomor Surat Terbit SRIKANDI (Bug Angka "421"):**
+  - Memperbaiki kesalahan ekspresi reguler (regex) `[^\s\.]+` pada fungsi backend `handleGetPermohonanSurat` dan `handleTrackPermohonanSurat` di [`backend/Code.gs`](backend/Code.gs) serta pada [`permohonan.html`](permohonan.html) dan [`assets/js/modul-surat.js`](assets/js/modul-surat.js).
+  - Regex kini mempertahankan tanda titik dan garis miring (`421.2/...` atau `041.2/...`) tanpa memotong string nomor surat dinas menjadi angka `421` semata.
+  - Menyematkan fungsi *self-healing* pemulihan data otomatis (`cleanupTruncatedNomorSurat`) saat aplikasi dimuat untuk memperbaiki nomor registrasi lama yang sempat tersimpan cacat di memori lokal.
+- **Pembaruan Stepper Tracking Resi Responsif & Ikon Centang Dinamis (`permohonan.html`):**
+  - Mengganti elemen lingkaran nomor statis pada stepper pelacakan resi dengan sistem perenderan dinamis `setStepState()`.
+  - Tanda centang hijau (`fa-check`) kini tampil responsif pada setiap tahapan yang telah dilalui (Terkirim, Verifikasi TU, Disetujui, dan Siap Diambil), tidak lagi mandek di tahapan 1.
+  - Menyelaraskan status visual stepper dan catatan petugas secara akurat terhadap 5 status verifikasi TU di admin: *Menunggu Verifikasi TU*, *Disetujui TU*, *Siap Diambil*, *Selesai / Diterima*, dan *Ditolak*.
+  - Meningkatkan algoritma penelusuran resi untuk membandingkan stempel waktu (*timestamp*) dan memprioritaskan data status paling mutakhir antara cache lokal dan Google Sheets.
+
+---
+
 ## [v2.6.2] - 2026-10-22
 
 ### Integrasi Konfigurasi Supabase & GAS di Menu Pengaturan, Sakelar On/Off Cloud & Penyelarasan Backend

@@ -695,11 +695,38 @@ const ModulSurat = {
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadge}">
                             <i class="fa-solid ${statusIcon}"></i> ${p.status}
                         </span>
-                        ${p.nomorSuratTerbit ? `
-                            <div class="text-[10px] font-mono font-bold text-blue-900 mt-1 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200">
-                                <i class="fa-solid fa-file-signature text-blue-700 mr-1"></i>${p.nomorSuratTerbit}
-                            </div>
-                        ` : ''}
+                        ${(() => {
+                            let noSuratTampil = p.nomorSuratTerbit || "";
+                            if (!noSuratTampil || noSuratTampil === "421" || noSuratTampil === "421.") {
+                                const rawKet = p.keteranganTindak || p.keterangan || "";
+                                const mSrikandi = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+                                if (mSrikandi) {
+                                    noSuratTampil = mSrikandi[1].trim().replace(/\.+$/, "");
+                                } else {
+                                    const m421 = rawKet.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
+                                    if (m421) noSuratTampil = m421[0].trim().replace(/\.+$/, "");
+                                }
+                                if ((!noSuratTampil || noSuratTampil === "421") && window.DataStore) {
+                                    try {
+                                        const skList = DataStore.getSuratKeluar() || [];
+                                        const cleanNama = (p.nama || "").toLowerCase();
+                                        const cleanNisn = p.nisn || "";
+                                        const matchedSK = skList.find(s => {
+                                            const perihal = (s.perihal || "").toLowerCase();
+                                            const tujuan = (s.tujuan || "").toLowerCase();
+                                            return (cleanNisn && (perihal.includes(cleanNisn) || tujuan.includes(cleanNisn))) ||
+                                                   (cleanNama && (perihal.includes(cleanNama) || tujuan.includes(cleanNama)));
+                                        });
+                                        if (matchedSK && matchedSK.nomorSurat) noSuratTampil = matchedSK.nomorSurat;
+                                    } catch (e) {}
+                                }
+                            }
+                            return noSuratTampil ? `
+                                <div class="text-[10px] font-mono font-bold text-blue-900 mt-1 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200">
+                                    <i class="fa-solid fa-file-signature text-blue-700 mr-1"></i>${noSuratTampil}
+                                </div>
+                            ` : '';
+                        })()}
                     </td>
                     <td class="px-4 py-3 text-center">
                         <select onchange="ModulSurat.updateStatusPermohonan('${p.id}', this.value)"
@@ -723,6 +750,11 @@ const ModulSurat = {
                                 class="p-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition shadow-xs">
                                 <i class="fa-brands fa-whatsapp"></i> WA
                             </button>
+                            <button onclick="ModulSurat.deletePermohonan('${p.id}')"
+                                title="Hapus Pengajuan Surat"
+                                class="p-1.5 px-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition shadow-xs">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -730,11 +762,38 @@ const ModulSurat = {
         }).join("");
     },
 
+    async deletePermohonan(id) {
+        const list = DataStore.getPermohonanSurat();
+        const item = list.find(p => p.id === id);
+        const label = item ? `${item.id} (${item.nama})` : id;
+        if (!confirm(`Apakah Anda yakin ingin menghapus permohonan surat ${label}? Data yang dihapus tidak dapat dipulihkan.`)) {
+            return;
+        }
+
+        try {
+            const filtered = list.filter(p => p.id !== id);
+            DataStore.savePermohonanSurat(filtered);
+            this.renderPermohonanTable();
+
+            const res = await ApiClient.request("deletePermohonanSurat", { id });
+            if (res && res.success) {
+                App.showToast(`Permohonan ${label} berhasil dihapus!`, "success");
+            } else {
+                App.showToast(`Permohonan ${label} dihapus dari penyimpanan lokal.`, "info");
+            }
+            if (window.VueStore) VueStore.refresh();
+        } catch (err) {
+            console.error("Gagal menghapus permohonan:", err);
+            App.showToast(`Gagal menghapus permohonan: ${err.message}`, "error");
+        }
+    },
+
     async updateStatusPermohonan(id, newStatus) {
         try {
             const list = DataStore.getPermohonanSurat();
             const item = list.find(p => p.id === id);
             let noSurat = item ? (item.nomorSuratTerbit || "") : "";
+            if (noSurat === "421" || noSurat === "421.") noSurat = "";
             let ketTindak = item ? (item.keteranganTindak || item.keterangan || "") : "";
 
             // Alur Penomoran Resmi: Saat status diubah menjadi Siap Diambil, ambil langsung dari data nomor surat keluar

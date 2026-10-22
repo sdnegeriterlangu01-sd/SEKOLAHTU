@@ -57,7 +57,7 @@ const ApiClient = {
             }
             if (json && !json.success && json.message && json.message.includes("Aksi tidak dikenali")) {
                 console.warn(`[ApiClient] GAS Web App belum mendukung aksi '${action}'. Deployment Apps Script perlu diperbarui ke versi baru.`);
-                if (action === "deleteSuratKeluar" || action === "deleteSuratMasuk" || action === "deleteTendik") {
+                if (action === "deleteSuratKeluar" || action === "deleteSuratMasuk" || action === "deleteTendik" || action === "deletePermohonanSurat") {
                     this.handleLocalFallback(action, payload);
                     return {
                         success: true,
@@ -811,6 +811,13 @@ const ApiClient = {
                 return { success: false, message: "Permohonan surat tidak ditemukan." };
             }
 
+            case "deletePermohonanSurat": {
+                let list = DataStore.getPermohonanSurat();
+                list = list.filter(p => p.id !== payload.id);
+                DataStore.savePermohonanSurat(list);
+                return { success: true, message: "Pengajuan surat berhasil dihapus!" };
+            }
+
             // ================== PEMBARUAN DATA SISWA (NO HP ORTU, KK, OCR) ==================
             case "updateStudentPhone":
             case "updateStudentFields": {
@@ -906,6 +913,7 @@ const Sync = {
         updatePIPStatus: ["pip"],
         submitPermohonanSurat: ["permohonan"],
         updatePermohonanSurat: ["permohonan"],
+        deletePermohonanSurat: ["permohonan"],
         saveAbsensiBatch: ["absensi", "absensiSiswaBulan"],
         saveAbsensiSiswaBulan: ["absensiSiswaBulan"]
     },

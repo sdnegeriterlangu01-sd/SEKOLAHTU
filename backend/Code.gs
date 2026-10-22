@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.6.2
+ * Backend REST API - Google Apps Script (GAS) v2.6.3
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -103,7 +103,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.6.2",
+    version: "2.6.3",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
@@ -333,6 +333,10 @@ function doPost(e) {
 
       case "updatePermohonanSurat":
         responseData = handleUpdatePermohonanSurat(ss, payload);
+        break;
+
+      case "deletePermohonanSurat":
+        responseData = handleDeletePermohonanSurat(ss, payload);
         break;
 
       // ==================== UPDATE DATA SISWA / KONTAK ====================
@@ -2185,8 +2189,15 @@ function handleGetPermohonanSurat(ss, payload) {
     const namaWali = String(r[5] || "");
     const hpWali = String(r[6] || "");
     const ketStr = String(r[10] || "");
-    const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^\s\.]+)/i);
-    const noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+    const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+    let noTerbit = (r.length > 12 && r[12]) ? String(r[12]).trim() : "";
+    if (!noTerbit && matchSrikandi) {
+      noTerbit = matchSrikandi[1].trim().replace(/\.+$/, "");
+    }
+    if (!noTerbit) {
+      const m421 = ketStr.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
+      if (m421) noTerbit = m421[0].trim().replace(/\.+$/, "");
+    }
 
     list.push({
       id: String(r[0] || ""),
@@ -2342,8 +2353,15 @@ function handleTrackPermohonanSurat(ss, payload) {
 
     if (isIdMatch || isNisnMatch || isHpMatch) {
       const ketStr = String(r[10] || "");
-      const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^\s\.]+)/i);
-      let noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+      const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+      let noTerbit = (r.length > 12 && r[12]) ? String(r[12]).trim() : "";
+      if (!noTerbit && matchSrikandi) {
+        noTerbit = matchSrikandi[1].trim().replace(/\.+$/, "");
+      }
+      if (!noTerbit) {
+        const m421 = ketStr.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
+        if (m421) noTerbit = m421[0].trim().replace(/\.+$/, "");
+      }
 
       // Alur Penomoran Resmi: Jika nomor surat belum tercatat di kolom keterangan, cek TAB_SURAT_KELUAR
       if (!noTerbit) {
@@ -2428,6 +2446,7 @@ function handleUpdatePermohonanSurat(ss, payload) {
       sheet.getRange(i + 1, 10).setValue(newStatus);
       if (ket) sheet.getRange(i + 1, 11).setValue(String(ket));
       sheet.getRange(i + 1, 12).setValue(nowStr);
+      if (noSurat) sheet.getRange(i + 1, 13).setValue(String(noSurat));
       return { 
         success: true, 
         message: `Status permohonan ${id} berhasil diubah menjadi: ${newStatus}`,
@@ -2442,6 +2461,22 @@ function handleUpdatePermohonanSurat(ss, payload) {
   }
 
   return { success: false, message: `Permohonan dengan ID ${id} tidak ditemukan.` };
+}
+
+function handleDeletePermohonanSurat(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Tidak ada data permohonan surat." };
+  const id = String(payload.id || "").trim();
+  if (!id) return { success: false, message: "ID permohonan surat tidak boleh kosong." };
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === id) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: `Permohonan surat ${id} berhasil dihapus dari Google Sheets.` };
+    }
+  }
+  return { success: false, message: `Permohonan surat ${id} tidak ditemukan.` };
 }
 
 /**

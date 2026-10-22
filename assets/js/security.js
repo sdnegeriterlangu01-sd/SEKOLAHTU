@@ -118,6 +118,7 @@ const ACL = {
         getPermohonanSurat: ["admin", "kepsek", "tu"],
         submitPermohonanSurat: ["*"],
         updatePermohonanSurat: ["admin", "tu"],
+        deletePermohonanSurat: ["admin", "tu"],
         // Surat
         getSuratKeluar: ["admin", "kepsek", "tu"],
         getNextNomorSuratKeluar: ["admin", "kepsek", "tu"],

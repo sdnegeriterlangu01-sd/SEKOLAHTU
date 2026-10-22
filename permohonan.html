@@ -340,7 +340,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
         <div class="max-w-4xl mx-auto px-4">
-            SIM-TAS-SD Versi 2.6.2 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
+            SIM-TAS-SD Versi 2.6.3 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
         </div>
     </footer>
 
@@ -614,10 +614,32 @@
                 searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mencari ke Google Sheets...`;
             }
 
-            let found = null;
+            // 1. Cek dulu di cache lokal (prioritas status terbaru jika admin mengubah di perangkat yang sama)
+            let localFound = null;
+            try {
+                const list = (window.DataStore && DataStore.getPermohonanSurat) ? DataStore.getPermohonanSurat() : [];
+                const queryUpper = rawQuery.toUpperCase();
+                const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
+                const queryHp = rawQuery.replace(/[^0-9]/g, "");
+
+                localFound = list.find(r => {
+                    if (!r) return false;
+                    const id = String(r.id || "").toUpperCase().trim();
+                    const idClean = id.replace(/[^A-Z0-9]/g, "");
+                    const nisn = String(r.nisn || "").trim();
+                    const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
+                    return (id === queryUpper) ||
+                           (idClean && idClean === queryClean) ||
+                           (queryClean.length >= 3 && idClean.endsWith(queryClean)) ||
+                           (nisn && nisn === rawQuery) ||
+                           (queryHp.length >= 6 && hp.includes(queryHp));
+                });
+            } catch (e) {}
+
+            let cloudFound = null;
             const gasUrl = getPublicGasUrl();
 
-            // 1. Cek LANGSUNG ke Google Sheets database DB_PermohonanSurat secara real-time
+            // 2. Cek ke database Google Sheets DB_PermohonanSurat
             try {
                 const response = await fetch(gasUrl, {
                     method: "POST",
@@ -631,44 +653,39 @@
                 if (response.ok) {
                     const json = await response.json();
                     if (json && json.success && json.data) {
-                        found = json.data;
-                        // Simpan / update ke cache lokal
-                        try {
-                            let list = DataStore.getPermohonanSurat();
-                            const idx = list.findIndex(r => r.id === found.id);
-                            if (idx >= 0) {
-                                list[idx] = found;
-                            } else {
-                                list.unshift(found);
-                            }
-                            DataStore.savePermohonanSurat(list);
-                        } catch (e) {}
+                        cloudFound = json.data;
                     }
                 }
             } catch (err) {
                 console.warn("[Tracking] Direct Google Sheets fetch failed:", err);
             }
 
-            // 2. Fallback: jika offline atau Google Sheets belum selesai loading, cek cache lokal
-            if (!found) {
+            // Pilih data yang paling mutakhir (bandingkan status dan updatedAt)
+            let found = null;
+            if (localFound && cloudFound) {
+                const localTime = new Date(localFound.updatedAt || localFound.createdAt || 0).getTime();
+                const cloudTime = new Date(cloudFound.updatedAt || cloudFound.createdAt || 0).getTime();
+                // Jika data lokal memiliki status lebih maju atau lebih baru diperbarui oleh staf TU
+                if (localFound.status !== cloudFound.status && localTime >= cloudTime) {
+                    found = localFound;
+                } else {
+                    found = cloudFound;
+                }
+            } else {
+                found = cloudFound || localFound;
+            }
+
+            // Sinkronkan ke DataStore lokal jika cloud membawa data baru
+            if (found && window.DataStore && DataStore.getPermohonanSurat) {
                 try {
                     let list = DataStore.getPermohonanSurat();
-                    const queryUpper = rawQuery.toUpperCase();
-                    const queryClean = queryUpper.replace(/[^A-Z0-9]/g, "");
-                    const queryHp = rawQuery.replace(/[^0-9]/g, "");
-
-                    found = list.find(r => {
-                        if (!r) return false;
-                        const id = String(r.id || "").toUpperCase().trim();
-                        const idClean = id.replace(/[^A-Z0-9]/g, "");
-                        const nisn = String(r.nisn || "").trim();
-                        const hp = String(r.noWhatsApp || r.hpOrtu || r.noHp || "").replace(/[^0-9]/g, "");
-                        return (id === queryUpper) ||
-                               (idClean && idClean === queryClean) ||
-                               (queryClean.length >= 3 && idClean.endsWith(queryClean)) ||
-                               (nisn && nisn === rawQuery) ||
-                               (queryHp.length >= 6 && hp.includes(queryHp));
-                    });
+                    const idx = list.findIndex(r => r.id === found.id);
+                    if (idx >= 0) {
+                        list[idx] = Object.assign({}, list[idx], found);
+                    } else {
+                        list.unshift(found);
+                    }
+                    DataStore.savePermohonanSurat(list);
                 } catch (e) {}
             }
 
@@ -688,74 +705,135 @@
             document.getElementById("res-track-code").textContent = found.id;
             document.getElementById("res-track-nama").textContent = `${found.nama} (Kelas ${found.kelas})`;
             document.getElementById("res-track-jenis").textContent = found.jenisSurat;
-            document.getElementById("res-track-time").textContent = `Masuk: ${found.tanggalMasuk}`;
+            document.getElementById("res-track-time").textContent = `Masuk: ${found.tanggalMasuk || found.createdAt || '-'}`;
 
             const badge = document.getElementById("res-track-badge");
             const st = (found.status || "Menunggu").toLowerCase();
 
-            // Reset steppers
-            const s1 = document.getElementById("step-1");
-            const s2 = document.getElementById("step-2");
-            const s3 = document.getElementById("step-3");
-            const s4 = document.getElementById("step-4");
+            // Helper dinamis untuk memperbarui stepper visual lengkap dengan ikon centang / status
+            function setStepState(stepIndex, state, stepNumText, stepTitle, stepDesc) {
+                const el = document.getElementById(`step-${stepIndex}`);
+                if (!el) return;
 
-            const activeClass = "p-3 rounded-2xl border transition bg-emerald-50 border-emerald-300 text-emerald-900";
-            const inactiveClass = "p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400";
-            const currentStepClass = "p-3 rounded-2xl border transition bg-blue-50 border-blue-300 text-blue-900 ring-2 ring-blue-500/20";
+                if (state === "completed") {
+                    el.className = "p-3 rounded-2xl border transition bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs";
+                    el.innerHTML = `
+                        <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto text-xs font-bold mb-1.5 shadow-xs">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <strong class="block text-xs">${stepTitle}</strong>
+                        <span class="text-[10px] opacity-75">${stepDesc}</span>
+                    `;
+                } else if (state === "current") {
+                    el.className = "p-3 rounded-2xl border transition bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-500/20 shadow-xs";
+                    el.innerHTML = `
+                        <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto text-xs font-bold mb-1.5 animate-pulse shadow-xs">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        </div>
+                        <strong class="block text-xs">${stepTitle}</strong>
+                        <span class="text-[10px] opacity-75">${stepDesc}</span>
+                    `;
+                } else if (state === "rejected") {
+                    el.className = "p-3 rounded-2xl border transition bg-rose-50 border-rose-300 text-rose-900 shadow-xs";
+                    el.innerHTML = `
+                        <div class="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto text-xs font-bold mb-1.5 shadow-xs">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <strong class="block text-xs">${stepTitle}</strong>
+                        <span class="text-[10px] opacity-75">${stepDesc}</span>
+                    `;
+                } else { // "pending"
+                    el.className = "p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400";
+                    el.innerHTML = `
+                        <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                            ${stepNumText}
+                        </div>
+                        <strong class="block text-xs">${stepTitle}</strong>
+                        <span class="text-[10px] opacity-75">${stepDesc}</span>
+                    `;
+                }
+            }
 
-            s1.className = activeClass;
-            s2.className = inactiveClass;
-            s3.className = inactiveClass;
-            s4.className = inactiveClass;
+            // Ambil nomor surat resmi lengkap (tanpa terpotong titik/simbol)
+            let noReg = found.nomorSuratTerbit;
+            if (!noReg || noReg === "421" || noReg === "421.") {
+                noReg = "";
+                const rawKet = found.keteranganTindak || found.keterangan || "";
+                if (rawKet) {
+                    const match = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i) ||
+                                  rawKet.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
+                    if (match) noReg = (match[1] || match[0]).trim().replace(/\.+$/, "");
+                }
+            }
+            if (!noReg || noReg === "421") {
+                try {
+                    const skList = (window.DataStore && DataStore.getSuratKeluar) ? DataStore.getSuratKeluar() : [];
+                    const cleanNama = (found.nama || "").toLowerCase();
+                    const cleanNisn = found.nisn || "";
+                    const matchedSK = skList.find(s => {
+                        const p = (s.perihal || "").toLowerCase();
+                        const t = (s.tujuan || "").toLowerCase();
+                        return (cleanNisn && (p.includes(cleanNisn) || t.includes(cleanNisn))) ||
+                               (cleanNama && (p.includes(cleanNama) || t.includes(cleanNama)));
+                    });
+                    if (matchedSK && matchedSK.nomorSurat) noReg = matchedSK.nomorSurat;
+                } catch (e) {}
+            }
 
             if (st.includes("menunggu")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
-                badge.innerHTML = `<i class="fa-solid fa-clock"></i> Menunggu Tinjauan`;
-                s2.className = currentStepClass;
-                document.getElementById("res-tindak-text").textContent = "Permohonan Anda telah tercatat dan sedang menunggu verifikasi oleh staf Tata Usaha.";
-            } else if (st.includes("proses") || st.includes("diproses")) {
+                badge.innerHTML = `<i class="fa-solid fa-clock"></i> Menunggu Verifikasi TU`;
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "current", "2", "2. Verifikasi TU", "Pengecekan berkas");
+                setStepState(3, "pending", "3", "3. Disetujui", "Penomoran surat");
+                setStepState(4, "pending", "4", "4. Siap Diambil", "Dicetak & stempel");
+                document.getElementById("res-tindak-text").textContent = "Permohonan Anda telah tercatat dan sedang menunggu verifikasi berkas oleh staf Tata Usaha SDN Terlangu 01.";
+            } else if (st.includes("disetujui")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
-                badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sedang Diproses TU`;
-                s2.className = activeClass;
-                s3.className = currentStepClass;
-                document.getElementById("res-tindak-text").textContent = "Data siswa telah divalidasi dengan buku induk. Surat sedang diajukan tanda tangan Kepala Sekolah.";
-            } else if (st.includes("disetujui") || st.includes("selesai") || st.includes("siap")) {
+                badge.innerHTML = `<i class="fa-solid fa-file-circle-check"></i> Disetujui TU`;
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "completed", "2", "2. Verifikasi TU", "Berkas valid");
+                setStepState(3, "completed", "3", "3. Disetujui", "Disetujui staf TU");
+                setStepState(4, "current", "4", "4. Siap Diambil", "Proses cetak & stempel");
+                document.getElementById("res-tindak-text").innerHTML = `Permohonan Anda telah <strong>diverifikasi & disetujui staf TU</strong>. Surat sedang diajukan penandatanganan Kepala Sekolah dan disiapkan lembar fisiknya.`;
+            } else if (st.includes("siap")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Siap Diambil di Sekolah`;
-                s2.className = activeClass;
-                s3.className = activeClass;
-                s4.className = activeClass;
-
-                // Ambil nomor surat resmi langsung dari data record atau agenda surat keluar
-                let noReg = found.nomorSuratTerbit;
-                if (!noReg && found.keteranganTindak) {
-                    const match = found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.<>]+)/i) || found.keteranganTindak.match(/421\.[0-9\/SD\-]+/i);
-                    if (match) noReg = match[1] || match[0];
-                }
-                if (!noReg) {
-                    try {
-                        const skList = (window.DataStore && DataStore.getSuratKeluar) ? DataStore.getSuratKeluar() : [];
-                        const cleanNama = (found.nama || "").toLowerCase();
-                        const cleanNisn = found.nisn || "";
-                        const matchedSK = skList.find(s => {
-                            const p = (s.perihal || "").toLowerCase();
-                            const t = (s.tujuan || "").toLowerCase();
-                            return (cleanNisn && (p.includes(cleanNisn) || t.includes(cleanNisn))) ||
-                                   (cleanNama && (p.includes(cleanNama) || t.includes(cleanNama)));
-                        });
-                        if (matchedSK) noReg = matchedSK.nomorSurat;
-                    } catch (e) {}
-                }
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "completed", "2", "2. Verifikasi TU", "Berkas valid");
+                setStepState(3, "completed", "3", "3. Disetujui", "Nomor terbit");
+                setStepState(4, "completed", "4", "4. Siap Diambil", "Telah dicetak & stempel");
 
                 if (noReg) {
                     document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
                 } else {
                     document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah disetujui dan <strong>siap diambil</strong> di ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB).<br>Silakan tunjukkan nomor tiket <strong>${found.id}</strong> kepada petugas Tata Usaha untuk pengambilan fisik surat.`;
                 }
+            } else if (st.includes("selesai")) {
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300";
+                badge.innerHTML = `<i class="fa-solid fa-check-double"></i> Selesai / Sudah Diambil`;
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "completed", "2", "2. Verifikasi TU", "Berkas valid");
+                setStepState(3, "completed", "3", "3. Disetujui", "Nomor terbit");
+                setStepState(4, "completed", "4", "4. Siap Diambil", "Surat telah diserahkan");
+                document.getElementById("res-tindak-text").innerHTML = `Surat fisik resmi ${noReg ? `(Nomor: <strong>${noReg}</strong>)` : ''} telah diserahkan kepada orang tua/wali pemohon. Proses permohonan telah <strong>Selesai</strong>.`;
             } else if (st.includes("tolak") || st.includes("ditolak")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Permohonan Ditolak`;
-                document.getElementById("res-tindak-text").textContent = `Permohonan ditolak dengan alasan: ${found.keteranganTindak || 'Data tidak sesuai atau berkas persyaratan belum lengkap.'}`;
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "rejected", "2", "2. Verifikasi TU", "Ditolak TU");
+                setStepState(3, "pending", "3", "3. Disetujui", "Dibatalkan");
+                setStepState(4, "pending", "4", "4. Siap Diambil", "Dibatalkan");
+                document.getElementById("res-tindak-text").textContent = `Permohonan ditolak dengan alasan: ${found.keteranganTindak || found.keterangan || 'Data tidak sesuai atau berkas persyaratan belum lengkap.'}`;
+            } else {
+                // Default / Status lainnya
+                badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300";
+                badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${found.status}`;
+                setStepState(1, "completed", "1", "1. Terkirim", "Tercatat di sistem");
+                setStepState(2, "current", "2", "2. Verifikasi TU", "Sedang diproses");
+                setStepState(3, "pending", "3", "3. Disetujui", "Penomoran surat");
+                setStepState(4, "pending", "4", "4. Siap Diambil", "Dicetak & stempel");
+                document.getElementById("res-tindak-text").textContent = found.keteranganTindak || found.keterangan || "Permohonan sedang diproses oleh staf Tata Usaha SDN Terlangu 01.";
             }
 
             if (box) {

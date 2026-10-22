@@ -180,7 +180,7 @@ const App = {
         }
     },
 
-    VERSION: "2.6.2",
+    VERSION: "2.6.3",
 
     formatJamMenit(w) {
         if (!w) return "";

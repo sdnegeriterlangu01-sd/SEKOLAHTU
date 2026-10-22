@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.7.0
+ * Backend REST API - Google Apps Script (GAS) v2.8.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -863,6 +863,8 @@ function handleGetTendik(ss) {
   const colAktif = headers.indexOf("AKTIF");
   const colFoto = headers.indexOf("FOTO");
   const colTugas = headers.indexOf("TUGAS_TAMBAHAN");
+  const colIjazah = headers.indexOf("IJAZAH");
+  const colJurusan = headers.indexOf("JURUSAN");
 
   const list = values.map(row => {
     const nip = colNip >= 0 ? String(row[colNip] || "") : String(row[0] || "");
@@ -873,7 +875,7 @@ function handleGetTendik(ss) {
 
     // Heuristik perbaikan jika sheet lama menyimpan status PNS/PPPK di kolom GOLONGAN
     if (!statusPeg && golongan) {
-      if (["PNS", "PPPK", "PTT", "GTT", "Honorer"].includes(golongan.trim())) {
+      if (["PNS", "PPPK", "PPPK PW", "PTT", "GTT", "Honorer"].includes(golongan.trim())) {
         statusPeg = golongan.trim();
         golongan = "";
       } else {
@@ -889,6 +891,8 @@ function handleGetTendik(ss) {
     const aktif = aktifRaw !== false && String(aktifRaw).toLowerCase() !== "false";
     const foto = colFoto >= 0 ? String(row[colFoto] || "") : (row.length > 9 ? String(row[9] || "") : "");
     const tugasTambahan = colTugas >= 0 ? String(row[colTugas] || "") : (row.length > 10 ? String(row[10] || "") : "");
+    const ijazah = colIjazah >= 0 ? String(row[colIjazah] || "") : (row.length > 11 ? String(row[11] || "") : "");
+    const jurusan = colJurusan >= 0 ? String(row[colJurusan] || "") : (row.length > 12 ? String(row[12] || "") : "");
 
     return {
       nip,
@@ -903,7 +907,9 @@ function handleGetTendik(ss) {
       urlQr,
       aktif,
       foto,
-      tugasTambahan
+      tugasTambahan,
+      ijazah,
+      jurusan
     };
   });
 
@@ -919,13 +925,13 @@ function handleSaveTendik(ss, payload) {
     return { success: false, message: "Tidak ada data guru/tendik yang dikirim." };
   }
 
-  const requiredHeaders = ["NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN"];
+  const requiredHeaders = ["NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN", "IJAZAH", "JURUSAN"];
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(requiredHeaders);
     sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
   } else {
     const curHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).toUpperCase());
-    if (!curHeaders.includes("STATUS_KEPEGAWAIAN")) {
+    if (!curHeaders.includes("STATUS_KEPEGAWAIAN") || !curHeaders.includes("IJAZAH")) {
       sheet.getRange(1, 1, 1, requiredHeaders.length).setValues([requiredHeaders]);
       sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
     }
@@ -945,11 +951,13 @@ function handleSaveTendik(ss, payload) {
     const statusPeg = t.statusKepegawaian || "PNS";
     const foto = t.foto || "";
     const tugas = t.tugasTambahan || "";
+    const ijazah = t.ijazah || "";
+    const jurusan = t.jurusan || "";
 
     const rowData = [
       nip, t.nama || "", t.jabatan || "", gol, statusPeg, t.jk || "",
       t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false,
-      foto, tugas
+      foto, tugas, ijazah, jurusan
     ];
 
     if (row) {
@@ -2335,6 +2343,13 @@ function handleSubmitPermohonanSurat(ss, payload) {
     noWhatsApp: hpPemohonFinal,
     hpOrtu: hpPemohonFinal,
     noHp: hpPemohonFinal,
+    tempatLahir: String(payload.tempatLahir || ""),
+    tanggalLahir: String(payload.tanggalLahir || ""),
+    sekolahAsalNama: String(payload.sekolahAsalNama || ""),
+    sekolahAsalNpsn: String(payload.sekolahAsalNpsn || ""),
+    sekolahAsalAlamat: String(payload.sekolahAsalAlamat || ""),
+    alamatOrtu: String(payload.alamatOrtu || payload.alamat || ""),
+    alamat: String(payload.alamatOrtu || payload.alamat || ""),
     jenisSurat: String(payload.jenisSurat || "Surat Keterangan Aktif"),
     keperluan: String(payload.keperluan || ""),
     status: String(payload.status || "Menunggu Verifikasi TU"),

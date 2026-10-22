@@ -182,7 +182,6 @@ const ModulVue = {
                 const userRoleLabel = computed(() => {
                     const r = role.value;
                     if (r === "admin") return "Administrator";
-                    if (r === "tu" || r === "tenaga_administrasi") return "Tenaga Administrasi";
                     if (r === "perpustakaan") return "Tenaga Perpustakaan";
                     if (r === "penjaga") return "Penjaga Sekolah";
                     if (r === "kepsek") return "Kepala Sekolah";
@@ -192,7 +191,6 @@ const ModulVue = {
                         if (g?.isGuruMapel) return `Guru Mapel (${g.namaMapel || 'PJOK/PAI'})`;
                         return "Guru";
                     }
-                    if (r === "kiosk") return "Terminal Kiosk";
                     return r;
                 });
 
@@ -234,11 +232,6 @@ const ModulVue = {
 
                 const actions = computed(() => {
                     const r = role.value;
-                    if (r === "kiosk") {
-                        return [
-                            { label: "Scan Presensi Mandiri", icon: "fa-qrcode", color: "text-indigo-300", action: () => App.navigateTo("scan-absensi") }
-                        ];
-                    }
                     if (r === "penjaga") {
                         return [
                             { label: "Scan Absensi Datang/Pulang", icon: "fa-qrcode", color: "text-emerald-300", action: () => App.navigateTo("scan-absensi") },
@@ -272,7 +265,7 @@ const ModulVue = {
                             { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-300", action: () => App.navigateTo("cetak") }
                         ];
                     }
-                    // Admin & Tenaga Administrasi (TU) default
+                    // Administrator default
                     return [
                         { label: "Data Guru & Tendik", icon: "fa-chalkboard-user", color: "text-purple-300", action: () => App.navigateTo("tendik") },
                         { label: "Tambah Siswa Baru", icon: "fa-user-plus", color: "text-sky-300", action: () => { App.navigateTo("berkas"); if (window.ModulBerkas) ModulBerkas.openAddModal(); } },

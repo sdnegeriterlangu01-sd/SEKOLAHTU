@@ -96,7 +96,7 @@
             <form id="form-permohonan-publik" onsubmit="handlePublicSubmit(event)" class="space-y-6">
 
                 <!-- Step 1: Cari Data Siswa via NISN -->
-                <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-3">
+                <div id="step-1-container" class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-3">
                     <div class="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wide">
                         <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
                         Identitas Peserta Didik
@@ -164,14 +164,112 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Surat yang Dibutuhkan <span class="text-rose-500">*</span></label>
-                        <select id="req-jenis" required class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                        <select id="req-jenis" required onchange="onJenisSuratChange(this.value)"
+                            class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
                             <option value="">-- Pilih Jenis Surat --</option>
-                            <option value="Surat Keterangan Aktif Belajar">Surat Keterangan Aktif Belajar (Umum)</option>
+                            <option value="Surat Keterangan Aktif Belajar (Umum)">Surat Keterangan Aktif Belajar (Umum)</option>
                             <option value="Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP">Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP</option>
-                            <option value="Surat Keterangan Pindah Sekolah (Mutasi)">Surat Keterangan Pindah Sekolah (Mutasi Keluar)</option>
-                            <option value="Surat Keterangan Kelakuan Baik">Surat Keterangan Kelakuan Baik</option>
-                            <option value="Surat Rekomendasi Lomba / Beasiswa">Surat Rekomendasi Lomba / Beasiswa</option>
+                            <option value="Surat Keterangan Pindah Sekolah (Mutasi Keluar)">Surat Keterangan Pindah Sekolah (Mutasi Keluar)</option>
+                            <option value="Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi">Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi</option>
+                            <option value="Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi)">Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi)</option>
+                            <option value="Surat Keterangan Kelakuan Baik Siswa">Surat Keterangan Kelakuan Baik Siswa</option>
                         </select>
+                    </div>
+
+                    <!-- Kotak Form Khusus: Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi (Sesuai Revisi Item 5) -->
+                    <div id="box-mutasi-masuk-form" class="hidden p-4 rounded-2xl bg-amber-50/80 border border-amber-300 space-y-4 text-xs animate-fade-in">
+                        <div class="flex items-center gap-2 text-amber-950 font-bold text-xs uppercase tracking-wide border-b border-amber-200/80 pb-2">
+                            <i class="fa-solid fa-school-flag text-amber-600 text-sm"></i>
+                            Formulir Data Siswa Pindahan & Sekolah Asal
+                        </div>
+                        <p class="text-[11px] text-amber-800 leading-relaxed">
+                            Bapak/Ibu orang tua/wali calon siswa pindahan, silakan lengkapi data siswa, sekolah asal, dan domisili di bawah ini untuk penerbitan <strong>Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi</strong>:
+                        </p>
+
+                        <!-- Sub-blok 1: Data Siswa Pindahan -->
+                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
+                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Calon Pindahan
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-nama" placeholder="Contoh: Muhammad Bima Satria"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">NISN Siswa <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-nisn" maxlength="10" placeholder="Contoh: 0134567890"
+                                        class="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tempat Lahir <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-tempat-lahir" placeholder="Contoh: Brebes"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Lahir <span class="text-rose-500">*</span></label>
+                                    <input type="date" id="req-mutasi-tanggal-lahir"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelas yang Dituju <span class="text-rose-500">*</span></label>
+                                    <select id="req-mutasi-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600">
+                                        <option value="1">Kelas 1</option>
+                                        <option value="2">Kelas 2</option>
+                                        <option value="3">Kelas 3</option>
+                                        <option value="4">Kelas 4</option>
+                                        <option value="5">Kelas 5</option>
+                                        <option value="6">Kelas 6</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-blok 2: Data Sekolah Asal -->
+                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
+                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-school text-blue-600"></i> Sekolah Asal
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Sekolah Asal <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-sekolah-asal" placeholder="Contoh: SDN Pejagan 02"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">NPSN Sekolah Asal <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-npsn-asal" maxlength="12" placeholder="Contoh: 20326789"
+                                        class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Sekolah Asal <span class="text-rose-500">*</span></label>
+                                <input type="text" id="req-mutasi-alamat-sekolah-asal" placeholder="Contoh: Jl. Raya Pejagan No. 12, Kec. Tanjung, Kab. Brebes"
+                                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Sub-blok 3: Data Orang Tua / Wali & Alamat -->
+                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
+                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-house-user text-blue-600"></i> Orang Tua / Wali & Alamat Domisili
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Orang Tua / Wali <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-ortu-nama" placeholder="Nama lengkap ayah/ibu"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Domisili / Tempat Tinggal <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="req-mutasi-ortu-alamat" placeholder="Contoh: RT 02 RW 03 Desa Terlangu Kec. Brebes"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
@@ -492,17 +590,77 @@
             showToast(`Data siswa siap digunakan: ${nama} (Kelas ${kelas})`, "success");
         }
 
+        function onJenisSuratChange(val) {
+            const isMutasiMasuk = val === "Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi";
+            const boxMutasi = document.getElementById("box-mutasi-masuk-form");
+            const step1Box = document.getElementById("step-1-container");
+            const reqNisn = document.getElementById("req-nisn");
+
+            if (boxMutasi) boxMutasi.classList.toggle("hidden", !isMutasiMasuk);
+            if (step1Box) step1Box.classList.toggle("hidden", isMutasiMasuk);
+            if (reqNisn) reqNisn.required = !isMutasiMasuk;
+
+            const keperluanInp = document.getElementById("req-keperluan");
+            if (isMutasiMasuk) {
+                if (keperluanInp && (!keperluanInp.value || keperluanInp.value.includes("Pencairan dana PIP"))) {
+                    keperluanInp.value = "Permohonan Pindah Sekolah (Mutasi Masuk) ke SDN Terlangu 01";
+                }
+                const pemohonNama = document.getElementById("req-pemohon-nama")?.value.trim();
+                const ortuNamaInp = document.getElementById("req-mutasi-ortu-nama");
+                if (pemohonNama && ortuNamaInp && !ortuNamaInp.value) ortuNamaInp.value = pemohonNama;
+            }
+        }
+
         async function handlePublicSubmit(event) {
             event.preventDefault();
-            if (!verifiedStudent) {
+            const jenisSurat = document.getElementById("req-jenis").value;
+            const isMutasiMasuk = jenisSurat === "Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi";
+
+            if (isMutasiMasuk) {
+                const mutasiNama = document.getElementById("req-mutasi-nama")?.value.trim();
+                const mutasiNisn = document.getElementById("req-mutasi-nisn")?.value.trim();
+                const mutasiTempat = document.getElementById("req-mutasi-tempat-lahir")?.value.trim();
+                const mutasiTgl = document.getElementById("req-mutasi-tanggal-lahir")?.value;
+                const mutasiKelas = document.getElementById("req-mutasi-kelas")?.value || "1";
+                const mutasiSekolah = document.getElementById("req-mutasi-sekolah-asal")?.value.trim();
+                const mutasiNpsn = document.getElementById("req-mutasi-npsn-asal")?.value.trim();
+                const mutasiAlamatSekolah = document.getElementById("req-mutasi-alamat-sekolah-asal")?.value.trim();
+                const mutasiOrtuNama = document.getElementById("req-mutasi-ortu-nama")?.value.trim() || document.getElementById("req-pemohon-nama")?.value.trim();
+                const mutasiOrtuAlamat = document.getElementById("req-mutasi-ortu-alamat")?.value.trim();
+
+                if (!mutasiNama || !mutasiNisn || !mutasiSekolah) {
+                    showToast("Lengkapi Nama Lengkap Siswa, NISN, dan Nama Sekolah Asal!", "warning");
+                    document.getElementById("req-mutasi-nama")?.focus();
+                    return;
+                }
+
+                verifiedStudent = {
+                    nama: mutasiNama,
+                    nisn: mutasiNisn,
+                    tempatLahir: mutasiTempat,
+                    tanggalLahir: mutasiTgl,
+                    kelas: mutasiKelas,
+                    rombel: mutasiKelas,
+                    sekolahAsalNama: mutasiSekolah,
+                    sekolahAsalNpsn: mutasiNpsn,
+                    sekolahAsalAlamat: mutasiAlamatSekolah,
+                    namaOrtu: mutasiOrtuNama,
+                    alamatOrtu: mutasiOrtuAlamat,
+                    alamat: mutasiOrtuAlamat,
+                    isMutasiMasuk: true
+                };
+
+                if (mutasiOrtuNama && !document.getElementById("req-pemohon-nama").value) {
+                    document.getElementById("req-pemohon-nama").value = mutasiOrtuNama;
+                }
+            } else if (!verifiedStudent) {
                 showToast("Silakan lakukan verifikasi NISN siswa terlebih dahulu!", "warning");
                 document.getElementById("req-nisn").focus();
                 return;
             }
 
-            const jenisSurat = document.getElementById("req-jenis").value;
             const keperluan = document.getElementById("req-keperluan").value.trim();
-            const namaPemohon = document.getElementById("req-pemohon-nama").value.trim();
+            const namaPemohon = document.getElementById("req-pemohon-nama").value.trim() || verifiedStudent.namaOrtu || "-";
             const hubunganPemohon = document.getElementById("req-pemohon-hubungan").value;
             const noWhatsApp = document.getElementById("req-pemohon-wa").value.trim();
 
@@ -514,10 +672,17 @@
                 nisn: verifiedStudent.nisn,
                 nama: verifiedStudent.nama,
                 kelas: verifiedStudent.rombel || verifiedStudent.kelas,
+                tempatLahir: verifiedStudent.tempatLahir || "",
+                tanggalLahir: verifiedStudent.tanggalLahir || "",
+                sekolahAsalNama: verifiedStudent.sekolahAsalNama || "",
+                sekolahAsalNpsn: verifiedStudent.sekolahAsalNpsn || "",
+                sekolahAsalAlamat: verifiedStudent.sekolahAsalAlamat || "",
+                alamatOrtu: verifiedStudent.alamatOrtu || "",
+                alamat: verifiedStudent.alamat || "",
                 jenisSurat,
                 keperluan,
                 namaPemohon,
-                namaOrtu: namaPemohon,
+                namaOrtu: verifiedStudent.namaOrtu || namaPemohon,
                 hubunganPemohon,
                 noWhatsApp,
                 hpOrtu: noWhatsApp

@@ -22,14 +22,12 @@ const Auth = {
     DEMO_USERS: {
         admin: { pw: "admin123", nama: "Administrator (Demo)", role: "admin" },
         kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
-        tu: { pw: "tu123", nama: "Tenaga Administrasi (Demo)", role: "tu" },
         perpustakaan: { pw: "perpus123", nama: "Tenaga Perpustakaan (Demo)", role: "perpustakaan" },
         penjaga: { pw: "penjaga123", nama: "Penjaga Sekolah (Demo)", role: "penjaga" },
         guru: { pw: "guru123", nama: "Guru Kelas 1 (Demo)", role: "guru", tipeGuru: "kelas", kelasGuru: "1" },
         guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
         guru_pjok: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
-        guru_pai: { pw: "guru123", nama: "Guru Mapel PAI (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PAI", kelasGuru: "Semua" },
-        kiosk: { pw: "kiosk123", nama: "Terminal Scan (Demo)", role: "kiosk" }
+        guru_pai: { pw: "guru123", nama: "Guru Mapel PAI (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PAI", kelasGuru: "Semua" }
     },
 
     cfg() {
@@ -66,7 +64,6 @@ const Auth = {
     canDo(action) { return !!this.role() && ACL.check(ACL.ACTIONS[action], this.role()); },
     canRoute(route) { return !!this.role() && ACL.check(ACL.ROUTES[route], this.role()); },
     defaultRoute() {
-        if (this.role() === "kiosk") return "scan-absensi";
         return this.canRoute("dashboard") ? "dashboard" : (this.canRoute("absensi") ? "absensi" : "scan-absensi");
     },
 
@@ -552,7 +549,7 @@ const Auth = {
                 }).join("");
         }
 
-        this.onRoleChange("tu");
+        this.onRoleChange("admin");
         this.switchUserTab("add");
         modal.classList.remove("hidden");
     },
@@ -604,8 +601,8 @@ const Auth = {
     },
 
     parseRoleInputs(roleVal, tipeGuruVal, kelasGuruVal, mapelNamaVal) {
-        let baseRole = roleVal || "tu";
-        let rawRole = roleVal || "tu";
+        let baseRole = roleVal || "admin";
+        let rawRole = roleVal || "admin";
         let tipeGuru = tipeGuruVal || "";
         let kelasGuru = kelasGuruVal || "";
         let namaMapel = "";
@@ -655,10 +652,8 @@ const Auth = {
 
         if (r === "admin") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800"><i class="fa-solid fa-shield-halved mr-1"></i>Administrator</span>`;
         if (r === "kepsek") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-user-tie mr-1"></i>Kepala Sekolah</span>`;
-        if (r === "tu" || r === "tenaga_administrasi") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-folder-closed mr-1"></i>Tenaga Administrasi</span>`;
         if (r === "perpustakaan") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800"><i class="fa-solid fa-book-bookmark mr-1"></i>Tenaga Perpustakaan</span>`;
         if (r === "penjaga") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800"><i class="fa-solid fa-person-shelter mr-1"></i>Penjaga Sekolah</span>`;
-        if (r === "kiosk") return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800"><i class="fa-solid fa-qrcode mr-1"></i>Terminal Kiosk</span>`;
 
         if (r === "guru" || (typeof r === "string" && r.startsWith("guru"))) {
             if (r === "guru_pjok" || mapel.toLowerCase().includes("pjok") || combined.includes("pjok") || combined.includes("penjas")) {
@@ -811,6 +806,9 @@ const Auth = {
                 if (!res.ok) {
                     if (j.message && j.message.toLowerCase().includes("rate limit")) {
                         throw new Error("Batas kirim email verifikasi Supabase terlampaui. Silakan matikan opsi 'Confirm email' di dashboard Supabase (Authentication > Providers > Email) agar akun bisa langsung aktif dibuat tanpa email verifikasi.");
+                    }
+                    if ((j.msg || j.message || "").includes("profiles_role_check")) {
+                        throw new Error("Gagal: Database Supabase masih membatasi peran (check constraint 'profiles_role_check'). Buka Supabase > SQL Editor dan jalankan skrip migrasi dari file 'supabase/schema.sql' agar peran baru (perpustakaan, penjaga) dapat disimpan.");
                     }
                     throw new Error(j.msg || j.message || "Gagal membuat akun di Supabase.");
                 }

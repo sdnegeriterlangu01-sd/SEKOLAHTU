@@ -298,10 +298,51 @@ const ModulCetak = {
         `;
     },
 
+    onSelectPermohonanMutasi(reqId) {
+        if (!reqId) {
+            this.activePermohonanId = null;
+            this.activePermohonan = null;
+            this.generatePreview();
+            return;
+        }
+        const permohonanList = DataStore.getPermohonanSurat();
+        const req = permohonanList.find(p => p.id === reqId);
+        if (!req) return;
+        this.activePermohonanId = reqId;
+        this.activePermohonan = req;
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || "";
+        };
+
+        setVal("cetak-mutasi-nama", req.nama);
+        setVal("cetak-mutasi-nisn", req.nisn);
+        setVal("cetak-mutasi-tempat-lahir", req.tempatLahir || "");
+        setVal("cetak-mutasi-tanggal-lahir", req.tanggalLahir || "");
+        setVal("cetak-mutasi-kelas", req.kelas || "1");
+        setVal("cetak-mutasi-sekolah-asal", req.sekolahAsalNama || "");
+        setVal("cetak-mutasi-npsn-asal", req.sekolahAsalNpsn || "");
+        setVal("cetak-mutasi-alamat-sekolah-asal", req.sekolahAsalAlamat || "");
+        setVal("cetak-mutasi-ortu-nama", req.namaOrtu || req.namaPemohon || "");
+        setVal("cetak-mutasi-ortu-alamat", req.alamatOrtu || req.alamat || "");
+
+        if (req.keperluan) {
+            setVal("cetak-keperluan", req.keperluan);
+        }
+
+        this.generatePreview();
+    },
+
     updateFormFieldsByTemplate() {
         const type = this.currentTemplateType;
         const keperluanInput = document.getElementById("cetak-keperluan");
         const extraFieldContainer = document.getElementById("cetak-extra-fields");
+        const wrapperSelectSiswa = document.getElementById("cetak-wrapper-select-siswa");
+
+        if (wrapperSelectSiswa) {
+            wrapperSelectSiswa.classList.toggle("hidden", type === "bersedia_menerima");
+        }
 
         if (type === "aktif") {
             if (keperluanInput) keperluanInput.value = "Persyaratan Administrasi Siswa Aktif Belajar";
@@ -328,6 +369,151 @@ const ModulCetak = {
                             <label class="block text-xs font-semibold text-slate-700 mb-1">NSS Sekolah Asal (12 Digit)</label>
                             <input type="text" id="cetak-nss-sekolah" value="101032916052" maxlength="12" oninput="ModulCetak.generatePreview()"
                                 class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold">
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (type === "bersedia_menerima") {
+            if (keperluanInput) keperluanInput.value = "Permohonan Pindah Sekolah (Mutasi Masuk) ke SDN Terlangu 01";
+            if (extraFieldContainer) {
+                const permohonanList = DataStore.getPermohonanSurat();
+                const mutasiReqs = permohonanList.filter(p => {
+                    const js = (p.jenisSurat || "").toLowerCase();
+                    return js.includes("bersedia") || js.includes("menerima") || p.sekolahAsalNama;
+                });
+
+                let activeReq = this.activePermohonan;
+                if (!activeReq && mutasiReqs.length > 0) {
+                    activeReq = mutasiReqs[0];
+                    this.activePermohonan = activeReq;
+                    this.activePermohonanId = activeReq.id;
+                }
+
+                const initialData = {
+                    nama: activeReq?.nama || "Ahmad Rizky Pratama",
+                    nisn: activeReq?.nisn || "0158877665",
+                    tempatLahir: activeReq?.tempatLahir || "Brebes",
+                    tanggalLahir: activeReq?.tanggalLahir || "2015-05-12",
+                    kelas: activeReq?.kelas || "4",
+                    sekolahAsalNama: activeReq?.sekolahAsalNama || "SD Negeri Pejagan 02",
+                    sekolahAsalNpsn: activeReq?.sekolahAsalNpsn || "20326789",
+                    sekolahAsalAlamat: activeReq?.sekolahAsalAlamat || "Jl. Raya Pejagan No. 12, Kec. Tanjung, Kab. Brebes",
+                    namaOrtu: activeReq?.namaOrtu || activeReq?.namaPemohon || "Bambang Pratama",
+                    alamatOrtu: activeReq?.alamatOrtu || activeReq?.alamat || "RT 02 RW 03 Desa Terlangu Kec. Brebes"
+                };
+
+                let permohonanOptions = `<option value="">-- Ketik Manual / Siswa Baru --</option>`;
+                if (mutasiReqs.length > 0) {
+                    permohonanOptions = mutasiReqs.map(r => `
+                        <option value="${r.id}" ${activeReq && activeReq.id === r.id ? 'selected' : ''}>
+                            ${r.id} - ${r.nama} (Asal: ${r.sekolahAsalNama || 'Sekolah Asal'})
+                        </option>
+                    `).join("") + `<option value="">-- Ketik Manual / Siswa Baru --</option>`;
+                }
+
+                extraFieldContainer.innerHTML = `
+                    <div class="space-y-3 mt-3 pt-3 border-t border-slate-200">
+                        <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-2">
+                            <div class="font-bold text-amber-900 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-import text-amber-600"></i> Sumber Data Siswa Pindahan:</span>
+                                ${activeReq ? `<span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded text-[10px] font-mono font-bold">${activeReq.id}</span>` : ''}
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Ambil dari Permohonan Online</label>
+                                <select id="cetak-select-permohonan-mutasi" onchange="ModulCetak.onSelectPermohonanMutasi(this.value)"
+                                    class="w-full px-2.5 py-1.5 text-xs border border-amber-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-blue-500">
+                                    ${permohonanOptions}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Data Calon Siswa -->
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                            <div class="text-[11px] font-bold text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Calon Pindahan
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Nama Lengkap Siswa</label>
+                                    <input type="text" id="cetak-mutasi-nama" value="${initialData.nama}" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">NISN Siswa</label>
+                                    <input type="text" id="cetak-mutasi-nisn" value="${initialData.nisn}" maxlength="10" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs font-mono font-bold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Tempat Lahir</label>
+                                    <input type="text" id="cetak-mutasi-tempat-lahir" value="${initialData.tempatLahir}" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Tanggal Lahir</label>
+                                    <input type="date" id="cetak-mutasi-tanggal-lahir" value="${initialData.tanggalLahir}" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Kelas yang Dituju</label>
+                                    <select id="cetak-mutasi-kelas" onchange="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs font-bold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                        <option value="1" ${initialData.kelas == "1" ? 'selected' : ''}>Kelas 1</option>
+                                        <option value="2" ${initialData.kelas == "2" ? 'selected' : ''}>Kelas 2</option>
+                                        <option value="3" ${initialData.kelas == "3" ? 'selected' : ''}>Kelas 3</option>
+                                        <option value="4" ${initialData.kelas == "4" ? 'selected' : ''}>Kelas 4</option>
+                                        <option value="5" ${initialData.kelas == "5" ? 'selected' : ''}>Kelas 5</option>
+                                        <option value="6" ${initialData.kelas == "6" ? 'selected' : ''}>Kelas 6</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Sekolah Asal -->
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                            <div class="text-[11px] font-bold text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-school text-blue-600"></i> Sekolah Asal Siswa
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Nama Sekolah Asal</label>
+                                    <input type="text" id="cetak-mutasi-sekolah-asal" value="${initialData.sekolahAsalNama}" oninput="ModulCetak.generatePreview()"
+                                        placeholder="Contoh: SDN Pejagan 02"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">NPSN Sekolah Asal</label>
+                                    <input type="text" id="cetak-mutasi-npsn-asal" value="${initialData.sekolahAsalNpsn}" maxlength="12" oninput="ModulCetak.generatePreview()"
+                                        placeholder="Contoh: 20326789"
+                                        class="w-full px-2.5 py-1.5 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Alamat Sekolah Asal</label>
+                                <input type="text" id="cetak-mutasi-alamat-sekolah-asal" value="${initialData.sekolahAsalAlamat}" oninput="ModulCetak.generatePreview()"
+                                    placeholder="Alamat lengkap sekolah asal"
+                                    class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Data Orang Tua / Wali -->
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                            <div class="text-[11px] font-bold text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-house-user text-blue-600"></i> Orang Tua / Wali & Domisili
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Nama Orang Tua / Wali</label>
+                                    <input type="text" id="cetak-mutasi-ortu-nama" value="${initialData.namaOrtu}" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Alamat Domisili</label>
+                                    <input type="text" id="cetak-mutasi-ortu-alamat" value="${initialData.alamatOrtu}" oninput="ModulCetak.generatePreview()"
+                                        class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -366,11 +552,34 @@ const ModulCetak = {
     },
 
     async generatePreview() {
-        if (!this.selectedStudent) return;
+        const type = this.currentTemplateType;
+        let student = this.selectedStudent;
+
+        if (type === "bersedia_menerima") {
+            const mutasiNama = document.getElementById("cetak-mutasi-nama")?.value.trim() || (this.activePermohonan?.nama) || "Ahmad Rizky Pratama";
+            const mutasiNisn = document.getElementById("cetak-mutasi-nisn")?.value.trim() || (this.activePermohonan?.nisn) || "0158877665";
+            const mutasiKelas = document.getElementById("cetak-mutasi-kelas")?.value || (this.activePermohonan?.kelas) || "4";
+            const mutasiTempat = document.getElementById("cetak-mutasi-tempat-lahir")?.value.trim() || (this.activePermohonan?.tempatLahir) || "Brebes";
+            const mutasiTgl = document.getElementById("cetak-mutasi-tanggal-lahir")?.value || (this.activePermohonan?.tanggalLahir) || "2015-05-12";
+            const mutasiOrtu = document.getElementById("cetak-mutasi-ortu-nama")?.value.trim() || (this.activePermohonan?.namaOrtu || this.activePermohonan?.namaPemohon) || "Bambang Pratama";
+            const mutasiAlamat = document.getElementById("cetak-mutasi-ortu-alamat")?.value.trim() || (this.activePermohonan?.alamatOrtu || this.activePermohonan?.alamat) || "RT 02 RW 03 Desa Terlangu Kec. Brebes";
+
+            student = {
+                nama: mutasiNama,
+                nisn: mutasiNisn,
+                kelas: mutasiKelas,
+                tempatLahir: mutasiTempat,
+                tanggalLahir: mutasiTgl,
+                namaOrtu: mutasiOrtu,
+                alamat: mutasiAlamat,
+                jk: "Laki-laki"
+            };
+            this.selectedStudent = student;
+        } else {
+            if (!this.selectedStudent) return;
+        }
 
         const config = DataStore.getConfig();
-        const student = this.selectedStudent;
-        const type = this.currentTemplateType;
         const keperluan = document.getElementById("cetak-keperluan")?.value || "-";
 
         // Tentukan Nomor Surat Berdasarkan Mode
@@ -472,6 +681,8 @@ const ModulCetak = {
             `;
         } else if (type === "mutasi") {
             judulSurat = "SURAT KETERANGAN PINDAH SEKOLAH";
+        } else if (type === "bersedia_menerima") {
+            judulSurat = "SURAT KETERANGAN BERSEDIA MENERIMA SISWA PINDAH / MUTASI";
         } else if (type === "rekomendasi") {
             judulSurat = "SURAT REKOMENDASI SEKOLAH";
             const bidangPrestasi = document.getElementById("cetak-prestasi")?.value || "Bidang Akademik";
@@ -674,6 +885,122 @@ const ModulCetak = {
                             <p style="margin: 2px 0 0 0; text-align: left; padding-left: 20px; font-size: 9pt;">NIP. ..............................................</p>
                         </div>
                         <div style="clear: both;"></div>
+                    </div>
+                </div>
+            `;
+        } else if (type === "bersedia_menerima") {
+            const sekolahAsalNama = document.getElementById("cetak-mutasi-sekolah-asal")?.value.trim() || (this.activePermohonan?.sekolahAsalNama) || "SD Negeri Pejagan 02";
+            const sekolahAsalNpsn = document.getElementById("cetak-mutasi-npsn-asal")?.value.trim() || (this.activePermohonan?.sekolahAsalNpsn) || "20326789";
+            const sekolahAsalAlamat = document.getElementById("cetak-mutasi-alamat-sekolah-asal")?.value.trim() || (this.activePermohonan?.sekolahAsalAlamat) || "Jl. Raya Pejagan No. 12, Kec. Tanjung, Kab. Brebes";
+            const kecClean = (config.kecamatan || "Kecamatan Brebes").replace(/^Kecamatan\s*/i, "");
+            const kabClean = (config.kabupatenKota || "Kabupaten Brebes").replace(/^(Kabupaten|Kota)\s*/i, "");
+
+            container.innerHTML = `
+                <!-- Kop Surat Resmi -->
+                ${this.renderKopHtml(config)}
+
+                <div class="surat-title">
+                    <h3 style="font-size: 12pt; font-weight: bold; margin: 0; padding: 0; text-decoration: underline; letter-spacing: 0.5px;">SURAT KETERANGAN BERSEDIA MENERIMA SISWA PINDAH / MUTASI</h3>
+                    <p style="font-size: 10.5pt; margin: 4px 0 0 0;">Nomor: <span class="font-mono font-bold">${this.generatedNomorSurat}</span></p>
+                </div>
+
+                <div class="surat-body" style="font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; line-height: 1.4;">
+                    <p class="surat-paragraf" style="margin-bottom: 8px; text-indent: 32px; text-align: justify;">
+                        Yang bertanda tangan di bawah ini Kepala ${config.namaSekolah || "SD Negeri Terlangu 01"} Dinas Pendidikan Pemuda dan Olahraga Kecamatan ${kecClean} Kabupaten ${kabClean} Provinsi ${config.provinsi || "Jawa Tengah"}, menerangkan bahwa:
+                    </p>
+
+                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 10.5pt; line-height: 1.35; margin-bottom: 8px;">
+                        <tr>
+                            <td style="width: 210px; vertical-align: top;">Nama Lengkap Siswa</td>
+                            <td style="width: 15px; vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><strong>${student.nama}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">NISN</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><span class="font-mono font-bold">${student.nisn}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Tempat, Tanggal Lahir</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.tempatLahir || '-'}, ${tglLahirFull}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Kelas yang Dituju</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><strong>${this.formatKelasRomawiDanTeks(student.kelas)}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Nama Orang Tua / Wali</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.namaOrtu || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Alamat Orang Tua / Wali</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.alamat || '-'}</td>
+                        </tr>
+                    </table>
+
+                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-indent: 32px; text-align: justify; line-height: 1.4;">
+                        Sesuai dengan permohonan pindah sekolah dari orang tua / wali siswa yang bersangkutan dan setelah memperhatikan formasi serta daya tampung rombongan belajar pada satuan pendidikan kami, maka dengan ini menyatakan bahwa satuan pendidikan kami:
+                    </p>
+
+                    <div style="text-align: center; margin: 8px 0;">
+                        <span style="display: inline-block; font-size: 12pt; font-weight: bold; letter-spacing: 2px; padding: 4px 20px; border: 1.5px solid #000; border-radius: 4px;">
+                            BERSEDIA MENERIMA
+                        </span>
+                    </div>
+
+                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-align: justify; line-height: 1.4;">
+                        Siswa tersebut di atas untuk pindah / mutasi masuk menjadi peserta didik di <strong>${config.namaSekolah || "SD Negeri Terlangu 01"}</strong> pada <strong>${this.formatKelasRomawiDanTeks(student.kelas)}</strong> Tahun Ajaran ${tahunAjaranSurat}, yang bersangkutan berasal dari:
+                    </p>
+
+                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 10.5pt; line-height: 1.35; margin-bottom: 8px;">
+                        <tr>
+                            <td style="width: 210px; vertical-align: top;">Nama Sekolah Asal</td>
+                            <td style="width: 15px; vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><strong>${sekolahAsalNama}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">NPSN Sekolah Asal</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><span class="font-mono">${sekolahAsalNpsn || '-'}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Alamat Sekolah Asal</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${sekolahAsalAlamat || '-'}</td>
+                        </tr>
+                    </table>
+
+                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 10px; text-indent: 32px; text-align: justify; line-height: 1.4;">
+                        Surat Keterangan ini diberikan sebagai bukti kesediaan menerima dan persyaratan kelengkapan penerbitan Surat Keterangan Pindah Sekolah / Mutasi Keluar dari sekolah asal serta proses pembaruan data pada aplikasi Dapodik Kementerian Pendidikan.
+                    </p>
+
+                    <p class="surat-paragraf" style="margin-bottom: 12px; text-indent: 32px; text-align: justify;">
+                        Demikian surat keterangan ini kami buat dengan sebenarnya dan penuh rasa tanggung jawab untuk dapat dipergunakan sebagaimana mestinya.
+                    </p>
+                </div>
+
+                <!-- Tanda Tangan & QR Code Keabsahan -->
+                <div class="surat-ttd-container" style="margin-top: 10px;">
+                    <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 10px;">
+                        <div id="qrcode-container" style="background: #ffffff; padding: 4px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                        <div class="qr-text" style="max-width: 160px; text-align: left;">
+                            <strong style="color: #0f172a; display: block; font-size: 8pt;">DOKUMEN RESMI TERVERIFIKASI</strong>
+                            <span style="font-size: 7pt; color: #475569; display: block; margin-top: 2px;">Pindai QR-Code untuk verifikasi kesediaan mutasi masuk.</span>
+                            <span style="font-family: monospace; font-size: 7pt; color: #1e3a8a; font-weight: bold; display: block; margin-top: 3px;">No: ${this.generatedNomorSurat}</span>
+                        </div>
+                    </div>
+
+                    <div class="surat-ttd-box">
+                        <p style="margin-bottom: 4px; font-size: 10.5pt;">${kabClean}, ${tglStr}</p>
+                        <p style="font-weight: bold; margin-bottom: 8px; font-size: 10.5pt;">Kepala Sekolah,</p>
+                        <div style="height: 65px; margin: 4px 0;"></div>
+                        <p style="font-weight: bold; text-decoration: underline; margin-bottom: 2px; font-size: 10.5pt;">${config.namaKepalaSekolah}</p>
+                        <p style="font-size: 9.5pt; font-family: 'Times New Roman';">NIP. ${config.nipKepalaSekolah}</p>
+                        <p style="font-size: 8.5pt; color: #475569; font-style: italic;">${config.pangkatGolongan || 'Pembina / IVa'}</p>
                     </div>
                 </div>
             `;

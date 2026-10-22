@@ -7,13 +7,22 @@
 create table if not exists public.profiles (
     id uuid references auth.users on delete cascade primary key,
     nama text not null,
-    role text not null check (role in ('admin', 'kepsek', 'tu', 'guru', 'kiosk')) default 'tu',
+    role text not null check (role in ('admin', 'kepsek', 'perpustakaan', 'penjaga', 'guru', 'guru_kelas', 'guru_pjok', 'guru_pai', 'guru_inggris', 'guru_seni', 'guru_mapel')) default 'admin',
     aktif boolean not null default true,
     tipe_guru text default 'kelas',
     kelas_guru text default '1',
     created_at timestamptz default now(),
     updated_at timestamptz default now()
 );
+
+-- =========================================================================
+-- MIGRASI WAJIB (v2.8.0): Update Constraint Check Role & Hapus tu/kiosk
+-- Jalankan 3 baris di bawah ini di Supabase SQL Editor jika database lama error:
+-- =========================================================================
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check 
+    check (role in ('admin', 'kepsek', 'perpustakaan', 'penjaga', 'guru', 'guru_kelas', 'guru_pjok', 'guru_pai', 'guru_inggris', 'guru_seni', 'guru_mapel'));
+alter table public.profiles alter column role set default 'admin';
 
 -- Migrasi aman (menambahkan kolom jika tabel sudah terlanjur dibuat di Supabase)
 alter table public.profiles add column if not exists tipe_guru text default 'kelas';
@@ -75,7 +84,7 @@ begin
     values (
         new.id,
         coalesce(new.raw_user_meta_data->>'nama', split_part(new.email, '@', 1)),
-        coalesce(new.raw_user_meta_data->>'role', 'tu'),
+        coalesce(new.raw_user_meta_data->>'role', 'admin'),
         true,
         coalesce(new.raw_user_meta_data->>'tipe_guru', 'kelas'),
         coalesce(new.raw_user_meta_data->>'kelas_guru', '1')

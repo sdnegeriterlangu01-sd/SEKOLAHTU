@@ -888,25 +888,41 @@ const ModulSurat = {
         // 3. Pindah ke modul Cetak & siapkan template
         App.navigateTo("cetak");
         const selectSiswa = document.getElementById("cetak-select-siswa");
-        if (selectSiswa && item.nisn) {
+
+        const js = (item.jenisSurat || "").toLowerCase();
+        let tVal = "aktif";
+        if (js.includes("bersedia") || js.includes("menerima") || js === "bersedia_menerima") {
+            tVal = "bersedia_menerima";
+        } else if (js.includes("pip")) {
+            tVal = "pip_pencairan";
+        } else if (js.includes("pindah") || js.includes("mutasi")) {
+            tVal = "mutasi";
+        } else if (js.includes("prestasi") || js.includes("lomba") || js.includes("rekomendasi")) {
+            tVal = "rekomendasi";
+        } else if (js.includes("kelakuan")) {
+            tVal = "kelakuan";
+        } else {
+            tVal = "aktif";
+        }
+
+        if (tVal === "bersedia_menerima") {
+            ModulCetak.selectedStudent = {
+                nama: item.nama,
+                nisn: item.nisn,
+                kelas: item.kelas || "1",
+                tempatLahir: item.tempatLahir || "",
+                tanggalLahir: item.tanggalLahir || "",
+                namaOrtu: item.namaOrtu || item.namaPemohon || "",
+                alamat: item.alamatOrtu || item.alamat || "",
+                jk: "Laki-laki"
+            };
+        } else if (selectSiswa && item.nisn) {
             selectSiswa.value = item.nisn;
             ModulCetak.loadStudentData(item.nisn);
         }
 
         const templateSelect = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
         if (templateSelect) {
-            let tVal = "aktif";
-            if (item.jenisSurat.includes("PIP")) {
-                tVal = "pip_pencairan";
-            } else if (item.jenisSurat.includes("Pindah") || item.jenisSurat.includes("Mutasi")) {
-                tVal = "mutasi";
-            } else if (item.jenisSurat.includes("Prestasi") || item.jenisSurat.includes("Lomba") || item.jenisSurat.includes("Rekomendasi")) {
-                tVal = "rekomendasi";
-            } else if (item.jenisSurat.includes("Kelakuan")) {
-                tVal = "kelakuan";
-            } else {
-                tVal = "aktif";
-            }
             templateSelect.value = tVal;
             if (window.ModulCetak && ModulCetak.onSelectTemplate) {
                 ModulCetak.onSelectTemplate(tVal);

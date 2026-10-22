@@ -20,7 +20,8 @@ const ModulTendik = {
     TUGAS_PRESETS: [
         "Kepala Sekolah",
         "Bendahara BOS",
-        "Pembina Pramuka Siaga / Penggalang",
+        "Pembina Pramuka Siaga",
+        "Pembina Pramuka Penggalang",
         "Pembina Drum Band"
     ],
 
@@ -152,6 +153,7 @@ const ModulTendik = {
                             <option value="all" ${this.statusFilter === "all" ? "selected" : ""}>Semua Status</option>
                             <option value="PNS" ${this.statusFilter === "PNS" ? "selected" : ""}>PNS</option>
                             <option value="PPPK" ${this.statusFilter === "PPPK" ? "selected" : ""}>PPPK</option>
+                            <option value="PPPK PW" ${this.statusFilter === "PPPK PW" ? "selected" : ""}>PPPK PW</option>
                             <option value="PTT" ${this.statusFilter === "PTT" ? "selected" : ""}>PTT</option>
                             <option value="GTT" ${this.statusFilter === "GTT" ? "selected" : ""}>GTT</option>
                             <option value="Honorer" ${this.statusFilter === "Honorer" ? "selected" : ""}>Honorer</option>
@@ -164,7 +166,8 @@ const ModulTendik = {
                             <option value="has_tugas" ${this.tugasFilter === "has_tugas" ? "selected" : ""}>Ada Tugas Tambahan</option>
                             <option value="Kepala Sekolah" ${this.tugasFilter === "Kepala Sekolah" ? "selected" : ""}>Kepala Sekolah</option>
                             <option value="Bendahara BOS" ${this.tugasFilter === "Bendahara BOS" ? "selected" : ""}>Bendahara BOS</option>
-                            <option value="Pembina Pramuka Siaga / Penggalang" ${this.tugasFilter === "Pembina Pramuka Siaga / Penggalang" ? "selected" : ""}>Pembina Pramuka</option>
+                            <option value="Pembina Pramuka Siaga" ${this.tugasFilter === "Pembina Pramuka Siaga" ? "selected" : ""}>Pembina Pramuka Siaga</option>
+                            <option value="Pembina Pramuka Penggalang" ${this.tugasFilter === "Pembina Pramuka Penggalang" ? "selected" : ""}>Pembina Pramuka Penggalang</option>
                             <option value="Pembina Drum Band" ${this.tugasFilter === "Pembina Drum Band" ? "selected" : ""}>Pembina Drum Band</option>
                             <option value="Lainnya" ${this.tugasFilter === "Lainnya" ? "selected" : ""}>Tugas Lainnya</option>
                         </select>
@@ -285,6 +288,12 @@ const ModulTendik = {
                             <div class="text-[11px] text-slate-500 mt-0.5">
                                 <span class="font-medium">${Sec.esc(golDisplay)}</span>
                             </div>
+                            ${(t.ijazah || t.jurusan) ? `
+                                <div class="mt-1 text-[10px] text-indigo-900 inline-flex items-center gap-1 bg-indigo-50/80 px-2 py-0.5 rounded-md border border-indigo-200/60 max-w-[95%] truncate font-medium">
+                                    <i class="fa-solid fa-graduation-cap text-indigo-600 text-[10px]"></i>
+                                    <span class="truncate">${Sec.esc(t.ijazah || '')} ${t.jurusan ? `• ${Sec.esc(t.jurusan)}` : ''}</span>
+                                </div>
+                            ` : ''}
                         </div>
 
                         <!-- Tugas Tambahan -->
@@ -361,8 +370,12 @@ const ModulTendik = {
                     </td>
                     <td class="px-3.5 py-3 font-semibold text-blue-950">${Sec.esc(jabatanDisplay)}</td>
                     <td class="px-3.5 py-3 text-slate-600">${Sec.esc(golDisplay)}</td>
+                    <td class="px-3.5 py-3 text-slate-600">
+                        ${t.ijazah ? `<span class="font-bold text-slate-800">${Sec.esc(t.ijazah)}</span>` : '<span class="text-slate-300">-</span>'}
+                        ${t.jurusan ? `<div class="text-[10px] text-slate-400 truncate max-w-[150px]" title="${Sec.esc(t.jurusan)}">${Sec.esc(t.jurusan)}</div>` : ''}
+                    </td>
                     <td class="px-3.5 py-3">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusPeg === "PPPK" ? "bg-emerald-100 text-emerald-800" : (statusPeg === "PNS" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800")}">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusPeg === "PPPK" ? "bg-emerald-100 text-emerald-800" : (statusPeg === "PPPK PW" ? "bg-teal-100 text-teal-800" : (statusPeg === "PNS" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"))}">
                             ${Sec.esc(statusPeg)}
                         </span>
                     </td>
@@ -405,7 +418,8 @@ const ModulTendik = {
                                 <th class="px-3.5 py-3 text-center">No</th>
                                 <th class="px-3.5 py-3">Nama & NIP</th>
                                 <th class="px-3.5 py-3">Jabatan</th>
-                                <th class="px-3.5 py-3">Golongan / Pangkat</th>
+                                <th class="px-3.5 py-3">Golongan / Jabatan</th>
+                                <th class="px-3.5 py-3">Ijazah & Jurusan</th>
                                 <th class="px-3.5 py-3">Status</th>
                                 <th class="px-3.5 py-3">Tugas Tambahan</th>
                                 <th class="px-3.5 py-3">JK</th>
@@ -513,15 +527,42 @@ const ModulTendik = {
                             <select id="mt-status" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-bold text-slate-800 bg-white">
                                 <option value="PNS" ${(v("statusKepegawaian") === "PNS" || !t) ? "selected" : ""}>PNS</option>
                                 <option value="PPPK" ${v("statusKepegawaian") === "PPPK" ? "selected" : ""}>PPPK</option>
+                                <option value="PPPK PW" ${v("statusKepegawaian") === "PPPK PW" ? "selected" : ""}>PPPK PW</option>
                                 <option value="PTT" ${v("statusKepegawaian") === "PTT" ? "selected" : ""}>PTT</option>
                                 <option value="GTT" ${v("statusKepegawaian") === "GTT" ? "selected" : ""}>GTT</option>
                                 <option value="Honorer" ${v("statusKepegawaian") === "Honorer" ? "selected" : ""}>Honorer</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Golongan / Pangkat</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Golongan / Jabatan</label>
                             <input id="mt-gol-jabatan" value="${Sec.esc(rawGol)}" 
                                 placeholder="Contoh: IX / Guru Kelas atau Penata Muda / IIIa" 
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Bagian Ijazah Terakhir & Jurusan (Sesuai Revisi Item 2) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Ijazah Terakhir</label>
+                            <select id="mt-ijazah" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-bold text-slate-800 bg-white">
+                                <option value="" ${!t?.ijazah ? "selected" : ""}>- Pilih Ijazah -</option>
+                                <option value="SD" ${t?.ijazah === "SD" ? "selected" : ""}>SD</option>
+                                <option value="SMP" ${t?.ijazah === "SMP" ? "selected" : ""}>SMP</option>
+                                <option value="MA/SMA/SMK" ${t?.ijazah === "MA/SMA/SMK" ? "selected" : ""}>MA/SMA/SMK</option>
+                                <option value="D1" ${t?.ijazah === "D1" ? "selected" : ""}>D1</option>
+                                <option value="D2" ${t?.ijazah === "D2" ? "selected" : ""}>D2</option>
+                                <option value="D3" ${t?.ijazah === "D3" ? "selected" : ""}>D3</option>
+                                <option value="D4" ${t?.ijazah === "D4" ? "selected" : ""}>D4</option>
+                                <option value="S1" ${t?.ijazah === "S1" ? "selected" : ""}>S1</option>
+                                <option value="S2" ${t?.ijazah === "S2" ? "selected" : ""}>S2</option>
+                                <option value="S3" ${t?.ijazah === "S3" ? "selected" : ""}>S3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Jurusan</label>
+                            <input id="mt-jurusan" value="${v("jurusan")}" 
+                                placeholder="Contoh: PGSD / PAI / Administrasi Perkantoran" 
                                 class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
@@ -555,7 +596,8 @@ const ModulTendik = {
                             <option value="" ${!curTugas ? "selected" : ""}>- Tidak Ada Tugas Tambahan -</option>
                             <option value="Kepala Sekolah" ${curTugas === "Kepala Sekolah" ? "selected" : ""}>Kepala Sekolah</option>
                             <option value="Bendahara BOS" ${curTugas === "Bendahara BOS" ? "selected" : ""}>Bendahara BOS</option>
-                            <option value="Pembina Pramuka Siaga / Penggalang" ${curTugas === "Pembina Pramuka Siaga / Penggalang" ? "selected" : ""}>Pembina Pramuka Siaga / Penggalang</option>
+                            <option value="Pembina Pramuka Siaga" ${curTugas === "Pembina Pramuka Siaga" ? "selected" : ""}>Pembina Pramuka Siaga</option>
+                            <option value="Pembina Pramuka Penggalang" ${curTugas === "Pembina Pramuka Penggalang" ? "selected" : ""}>Pembina Pramuka Penggalang</option>
                             <option value="Pembina Drum Band" ${curTugas === "Pembina Drum Band" ? "selected" : ""}>Pembina Drum Band</option>
                             <option value="custom" ${isCustomTugas ? "selected" : ""}>Tugas Tambahan Lainnya...</option>
                         </select>
@@ -727,6 +769,8 @@ const ModulTendik = {
             statusKepegawaian,
             tugasTambahan,
             foto: this.tempPhotoBase64 || "",
+            ijazah: g("mt-ijazah"),
+            jurusan: g("mt-jurusan"),
             jk: g("mt-jk") || "Laki-laki",
             noHp: g("mt-nohp"),
             aktif: document.getElementById("mt-aktif")?.checked !== false
@@ -831,6 +875,7 @@ const ModulTendik = {
                 </td>
                 <td style="padding:6px;border:1px solid #333;">${Sec.esc(Auth.getJabatanFromAccount ? (Auth.getJabatanFromAccount(t) || t.jabatan) : t.jabatan)}</td>
                 <td style="padding:6px;border:1px solid #333;">${Sec.esc(t.golJabatan || t.golongan || "-")}</td>
+                <td style="padding:6px;border:1px solid #333;">${Sec.esc(t.ijazah || "-")} ${t.jurusan ? `(${Sec.esc(t.jurusan)})` : ''}</td>
                 <td style="text-align:center;padding:6px;border:1px solid #333;">${Sec.esc(t.statusKepegawaian || "PNS")}</td>
                 <td style="padding:6px;border:1px solid #333;">${Sec.esc(t.tugasTambahan || "-")}</td>
                 <td style="text-align:center;padding:6px;border:1px solid #333;">${Sec.esc(t.jk || "Laki-laki")}</td>
@@ -865,7 +910,8 @@ const ModulTendik = {
                             <th style="width:30px;">No</th>
                             <th>Nama Lengkap & NIP</th>
                             <th>Jabatan</th>
-                            <th>Golongan / Pangkat</th>
+                            <th>Golongan / Jabatan</th>
+                            <th>Ijazah & Jurusan</th>
                             <th>Status</th>
                             <th>Tugas Tambahan</th>
                             <th>JK</th>

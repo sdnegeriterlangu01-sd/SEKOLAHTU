@@ -3,6 +3,61 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.8.0] - 2026-10-23
+
+### Template Surat Mutasi Masuk, Integrasi Permohonan Siswa Pindahan, Kolom Ijazah & Jurusan Tendik, Status PPPK PW, Pembersihan Role TU/Kiosk, dan Perbaikan Constraint Supabase
+
+- **Pemisahan Tugas Tambahan Pramuka (`assets/js/modul-tendik.js`, `assets/js/data.js`):**
+  - Memisahkan opsi tugas tambahan *"Pramuka Siaga / Penggalang"* menjadi dua tugas mandiri: **"Pembina Pramuka Siaga"** dan **"Pembina Pramuka Penggalang"** pada preset pilihan penugasan maupun filter direktori tendik.
+
+- **Data Ijazah & Jurusan pada Menu Tendik (`assets/js/modul-tendik.js`, `assets/js/data.js`, `assets/js/api.js`, `backend/Code.gs`):**
+  - Menambahkan kolom **Ijazah Terakhir** dengan pilihan jenjang pendidikan lengkap: `SD`, `SMP`, `MA/SMA/SMK`, `D1`, `D2`, `D3`, `D4`, `S1`, `S2`, `S3`.
+  - Menambahkan kolom **Jurusan** (contoh: *PGSD*, *Manajemen Pendidikan*, *Teknik Informatika*, dll.).
+  - Menampilkan badge Ijazah & Jurusan pada Kartu Grid Tendik, kolom baru pada Tabel Tendik, serta menyertakannya pada cetakan Direktori Pegawai Sekolah (`printDirectory`).
+  - Menyelaraskan penyimpanan data Ijazah dan Jurusan pada `DataStore`, `ApiClient.saveTendik`, serta kolom baru spreadsheet `DB_Tendik` di backend Google Apps Script (`backend/Code.gs`).
+
+- **Pembersihan Role `tu` dan `kiosk` (`assets/js/security.js`, `assets/js/auth.js`, `index.html`, `assets/js/modul-vue.js`, `supabase/schema.sql`):**
+  - Menghapus opsi role `tu` ("Tenaga Administrasi") dan `kiosk` ("Terminal Scan Presensi") dari modal pembuatan dan edit akun pengguna (`#new-user-role` dan `#edit-user-role`).
+  - Menghapus `tu` dan `kiosk` dari `ACL.ROLES`, `ACL.ACTIONS`, dan `ACL.ROUTES` pada `security.js`.
+  - Menjaga *backward-compatibility* di mana sesi login atau token yang masih memuat role `tu` secara otomatis dipetakan ke role `admin` tanpa kehilangan hak akses.
+  - Memperbarui daftar pengguna demo (`DEMO_USERS`), default redirect login, dan pengabaian timer idle kiosk.
+
+- **Penyelarasan Menu Dropdown Template Surat (`permohonan.html`, `index.html`, `assets/js/modul-cetak.js`):**
+  - Menyelaraskan secara 100% opsi template surat antara portal layanan mandiri publik `permohonan.html` dengan menu Cetak Surat di `index.html`:
+    1. Surat Keterangan Aktif Belajar (Umum) (`aktif`)
+    2. Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP (`pip_pencairan`)
+    3. Surat Keterangan Pindah Sekolah (Mutasi Keluar) (`mutasi`)
+    4. Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi (`bersedia_menerima`)
+    5. Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi) (`rekomendasi`)
+    6. Surat Keterangan Kelakuan Baik Siswa (`kelakuan`)
+
+- **Template Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi pada Portal Publik (`permohonan.html`):**
+  - Menambahkan formulir data calon siswa pindahan masuk (`#box-mutasi-masuk-form`) yang muncul otomatis saat orang tua memilih jenis surat *"Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi"*.
+  - Menyediakan input lengkap untuk:
+    - **Identitas Siswa:** Nama Lengkap, NISN, Tempat Lahir, Tanggal Lahir, Kelas yang Dituju.
+    - **Sekolah Asal:** Nama Sekolah Asal, NPSN Sekolah Asal, Alamat Sekolah Asal.
+    - **Orang Tua / Domisili:** Nama Orang Tua / Wali, Alamat Domisili.
+  - Mengotomatiskan validasi tanpa mewajibkan NISN terdaftar di database internal SDN Terlangu 01 karena siswa berasal dari sekolah luar.
+
+- **Integrasi Otomatis Cetak Surat Bersedia Menerima dari Permohonan Online (`assets/js/modul-cetak.js`, `assets/js/modul-surat.js`):**
+  - Pada menu Cetak Surat, saat memilih template *"Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi"*, sistem otomatis mengambil data siswa dan sekolah asal dari inputan permohonan online (`DataStore.getPermohonanSurat`).
+  - Menyediakan dropdown pemilihan berkas permohonan online (`#cetak-select-permohonan-mutasi`) serta formulir preview yang dapat diedit langsung.
+  - Menyusun layout resmi Surat Bersedia Menerima lengkap dengan Kop Resmi Pemkab Brebes / Dinas Dikpora, identitas siswa, pernyataan tegas **BERSEDIA MENERIMA**, data sekolah asal, tanda tangan Kepala Sekolah, dan stempel QR-Code verifikasi publik.
+  - Menghubungkan tombol "Proses" di tabel permohonan (`ModulSurat.prosesPermohonan`) langsung ke template `bersedia_menerima` dengan data terisi penuh.
+
+- **Status Kepegawaian "PPPK PW" & Penyesuaian Golongan/Jabatan (`assets/js/modul-tendik.js`, `assets/js/data.js`):**
+  - Menambahkan status kepegawaian baru **"PPPK PW"** pada filter status dan opsi modal penambahan/pengeditan data tendik.
+  - Mengubah label kolom form modal edit dari *"Golongan / Pangkat"* menjadi **"Golongan / Jabatan"** (beserta header tabel kompak) agar mencakup jenjang jabatan fungsional PPPK/PPPK PW.
+
+- **Solusi Error Pembuatan Akun Baru Supabase (`supabase/schema.sql`, `assets/js/auth.js`):**
+  - Mengatasi error PostgreSQL: `Gagal: new row for relation "profiles" violates check constraint "profiles_role_check"`.
+  - Memperbarui definisi `CHECK (role IN (...))` pada `supabase/schema.sql` untuk mencakup seluruh 11 peran aktif (`admin`, `kepsek`, `perpustakaan`, `penjaga`, `guru`, `guru_kelas`, `guru_pjok`, `guru_pai`, `guru_inggris`, `guru_seni`, `guru_mapel`) serta menghapus `tu` dan `kiosk`.
+  - Menyediakan skrip migrasi SQL siap eksekusi di Supabase SQL Editor (`ALTER TABLE public.profiles DROP CONSTRAINT profiles_role_check; ...`).
+  - Memperbarui trigger `handle_new_user` agar menggunakan default role `'admin'` yang valid.
+  - Menambahkan penanganan pesan error yang informatif dan ramah pengguna di `assets/js/auth.js` jika terdapat inkonsistensi constraint database remote.
+
+---
+
 ## [v2.7.0] - 2026-10-23
 
 ### Modul Baru Data Guru & Tendik, Foto Profil, Pemisahan Status PNS/PPPK & Golongan, Role Tenaga Perpustakaan & Penjaga Sekolah, serta Tombol Pintas Dinamis Dashboard

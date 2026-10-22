@@ -85,8 +85,6 @@ const ACL = {
     ROLES: {
         admin: "Administrator",
         kepsek: "Kepala Sekolah",
-        tu: "Tenaga Administrasi",
-        tenaga_administrasi: "Tenaga Administrasi",
         perpustakaan: "Tenaga Perpustakaan",
         penjaga: "Penjaga Sekolah",
         guru: "Guru / Tendik",
@@ -95,57 +93,56 @@ const ACL = {
         guru_pai: "Guru Mapel PAI",
         guru_inggris: "Guru Mapel B. Inggris",
         guru_seni: "Guru Mapel Seni Budaya",
-        guru_mapel: "Guru Mapel",
-        kiosk: "Terminal Scan Presensi"
+        guru_mapel: "Guru Mapel"
     },
 
     ACTIONS: {
         ping: ["*"],
         // Siswa
-        getStudents: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        saveStudent: ["admin", "tu", "tenaga_administrasi"],
-        importStudents: ["admin", "tu", "tenaga_administrasi"],
-        uploadStudentDoc: ["admin", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        updateStudentPhone: ["admin", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        updateStudentFields: ["admin", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
+        getStudents: ["admin", "kepsek", "guru", "perpustakaan"],
+        saveStudent: ["admin"],
+        importStudents: ["admin"],
+        uploadStudentDoc: ["admin", "guru", "perpustakaan"],
+        updateStudentPhone: ["admin", "guru", "perpustakaan"],
+        updateStudentFields: ["admin", "guru", "perpustakaan"],
         // Jadwal Pelajaran
-        getJadwal: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
-        saveJadwal: ["admin", "tu", "tenaga_administrasi", "guru"],
-        deleteJadwal: ["admin", "tu", "tenaga_administrasi"],
+        getJadwal: ["admin", "kepsek", "guru"],
+        saveJadwal: ["admin", "guru"],
+        deleteJadwal: ["admin"],
         // Program PIP
-        getPIP: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        savePIP: ["admin", "tu", "tenaga_administrasi"],
-        importPIP: ["admin", "tu", "tenaga_administrasi"],
-        updatePIPStatus: ["admin", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
+        getPIP: ["admin", "kepsek", "guru", "perpustakaan"],
+        savePIP: ["admin"],
+        importPIP: ["admin"],
+        updatePIPStatus: ["admin", "guru", "perpustakaan"],
         // Permohonan Surat Online
-        getPermohonanSurat: ["admin", "kepsek", "tu", "tenaga_administrasi"],
+        getPermohonanSurat: ["admin", "kepsek"],
         submitPermohonanSurat: ["*"],
-        updatePermohonanSurat: ["admin", "tu", "tenaga_administrasi"],
-        deletePermohonanSurat: ["admin", "tu", "tenaga_administrasi"],
+        updatePermohonanSurat: ["admin"],
+        deletePermohonanSurat: ["admin"],
         // Surat
-        getSuratKeluar: ["admin", "kepsek", "tu", "tenaga_administrasi"],
-        getNextNomorSuratKeluar: ["admin", "kepsek", "tu", "tenaga_administrasi"],
-        saveSuratKeluar: ["admin", "tu", "tenaga_administrasi"],
-        deleteSuratKeluar: ["admin", "tu", "tenaga_administrasi"],
-        getSuratMasuk: ["admin", "kepsek", "tu", "tenaga_administrasi"],
-        saveSuratMasuk: ["admin", "tu", "tenaga_administrasi"],
-        deleteSuratMasuk: ["admin", "tu", "tenaga_administrasi"],
-        generateSuratDocPDF: ["admin", "kepsek", "tu", "tenaga_administrasi"],
+        getSuratKeluar: ["admin", "kepsek"],
+        getNextNomorSuratKeluar: ["admin", "kepsek"],
+        saveSuratKeluar: ["admin"],
+        deleteSuratKeluar: ["admin"],
+        getSuratMasuk: ["admin", "kepsek"],
+        saveSuratMasuk: ["admin"],
+        deleteSuratMasuk: ["admin"],
+        generateSuratDocPDF: ["admin", "kepsek"],
         // Absensi harian (lama)
-        getAbsensi: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
-        saveAbsensiBatch: ["admin", "tu", "tenaga_administrasi", "guru"],
-        getRekapAbsensi: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
+        getAbsensi: ["admin", "kepsek", "guru"],
+        saveAbsensiBatch: ["admin", "guru"],
+        getRekapAbsensi: ["admin", "kepsek", "guru"],
         // Tendik & presensi QR
-        getTendik: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga"],
-        saveTendik: ["admin", "tu", "tenaga_administrasi"],
-        deleteTendik: ["admin", "tu", "tenaga_administrasi"],
-        saveQrFiles: ["admin", "tu", "tenaga_administrasi"],
-        scanTendik: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga", "kiosk"],
-        getAbsensiTendikBulan: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga"],
-        saveAbsensiTendikManual: ["admin", "tu", "tenaga_administrasi"],
+        getTendik: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        saveTendik: ["admin"],
+        deleteTendik: ["admin"],
+        saveQrFiles: ["admin"],
+        scanTendik: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        getAbsensiTendikBulan: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        saveAbsensiTendikManual: ["admin"],
         // Absensi siswa bulanan
-        getAbsensiSiswaBulan: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
-        saveAbsensiSiswaBulan: ["admin", "tu", "tenaga_administrasi", "guru"],
+        getAbsensiSiswaBulan: ["admin", "kepsek", "guru"],
+        saveAbsensiSiswaBulan: ["admin", "guru"],
         // Administrasi
         setupDatabase: ["admin"],
         backupNow: ["admin"],
@@ -154,23 +151,23 @@ const ACL = {
     },
 
     ROUTES: {
-        dashboard: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga"],
-        "scan-absensi": ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga", "kiosk"],
-        berkas: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        jadwal: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
-        pip: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan"],
-        surat: ["admin", "kepsek", "tu", "tenaga_administrasi"],
-        cetak: ["admin", "kepsek", "tu", "tenaga_administrasi"],
-        absensi: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru", "perpustakaan", "penjaga", "kiosk"],
-        tendik: ["admin", "kepsek", "tu", "tenaga_administrasi", "guru"],
-        pengaturan: ["admin", "kepsek", "tu", "tenaga_administrasi"]
+        dashboard: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        "scan-absensi": ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        berkas: ["admin", "kepsek", "guru", "perpustakaan"],
+        jadwal: ["admin", "kepsek", "guru"],
+        pip: ["admin", "kepsek", "guru", "perpustakaan"],
+        surat: ["admin", "kepsek"],
+        cetak: ["admin", "kepsek"],
+        absensi: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
+        tendik: ["admin", "kepsek", "guru"],
+        pengaturan: ["admin", "kepsek"]
     },
 
     check(list, role) {
         if (!list) return false;
         if (list.includes("*") || list.includes(role)) return true;
-        if (list.includes("tu") && role === "tenaga_administrasi") return true;
-        if (list.includes("tenaga_administrasi") && role === "tu") return true;
+        // Kompatibilitas mundur akun TU lama dipetakan ke admin
+        if ((role === "tu" || role === "tenaga_administrasi") && list.includes("admin")) return true;
         if (list.includes("guru") && typeof role === "string" && role.startsWith("guru")) return true;
         return false;
     }

@@ -524,6 +524,8 @@ const ApiClient = {
                         urlQr: p.urlQr || prev.urlQr || "",
                         foto: p.foto !== undefined ? p.foto : (prev.foto || ""),
                         tugasTambahan: p.tugasTambahan !== undefined ? p.tugasTambahan : (prev.tugasTambahan || ""),
+                        ijazah: p.ijazah !== undefined ? p.ijazah : (prev.ijazah || ""),
+                        jurusan: p.jurusan !== undefined ? p.jurusan : (prev.jurusan || ""),
                         aktif: p.aktif !== false
                     };
                     if (idx >= 0) list[idx] = { ...list[idx], ...rec }; else list.push(rec);
@@ -772,6 +774,13 @@ const ApiClient = {
                     noWhatsApp: payload.noWhatsApp || payload.hpOrtu || payload.noHp || "",
                     hpOrtu: payload.hpOrtu || payload.noWhatsApp || payload.noHp || "",
                     noHp: payload.noWhatsApp || payload.hpOrtu || payload.noHp || "",
+                    tempatLahir: payload.tempatLahir || "",
+                    tanggalLahir: payload.tanggalLahir || "",
+                    sekolahAsalNama: payload.sekolahAsalNama || "",
+                    sekolahAsalNpsn: payload.sekolahAsalNpsn || "",
+                    sekolahAsalAlamat: payload.sekolahAsalAlamat || "",
+                    alamatOrtu: payload.alamatOrtu || payload.alamat || "",
+                    alamat: payload.alamatOrtu || payload.alamat || "",
                     status: "Menunggu",
                     nomorSuratTerbit: "",
                     keteranganTindak: ""

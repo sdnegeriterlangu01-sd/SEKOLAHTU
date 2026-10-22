@@ -834,22 +834,24 @@ const ModulSurat = {
             ModulCetak.loadStudentData(item.nisn);
         }
 
-        const templateSelect = document.getElementById("cetak-select-template");
+        const templateSelect = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
         if (templateSelect) {
-            if (item.jenisSurat.includes("PIP") && item.jenisSurat.includes("Rekomendasi")) {
-                templateSelect.value = "pip_pencairan";
-            } else if (item.jenisSurat.includes("PIP")) {
-                templateSelect.value = "pip_aktif";
+            let tVal = "aktif";
+            if (item.jenisSurat.includes("PIP")) {
+                tVal = "pip_pencairan";
             } else if (item.jenisSurat.includes("Pindah") || item.jenisSurat.includes("Mutasi")) {
-                templateSelect.value = "mutasi";
-            } else if (item.jenisSurat.includes("Prestasi")) {
-                templateSelect.value = "rekomendasi";
+                tVal = "mutasi";
+            } else if (item.jenisSurat.includes("Prestasi") || item.jenisSurat.includes("Lomba") || item.jenisSurat.includes("Rekomendasi")) {
+                tVal = "rekomendasi";
             } else if (item.jenisSurat.includes("Kelakuan")) {
-                templateSelect.value = "kelakuan";
+                tVal = "kelakuan";
             } else {
-                templateSelect.value = "aktif";
+                tVal = "aktif";
             }
-            ModulCetak.onSelectTemplate(templateSelect.value);
+            templateSelect.value = tVal;
+            if (window.ModulCetak && ModulCetak.onSelectTemplate) {
+                ModulCetak.onSelectTemplate(tVal);
+            }
         }
 
         const keperluanInput = document.getElementById("cetak-keperluan");

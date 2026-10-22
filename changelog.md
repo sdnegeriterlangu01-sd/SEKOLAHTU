@@ -3,6 +3,23 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.6.1] - 2026-10-22
+
+### Perbaikan Responsif Dropdown Template Surat, Kop Surat Mutasi & Harmonisasi Template Persuratan
+- **Perbaikan Tata Letak Dropdown Pilihan Template Surat:**
+  - Memperbaiki sintaks tag HTML `<select id="cetak-jenis-surat">` pada [`index.html`](index.html) serta menambahkan kelas `w-full max-w-full font-medium` dan kontainer `min-w-0`.
+  - Mengatasi kendala dropdown yang melebar dan meluap (*overflow*) melewati batas kolom kontrol ke area kanvas pratinjau surat (sesuai *Screenshot 2026-10-22 230552.png*).
+- **Kop Surat Kedinasan Lengkap pada Surat Keterangan Pindah / Mutasi:**
+  - Menyematkan kop surat resmi instansi (`renderKopHtml`) pada template Surat Keterangan Pindah Sekolah (Mutasi), lengkap dengan Logo Kabupaten Brebes, hierarki dinas, kontak sekolah, garis pembatas ganda (*double border*), serta stiker QR Code verifikasi dokumen elektronik.
+- **Pemulihan Penuh Template Surat Keterangan Aktif Belajar (Umum):**
+  - Mengembalikan opsi *Surat Keterangan Aktif Belajar (Umum)* sebagai template standar mandiri pada dropdown cetak dan form permohonan mandiri dengan judul resmi **"SURAT KETERANGAN AKTIF BELAJAR"**.
+- **Harmonisasi Template Surat Keterangan & Rekomendasi Pencairan PIP:**
+  - Menetapkan judul resmi naskah dinas menjadi: **"SURAT KETERANGAN AKTIF BELAJAR DAN REKOMENDASI PENCAIRAN DANA PIP"** (menghilangkan kata "SURAT" kedua yang redundan) dengan tetap menginjeksi data lengkap SK PIP siswa (Nomor SK, Tanggal SK, Tahap, Nomor Rekening, Virtual Account).
+- **Penyelarasan API `ModulCetak.onSelectTemplate`:**
+  - Menambahkan metode `ModulCetak.onSelectTemplate` dan pemetaan ID elemen dropdown pada [`assets/js/modul-cetak.js`](assets/js/modul-cetak.js) dan [`assets/js/modul-surat.js`](assets/js/modul-surat.js), memastikan tombol cetak pintasan dari modul PIP maupun agenda TU langsung mengaktifkan template bersangkutan secara instan.
+
+---
+
 ## [v2.6.0] - 2026-10-22
 
 ### Pembaruan Format Cetak Persuratan, OCR KTA Pramuka, Status Multi-Opsi PIP & Penomoran Otomatis Tertinggi

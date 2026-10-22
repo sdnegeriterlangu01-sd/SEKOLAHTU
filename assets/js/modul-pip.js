@@ -702,13 +702,14 @@ const ModulPIP = {
         if (selSiswa) {
             selSiswa.value = nisn;
         }
-        const selJenis = document.getElementById("cetak-jenis-surat");
-        if (selJenis) {
-            selJenis.value = templateType;
-        }
         if (window.ModulCetak) {
             ModulCetak.loadStudentData(nisn);
-            ModulCetak.generatePreview();
+            if (ModulCetak.onSelectTemplate) {
+                ModulCetak.onSelectTemplate(templateType);
+            } else {
+                ModulCetak.currentTemplateType = templateType;
+                ModulCetak.generatePreview();
+            }
         }
     },
 

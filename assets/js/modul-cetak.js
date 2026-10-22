@@ -212,6 +212,44 @@ const ModulCetak = {
             `</span>`;
     },
 
+    onSelectTemplate(type) {
+        this.currentTemplateType = type;
+        const select = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
+        if (select) {
+            select.value = type;
+        }
+        this.updateFormFieldsByTemplate();
+        this.generatePreview();
+    },
+
+    renderKopHtml(config) {
+        const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";
+        const telpSekolah = config.telepon && config.telepon !== '-' ? ` | Telp: ${config.telepon}` : '';
+        const kodePosSekolah = config.kodePos ? ` | Kode Pos: ${config.kodePos}` : '';
+        const npsnSekolah = config.npsn || "20326713";
+        const akreditasiSekolah = config.akreditasi ? ` • Akreditasi: ${config.akreditasi}` : '';
+        const websiteSekolah = config.website && config.website.trim() ? ` • Website: ${config.website.trim()}` : '';
+        const emailSekolah = config.email && config.email.trim() ? ` • Email: ${config.email.trim()}` : '';
+
+        return `
+            <div class="kop-header">
+                <!-- Logo Resmi Kabupaten Brebes -->
+                <img src="assets/img/logo-brebes.svg" 
+                    onerror="this.onerror=null; this.src='https://id.wikipedia.org/wiki/Berkas:Seal_of_Brebes_Regency.svg';"
+                    alt="Logo Kabupaten Brebes" class="kop-logo">
+                <div class="kop-teks">
+                    <h4 class="instansi-1">PEMERINTAH KABUPATEN BREBES</h4>
+                    <h3 class="instansi-2">DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA</h3>
+                    <h4 class="instansi-3">UPT SATUAN PENDIDIKAN</h4>
+                    <h2 class="sekolah-nama">${(config.namaSekolah || "SD NEGERI TERLANGU 01").toUpperCase()}</h2>
+                    <h5 class="sekolah-kec">KECAMATAN BREBES</h5>
+                    <p class="kop-alamat">Alamat: ${alamatSekolah}${telpSekolah}${kodePosSekolah}</p>
+                    <p class="kop-kontak">NPSN: ${npsnSekolah}${akreditasiSekolah}${websiteSekolah}${emailSekolah}</p>
+                </div>
+            </div>
+        `;
+    },
+
     updateFormFieldsByTemplate() {
         const type = this.currentTemplateType;
         const keperluanInput = document.getElementById("cetak-keperluan");
@@ -333,186 +371,14 @@ const ModulCetak = {
         const container = document.getElementById("kop-surat-print-area");
         if (!container) return;
 
-        // =========================================================================
-        // TEMPLATE 1: SURAT KETERANGAN PINDAH SEKOLAH (SESUAI CONTOH GAMBAR)
-        // =========================================================================
-        if (type === "mutasi") {
-            const sekolahTujuan = document.getElementById("cetak-sekolah-tujuan")?.value || "SD Islam Al – Islamiyah Kelurahan Kalibaru Kecamatan Cilincing Kota Jakarta Utara";
-            const alasanPindah = document.getElementById("cetak-alasan-pindah")?.value || document.getElementById("cetak-keperluan")?.value || "Mengikuti Orang Tua";
-            const nssSekolah = document.getElementById("cetak-nss-sekolah")?.value || config.nss || "101032916052";
-            const nssBoxes = this.renderNssBoxes(nssSekolah);
-            const blankNssBoxes = this.renderBlankNssBoxes(12);
-
-            const kecClean = (config.kecamatan || "Kecamatan Brebes").replace(/^Kecamatan\s*/i, "");
-            const kabClean = (config.kabupatenKota || "Kabupaten Brebes").replace(/^(Kabupaten|Kota)\s*/i, "");
-
-            container.innerHTML = `
-                <div style="font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.4; padding: 10px 15px; font-size: 11pt;">
-                    <!-- NSS Pojok Kanan Atas Sesuai Gambar -->
-                    <div style="text-align: right; margin-bottom: 12px; font-size: 11pt;">
-                        <span style="font-weight: normal; margin-right: 4px;">NSS : </span>
-                        ${nssBoxes}
-                    </div>
-
-                    <!-- Judul Surat Sesuai Gambar -->
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h3 style="font-size: 13pt; font-weight: bold; margin: 0; padding: 0; text-decoration: underline; letter-spacing: 0.5px;">SURAT KETERANGAN PINDAH SEKOLAH</h3>
-                        <p style="font-size: 11pt; margin: 4px 0 0 0;">Nomor : <span class="font-bold">${this.generatedNomorSurat}</span></p>
-                    </div>
-
-                    <!-- Paragraf Pembuka -->
-                    <p style="text-align: justify; margin-bottom: 10px; line-height: 1.5; text-indent: 0;">
-                        Yang bertanda tangan di bawah ini Kepala ${config.namaSekolah} Dinas Pendidikan Pemuda dan Olahraga Kecamatan ${kecClean} Kabupaten ${kabClean} Provinsi ${config.provinsi || "Jawa Tengah"}, menerangkan bahwa :
-                    </p>
-
-                    <!-- Identitas Siswa -->
-                    <table style="width: 100%; border-collapse: collapse; margin-left: 0; margin-bottom: 6px; font-size: 11pt; line-height: 1.45;">
-                        <tr>
-                            <td style="width: 175px; vertical-align: top;">Nama</td>
-                            <td style="width: 18px; vertical-align: top;">:</td>
-                            <td style="vertical-align: top;"><strong>${student.nama}</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">Kelas</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${this.formatKelasRomawiDanTeks(student.kelas)}</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">NISN / NIS</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${student.nisn} ${student.nis ? `/ ${student.nis}` : ''}</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">Jenis Kelamin</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${student.jk}</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">Alamat</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${student.alamat || '-'}</td>
-                        </tr>
-                        <tr>
-                            <td colspan="3" style="padding-top: 5px; vertical-align: top;">Sesuai permohonan pindah orang tuanya :</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">Nama</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${student.namaOrtu || '-'}</td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top;">Pekerjaan</td>
-                            <td style="vertical-align: top;">:</td>
-                            <td style="vertical-align: top;">${student.pekerjaanOrtu || 'Ibu Rumah Tangga'}</td>
-                        </tr>
-                    </table>
-
-                    <!-- Keterangan Pindah & Buku Raport -->
-                    <p style="text-align: justify; margin-top: 4px; margin-bottom: 4px; line-height: 1.45;">
-                        Telah mengajukan pindah ke <strong>${sekolahTujuan}</strong> dengan alasan <strong>${alasanPindah}</strong>.
-                    </p>
-                    <p style="margin-top: 4px; margin-bottom: 16px; line-height: 1.45;">
-                        Bersama ini kami sertakan Buku Raport yang bersangkutan.
-                    </p>
-
-                    <!-- Tanda Tangan Kepala Sekolah (Kanan) -->
-                    <div style="float: right; text-align: left; width: 260px; margin-bottom: 16px;">
-                        <p style="margin: 0 0 4px 0;">${kabClean}, ${tglStr}</p>
-                        <p style="margin: 0 0 55px 0;">Kepala Sekolah</p>
-                        <p style="font-weight: bold; text-decoration: underline; margin: 0 0 2px 0;">${config.namaKepalaSekolah}</p>
-                        <p style="margin: 0; font-size: 10.5pt;">NIP. ${config.nipKepalaSekolah}</p>
-                    </div>
-                    <div style="clear: both;"></div>
-
-                    <!-- Garis Gunting Potongan Sesuai Gambar -->
-                    <div style="margin-top: 10px; padding-top: 4px; border-top: 1px dashed #000;">
-                        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-                            <span style="font-size: 12pt;">✂</span>
-                            <span style="border-top: 1px dotted #555; flex-grow: 1;"></span>
-                        </div>
-                        <p style="font-size: 10pt; font-style: italic; margin: 0 0 6px 0;">
-                            Setelah anak diterima di sekolah ini, isian di bawah ini harap dikirim kembali pada kami.
-                        </p>
-
-                        <!-- NSS Sekolah Penerima -->
-                        <div style="text-align: right; margin-bottom: 8px; font-size: 10pt;">
-                            <span style="margin-right: 4px;">NSS : </span>
-                            ${blankNssBoxes}
-                        </div>
-
-                        <!-- Form Isian Sekolah Penerima -->
-                        <table style="width: 100%; border-collapse: collapse; font-size: 10pt; line-height: 1.4;">
-                            <tr>
-                                <td style="width: 160px; padding: 1.5px 0;">Nama Sekolah</td>
-                                <td style="width: 15px; padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Status Sekolah</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Alamat</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Desa</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Kecamatan</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Kabupaten</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Nama Siswa</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Diterima di kelas</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 1.5px 0;">Diterima tanggal</td>
-                                <td style="padding: 1.5px 0;">:</td>
-                                <td style="padding: 1.5px 0; letter-spacing: 1px;">...........................................................................................</td>
-                            </tr>
-                        </table>
-
-                        <!-- Tanda Tangan Sekolah Penerima -->
-                        <div style="float: right; text-align: center; width: 240px; margin-top: 8px;">
-                            <p style="margin: 0; letter-spacing: 1px;">....................................................</p>
-                            <p style="margin: 2px 0 45px 0;">Kepala Sekolah</p>
-                            <p style="margin: 0; letter-spacing: 1px;">....................................................</p>
-                            <p style="margin: 2px 0 0 0; text-align: left; padding-left: 20px;">NIP. ..............................................</p>
-                        </div>
-                        <div style="clear: both;"></div>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        // =========================================================================
-        // TEMPLATE SURAT STANDAR: AKTIF BELAJAR, REKOMENDASI PENCAIRAN PIP, DLL.
-        // =========================================================================
+        // Tentukan Judul Surat dan Konten Tambahan Berdasarkan Template
         let judulSurat = "SURAT KETERANGAN AKTIF BELAJAR";
         let kalimatIsi = `Adalah benar-benar siswa aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran 2025/2026 dan bertingkah laku baik. Surat keterangan ini diterbitkan atas permintaan yang bersangkutan untuk keperluan: <strong>${keperluan}</strong>.`;
         let extraPipHtml = "";
 
         if (type === "pip_pencairan") {
             // Revisi Item 4: Judul Surat & Injeksi Data PIP Lengkap
-            judulSurat = "SURAT KETERANGAN AKTIF BELAJAR DAN SURAT REKOMENDASI PENCAIRAN DANA PIP";
+            judulSurat = "SURAT KETERANGAN AKTIF BELAJAR DAN REKOMENDASI PENCAIRAN DANA PIP";
             const pipRec = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []).find(p => p.nisn === student.nisn) || {};
             const noRek = pipRec.nomorRekening || student.noRekSimpel || "0109-01-029384-50-8";
             const noSK = pipRec.nomorSK || "0345/P3KE/PIP/2026";
@@ -552,9 +418,11 @@ const ModulCetak = {
                     </tr>
                 </table>
                 <p class="surat-paragraf" style="margin-top: 8px; margin-bottom: 8px; text-indent: 32px; line-height: 1.5;">
-                    Surat Keterangan Aktif Belajar dan Surat Rekomendasi ini diterbitkan resmi dari satuan pendidikan untuk kelengkapan administrasi <strong>Aktivasi Rekening / Pencairan Dana Bantuan PIP</strong> bagi siswa yang bersangkutan.
+                    Surat Keterangan Aktif Belajar dan Rekomendasi ini diterbitkan resmi dari satuan pendidikan untuk kelengkapan administrasi <strong>Aktivasi Rekening / Pencairan Dana Bantuan PIP</strong> bagi siswa yang bersangkutan.
                 </p>
             `;
+        } else if (type === "mutasi") {
+            judulSurat = "SURAT KETERANGAN PINDAH SEKOLAH";
         } else if (type === "rekomendasi") {
             judulSurat = "SURAT REKOMENDASI SEKOLAH";
             const bidangPrestasi = document.getElementById("cetak-prestasi")?.value || "Bidang Akademik";
@@ -580,32 +448,193 @@ const ModulCetak = {
         }));
         const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}&d=${compactPayload}`;
 
-        // Format alamat dan kontak kop surat
-        const alamatSekolah = config.alamat || "Jl. Raya Terlangu, Desa Terlangu";
-        const telpSekolah = config.telepon && config.telepon !== '-' ? ` | Telp: ${config.telepon}` : '';
-        const kodePosSekolah = config.kodePos ? ` | Kode Pos: ${config.kodePos}` : '';
-        const npsnSekolah = config.npsn || "20326713";
-        const akreditasiSekolah = config.akreditasi ? ` • Akreditasi: ${config.akreditasi}` : '';
-        const websiteSekolah = config.website && config.website.trim() ? ` • Website: ${config.website.trim()}` : '';
-        const emailSekolah = config.email && config.email.trim() ? ` • Email: ${config.email.trim()}` : '';
+        // =========================================================================
+        // TEMPLATE 1: SURAT KETERANGAN PINDAH SEKOLAH (DENGAN KOP RESMI)
+        // =========================================================================
+        if (type === "mutasi") {
+            const sekolahTujuan = document.getElementById("cetak-sekolah-tujuan")?.value || "SD Islam Al – Islamiyah Kelurahan Kalibaru Kecamatan Cilincing Kota Jakarta Utara";
+            const alasanPindah = document.getElementById("cetak-alasan-pindah")?.value || document.getElementById("cetak-keperluan")?.value || "Mengikuti Orang Tua";
+            const nssSekolah = document.getElementById("cetak-nss-sekolah")?.value || config.nss || "101032916052";
+            const nssBoxes = this.renderNssBoxes(nssSekolah);
+            const blankNssBoxes = this.renderBlankNssBoxes(12);
 
-        // Render Lembar Surat Standar (Revisi Item 1 & 2: Hapus NIK, pekerjaan ortu, dan alamat tempat tinggal; Tgl lahir full date)
-        container.innerHTML = `
-            <div class="kop-header">
-                <!-- Logo Resmi Kabupaten Brebes -->
-                <img src="assets/img/logo-brebes.svg" 
-                    onerror="this.onerror=null; this.src='https://id.wikipedia.org/wiki/Berkas:Seal_of_Brebes_Regency.svg';"
-                    alt="Logo Kabupaten Brebes" class="kop-logo">
-                <div class="kop-teks">
-                    <h4 class="instansi-1">PEMERINTAH KABUPATEN BREBES</h4>
-                    <h3 class="instansi-2">DINAS PENDIDIKAN PEMUDA DAN OLAHRAGA</h3>
-                    <h4 class="instansi-3">UPT SATUAN PENDIDIKAN</h4>
-                    <h2 class="sekolah-nama">${(config.namaSekolah || "SD NEGERI TERLANGU 01").toUpperCase()}</h2>
-                    <h5 class="sekolah-kec">KECAMATAN BREBES</h5>
-                    <p class="kop-alamat">Alamat: ${alamatSekolah}${telpSekolah}${kodePosSekolah}</p>
-                    <p class="kop-kontak">NPSN: ${npsnSekolah}${akreditasiSekolah}${websiteSekolah}${emailSekolah}</p>
+            const kecClean = (config.kecamatan || "Kecamatan Brebes").replace(/^Kecamatan\s*/i, "");
+            const kabClean = (config.kabupatenKota || "Kabupaten Brebes").replace(/^(Kabupaten|Kota)\s*/i, "");
+
+            container.innerHTML = `
+                <!-- Kop Surat Resmi (Sesuai Template Surat Lainnya) -->
+                ${this.renderKopHtml(config)}
+
+                <div style="font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.4; padding: 0 5px; font-size: 10.5pt;">
+                    <!-- NSS Pojok Kanan Atas Sesuai Format Kedinasan -->
+                    <div style="text-align: right; margin-bottom: 6px; font-size: 10pt;">
+                        <span style="font-weight: normal; margin-right: 4px;">NSS : </span>
+                        ${nssBoxes}
+                    </div>
+
+                    <!-- Judul Surat Mutasi -->
+                    <div style="text-align: center; margin-bottom: 12px;">
+                        <h3 style="font-size: 12.5pt; font-weight: bold; margin: 0; padding: 0; text-decoration: underline; letter-spacing: 0.5px;">SURAT KETERANGAN PINDAH SEKOLAH</h3>
+                        <p style="font-size: 10.5pt; margin: 3px 0 0 0;">Nomor : <span class="font-bold font-mono">${this.generatedNomorSurat}</span></p>
+                    </div>
+
+                    <!-- Paragraf Pembuka -->
+                    <p style="text-align: justify; margin-bottom: 6px; line-height: 1.4; text-indent: 0; font-size: 10.5pt;">
+                        Yang bertanda tangan di bawah ini Kepala ${config.namaSekolah} Dinas Pendidikan Pemuda dan Olahraga Kecamatan ${kecClean} Kabupaten ${kabClean} Provinsi ${config.provinsi || "Jawa Tengah"}, menerangkan bahwa :
+                    </p>
+
+                    <!-- Identitas Siswa -->
+                    <table style="width: 100%; border-collapse: collapse; margin-left: 0; margin-bottom: 4px; font-size: 10.5pt; line-height: 1.35;">
+                        <tr>
+                            <td style="width: 175px; vertical-align: top;">Nama</td>
+                            <td style="width: 18px; vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><strong>${student.nama}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Kelas</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${this.formatKelasRomawiDanTeks(student.kelas)}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">NISN / NIS</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;"><span class="font-mono">${student.nisn}</span> ${student.nis ? `/ <span class="font-mono">${student.nis}</span>` : ''}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Jenis Kelamin</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.jk}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Alamat</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.alamat || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="padding-top: 4px; vertical-align: top;">Sesuai permohonan pindah orang tuanya :</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Nama</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.namaOrtu || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">Pekerjaan</td>
+                            <td style="vertical-align: top;">:</td>
+                            <td style="vertical-align: top;">${student.pekerjaanOrtu || 'Ibu Rumah Tangga'}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Keterangan Pindah & Buku Raport -->
+                    <p style="text-align: justify; margin-top: 4px; margin-bottom: 3px; line-height: 1.35; font-size: 10.5pt;">
+                        Telah mengajukan pindah ke <strong>${sekolahTujuan}</strong> dengan alasan <strong>${alasanPindah}</strong>.
+                    </p>
+                    <p style="margin-top: 3px; margin-bottom: 8px; line-height: 1.35; font-size: 10.5pt;">
+                        Bersama ini kami sertakan Buku Raport yang bersangkutan.
+                    </p>
+
+                    <!-- Tanda Tangan & QR Code Keabsahan Mutasi -->
+                    <div class="surat-ttd-container" style="margin-top: 4px; margin-bottom: 8px;">
+                        <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 8px;">
+                            <div id="qrcode-container" style="background: #ffffff; padding: 3px; border: 1px solid #cbd5e1; border-radius: 6px; width: 85px; height: 85px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                            <div class="qr-text" style="max-width: 150px; text-align: left;">
+                                <strong style="color: #0f172a; display: block; font-size: 8pt;">DOKUMEN TERVERIFIKASI</strong>
+                                <span style="font-size: 6.5pt; color: #475569; display: block; margin-top: 1px;">Pindai QR-Code untuk verifikasi keaslian surat mutasi.</span>
+                                <span style="font-family: monospace; font-size: 6.5pt; color: #1e3a8a; font-weight: bold; display: block; margin-top: 2px;">No: ${this.generatedNomorSurat}</span>
+                            </div>
+                        </div>
+
+                        <div class="surat-ttd-box" style="text-align: left; width: 250px;">
+                            <p style="margin: 0 0 2px 0; font-size: 10.5pt;">${kabClean}, ${tglStr}</p>
+                            <p style="margin: 0 0 45px 0; font-weight: bold; font-size: 10.5pt;">Kepala Sekolah,</p>
+                            <p style="font-weight: bold; text-decoration: underline; margin: 0 0 1px 0; font-size: 10.5pt;">${config.namaKepalaSekolah}</p>
+                            <p style="margin: 0; font-size: 10pt; font-family: 'Times New Roman';">NIP. ${config.nipKepalaSekolah}</p>
+                        </div>
+                    </div>
+
+                    <!-- Garis Gunting Potongan Sesuai Format Resmi -->
+                    <div style="margin-top: 6px; padding-top: 3px; border-top: 1px dashed #000;">
+                        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 3px;">
+                            <span style="font-size: 11pt;">✂</span>
+                            <span style="border-top: 1px dotted #555; flex-grow: 1;"></span>
+                        </div>
+                        <p style="font-size: 9.5pt; font-style: italic; margin: 0 0 4px 0;">
+                            Setelah anak diterima di sekolah ini, isian di bawah ini harap dikirim kembali pada kami.
+                        </p>
+
+                        <!-- NSS Sekolah Penerima -->
+                        <div style="text-align: right; margin-bottom: 4px; font-size: 9.5pt;">
+                            <span style="margin-right: 4px;">NSS : </span>
+                            ${blankNssBoxes}
+                        </div>
+
+                        <!-- Form Isian Sekolah Penerima -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 9.5pt; line-height: 1.3;">
+                            <tr>
+                                <td style="width: 150px; padding: 1px 0;">Nama Sekolah</td>
+                                <td style="width: 15px; padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Status Sekolah</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Alamat</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Desa</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Kecamatan</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Kabupaten</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Nama Siswa</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Diterima di kelas</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1px 0;">Diterima tanggal</td>
+                                <td style="padding: 1px 0;">:</td>
+                                <td style="padding: 1px 0; letter-spacing: 1px;">...........................................................................................</td>
+                            </tr>
+                        </table>
+
+                        <!-- Tanda Tangan Sekolah Penerima -->
+                        <div style="float: right; text-align: center; width: 230px; margin-top: 4px;">
+                            <p style="margin: 0; letter-spacing: 1px; font-size: 9.5pt;">....................................................</p>
+                            <p style="margin: 2px 0 35px 0; font-size: 9.5pt;">Kepala Sekolah</p>
+                            <p style="margin: 0; letter-spacing: 1px; font-size: 9.5pt;">....................................................</p>
+                            <p style="margin: 2px 0 0 0; text-align: left; padding-left: 20px; font-size: 9pt;">NIP. ..............................................</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
                 </div>
-            </div>
+            `;
+        } else {
+            // =========================================================================
+            // TEMPLATE SURAT STANDAR: AKTIF BELAJAR, REKOMENDASI PENCAIRAN PIP, DLL.
+            // =========================================================================
+            container.innerHTML = `
+                <!-- Kop Surat Resmi -->
+                ${this.renderKopHtml(config)}
 
             <div class="surat-title">
                 <h3>${judulSurat}</h3>
@@ -695,6 +724,7 @@ const ModulCetak = {
                 </div>
             </div>
         `;
+        }
 
         // Render QR Code di dalam Dokumen
         const qrBox = document.getElementById("qrcode-container");

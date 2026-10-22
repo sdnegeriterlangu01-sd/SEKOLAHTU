@@ -3,6 +3,21 @@ Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha admi
 
 ---
 
+## [v2.5.2] - 2026-10-22
+
+### Revisi Modul PIP & Alur Penomoran Surat Permohonan Mandiri
+- **Tata Letak Tombol Impor PIP:**
+  - Menghapus tombol impor global di header atas modul PIP (yang sebelumnya tampil redundan di semua subtab) dan menambahkan tombol impor Excel mandiri langsung di dalam kartu tab **Siswa Penerima SK PIP** (berdampingan dengan tombol *Unduh Format Contoh*), sehingga simetris dengan tab **Data Pengusulan**.
+- **Kolom `UPDATED_AT` Database PIP & Sinkronisasi Dasbor Real-Time:**
+  - Menambahkan kolom `UPDATED_AT` pada header tabel Google Sheets `DB_PIP_Pengusulan` (kolom 29) dan `DB_PIP_Penerima` (kolom 23) pada [`backend/Code.gs`](backend/Code.gs).
+  - Menyertakan nilai timestamp `updatedAt` otomatis saat impor baris di [`assets/js/modul-pip.js`](assets/js/modul-pip.js) dan [`assets/js/api.js`](assets/js/api.js).
+  - Memperbaiki `Sync.pull` pada [`assets/js/api.js`](assets/js/api.js) agar respon bertipe objek (`res.data.pengusulan` dan `res.data.penerima`) langsung tersimpan ke *DataStore* lokal, sehingga data yang baru diimpor langsung muncul di dasbor & tabel analitik PIP seketika tanpa perlu muat ulang manual.
+- **Alur Penomoran Surat Permohonan "Siap Diambil":**
+  - Memperbarui fungsi `updateStatusPermohonan` pada [`assets/js/modul-surat.js`](assets/js/modul-surat.js): saat status permohonan diubah menjadi **"Siap Diambil"**, sistem secara otomatis memeriksa agenda surat keluar (`DB_SuratKeluar`). Jika belum terdaftar, nomor resmi baru langsung ditarik dari generator nomor dinas SRIKANDI (`getNextNomorSuratKeluar`) dan otomatis dibukukan ke tabel agenda surat keluar (`saveSuratKeluar`).
+  - Menghapus nomor registrasi dummy/hardcoded (`421.2/001/SD/2026`) pada pelacakan resi [`permohonan.html`](permohonan.html), menggantikannya dengan pembacaan langsung dari nomor surat dinas yang sah atau arahan langsung ke ruang TU dengan nomor tiket.
+
+---
+
 ## [v2.5.1] - 2026-10-22
 
 ### Dashboard Hero Banner & Navigasi Sidebar (Revisi Layout)

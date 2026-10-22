@@ -633,18 +633,19 @@ const ApiClient = {
             case "importPIP": {
                 const { jenis, rows } = payload;
                 if (!Array.isArray(rows) || rows.length === 0) return { success: false, message: "Data impor kosong." };
+                const nowIso = new Date().toISOString();
                 if (jenis === "pengusulan") {
                     const current = DataStore.getPIPPengusulan();
                     const map = new Map();
                     current.forEach(item => map.set(item.nisn, item));
-                    rows.forEach(r => map.set(r.nisn, { ...r, tahunUsulan: r.tahunUsulan || "2026" }));
+                    rows.forEach(r => map.set(r.nisn, { ...r, tahunUsulan: r.tahunUsulan || "2026", updatedAt: r.updatedAt || nowIso }));
                     DataStore.savePIPPengusulan(Array.from(map.values()));
                     return { success: true, message: `Berhasil mengimpor ${rows.length} data pengusulan PIP!`, count: rows.length };
                 } else {
                     const current = DataStore.getPIPPenerima();
                     const map = new Map();
                     current.forEach(item => map.set(item.nisn, item));
-                    rows.forEach(r => map.set(r.nisn, { ...r, tahunAnggaran: r.tahunAnggaran || "2026" }));
+                    rows.forEach(r => map.set(r.nisn, { ...r, tahunAnggaran: r.tahunAnggaran || "2026", updatedAt: r.updatedAt || nowIso }));
                     DataStore.savePIPPenerima(Array.from(map.values()));
                     return { success: true, message: `Berhasil mengimpor ${rows.length} data penerima PIP!`, count: rows.length };
                 }
@@ -832,7 +833,7 @@ const Sync = {
         const src = this.SOURCES[kind];
         if (!src || !ApiClient.isCloudActive() || !Auth.canDo(src.action)) return false;
         const res = await ApiClient.cloudCall(src.action, src.payload);
-        if (res && res.success && Array.isArray(res.data)) {
+        if (res && res.success && (Array.isArray(res.data) || (res.data && typeof res.data === "object"))) {
             src.save(res.data);
             return true;
         }

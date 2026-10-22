@@ -1607,12 +1607,6 @@
                                 class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
                                 <i class="fa-solid fa-radar text-rose-600"></i> Radar Kemiskinan
                             </button>
-                            <button onclick="document.getElementById('pip-file-input').click()" data-need="importPIP"
-                                class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs">
-                                <i class="fa-solid fa-file-import"></i> Impor Excel SK (SheetJS)
-                            </button>
-                            <input type="file" id="pip-file-input" accept=".xlsx,.xls,.csv" class="hidden"
-                                onchange="ModulPIP.handleFileImport(event)">
                             <button onclick="ModulPIP.exportPenerimaCSV()"
                                 class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs">
                                 <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor CSV
@@ -1836,6 +1830,12 @@
                                         class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Unduh Format Contoh Excel Penerima PIP">
                                         <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Format Contoh
                                     </button>
+                                    <button onclick="ModulPIP.triggerImport('penerima')" 
+                                        class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Impor Data Penerima SK dari Excel">
+                                        <i class="fa-solid fa-file-arrow-up"></i> Impor Data Excel
+                                    </button>
+                                    <input type="file" id="file-import-pip-penerima" accept=".xlsx,.xls,.csv" class="hidden"
+                                        onchange="ModulPIP.handleFileImport(event, 'penerima')">
                                 </div>
                             </div>
                             <div class="overflow-x-auto">

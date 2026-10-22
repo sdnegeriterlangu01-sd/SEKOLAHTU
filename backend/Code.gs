@@ -38,14 +38,13 @@ const TAB_PIP_PENGUSULAN = "DB_PIP_Pengusulan";
 const TAB_PIP_PENERIMA = "DB_PIP_Penerima";
 const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
 
-// Kolom Header Baku PIP (Persis Sama dengan Format Download Contoh Impor)
 const HEADERS_PIP_PENGUSULAN = [
   "No", "Nama Murid", "NIK", "Valid Dukcapil", "NISN", "Valid NISN", 
   "Tempat Lahir", "Tanggal Lahir", "Umur", "Jenis Kelamin", "Nama Ibu", 
   "Pekerjaan Ibu", "Nama Ayah", "Pekerjaan Ayah", "Jenjang", "Kelas", 
   "Rombel", "Semester ID", "Desil", "Bank", "Status Tabungan", 
   "flag_drop", "keterangan_flag", "Fase ID", "Nama Fase", "Role", 
-  "Status SK", "SK Atas Nama"
+  "Status SK", "SK Atas Nama", "UPDATED_AT"
 ];
 
 const HEADERS_PIP_PENERIMA = [
@@ -53,7 +52,7 @@ const HEADERS_PIP_PENERIMA = [
   "nama_ibu_kandung", "nama_ayah", "tanggal_lahir", "tempat_lahir", 
   "nisn", "nik", "JK", "nominal", "no_rekening", "virtual_acc", 
   "Tahap", "status_cair", "No Rekening / Virtual ACC", "Nama Pengusul", 
-  "confirmation_text", "nomor_sk", "tanggal_sk"
+  "confirmation_text", "nomor_sk", "tanggal_sk", "UPDATED_AT"
 ];
 
 /**
@@ -500,31 +499,33 @@ function setupDatabaseAndFolders() {
     sheetJadwal.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#d9ead3");
   }
 
-  // 10. Tab DB_PIP_Pengusulan (28 Kolom Sesuai Format Impor Puslapdik)
+  // 10. Tab DB_PIP_Pengusulan (29 Kolom Sesuai Format Impor Puslapdik + UPDATED_AT)
   let sheetPIPU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
   if (!sheetPIPU) sheetPIPU = ss.insertSheet(TAB_PIP_PENGUSULAN);
   if (sheetPIPU.getLastRow() === 0) {
     sheetPIPU.appendRow(HEADERS_PIP_PENGUSULAN);
     sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setFontWeight("bold").setBackground("#fff2cc");
   } else {
-    // Sinkronkan baris header jika masih menggunakan format lama
-    const curHeadersU = sheetPIPU.getRange(1, 1, 1, Math.min(28, sheetPIPU.getLastColumn())).getValues()[0];
-    if (String(curHeadersU[0]).toUpperCase() === "ID" || String(curHeadersU[1]).toUpperCase() === "TAHUN") {
+    // Sinkronkan baris header jika masih menggunakan format lama atau kurang kolom UPDATED_AT
+    const curLastColU = sheetPIPU.getLastColumn();
+    const curHeadersU = sheetPIPU.getRange(1, 1, 1, Math.min(29, Math.max(1, curLastColU))).getValues()[0];
+    if (String(curHeadersU[0]).toUpperCase() === "ID" || String(curHeadersU[1]).toUpperCase() === "TAHUN" || curLastColU < HEADERS_PIP_PENGUSULAN.length) {
       sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setValues([HEADERS_PIP_PENGUSULAN]);
       sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setFontWeight("bold").setBackground("#fff2cc");
     }
   }
 
-  // 11. Tab DB_PIP_Penerima (22 Kolom Sesuai Format Impor Puslapdik)
+  // 11. Tab DB_PIP_Penerima (23 Kolom Sesuai Format Impor Puslapdik + UPDATED_AT)
   let sheetPIPP = ss.getSheetByName(TAB_PIP_PENERIMA);
   if (!sheetPIPP) sheetPIPP = ss.insertSheet(TAB_PIP_PENERIMA);
   if (sheetPIPP.getLastRow() === 0) {
     sheetPIPP.appendRow(HEADERS_PIP_PENERIMA);
     sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setFontWeight("bold").setBackground("#cfe2f3");
   } else {
-    // Sinkronkan baris header jika masih menggunakan format lama
-    const curHeadersP = sheetPIPP.getRange(1, 1, 1, Math.min(22, sheetPIPP.getLastColumn())).getValues()[0];
-    if (String(curHeadersP[0]).toUpperCase() === "ID" || String(curHeadersP[1]).toUpperCase() === "TAHUN") {
+    // Sinkronkan baris header jika masih menggunakan format lama atau kurang kolom UPDATED_AT
+    const curLastColP = sheetPIPP.getLastColumn();
+    const curHeadersP = sheetPIPP.getRange(1, 1, 1, Math.min(23, Math.max(1, curLastColP))).getValues()[0];
+    if (String(curHeadersP[0]).toUpperCase() === "ID" || String(curHeadersP[1]).toUpperCase() === "TAHUN" || curLastColP < HEADERS_PIP_PENERIMA.length) {
       sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setValues([HEADERS_PIP_PENERIMA]);
       sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setFontWeight("bold").setBackground("#cfe2f3");
     }
@@ -1869,7 +1870,7 @@ function handleGetPIP(ss, payload) {
           skAtasNama: String(r[27] || r[1] || ""),
           statusKelayakan: "Layak",
           keterangan: String(r[26] || ""),
-          updatedAt: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+          updatedAt: r[28] ? (r[28] instanceof Date ? Utilities.formatDate(r[28], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : String(r[28])) : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
         });
       } else {
         pengusulan.push({
@@ -1929,7 +1930,7 @@ function handleGetPIP(ss, payload) {
           tanggalSK: String(r[21] || ""),
           bankPenyalur: "BRI",
           tahun: "2026",
-          updatedAt: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+          updatedAt: r[22] ? (r[22] instanceof Date ? Utilities.formatDate(r[22], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : String(r[22])) : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
         });
       } else {
         penerima.push({
@@ -2005,7 +2006,8 @@ function handleSavePIP(ss, payload) {
       String(payload.namaPengusul || payload.nama_pengusul || "Kepala SDN Terlangu 01"),
       String(payload.confirmationText || payload.confirmation_text || "-"),
       String(payload.nomorSK || payload.nomor_sk || "0345/P3KE/PIP/2026"),
-      String(payload.tanggalSK || payload.tanggal_sk || "2026-01-15")
+      String(payload.tanggalSK || payload.tanggal_sk || "2026-01-15"),
+      Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
     ];
 
     if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, HEADERS_PIP_PENERIMA.length).setValues([rowValues]);
@@ -2046,7 +2048,8 @@ function handleSavePIP(ss, payload) {
       String(payload.namaFase || (Number(payload.kelas) <= 2 ? "Fase A" : (Number(payload.kelas) <= 4 ? "Fase B" : "Fase C"))),
       String(payload.role || "Siswa"),
       String(payload.statusSK || (payload.nomorSK ? "Sudah SK" : "Belum Masuk SK")),
-      String(payload.skAtasNama || payload.nama || "")
+      String(payload.skAtasNama || payload.nama || ""),
+      Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
     ];
 
     if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, HEADERS_PIP_PENGUSULAN.length).setValues([rowValues]);
@@ -2274,7 +2277,27 @@ function handleTrackPermohonanSurat(ss, payload) {
     if (isIdMatch || isNisnMatch || isHpMatch) {
       const ketStr = String(r[10] || "");
       const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^\s\.]+)/i);
-      const noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+      let noTerbit = matchSrikandi ? matchSrikandi[1].trim() : (ketStr.match(/421\.[0-9\/SD\-]+/i) ? ketStr.match(/421\.[0-9\/SD\-]+/i)[0] : "");
+
+      // Alur Penomoran Resmi: Jika nomor surat belum tercatat di kolom keterangan, cek TAB_SURAT_KELUAR
+      if (!noTerbit) {
+        let sheetSK = ss.getSheetByName(TAB_SURAT_KELUAR);
+        if (sheetSK && sheetSK.getLastRow() > 1) {
+          const skData = sheetSK.getDataRange().getValues();
+          const cleanNama = String(r[3] || "").toLowerCase().trim();
+          const cleanNisn = String(r[2] || "").trim();
+          for (let j = skData.length - 1; j >= 1; j--) {
+            const skRow = skData[j];
+            const perihal = String(skRow[7] || "").toLowerCase();
+            const tujuan = String(skRow[6] || "").toLowerCase();
+            if ((cleanNisn && (perihal.includes(cleanNisn) || tujuan.includes(cleanNisn))) ||
+                (cleanNama && (perihal.includes(cleanNama) || tujuan.includes(cleanNama)))) {
+              noTerbit = String(skRow[1] || "");
+              break;
+            }
+          }
+        }
+      }
 
       return {
         success: true,
@@ -2308,7 +2331,28 @@ function handleUpdatePermohonanSurat(ss, payload) {
 
   const id = String(payload.id || "");
   const newStatus = String(payload.status || "Disetujui TU");
-  const noSurat = String(payload.nomorSuratTerbit || "");
+  let noSurat = String(payload.nomorSuratTerbit || "");
+
+  // Alur Penomoran: Saat status Siap Diambil dan belum ada nomor terbit, ambil langsung dari data nomor surat keluar
+  if ((newStatus === "Siap Diambil" || newStatus.toLowerCase().includes("siap")) && !noSurat) {
+    let sheetSK = ss.getSheetByName(TAB_SURAT_KELUAR);
+    if (sheetSK && sheetSK.getLastRow() > 1) {
+      const skData = sheetSK.getDataRange().getValues();
+      const nisnTarget = String(payload.nisn || "");
+      const namaTarget = String(payload.nama || "").toLowerCase();
+      for (let j = skData.length - 1; j >= 1; j--) {
+        const skRow = skData[j];
+        const perihal = String(skRow[7] || "").toLowerCase();
+        const tujuan = String(skRow[6] || "").toLowerCase();
+        if ((nisnTarget && (perihal.includes(nisnTarget) || tujuan.includes(nisnTarget))) ||
+            (namaTarget && (perihal.includes(namaTarget) || tujuan.includes(namaTarget)))) {
+          noSurat = String(skRow[1] || "");
+          break;
+        }
+      }
+    }
+  }
+
   const ket = payload.keteranganTindak || payload.keterangan || (noSurat ? `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.` : "");
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
   const data = sheet.getDataRange().getValues();

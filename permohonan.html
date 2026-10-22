@@ -723,8 +723,33 @@
                 s2.className = activeClass;
                 s3.className = activeClass;
                 s4.className = activeClass;
-                const noReg = found.nomorSuratTerbit || (found.keteranganTindak && found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.]+)/i) ? found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.]+)/i)[1] : '421.2/001/SD/2026');
-                document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
+
+                // Ambil nomor surat resmi langsung dari data record atau agenda surat keluar
+                let noReg = found.nomorSuratTerbit;
+                if (!noReg && found.keteranganTindak) {
+                    const match = found.keteranganTindak.match(/SRIKANDI:\s*([^\s\.<>]+)/i) || found.keteranganTindak.match(/421\.[0-9\/SD\-]+/i);
+                    if (match) noReg = match[1] || match[0];
+                }
+                if (!noReg) {
+                    try {
+                        const skList = (window.DataStore && DataStore.getSuratKeluar) ? DataStore.getSuratKeluar() : [];
+                        const cleanNama = (found.nama || "").toLowerCase();
+                        const cleanNisn = found.nisn || "";
+                        const matchedSK = skList.find(s => {
+                            const p = (s.perihal || "").toLowerCase();
+                            const t = (s.tujuan || "").toLowerCase();
+                            return (cleanNisn && (p.includes(cleanNisn) || t.includes(cleanNisn))) ||
+                                   (cleanNama && (p.includes(cleanNama) || t.includes(cleanNama)));
+                        });
+                        if (matchedSK) noReg = matchedSK.nomorSurat;
+                    } catch (e) {}
+                }
+
+                if (noReg) {
+                    document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
+                } else {
+                    document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah disetujui dan <strong>siap diambil</strong> di ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB).<br>Silakan tunjukkan nomor tiket <strong>${found.id}</strong> kepada petugas Tata Usaha untuk pengambilan fisik surat.`;
+                }
             } else if (st.includes("tolak") || st.includes("ditolak")) {
                 badge.className = "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Permohonan Ditolak`;

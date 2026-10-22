@@ -777,7 +777,8 @@ const ModulPIP = {
                             statusSK: norm.statussk || (norm.skatasnama ? "Sudah SK" : "Belum Masuk SK"),
                             skAtasNama: norm.skatasnama || norm.atasnama || nama,
                             tahunUsulan: norm.tahunusulan || norm.tahun || "2026",
-                            catatanDapodik: norm.catatan || norm.catatandapodik || "Diimpor dari file pengusulan"
+                            catatanDapodik: norm.catatan || norm.catatandapodik || "Diimpor dari file pengusulan",
+                            updatedAt: new Date().toISOString()
                         });
                     } else {
                         parsedRows.push({
@@ -805,7 +806,8 @@ const ModulPIP = {
                             tanggalCair: norm.tanggalcair || norm.tglcair || "-",
                             namaPengusul: norm.namapengusul || "Kepala SDN Terlangu 01",
                             confirmationText: norm.confirmationtext || "-",
-                            tahunAnggaran: norm.tahunanggaran || norm.tahun || "2026"
+                            tahunAnggaran: norm.tahunanggaran || norm.tahun || "2026",
+                            updatedAt: new Date().toISOString()
                         });
                     }
                 }
@@ -820,7 +822,11 @@ const ModulPIP = {
             if (res && res.success) {
                 App.showToast(res.message || `Berhasil mengimpor ${parsedRows.length} data PIP!`, "success");
                 this.renderActiveTab();
-                App.updateDashboardStats();
+                this.renderDasbor();
+                if (typeof App !== "undefined") {
+                    if (App.updateDashboardStats) App.updateDashboardStats();
+                    if (App.renderAdminPIPStats) App.renderAdminPIPStats();
+                }
             } else {
                 App.showToast("Gagal menyimpan data PIP hasil impor", "error");
             }

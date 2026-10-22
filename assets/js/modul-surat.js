@@ -737,7 +737,7 @@ const ModulSurat = {
             let noSurat = item ? (item.nomorSuratTerbit || "") : "";
             let ketTindak = item ? (item.keteranganTindak || item.keterangan || "") : "";
 
-            // Jika status diubah menjadi Siap Diambil, cari nomor surat keluar atas nama siswa
+            // Alur Penomoran Resmi: Saat status diubah menjadi Siap Diambil, ambil langsung dari data nomor surat keluar
             if (newStatus === "Siap Diambil") {
                 if (!noSurat && item) {
                     const suratKeluarList = DataStore.getSuratKeluar();
@@ -749,15 +749,45 @@ const ModulSurat = {
                         return (cleanNama && (perihal.includes(cleanNama) || tujuan.includes(cleanNama))) ||
                             (cleanNisn && (perihal.includes(cleanNisn) || tujuan.includes(cleanNisn)));
                     });
-                    if (foundSK) {
+
+                    if (foundSK && foundSK.nomorSurat) {
                         noSurat = foundSK.nomorSurat;
-                    } else if (suratKeluarList.length > 0) {
-                        noSurat = suratKeluarList[0].nomorSurat;
+                    } else {
+                        // Ambil nomor surat resmi berikutnya langsung dari generator penomoran surat dinas
+                        const resNext = await ApiClient.request("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
+                        if (resNext && resNext.success && resNext.data && resNext.data.nomorSurat) {
+                            noSurat = resNext.data.nomorSurat;
+                        } else {
+                            const skCount = suratKeluarList.length + 1;
+                            noSurat = `421.2/${String(skCount).padStart(3, "0")}/SD/${new Date().getFullYear()}`;
+                        }
+
+                        // Catat nomor surat resmi ini ke buku register Agenda Surat Keluar (DB_SuratKeluar)
+                        await ApiClient.request("saveSuratKeluar", {
+                            nomorSurat: noSurat,
+                            kodeKlasifikasi: "421.2",
+                            tanggalSurat: new Date().toISOString().split("T")[0],
+                            tujuan: `Orang Tua / Wali Siswa (${item.nama})`,
+                            perihal: `${item.jenisSurat || "Surat Keterangan"} an. ${item.nama} (NISN: ${item.nisn})`,
+                            pengonsep: "Staf TU (Layanan Permohonan Mandiri)",
+                            penandatangan: (DataStore.getConfig() && DataStore.getConfig().namaKepalaSekolah) || "Kepala Sekolah",
+                            keterangan: `Diterbitkan otomatis via Permohonan Online (Tiket: ${item.id})`
+                        });
                     }
                 }
                 if (noSurat) {
-                    ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.`;
+                    ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}. Silakan mengambil fisik surat di ruang Tata Usaha SDN Terlangu 01.`;
                 }
+            }
+
+            if (item) {
+                item.status = newStatus;
+                if (noSurat) item.nomorSuratTerbit = noSurat;
+                if (ketTindak) {
+                    item.keteranganTindak = ketTindak;
+                    item.keterangan = ketTindak;
+                }
+                DataStore.savePermohonanSurat(list);
             }
 
             const payload = {

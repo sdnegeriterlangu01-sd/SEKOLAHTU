@@ -1,5 +1,6 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SIM-TAS-SD (Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar) v2.9.0
+## SEKOLAHTU (Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha) v3.0.0
+> **"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"**
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.
 
@@ -7,7 +8,7 @@ Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS),
 
 ### Langkah 1: Buat Google Spreadsheet Baru
 1. Buka [Google Sheets](https://sheets.new) di peramban web Anda.
-2. Beri nama spreadsheet: `DATABASE_SIM_TAS_SD`.
+2. Beri nama spreadsheet: `DATABASE_SEKOLAHTU` (atau `DATABASE_SIM_TAS_SD` jika melanjutkan database lama).
 3. Anda tidak perlu membuat tab secara manual, script akan menginisialisasinya secara otomatis.
 
 ---
@@ -35,7 +36,7 @@ Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS),
    - Membuat struktur folder terorganisir di Google Drive:
      ```
      My Drive /
-     └── SIM-TAS /
+     └── SEKOLAHTU /   (atau SIM-TAS / untuk instalasi sebelumnya)
          ├── Berkas_Siswa /
          ├── Surat_Masuk /
          ├── Surat_Keluar_PDF /
@@ -62,9 +63,9 @@ Jika ingin mengatur properti script secara manual di Apps Script:
 ### Langkah 5: Publikasikan sebagai Web App (Penerapan Baru atau Update Versi)
 1. Di pojok kanan atas Apps Script:
    - **Jika baru pertama kali:** Klik **Terapkan** > **Penerapan Baru** (`Deploy` > `New deployment`), pilih jenis **Aplikasi Web** (`Web app`).
-   - **Jika memperbarui kode (Update v2.9.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
+   - **Jika memperbarui kode (Update v3.0.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
 2. Konfigurasikan:
-   - **Deskripsi**: `SIM-TAS-SD Production API v2.9.0 (Sinkronisasi Otomatis Rombel Siswa Dropdown Kelas & Koreksi Paragraf Mutasi Masuk)`
+   - **Deskripsi**: `SEKOLAHTU Production API v3.0.0 (Rebranding SEKOLAHTU & Harmonisasi Tata Usaha)`
    - **Jalankan sebagai**: `Saya (emailanda@gmail.com)`
    - **Siapa yang memiliki akses**: `Semua orang` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
 3. Klik **Terapkan** (`Deploy`).
@@ -72,7 +73,7 @@ Jika ingin mengatur properti script secara manual di Apps Script:
 
 ---
 
-### Langkah 6: Hubungkan ke Frontend SIM-TAS-SD
-1. Buka file `assets/js/config.js` di direktori proyek SIM-TAS-SD Anda.
+### Langkah 6: Hubungkan ke Frontend SEKOLAHTU
+1. Buka file `assets/js/config.js` di direktori proyek Anda.
 2. Tempelkan URL Web App pada konstanta `GAS_API_URL`.
 3. Buka aplikasi web `index.html`, masuk ke menu **Pengaturan Sistem**, lalu klik **Uji Koneksi API** untuk memastikan status cloud telah aktif (berwarna hijau).

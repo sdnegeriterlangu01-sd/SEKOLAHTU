@@ -17,7 +17,7 @@ const App = {
         // Jika belum, Auth.init() akan menampilkan Login Overlay modal.
         await Auth.init();
 
-        console.log("SIM-TAS-SD Controller Ready");
+        console.log("SEKOLAHTU Controller Ready");
     },
 
     start() {
@@ -381,9 +381,9 @@ const App = {
                         : `Kelola data kehadiran dan administrasi siswa seluruh kelas yang Anda ajar (${gInfo?.namaMapel ? 'Mata Pelajaran ' + gInfo.namaMapel : 'Lintas Kelas'}) secara terpadu dan otomatis.`;
                 }
             } else {
-                heroTitle.textContent = `Selamat Datang di SIM-TAS-SD`;
+                heroTitle.textContent = `Selamat Datang di SEKOLAHTU`;
                 if (heroDesc) {
-                    heroDesc.textContent = `Kelola administrasi sekolah dasar secara modern, terpadu, dan otomatis. Pengarsipan berkas siswa, penomoran surat baku SRIKANDI, penerbitan surat keterangan instan, dan absensi digital terhubung langsung ke Google Sheets & Drive.`;
+                    heroDesc.textContent = `"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan" — Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha sekolah dasar secara modern, terpadu, paperless, dan otomatis terhubung langsung ke Google Sheets & Drive.`;
                 }
             }
         }
@@ -1236,7 +1236,7 @@ const App = {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `SIM-TAS-SD_backup_${Util.today()}.json`;
+            a.download = `SEKOLAHTU_backup_${Util.today()}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

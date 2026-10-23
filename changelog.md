@@ -1,5 +1,24 @@
-# Changelog & Riwayat Versi SIM-TAS-SD
-Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha administrasi sekolah dasar (SIM-TAS-SD).
+# Changelog & Riwayat Versi SEKOLAHTU
+Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
+
+## [v3.0.0] - 2026-10-23
+
+### Transformasi Identitas & Rebranding Resmi: SEKOLAHTU
+- **Nama Aplikasi:** **SEKOLAHTU**
+- **Akronim Resmi:** *Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha*
+- **Tagline:** *"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"*
+- **Pembaruan Menyeluruh Seluruh Antarmuka (UI/UX) & Komponen Sistem:**
+  - **Header & Sidebar Brand (`index.html`):** Pembaruan logo brand menjadi **SEKOLAHTU**, badge versi naik ke **v3.0.0**, serta subheader dinamis memuat kepanjangan akronim resmi.
+  - **Banner Hero Dasbor (`index.html` & `assets/js/app.js`):** Menampilkan sapaan *"Selamat Datang di SEKOLAHTU"* beserta penegasan tagline *"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"*.
+  - **Login Overlay Modal (`index.html`):** Menampilkan identitas baru SEKOLAHTU beserta akronim dan tagline resmi sekolah.
+  - **Portal Layanan Mandiri Publik (`permohonan.html`):** Penyesuaian nama aplikasi, tombol navigasi *"Masuk SEKOLAHTU"*, serta footer resmi v3.0.0.
+  - **Portal Validasi Dokumen Resmi (`verifikasi.html`):** Penyempurnaan kop validasi keabsahan surat resmi Pangkalan Data SEKOLAHTU dan pengenalan otomatis URL verifikasi.
+  - **Format Cadangan & Ekspor Data (`assets/js/data.js` & `assets/js/app.js`):** File cadangan lokal kini dinamai `SEKOLAHTU_backup_[tanggal].json` dengan dukungan kompatibilitas mundur penuh (*backward compatibility*) untuk memulihkan cadangan versi sebelumnya.
+  - **Format Berkas Impor Siswa (`assets/js/modul-import.js`):** Template unduh berkas otomatis bernama `Template_Impor_Siswa_SEKOLAHTU.xlsx` dan `.csv`.
+  - **Pesan Pengingat WhatsApp Wali Murid (`assets/js/modul-berkas.js`):** Redaksi notifikasi pengingat kelengkapan berkas diselaraskan dengan nama sistem SEKOLAHTU.
+  - **Backend REST API Google Apps Script (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):** Pembaruan identitas backend API ke versi 3.0.0, pendukung folder Google Drive `/SEKOLAHTU/` dengan fallback mulus ke direktori `/SIM-TAS/` lama tanpa risiko data hilang.
+
+---
 
 ## [v2.9.0] - 2026-10-23
 

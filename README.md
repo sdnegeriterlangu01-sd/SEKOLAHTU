@@ -1,6 +1,7 @@
-# SIM-TAS-SD
-### Sistem Informasi Manajemen Tata Usaha Administrasi Sekolah Dasar Terpadu
-> **Paperless • Lightweight • Zero-Cost • Supabase RBAC • Google Sheets & Drive Cloud**
+# SEKOLAHTU
+### Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha Sekolah Dasar
+> **"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"**
+> *Paperless • Lightweight • Zero-Cost • Supabase RBAC • Google Sheets & Drive Cloud*
 
 ---
 
@@ -48,7 +49,7 @@ Membangun platform tata usaha sekolah dasar terpadu yang **ringan (lightweight)*
   - `Config`: Identitas sekolah, kop surat, dan kalender hari libur
 - **Penyimpanan Berkas (Google Drive):**
   ```
-  /SIM-TAS/
+  /SEKOLAHTU/ (atau /SIM-TAS/ untuk instalasi lama)
   ├── Berkas_Siswa/       (Scan KK, Akta, KIP, Foto)
   ├── Surat_Masuk/        (Scan fisik surat masuk)
   ├── Surat_Keluar_PDF/   (PDF surat yang diterbitkan)
@@ -102,10 +103,10 @@ Membangun platform tata usaha sekolah dasar terpadu yang **ringan (lightweight)*
 - **Rekapitulasi Bulanan Siswa:**
   - Matriks bulanan per kelas dengan penanda status Hadir, S, I, A.
 - **Generator Kartu ID QR Otomatis:**
-  - Diterbitkan otomatis untuk seluruh guru & tendik, dapat diunduh per kartu, dicetak lembar A4, dan disimpan langsung ke Google Drive `/SIM-TAS/QR_Tendik/`.
+  - Diterbitkan otomatis untuk seluruh guru & tendik, dapat diunduh per kartu, dicetak lembar A4, dan disimpan langsung ke Google Drive `/SEKOLAHTU/QR_Tendik/`.
 
 ### 💾 6. Pencadangan Sistem (Backup & Restore)
-- **Cadangan Cloud Otomatis ke Google Drive:** Snapshot seluruh tabel Sheets ke file `.json` berstempel waktu di folder `/SIM-TAS/Backup/`.
+- **Cadangan Cloud Otomatis ke Google Drive:** Snapshot seluruh tabel Sheets ke file `.json` berstempel waktu di folder `/SEKOLAHTU/Backup/`.
 - **Cadangan Lokal Portable:** Unduh snapshot basis data lokal browser kapan saja ke file `.json` dan pulihkan kembali dalam 1 klik.
 
 ---

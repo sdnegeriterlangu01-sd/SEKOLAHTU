@@ -216,12 +216,12 @@ const ModulImport = {
             ws["!cols"] = this.TEMPLATE_HEADERS.map(() => ({ wch: 18 }));
             const wb = X.utils.book_new();
             X.utils.book_append_sheet(wb, ws, "Data Siswa");
-            X.writeFile(wb, "Template_Impor_Siswa_SIM-TAS-SD.xlsx");
+            X.writeFile(wb, "Template_Impor_Siswa_SEKOLAHTU.xlsx");
         } catch (e) {
             const csv = [this.TEMPLATE_HEADERS, sample].map(r => r.map(Sec.csvCell).join(",")).join("\n");
             const a = document.createElement("a");
             a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }));
-            a.download = "Template_Impor_Siswa_SIM-TAS-SD.csv";
+            a.download = "Template_Impor_Siswa_SEKOLAHTU.csv";
             a.click();
         }
     },

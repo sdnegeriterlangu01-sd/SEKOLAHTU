@@ -222,7 +222,7 @@ const ModulBerkas = {
         if (!student.berkas?.akta?.uploaded) missing.push("Akta Kelahiran");
         
         const namaSekolah = DataStore.getConfig().namaSekolah || "SD Negeri Terlangu 01";
-        const msg = `Yth. Bapak/Ibu Wali dari Ananda *${student.nama}* (Kelas ${student.rombel || student.kelas} ${namaSekolah}).\n\nBerdasarkan rekap data bangkas sekolah, berkas *${missing.join(" dan ") || "kelengkapan administrasi"}* ananda belum terunggah di sistem SIM-TAS-SD. Mohon kesediaannya mengirimkan foto/scan berkas fisik tersebut demi kelancaran administrasi Dapodik dan verifikasi bantuan sosial PIP.\n\nTerima kasih atas kerja samanya.\n*${namaSekolah}*`;
+        const msg = `Yth. Bapak/Ibu Wali dari Ananda *${student.nama}* (Kelas ${student.rombel || student.kelas} ${namaSekolah}).\n\nBerdasarkan rekap data bangkas sekolah, berkas *${missing.join(" dan ") || "kelengkapan administrasi"}* ananda belum terunggah di sistem SEKOLAHTU. Mohon kesediaannya mengirimkan foto/scan berkas fisik tersebut demi kelancaran administrasi Dapodik dan verifikasi bantuan sosial PIP.\n\nTerima kasih atas kerja samanya.\n*${namaSekolah}*`;
         return `https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`;
     },
 
@@ -459,7 +459,7 @@ const ModulBerkas = {
                         <i class="fa-solid fa-file-pdf"></i>
                     </div>
                     <h4 class="font-bold text-slate-800 text-base mb-1">${doc.filename}</h4>
-                    <p class="text-xs text-slate-500 mb-6">Tersimpan aman di Google Drive: <span class="font-mono text-slate-700">/SIM-TAS/Berkas_Siswa/${doc.filename}</span></p>
+                    <p class="text-xs text-slate-500 mb-6">Tersimpan aman di Google Drive: <span class="font-mono text-slate-700">/SEKOLAHTU/Berkas_Siswa/${doc.filename}</span></p>
                     <div class="flex items-center justify-center gap-3">
                         <a href="${doc.url}" target="_blank" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-2 shadow-sm transition">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka di Google Drive

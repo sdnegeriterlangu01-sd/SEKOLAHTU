@@ -198,7 +198,7 @@ const ApiClient = {
 
         switch (action) {
             case "ping":
-                return { success: true, message: "SIM-TAS Local Database Siap", mode: "local" };
+                return { success: true, message: "SEKOLAHTU Local Database Siap", mode: "local" };
 
             // ================== SISWA / BERKAS ==================
             case "getStudents": {

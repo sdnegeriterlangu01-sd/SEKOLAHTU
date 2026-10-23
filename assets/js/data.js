@@ -1116,7 +1116,7 @@ const DataStore = {
 
     // ================= BACKUP LOKAL (JSON) =================
     exportAll() {
-        const dump = { _app: "SIM-TAS-SD", _versi: 2, _dibuat: new Date().toISOString(), data: {} };
+        const dump = { _app: "SEKOLAHTU", _versi: 3, _dibuat: new Date().toISOString(), data: {} };
         Object.entries(this.KEYS).forEach(([name, key]) => {
             if (name === "CONFIG") return; // konfigurasi (URL/endpoint) tidak ikut dibackup
             dump.data[key] = JSON.parse(localStorage.getItem(key) || "null");
@@ -1129,7 +1129,7 @@ const DataStore = {
     },
 
     importAll(dump) {
-        if (!dump || dump._app !== "SIM-TAS-SD" || !dump.data) throw new Error("Berkas bukan backup SIM-TAS-SD yang valid.");
+        if (!dump || (dump._app !== "SEKOLAHTU" && dump._app !== "SIM-TAS-SD") || !dump.data) throw new Error("Berkas bukan backup SEKOLAHTU yang valid.");
         Object.entries(this.KEYS).forEach(([name, key]) => {
             if (name === "CONFIG") return;
             if (dump.data[key] != null) localStorage.setItem(key, JSON.stringify(Sec.cleanDeep(dump.data[key])));

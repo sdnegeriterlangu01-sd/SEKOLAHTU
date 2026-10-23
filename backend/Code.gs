@@ -1,7 +1,8 @@
 /**
  * ==========================================================================
- * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.9.0
+ * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
+ * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
+ * Backend REST API - Google Apps Script (GAS) v3.0.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -22,8 +23,8 @@ const DEFAULT_SUPABASE_URL = "https://wesuxejtpquzqkojpvpg.supabase.co";
 const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_fz1vTJMm99C7PPNsCKjS_g_dt2DfhVa";
 const DEFAULT_GAS_API_URL = "https://script.google.com/macros/s/AKfycby8iGSmXP0R6ytEtzWLCcrp7FZQVQQFORaS1KqCsKuNEXrAQ9-JnAZtmkz0mSITSaFM/exec";
 
-// Konstanta Nama Folder di Google Drive
-const ROOT_FOLDER_NAME = "SIM-TAS";
+// Konstanta Nama Folder di Google Drive (Mendukung SEKOLAHTU & Fallback SIM-TAS)
+const ROOT_FOLDER_NAME = "SEKOLAHTU";
 const FOLDER_BERKAS_SISWA = "Berkas_Siswa";
 const FOLDER_SURAT_MASUK = "Surat_Masuk";
 const FOLDER_SURAT_KELUAR = "Surat_Keluar_PDF";
@@ -102,8 +103,8 @@ function doGet(e) {
   const backendCfg = getBackendConfig();
   const result = {
     status: "ok",
-    app: "SIM-TAS-SD Backend API",
-    version: "2.9.0",
+    app: "SEKOLAHTU Backend API",
+    version: "3.0.0",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
@@ -129,7 +130,7 @@ function doPost(e) {
 
     // Ping / Health Check bebas token
     if (action === "ping") {
-      responseData = { success: true, message: "Koneksi API SIM-TAS-SD aktif!", timestamp: new Date() };
+      responseData = { success: true, message: "Koneksi API SEKOLAHTU aktif!", timestamp: new Date() };
       return ContentService.createTextOutput(JSON.stringify(responseData)).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -595,7 +596,7 @@ function setupDatabaseAndFolders() {
 
   return {
     success: true,
-    message: "Inisialisasi Database Google Sheets (12 Tab) & Folder Google Drive (/SIM-TAS/) berhasil diselesaikan!",
+    message: "Inisialisasi Database Google Sheets (12 Tab) & Folder Google Drive (/SEKOLAHTU/) berhasil diselesaikan!",
     rootFolderId: rootFolder.getId()
   };
 }
@@ -603,6 +604,11 @@ function setupDatabaseAndFolders() {
 function getOrCreateSubFolder(parentFolder, folderName) {
   const folders = parentFolder.getFoldersByName(folderName);
   if (folders.hasNext()) return folders.next();
+  // Fallback legacy folder jika mencari SEKOLAHTU tapi yang sudah ada SIM-TAS
+  if (folderName === "SEKOLAHTU") {
+    const legacy = parentFolder.getFoldersByName("SIM-TAS");
+    if (legacy.hasNext()) return legacy.next();
+  }
   const newFolder = parentFolder.createFolder(folderName);
   newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return newFolder;
@@ -620,8 +626,8 @@ function handleBackupDatabase(ss) {
   const timeStr = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd_HHmmss");
 
   const dump = {
-    _app: "SIM-TAS-SD",
-    _version: "2.0.0",
+    _app: "SEKOLAHTU",
+    _version: "3.0.0",
     _created: now.toISOString(),
     spreadsheetId: ss.getId(),
     tables: {}
@@ -639,12 +645,12 @@ function handleBackupDatabase(ss) {
   });
 
   const jsonStr = JSON.stringify(dump, null, 2);
-  const filename = `Backup_SIM-TAS_${timeStr}.json`;
+  const filename = `Backup_SEKOLAHTU_${timeStr}.json`;
   const file = backupFolder.createFile(filename, jsonStr, "application/json");
 
   return {
     success: true,
-    message: `Pencadangan database berhasil disimpan di Google Drive /SIM-TAS/Backup/${filename}`,
+    message: `Pencadangan database berhasil disimpan di Google Drive /SEKOLAHTU/Backup/${filename}`,
     fileUrl: file.getUrl()
   };
 }
@@ -834,7 +840,7 @@ function handleUploadStudentDoc(ss, payload) {
 
   return {
     success: true,
-    message: `Dokumen ${docType} berhasil diunggah ke Google Drive /SIM-TAS/Berkas_Siswa/!`,
+    message: `Dokumen ${docType} berhasil diunggah ke Google Drive /SEKOLAHTU/Berkas_Siswa/!`,
     data: { filename: filename, url: directUrl, viewUrl: fileUrl }
   };
 }

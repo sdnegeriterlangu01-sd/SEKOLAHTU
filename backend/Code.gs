@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SIM-TAS-SD: SISTEM INFORMASI MANAJEMEN TATA USAHA SEKOLAH DASAR
- * Backend REST API - Google Apps Script (GAS) v2.8.0
+ * Backend REST API - Google Apps Script (GAS) v2.9.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -103,7 +103,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SIM-TAS-SD Backend API",
-    version: "2.7.0",
+    version: "2.9.0",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,

@@ -1,6 +1,32 @@
 # Changelog & Riwayat Versi SIM-TAS-SD
 Semua catatan perubahan dan pembaruan sistem informasi manajemen tata usaha administrasi sekolah dasar (SIM-TAS-SD).
 
+## [v2.9.0] - 2026-10-23
+
+### Sinkronisasi Otomatis Seluruh Dropdown Kelas / Rombel Siswa (1A, 3A, dll.) dan Perbaikan Redaksi Surat Mutasi Masuk
+
+- **Perbaikan Redaksi Paragraf Surat Keterangan Bersedia Menerima / Mutasi Masuk (`assets/js/modul-cetak.js`):**
+  - Menghapus penyebutan kelas angka romawi yang tidak nyambung pada kalimat persetujuan mutasi masuk:
+    - *Sebelum:* `... di SD Negeri Terlangu 01 pada IV ( Empat ) Tahun Ajaran 2026/2027, yang bersangkutan berasal dari:`
+    - *Sesudah:* `... di SD Negeri Terlangu 01 pada Tahun Ajaran 2026/2027, yang bersangkutan berasal dari:`
+  - Informasi kelas yang dituju tetap tertera lengkap dan terstruktur pada tabel identitas calon siswa ("Kelas yang Dituju: IV ( Empat )").
+  - Menampilkan rombel lengkap (`s.rombel || s.kelas`) pada pemilih siswa cetak surat.
+
+- **Sinkronisasi Otomatis Seluruh Dropdown Kelas dari Data Siswa (`assets/js/data.js`, `assets/js/app.js`, `assets/js/modul-berkas.js`, `assets/js/modul-absensi.js`, `assets/js/modul-jadwal.js`, `assets/js/modul-pip.js`, `assets/js/modul-presensi.js`, `assets/js/modul-import.js`, `assets/js/auth.js`, `permohonan.html`):**
+  - Mengoptimalkan `DataStore.getRombels()` agar menormalisasi nama rombel dan mengekstrak daftar rombel unik terurut secara natural (misal: `1A`, `1B`, `2`, `3A`, `4`, `5`, `6`).
+  - Menghubungkan seluruh menu dropdown kelas di semua modul aplikasi agar mengikuti data rombel hasil impor maupun penambahan siswa:
+    1. **Filter Berkas Siswa (`#filter-kelas-berkas`):** Mengikuti daftar rombel siswa aktif.
+    2. **Modal Tambah Siswa Manual (`#tambah-kelas`):** Otomatis menyajikan pilihan rombel yang ada di database.
+    3. **Filter Presensi Siswa (`#absensi-kelas`):** Menyajikan pilihan rombel siswa secara dinamis.
+    4. **Jadwal Pelajaran (`#jadwal-select-kelas`, `#jadwal-form-rombel`):** Sinkron dengan rombel aktif beserta fase kurikulum.
+    5. **Filter PIP (`#pip-filter-kelas-penerima`):** Sinkron dengan rombel aktif.
+    6. **Rekap Presensi Bulanan (`#rs-kelas`):** Sinkron dengan rombel aktif.
+    7. **Modal Impor Data Siswa (`#imp-kelas-default`):** Dropdown kelas default bila rombel kosong terisi dinamis.
+    8. **Manajemen Akun Guru (`#new-user-guru-kelas`, `#edit-user-guru-kelas`):** Tersinkronisasi saat tambah dan edit akun guru.
+    9. **Portal Permohonan Mandiri Publik (`#req-manual-kelas`, `#req-mutasi-kelas` di `permohonan.html`):** Tersinkronisasi langsung dengan master rombel sekolah.
+  - Menambahkan controller terpusat `App.syncAllKelasDropdowns()` yang otomatis dipanggil saat startup, setelah impor Excel Dapodik, setelah penambahan siswa, dan saat pergantian tahun ajaran aktif.
+  - Memperbaiki logika filter pencocokan rombel (*class matcher*) di seluruh modul agar tidak salah mencocokkan rombel berhuruf (seperti `1A` dengan `1B`).
+
 ---
 
 ## [v2.8.0] - 2026-10-23

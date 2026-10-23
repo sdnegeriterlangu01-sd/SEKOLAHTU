@@ -68,7 +68,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SIM-TAS-SD
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.8.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v2.9.0</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -105,8 +105,7 @@
                         <span>{{ item.label }}</span>
                         <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
                     </a>
-                    <a v-else :href="'#' + item.route" :data-route="item.route"
-                        @click.prevent="navigate(item.route)"
+                    <a v-else :href="'#' + item.route" :data-route="item.route" @click.prevent="navigate(item.route)"
                         :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
                         <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
                         <span>{{ item.label }}</span>
@@ -213,10 +212,12 @@
                                 absensi digital terhubung langsung ke Google Sheets & Drive.
                             </p>
                             <!-- Tombol Aksi Cepat Mandiri (Dipisah di Bawah Selamat Datang Sesuai Revisi) -->
-                            <div class="mt-4 sm:mt-5 flex flex-wrap gap-2 sm:gap-2.5 items-center" id="vue-quick-actions">
+                            <div class="mt-4 sm:mt-5 flex flex-wrap gap-2 sm:gap-2.5 items-center"
+                                id="vue-quick-actions">
                                 <button v-for="act in actions" :key="act.label" type="button" @click="run(act)"
                                     class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
-                                    <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                    <span
+                                        class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
                                         <i :class="['fa-solid', act.icon, act.color || 'text-amber-300']"></i>
                                     </span>
                                     <span>{{ act.label }}</span>
@@ -705,14 +706,12 @@
 
                         <!-- Sub-tab Toggle Bar with Direct Click Handlers & Vue Sync -->
                         <div id="vue-surat-tabs" class="bg-slate-200/80 p-1 rounded-xl flex items-center gap-1">
-                            <button type="button" id="btn-tab-surat-keluar"
-                                onclick="ModulSurat.switchSubTab('keluar')"
+                            <button type="button" id="btn-tab-surat-keluar" onclick="ModulSurat.switchSubTab('keluar')"
                                 class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer bg-white text-blue-700 shadow-sm">
                                 <i class="fa-solid fa-paper-plane"></i>
                                 <span>Surat Keluar</span>
                             </button>
-                            <button type="button" id="btn-tab-surat-masuk"
-                                onclick="ModulSurat.switchSubTab('masuk')"
+                            <button type="button" id="btn-tab-surat-masuk" onclick="ModulSurat.switchSubTab('masuk')"
                                 class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900">
                                 <i class="fa-solid fa-inbox"></i>
                                 <span>Surat Masuk</span>
@@ -722,7 +721,8 @@
                                 class="px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer text-slate-600 hover:text-slate-900 relative">
                                 <i class="fa-solid fa-users"></i>
                                 <span>Pengajuan Ortu</span>
-                                <span id="badge-pending-permohonan" class="hidden ml-1 px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-black rounded-full shadow-xs">0</span>
+                                <span id="badge-pending-permohonan"
+                                    class="hidden ml-1 px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-black rounded-full shadow-xs">0</span>
                             </button>
                         </div>
                     </div>
@@ -831,62 +831,62 @@
 
                     <!-- ================= SUB VIEW: PENGAJUAN ONLINE ORTU ================= -->
                     <div id="view-surat-permohonan" class="hidden space-y-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div class="flex items-center gap-3 flex-grow max-w-xl">
-                                    <div class="relative flex-grow">
-                                        <i
-                                            class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                        <input type="text" id="search-surat-permohonan"
-                                            placeholder="Cari kode tiket, nama siswa, NISN, atau orang tua..."
-                                            class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    </div>
-                                    <select id="filter-status-permohonan"
-                                        class="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
-                                        <option value="Semua">Semua Status</option>
-                                        <option value="Menunggu Verifikasi TU">Menunggu Verifikasi</option>
-                                        <option value="Disetujui TU">Disetujui TU</option>
-                                        <option value="Siap Diambil">Siap Diambil</option>
-                                        <option value="Selesai">Selesai</option>
-                                        <option value="Ditolak">Ditolak</option>
-                                    </select>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 flex-grow max-w-xl">
+                                <div class="relative flex-grow">
+                                    <i
+                                        class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="search-surat-permohonan"
+                                        placeholder="Cari kode tiket, nama siswa, NISN, atau orang tua..."
+                                        class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
-                                <a href="permohonan.html" target="_blank"
-                                    class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs whitespace-nowrap">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Portal Publik Ortu
-                                </a>
+                                <select id="filter-status-permohonan"
+                                    class="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Status</option>
+                                    <option value="Menunggu Verifikasi TU">Menunggu Verifikasi</option>
+                                    <option value="Disetujui TU">Disetujui TU</option>
+                                    <option value="Siap Diambil">Siap Diambil</option>
+                                    <option value="Selesai">Selesai</option>
+                                    <option value="Ditolak">Ditolak</option>
+                                </select>
                             </div>
+                            <a href="permohonan.html" target="_blank"
+                                class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs whitespace-nowrap">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Portal Publik Ortu
+                            </a>
+                        </div>
 
-                            <!-- Table Card -->
-                            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                                <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                                    <span id="total-surat-permohonan-count" class="text-xs font-bold text-slate-600">0
-                                        Pengajuan Surat Terdata</span>
-                                    <div class="text-[11px] text-slate-400">
-                                        Portal Self-Service: <span
-                                            class="font-mono font-semibold text-slate-600">permohonan.html</span>
-                                    </div>
+                        <!-- Table Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <span id="total-surat-permohonan-count" class="text-xs font-bold text-slate-600">0
+                                    Pengajuan Surat Terdata</span>
+                                <div class="text-[11px] text-slate-400">
+                                    Portal Self-Service: <span
+                                        class="font-mono font-semibold text-slate-600">permohonan.html</span>
                                 </div>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr
-                                                class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                                                <th class="px-4 py-3">Tiket & Tanggal</th>
-                                                <th class="px-4 py-3">Nama Siswa & NISN</th>
-                                                <th class="px-4 py-3">Jenis Surat & Keperluan</th>
-                                                <th class="px-4 py-3">Orang Tua & WhatsApp</th>
-                                                <th class="px-4 py-3 text-center">Status</th>
-                                                <th class="px-4 py-3 text-center">Verifikasi TU</th>
-                                                <th class="px-4 py-3 text-right">Tindakan</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="table-surat-permohonan-body">
-                                            <!-- Rendered dynamically -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr
+                                            class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                            <th class="px-4 py-3">Tiket & Tanggal</th>
+                                            <th class="px-4 py-3">Nama Siswa & NISN</th>
+                                            <th class="px-4 py-3">Jenis Surat & Keperluan</th>
+                                            <th class="px-4 py-3">Orang Tua & WhatsApp</th>
+                                            <th class="px-4 py-3 text-center">Status</th>
+                                            <th class="px-4 py-3 text-center">Verifikasi TU</th>
+                                            <th class="px-4 py-3 text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-surat-permohonan-body">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+                    </div>
 
                 </section>
 
@@ -938,12 +938,14 @@
 
                             <!-- Tahun Ajaran Surat -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tahun Ajaran Surat</label>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tahun Ajaran
+                                    Surat</label>
                                 <select id="cetak-select-ta" onchange="ModulCetak.generatePreview()"
                                     class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium text-slate-800">
                                     <!-- Populated dynamically by ModulCetak.populateTASelect() -->
                                 </select>
-                                <p class="text-[10px] text-slate-400 mt-1">Tahun ajaran dinamis pada badan surat resmi.</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Tahun ajaran dinamis pada badan surat resmi.
+                                </p>
                             </div>
 
                             <!-- Pengaturan Nomor Surat -->
@@ -992,7 +994,7 @@
                                 <div id="cetak-box-manual" class="hidden">
                                     <input type="text" id="cetak-input-manual"
                                         oninput="ModulCetak.onInputManualNomor(this.value)"
-                                        placeholder="Contoh: 421.2/045/SD/2026"
+                                        placeholder="Contoh: 421.2/001/VII/2026"
                                         class="w-full px-3 py-2 text-xs border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/30">
                                 </div>
                             </div>
@@ -1004,10 +1006,13 @@
                                 <select id="cetak-jenis-surat" onchange="ModulCetak.onSelectTemplate(this.value)"
                                     class="w-full max-w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium text-slate-800">
                                     <option value="aktif">Surat Keterangan Aktif Belajar (Umum)</option>
-                                    <option value="pip_pencairan">Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP</option>
+                                    <option value="pip_pencairan">Surat Keterangan Aktif Belajar dan Rekomendasi
+                                        Pencairan Dana PIP</option>
                                     <option value="mutasi">Surat Keterangan Pindah Sekolah (Mutasi Keluar)</option>
-                                    <option value="bersedia_menerima">Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi</option>
-                                    <option value="rekomendasi">Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi)</option>
+                                    <option value="bersedia_menerima">Surat Keterangan Bersedia Menerima Siswa Pindah /
+                                        Mutasi</option>
+                                    <option value="rekomendasi">Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi)
+                                    </option>
                                     <option value="kelakuan">Surat Keterangan Kelakuan Baik Siswa</option>
                                 </select>
                             </div>
@@ -1269,26 +1274,34 @@
                     <form onsubmit="App.saveSettings(event)" class="space-y-6">
 
                         <!-- Panel 1: Mode Operasi Sistem (On/Off Cloud vs Lokal) -->
-                        <div id="cfg-cloud-mode-card" class="p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 transition-all shadow-xs space-y-3">
+                        <div id="cfg-cloud-mode-card"
+                            class="p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 transition-all shadow-xs space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                                            <i class="fa-solid fa-tower-broadcast text-blue-600"></i> Mode Operasi Sistem
+                                            <i class="fa-solid fa-tower-broadcast text-blue-600"></i> Mode Operasi
+                                            Sistem
                                         </h3>
-                                        <span id="cfg-cloud-mode-status-text" class="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode Cloud Aktif
+                                        <span id="cfg-cloud-mode-status-text"
+                                            class="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode
+                                            Cloud Aktif
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-500 mt-1">Pilih apakah sistem beroperasi online terhubung ke Cloud atau offline lokal di peramban.</p>
+                                    <p class="text-xs text-slate-500 mt-1">Pilih apakah sistem beroperasi online
+                                        terhubung ke Cloud atau offline lokal di peramban.</p>
                                 </div>
 
                                 <!-- Switch On/Off Button -->
-                                <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-xs self-start sm:self-auto">
+                                <div
+                                    class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-xs self-start sm:self-auto">
                                     <span class="text-xs font-bold text-slate-700">Lokal</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="cfg-cloud-mode" onchange="App.toggleCloudMode(this.checked)" class="sr-only peer" checked>
-                                        <div class="w-12 h-6.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner">
+                                        <input type="checkbox" id="cfg-cloud-mode"
+                                            onchange="App.toggleCloudMode(this.checked)" class="sr-only peer" checked>
+                                        <div
+                                            class="w-12 h-6.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner">
                                         </div>
                                     </label>
                                     <span class="text-xs font-extrabold text-emerald-700">Cloud (On)</span>
@@ -1298,18 +1311,24 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
                                 <div class="p-3 bg-white/80 rounded-xl border border-emerald-200/60">
                                     <div class="font-bold text-emerald-900 flex items-center gap-1.5 mb-0.5">
-                                        <i class="fa-solid fa-cloud-check text-emerald-600"></i> Mode Cloud (On / Disarankan):
+                                        <i class="fa-solid fa-cloud-check text-emerald-600"></i> Mode Cloud (On /
+                                        Disarankan):
                                     </div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        Sinkronisasi multi-perangkat real-time ke <strong>Google Sheets</strong>, pengarsipan berkas ke <strong>Google Drive</strong>, dan otentikasi zero-trust via <strong>Supabase Auth</strong>.
+                                        Sinkronisasi multi-perangkat real-time ke <strong>Google Sheets</strong>,
+                                        pengarsipan berkas ke <strong>Google Drive</strong>, dan otentikasi zero-trust
+                                        via <strong>Supabase Auth</strong>.
                                     </p>
                                 </div>
                                 <div class="p-3 bg-white/80 rounded-xl border border-slate-200/60">
                                     <div class="font-bold text-slate-800 flex items-center gap-1.5 mb-0.5">
-                                        <i class="fa-solid fa-hard-drive text-amber-600"></i> Mode Lokal (Off / Demo Offline):
+                                        <i class="fa-solid fa-hard-drive text-amber-600"></i> Mode Lokal (Off / Demo
+                                        Offline):
                                     </div>
                                     <p class="text-[11px] text-slate-600 leading-relaxed">
-                                        Bekerja tanpa koneksi server cloud. Seluruh data disimpan mandiri di memori browser (<strong>LocalStorage</strong>) cocok untuk demonstrasi dan uji coba cepat.
+                                        Bekerja tanpa koneksi server cloud. Seluruh data disimpan mandiri di memori
+                                        browser (<strong>LocalStorage</strong>) cocok untuk demonstrasi dan uji coba
+                                        cepat.
                                     </p>
                                 </div>
                             </div>
@@ -1320,44 +1339,53 @@
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div>
                                     <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                                        <i class="fa-solid fa-bolt text-emerald-600"></i> Konfigurasi Supabase (Otentikasi & Database Cloud)
+                                        <i class="fa-solid fa-bolt text-emerald-600"></i> Konfigurasi Supabase
+                                        (Otentikasi & Database Cloud)
                                     </h3>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">Kredensial publik Supabase Auth untuk verifikasi sesi staf TU, Kepala Sekolah, dan Guru.</p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Kredensial publik Supabase Auth untuk
+                                        verifikasi sesi staf TU, Kepala Sekolah, dan Guru.</p>
                                 </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
                                     Zero Trust Auth
                                 </span>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project URL</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project
+                                        URL</label>
                                     <input type="url" id="cfg-supabase-url"
                                         placeholder="https://wesuxejtpquzqkojpvpg.supabase.co"
                                         class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
-                                    <p class="text-[10px] text-slate-400 mt-1">URL Project REST & Auth Supabase Anda.</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">URL Project REST & Auth Supabase Anda.
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key (Public Key)</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key
+                                        (Public Key)</label>
                                     <div class="relative">
                                         <input type="password" id="cfg-supabase-anon-key"
                                             placeholder="sb_publishable_... atau eyJhbGciOi..."
                                             class="w-full px-3.5 py-2 pr-10 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
-                                        <button type="button" onclick="App.togglePasswordVisibility('cfg-supabase-anon-key', this)"
+                                        <button type="button"
+                                            onclick="App.togglePasswordVisibility('cfg-supabase-anon-key', this)"
                                             class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs"
                                             title="Tampilkan / Sembunyikan Kunci">
                                             <i class="fa-solid fa-eye"></i>
                                         </button>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 mt-1">Anon key bersifat publik & aman karena dilindungi oleh Row Level Security (RLS).</p>
+                                    <p class="text-[10px] text-slate-400 mt-1">Anon key bersifat publik & aman karena
+                                        dilindungi oleh Row Level Security (RLS).</p>
                                 </div>
                             </div>
 
                             <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
                                 <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
                                     <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-                                    <span>Token login selalu diverifikasi ulang di sisi server Google Apps Script.</span>
+                                    <span>Token login selalu diverifikasi ulang di sisi server Google Apps
+                                        Script.</span>
                                 </div>
                                 <button type="button" id="btn-test-supabase" onclick="App.testSupabaseConnection()"
                                     class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-xs cursor-pointer">
@@ -1371,22 +1399,27 @@
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div>
                                     <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                                        <i class="fa-solid fa-cloud text-blue-600"></i> Integrasi Google Apps Script (GAS) Web App Endpoint
+                                        <i class="fa-solid fa-cloud text-blue-600"></i> Integrasi Google Apps Script
+                                        (GAS) Web App Endpoint
                                     </h3>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">Jembatan REST API gratis untuk membaca & menulis basis data Google Sheets dan Google Drive.</p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Jembatan REST API gratis untuk membaca
+                                        & menulis basis data Google Sheets dan Google Drive.</p>
                                 </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
                                     Zero Cost Serverless
                                 </span>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps Script Web App Endpoint</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps
+                                        Script Web App Endpoint</label>
                                     <input type="url" id="cfg-gas-url"
                                         placeholder="https://script.google.com/macros/s/AKfycb.../exec"
                                         class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono">
-                                    <p class="text-[11px] text-slate-400 mt-1">Dapatkan URL ini setelah menerapkan (Deploy) script backend sebagai Web App.</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">Dapatkan URL ini setelah menerapkan
+                                        (Deploy) script backend sebagai Web App.</p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button type="button" id="btn-test-gas" onclick="App.testGasConnection()"
@@ -1402,17 +1435,29 @@
                             </div>
 
                             <!-- Panduan Singkat Deployment -->
-                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1.5">
+                            <div
+                                class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1.5">
                                 <div class="font-bold text-slate-800 flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-book text-amber-500"></i> Panduan Cepat Setup Backend Google Apps Script:</span>
-                                    <a href="backend/Panduan_Deploy_GAS.md" target="_blank" class="text-blue-700 hover:underline font-bold text-[11px]">Buka Panduan Lengkap &rarr;</a>
+                                    <span class="flex items-center gap-1.5"><i
+                                            class="fa-solid fa-book text-amber-500"></i> Panduan Cepat Setup Backend
+                                        Google Apps Script:</span>
+                                    <a href="backend/Panduan_Deploy_GAS.md" target="_blank"
+                                        class="text-blue-700 hover:underline font-bold text-[11px]">Buka Panduan Lengkap
+                                        &rarr;</a>
                                 </div>
                                 <ol class="list-decimal list-inside space-y-1 pl-1 text-[11px] leading-relaxed">
-                                    <li>Buka file <code class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">backend/Code.gs</code> di repositori ini dan salin seluruh kodenya.</li>
-                                    <li>Buka spreadsheet baru di Google Sheets &rarr; menu <strong>Ekstensi</strong> &rarr; <strong>Apps Script</strong>.</li>
-                                    <li>Jalankan fungsi <code class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">setupDatabaseAndFolders</code> untuk menginisialisasi tabel & folder Drive secara otomatis.</li>
-                                    <li>Klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (Execute as: <em>Me</em>, Access: <em>Anyone</em>).</li>
-                                    <li>Salin URL Web App yang dihasilkan ke kotak input di atas lalu klik <strong>Uji Koneksi GAS</strong>.</li>
+                                    <li>Buka file <code
+                                            class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">backend/Code.gs</code>
+                                        di repositori ini dan salin seluruh kodenya.</li>
+                                    <li>Buka spreadsheet baru di Google Sheets &rarr; menu <strong>Ekstensi</strong>
+                                        &rarr; <strong>Apps Script</strong>.</li>
+                                    <li>Jalankan fungsi <code
+                                            class="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">setupDatabaseAndFolders</code>
+                                        untuk menginisialisasi tabel & folder Drive secara otomatis.</li>
+                                    <li>Klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (Execute as:
+                                        <em>Me</em>, Access: <em>Anyone</em>).</li>
+                                    <li>Salin URL Web App yang dihasilkan ke kotak input di atas lalu klik <strong>Uji
+                                            Koneksi GAS</strong>.</li>
                                 </ol>
                             </div>
                         </div>
@@ -1619,8 +1664,10 @@
                                 class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm">
                                 <i class="fa-solid fa-plus"></i> Tambah / Edit Slot
                             </button>
-                            <button id="jadwal-btn-clear-kelas" onclick="ModulJadwal.clearAllJadwalKelas()" data-need="saveJadwal"
-                                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs" title="Hapus seluruh jadwal pelajaran pada kelas ini">
+                            <button id="jadwal-btn-clear-kelas" onclick="ModulJadwal.clearAllJadwalKelas()"
+                                data-need="saveJadwal"
+                                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-xs"
+                                title="Hapus seluruh jadwal pelajaran pada kelas ini">
                                 <i class="fa-solid fa-trash-can text-rose-600"></i> Hapus Semua Jadwal Kelas
                             </button>
                         </div>
@@ -1709,7 +1756,8 @@
                             class="pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 bg-white text-amber-700 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-chart-simple"></i> Dasbor & Analitik
                         </button>
-                        <button id="pip-btn-tab-pengusulan" data-tab="pengusulan" onclick="ModulPIP.switchTab('pengusulan')"
+                        <button id="pip-btn-tab-pengusulan" data-tab="pengusulan"
+                            onclick="ModulPIP.switchTab('pengusulan')"
                             class="pip-subtab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
                             <i class="fa-solid fa-clipboard-question"></i> Data Pengusulan (Desil)
                         </button>
@@ -1836,28 +1884,35 @@
                         </div>
 
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                            <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div
+                                class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
-                                    <span id="pip-total-pengusulan-count" class="text-xs font-bold text-slate-700">0 Data Pengusulan</span>
-                                    <div class="text-[11px] text-slate-400">Sinkronisasi: <span class="font-mono font-semibold text-slate-600">Dapodik & P3KE Kemendikbud</span></div>
+                                    <span id="pip-total-pengusulan-count" class="text-xs font-bold text-slate-700">0
+                                        Data Pengusulan</span>
+                                    <div class="text-[11px] text-slate-400">Sinkronisasi: <span
+                                            class="font-mono font-semibold text-slate-600">Dapodik & P3KE
+                                            Kemendikbud</span></div>
                                 </div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <button onclick="ModulPIP.downloadTemplate('pengusulan')" 
-                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Unduh Format Contoh Excel Pengusulan PIP">
+                                    <button onclick="ModulPIP.downloadTemplate('pengusulan')"
+                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        title="Unduh Format Contoh Excel Pengusulan PIP">
                                         <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Format Contoh
                                     </button>
-                                    <button onclick="ModulPIP.triggerImport('pengusulan')" 
-                                        class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Impor Data Pengusulan dari Excel">
+                                    <button onclick="ModulPIP.triggerImport('pengusulan')"
+                                        class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        title="Impor Data Pengusulan dari Excel">
                                         <i class="fa-solid fa-file-arrow-up"></i> Impor Data Excel
                                     </button>
-                                    <input type="file" id="file-import-pip-usulan" accept=".xlsx,.xls,.csv" class="hidden"
-                                        onchange="ModulPIP.handleFileImport(event, 'pengusulan')">
+                                    <input type="file" id="file-import-pip-usulan" accept=".xlsx,.xls,.csv"
+                                        class="hidden" onchange="ModulPIP.handleFileImport(event, 'pengusulan')">
                                 </div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                        <tr
+                                            class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                                             <th class="px-3 py-3 text-center w-12">No</th>
                                             <th class="px-4 py-3">Nama Murid & NISN</th>
                                             <th class="px-4 py-3 text-center">Kelas & Rombel</th>
@@ -1911,28 +1966,34 @@
                         </div>
 
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                            <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div
+                                class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
-                                    <span id="pip-total-penerima-count" class="text-xs font-bold text-slate-700">0 Siswa Penerima SK</span>
-                                    <div class="text-[11px] text-slate-400">Penyalur: <span class="font-bold text-slate-700">Bank Rakyat Indonesia (BRI)</span></div>
+                                    <span id="pip-total-penerima-count" class="text-xs font-bold text-slate-700">0 Siswa
+                                        Penerima SK</span>
+                                    <div class="text-[11px] text-slate-400">Penyalur: <span
+                                            class="font-bold text-slate-700">Bank Rakyat Indonesia (BRI)</span></div>
                                 </div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <button onclick="ModulPIP.downloadTemplate('penerima')" 
-                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Unduh Format Contoh Excel Penerima PIP">
+                                    <button onclick="ModulPIP.downloadTemplate('penerima')"
+                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        title="Unduh Format Contoh Excel Penerima PIP">
                                         <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Format Contoh
                                     </button>
-                                    <button onclick="ModulPIP.triggerImport('penerima')" 
-                                        class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer" title="Impor Data Penerima SK dari Excel">
+                                    <button onclick="ModulPIP.triggerImport('penerima')"
+                                        class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        title="Impor Data Penerima SK dari Excel">
                                         <i class="fa-solid fa-file-arrow-up"></i> Impor Data Excel
                                     </button>
-                                    <input type="file" id="file-import-pip-penerima" accept=".xlsx,.xls,.csv" class="hidden"
-                                        onchange="ModulPIP.handleFileImport(event, 'penerima')">
+                                    <input type="file" id="file-import-pip-penerima" accept=".xlsx,.xls,.csv"
+                                        class="hidden" onchange="ModulPIP.handleFileImport(event, 'penerima')">
                                 </div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                        <tr
+                                            class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                                             <th class="px-3 py-3 text-center w-12">No</th>
                                             <th class="px-4 py-3">Nama Siswa & NISN</th>
                                             <th class="px-4 py-3 text-center">Kelas / Rombel</th>
@@ -1970,7 +2031,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SIM-TAS-SD • Sistem Informasi Manajemen Tata Usaha Sekolah
                         Dasar <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.8.0</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v2.9.0</span></span>
                     <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -2276,7 +2337,7 @@
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Ketik Nomor Surat Resmi <span
                             class="text-red-500">*</span></label>
                     <input type="text" id="sk-nomor-manual"
-                        placeholder="Contoh: 421.2/045/SD/2026 atau nomor dinas khusus"
+                        placeholder="Contoh: 421.2/001/VII/2026 atau nomor dinas khusus"
                         class="w-full px-3 py-2 text-xs border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/40">
                 </div>
 
@@ -2286,7 +2347,7 @@
                     <span class="text-xs text-slate-600">Nomor Surat Otomatis SRIKANDI:</span>
                     <span id="sk-preview-nomor"
                         class="font-mono font-bold text-blue-900 text-xs px-2.5 py-1 bg-white rounded border border-blue-200">
-                        421.2/045/SD/2026
+                        421.2/001/VII/2026
                     </span>
                 </div>
 
@@ -2549,7 +2610,8 @@
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                         </div>
                         <div id="new-user-guru-kelas-box">
-                            <label id="new-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
+                            <label id="new-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas
+                                yang Diajar</label>
                             <select id="new-user-guru-kelas"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                                 <option value="Semua">Semua Kelas (Guru Mapel)</option>
@@ -2695,7 +2757,8 @@
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                         </div>
                         <div id="edit-user-guru-kelas-box">
-                            <label id="edit-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas yang Diajar</label>
+                            <label id="edit-user-guru-kelas-label" class="block text-[11px] text-slate-600 mb-1">Kelas
+                                yang Diajar</label>
                             <select id="edit-user-guru-kelas"
                                 class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white">
                                 <option value="Semua">Semua Kelas (Guru Mapel)</option>

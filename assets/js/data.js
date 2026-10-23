@@ -959,18 +959,24 @@ const DataStore = {
         this.saveSiswaAll(list.concat(others));
     },
 
-    // Daftar rombel unik yang ada di data siswa (mis. "Kelas 1", "Kelas 2", "Kelas 5A", dst.)
+    // Daftar rombel unik yang ada di data siswa (mis. "1A", "1B", "3A", "5", dst.)
     getRombels(ta) {
         const students = this.getSiswa(ta);
-        const set = new Set();
+        const map = new Map();
         students.forEach(s => {
-            const r = String(s.rombel || s.kelas || "").trim();
-            if (r) set.add(r);
+            const raw = String(s.rombel || s.kelas || "").trim();
+            if (!raw) return;
+            const clean = raw.replace(/^kelas\s*/i, "").trim();
+            if (!clean) return;
+            const key = clean.toUpperCase();
+            if (!map.has(key)) {
+                map.set(key, clean);
+            }
         });
-        if (set.size === 0) {
-            return ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
+        if (map.size === 0) {
+            return ["1", "2", "3", "4", "5", "6"];
         }
-        return Array.from(set).sort((a, b) => a.localeCompare(b, "id", { numeric: true, sensitivity: 'base' }));
+        return Array.from(map.values()).sort((a, b) => a.localeCompare(b, "id", { numeric: true, sensitivity: 'base' }));
     },
 
     getTendik() {

@@ -438,7 +438,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
         <div class="max-w-4xl mx-auto px-4">
-            SIM-TAS-SD Versi 2.7.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
+            SIM-TAS-SD Versi 2.9.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713
         </div>
     </footer>
 
@@ -776,7 +776,7 @@
             const oldText = searchBtn ? searchBtn.innerHTML : "";
             if (searchBtn) {
                 searchBtn.disabled = true;
-                searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mencari ke Google Sheets...`;
+                searchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sedang Mencari......`;
             }
 
             // 1. Cek dulu di cache lokal (prioritas status terbaru jika admin mengubah di perangkat yang sama)
@@ -1006,6 +1006,21 @@
                 box.scrollIntoView({ behavior: 'smooth' });
             }
         }
+
+        function populatePermohonanKelasOptions() {
+            if (typeof DataStore === "undefined" || !DataStore.getRombels) return;
+            const rombels = DataStore.getRombels();
+            const selManual = document.getElementById("req-manual-kelas");
+            const selMutasi = document.getElementById("req-mutasi-kelas");
+            const optionsHtml = rombels.map(r => {
+                const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+                return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
+            }).join("");
+            if (selManual && optionsHtml) selManual.innerHTML = optionsHtml;
+            if (selMutasi && optionsHtml) selMutasi.innerHTML = optionsHtml;
+        }
+
+        window.addEventListener("DOMContentLoaded", populatePermohonanKelasOptions);
     </script>
 </body>
 </html>

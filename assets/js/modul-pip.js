@@ -50,8 +50,9 @@ const ModulPIP = {
                 if (n === 3 || n === 4) fase = "Fase B";
                 else if (n >= 5) fase = "Fase C";
 
-                const isSelected = String(currentVal) === String(r) || String(currentVal) === cleanNum;
-                optionsHtml += `<option value="${Sec.esc(r)}" ${isSelected ? "selected" : ""}>${Sec.esc(r)} (${fase})</option>`;
+                const isSelected = String(currentVal).toLowerCase() === String(r).toLowerCase();
+                const displayName = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+                optionsHtml += `<option value="${Sec.esc(r)}" ${isSelected ? "selected" : ""}>${Sec.esc(displayName)} (${fase})</option>`;
             });
         } else {
             for (let i = 1; i <= 6; i++) {
@@ -399,9 +400,11 @@ const ModulPIP = {
         const q = (this.searchQuery || "").toLowerCase();
         data = data.filter(p => {
             const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q);
-            const matchK = this.filterKelas === "Semua" || 
-                String(p.kelas).toLowerCase().trim() === String(this.filterKelas).toLowerCase().trim() ||
-                String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
+            const normFilter = String(this.filterKelas || "Semua").replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const normK = String(p.kelas || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const matchK = normFilter === "semua" ||
+                normK === normFilter ||
+                (!/[a-z]/i.test(normFilter) && normK.replace(/\D/g, "") === normFilter.replace(/\D/g, ""));
             const matchD = this.filterDesil === "Semua" || 
                 (this.filterDesil === "1-4" ? Number(p.desil) >= 1 && Number(p.desil) <= 4 :
                  this.filterDesil === "5-7" ? Number(p.desil) >= 5 && Number(p.desil) <= 7 :
@@ -513,9 +516,11 @@ const ModulPIP = {
         const q = (this.searchQuery || "").toLowerCase();
         data = data.filter(p => {
             const matchQ = !q || p.nama.toLowerCase().includes(q) || p.nisn.includes(q) || (p.nomorRekening && p.nomorRekening.includes(q)) || (p.virtualAcc && p.virtualAcc.includes(q));
-            const matchK = this.filterKelas === "Semua" || 
-                String(p.kelas).toLowerCase().trim() === String(this.filterKelas).toLowerCase().trim() ||
-                String(p.kelas).replace(/\D/g, "") === String(this.filterKelas).replace(/\D/g, "");
+            const normFilter = String(this.filterKelas || "Semua").replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const normK = String(p.kelas || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const matchK = normFilter === "semua" ||
+                normK === normFilter ||
+                (!/[a-z]/i.test(normFilter) && normK.replace(/\D/g, "") === normFilter.replace(/\D/g, ""));
             const matchT = this.filterTahap === "Semua" || String(p.tahap) === this.filterTahap;
             let matchC = true;
             if (this.filterStatusCair !== "Semua") {

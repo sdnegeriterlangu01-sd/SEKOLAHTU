@@ -532,22 +532,37 @@ const Auth = {
     },
 
     // ------------------------------------------------ MANAJEMEN AKUN (ADMIN)
+    syncUserKelasDropdowns() {
+        const rombels = (typeof DataStore !== "undefined" && DataStore.getRombels) ? DataStore.getRombels() : ["1", "2", "3", "4", "5", "6"];
+        const buildOptions = () => `<option value="Semua">Semua Kelas (Guru Mapel)</option>` +
+            rombels.map(r => {
+                const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+                return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
+            }).join("");
+
+        const selGuruKelas = document.getElementById("new-user-guru-kelas");
+        if (selGuruKelas) {
+            const curVal = selGuruKelas.value;
+            selGuruKelas.innerHTML = buildOptions();
+            if (curVal && Array.from(selGuruKelas.options).some(o => o.value === curVal)) selGuruKelas.value = curVal;
+        }
+
+        const selEditGuruKelas = document.getElementById("edit-user-guru-kelas");
+        if (selEditGuruKelas) {
+            const curVal = selEditGuruKelas.value;
+            selEditGuruKelas.innerHTML = buildOptions();
+            if (curVal && Array.from(selEditGuruKelas.options).some(o => o.value === curVal)) selEditGuruKelas.value = curVal;
+        }
+    },
+
     openUserModal() {
         if (!this.isAdmin()) return;
         const modal = document.getElementById("modal-manage-users");
         if (!modal) return;
         document.getElementById("form-add-user")?.reset();
 
-        // Populate pilihan kelas yang diajar dari rombel bangkas siswa
-        const selGuruKelas = document.getElementById("new-user-guru-kelas");
-        if (selGuruKelas) {
-            const rombels = typeof DataStore !== "undefined" && DataStore.getRombels ? DataStore.getRombels() : ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
-            selGuruKelas.innerHTML = `<option value="Semua">Semua Kelas (Guru Mapel)</option>` +
-                rombels.map(r => {
-                    const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
-                    return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
-                }).join("");
-        }
+        // Populate pilihan kelas yang diajar dari rombel siswa
+        this.syncUserKelasDropdowns();
 
         this.onRoleChange("admin");
         this.switchUserTab("add");
@@ -899,6 +914,7 @@ const Auth = {
         const mapelInput = document.getElementById("edit-user-guru-mapel-nama");
         if (mapelInput) mapelInput.value = userObj.nama_mapel || userObj.namaMapel || mapping.namaMapel || "";
 
+        this.syncUserKelasDropdowns();
         const kelasSel = document.getElementById("edit-user-guru-kelas");
         if (kelasSel) kelasSel.value = userObj.kelas_guru || userObj.kelasGuru || mapping.kelasGuru || (roleValue === "guru_kelas" ? "1" : "Semua");
 

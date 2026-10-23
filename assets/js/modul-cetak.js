@@ -165,7 +165,7 @@ const ModulCetak = {
 
         const students = DataStore.getSiswa();
         select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
-            students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.kelas})</option>`).join("");
+            students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.rombel || s.kelas})</option>`).join("");
     },
 
     selectDefaultStudent() {
@@ -953,7 +953,7 @@ const ModulCetak = {
                     </div>
 
                     <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-align: justify; line-height: 1.4;">
-                        Siswa tersebut di atas untuk pindah / mutasi masuk menjadi peserta didik di <strong>${config.namaSekolah || "SD Negeri Terlangu 01"}</strong> pada <strong>${this.formatKelasRomawiDanTeks(student.kelas)}</strong> Tahun Ajaran ${tahunAjaranSurat}, yang bersangkutan berasal dari:
+                        Siswa tersebut di atas untuk pindah / mutasi masuk menjadi peserta didik di <strong>${config.namaSekolah || "SD Negeri Terlangu 01"}</strong> pada Tahun Ajaran ${tahunAjaranSurat}, yang bersangkutan berasal dari:
                     </p>
 
                     <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 10.5pt; line-height: 1.35; margin-bottom: 8px;">

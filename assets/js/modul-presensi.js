@@ -806,12 +806,17 @@ const ModulPresensi = {
             const k1 = String(s.kelas || "").trim();
             const k2 = String(s.rombel || "").trim();
             const selK = String(this.kelasSiswa || "").trim();
-            if (k1 === selK || k2 === selK) return true;
-            if (k1.toLowerCase() === selK.toLowerCase() || k2.toLowerCase() === selK.toLowerCase()) return true;
-            const d1 = k1.replace(/\D/g, "");
-            const d2 = k2.replace(/\D/g, "");
-            const dSel = selK.replace(/\D/g, "");
-            return !!(dSel && (d1 === dSel || d2 === dSel));
+            const normSel = selK.replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const norm1 = k1.replace(/^kelas\s*/i, "").trim().toLowerCase();
+            const norm2 = k2.replace(/^kelas\s*/i, "").trim().toLowerCase();
+            if (norm1 === normSel || norm2 === normSel) return true;
+            if (!/[a-z]/i.test(normSel)) {
+                const d1 = norm1.replace(/\D/g, "");
+                const d2 = norm2.replace(/\D/g, "");
+                const dSel = normSel.replace(/\D/g, "");
+                if (dSel && (d1 === dSel || d2 === dSel)) return true;
+            }
+            return false;
         }).sort((a, b) => a.nama.localeCompare(b.nama, "id"));
     },
 

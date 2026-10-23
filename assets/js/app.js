@@ -29,6 +29,7 @@ const App = {
         if (window.ModulVue) ModulVue.init();
         this.renderTASelector();
         this.renderQuickActions();
+        this.syncAllKelasDropdowns();
         this.updateDashboardStats();
         this.updateConnectionStatusBadge();
 
@@ -36,6 +37,7 @@ const App = {
         if (ApiClient.isCloudActive()) {
             Sync.pullAll().then(() => {
                 this.updateDashboardStats();
+                this.syncAllKelasDropdowns();
                 if (this.currentRoute === "berkas") ModulBerkas.renderTable();
                 if (this.currentRoute === "tendik" && window.ModulTendik) ModulTendik.renderTable();
             }).catch(e => console.warn("Sync initial error:", e));
@@ -112,12 +114,23 @@ const App = {
 
     refreshAll() {
         this.updateDashboardStats();
+        this.syncAllKelasDropdowns();
         if (this.currentRoute === "berkas") ModulBerkas.renderTable();
         else if (this.currentRoute === "cetak") ModulCetak.populateStudentSelect();
         else if (this.currentRoute === "absensi") ModulPresensi.onShow();
         else if (this.currentRoute === "scan-absensi") ModulPresensi.renderScanView();
         else if (this.currentRoute === "jadwal" && window.ModulJadwal) ModulJadwal.renderGrid();
         else if (this.currentRoute === "pip" && window.ModulPIP) ModulPIP.renderTab();
+    },
+
+    syncAllKelasDropdowns() {
+        if (window.ModulBerkas && ModulBerkas.populateKelasFilter) ModulBerkas.populateKelasFilter();
+        if (window.ModulBerkas && ModulBerkas.populateTambahKelasSelect) ModulBerkas.populateTambahKelasSelect();
+        if (window.ModulAbsensi && ModulAbsensi.populateKelasOptions) ModulAbsensi.populateKelasOptions();
+        if (window.ModulJadwal && ModulJadwal.renderKelasSelector) ModulJadwal.renderKelasSelector();
+        if (window.ModulPIP && ModulPIP.renderKelasFilter) ModulPIP.renderKelasFilter();
+        if (window.ModulCetak && ModulCetak.populateStudentSelect) ModulCetak.populateStudentSelect();
+        if (window.Auth && Auth.syncUserKelasDropdowns) Auth.syncUserKelasDropdowns();
     },
 
     navigateTo(route) {
@@ -167,6 +180,7 @@ const App = {
         } else if (route === "scan-absensi") {
             ModulPresensi.renderScanView();
         } else if (route === "berkas") {
+            ModulBerkas.populateKelasFilter();
             ModulBerkas.renderTable();
         } else if (route === "jadwal") {
             if (window.ModulJadwal) {
@@ -206,7 +220,7 @@ const App = {
         }
     },
 
-    VERSION: "2.7.0",
+    VERSION: "2.9.0",
 
     formatJamMenit(w) {
         if (!w) return "";

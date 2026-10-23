@@ -170,9 +170,21 @@ const ModulImport = {
         document.body.appendChild(div);
     },
 
+    populateKelasDefaultSelect() {
+        const sel = document.getElementById("imp-kelas-default");
+        if (!sel) return;
+        const rombels = (typeof DataStore !== "undefined" && DataStore.getRombels) ? DataStore.getRombels() : ["1", "2", "3", "4", "5", "6"];
+        sel.innerHTML = `<option value="">— Tandai sebagai kesalahan —</option>` +
+            rombels.map(k => {
+                const label = k.toLowerCase().startsWith("kelas") ? k : `Kelas ${k}`;
+                return `<option value="${Sec.esc(k)}">${Sec.esc(label)}</option>`;
+            }).join("");
+    },
+
     openModal() {
         if (!Auth.canDo("importStudents")) { App.showToast("Anda tidak memiliki izin mengimpor data siswa.", "error"); return; }
         this.ensureModal();
+        this.populateKelasDefaultSelect();
         this.parsed = null;
 
         const taSel = document.getElementById("imp-ta");

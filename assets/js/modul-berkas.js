@@ -35,11 +35,14 @@ const ModulBerkas = {
 
         // Isolasi Rombel Akun Guru Kelas
         if (role === "guru" && gInfo && gInfo.isGuruKelas) {
-            const k = String(gInfo.kelas).replace(/\D/g, "") || "1";
-            filterEl.innerHTML = `<option value="${k}">Kelas ${k} (Rombel Binaan)</option>`;
-            filterEl.value = k;
+            const rawK = String(gInfo.kelas || "1").replace(/kelas\s*/i, "").trim();
+            const rombels = DataStore.getRombels();
+            const matched = rombels.find(r => r.toLowerCase() === rawK.toLowerCase()) || rawK;
+            const label = matched.toLowerCase().startsWith("kelas") ? matched : `Kelas ${matched}`;
+            filterEl.innerHTML = `<option value="${Sec.esc(matched)}">${Sec.esc(label)} (Rombel Binaan)</option>`;
+            filterEl.value = matched;
             filterEl.disabled = true;
-            this.currentFilterKelas = k;
+            this.currentFilterKelas = matched;
             return;
         }
 
@@ -61,8 +64,23 @@ const ModulBerkas = {
         }
     },
 
+    populateTambahKelasSelect() {
+        const sel = document.getElementById("tambah-kelas");
+        if (!sel) return;
+        const rombels = DataStore.getRombels();
+        const curVal = sel.value;
+        sel.innerHTML = rombels.map(r => {
+            const label = r.toLowerCase().startsWith("kelas") ? r : `Kelas ${r}`;
+            return `<option value="${Sec.esc(r)}">${Sec.esc(label)}</option>`;
+        }).join("");
+        if (curVal && Array.from(sel.options).some(o => o.value === curVal)) {
+            sel.value = curVal;
+        }
+    },
+
     init() {
         this.populateKelasFilter();
+        this.populateTambahKelasSelect();
         this.renderTable();
         this.bindEvents();
     },
@@ -149,14 +167,15 @@ const ModulBerkas = {
             const targetKls = String(this.currentFilterKelas || "Semua").trim();
             let matchKelas = targetKls === "Semua";
             if (!matchKelas) {
-                const k1 = String(s.kelas || "").trim();
-                const k2 = String(s.rombel || "").trim();
-                if (k1 === targetKls || k2 === targetKls) matchKelas = true;
-                else if (k1.toLowerCase() === targetKls.toLowerCase() || k2.toLowerCase() === targetKls.toLowerCase()) matchKelas = true;
-                else {
+                const normTarget = targetKls.replace(/^kelas\s*/i, "").trim().toLowerCase();
+                const k1 = String(s.kelas || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+                const k2 = String(s.rombel || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+                if (k1 === normTarget || k2 === normTarget) {
+                    matchKelas = true;
+                } else if (!/[a-z]/i.test(normTarget)) {
+                    const dTarget = normTarget.replace(/\D/g, "");
                     const d1 = k1.replace(/\D/g, "");
                     const d2 = k2.replace(/\D/g, "");
-                    const dTarget = targetKls.replace(/\D/g, "");
                     if (dTarget && (d1 === dTarget || d2 === dTarget)) matchKelas = true;
                 }
             }
@@ -640,6 +659,7 @@ const ModulBerkas = {
         const modal = document.getElementById("modal-tambah-siswa");
         if (modal) {
             document.getElementById("form-tambah-siswa").reset();
+            this.populateTambahKelasSelect();
             modal.classList.remove("hidden");
         }
     },
@@ -665,6 +685,7 @@ const ModulBerkas = {
             return;
         }
 
+        const kelasNum = kelas.replace(/\D/g, "") || kelas;
         const newStudent = {
             nisn: nisn,
             nis: val("tambah-nis"),
@@ -674,7 +695,7 @@ const ModulBerkas = {
             tempatLahir: val("tambah-tempat-lahir") || "-",
             tanggalLahir: val("tambah-tgl-lahir") || "2015-01-01",
             jk: val("tambah-jk"),
-            kelas: kelas,
+            kelas: kelasNum,
             rombel: kelas,
             namaOrtu: val("tambah-ortu") || "-",
             pekerjaanOrtu: val("tambah-pekerjaan") || "-",
@@ -687,6 +708,7 @@ const ModulBerkas = {
             App.showToast(res.message, "success");
             this.closeAddModal();
             this.renderTable();
+            if (window.App && App.syncAllKelasDropdowns) App.syncAllKelasDropdowns();
             App.updateDashboardStats();
         } else {
             App.showToast(res.message || "Gagal menambah data siswa", "error");

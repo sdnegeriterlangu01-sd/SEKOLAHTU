@@ -51,6 +51,11 @@ const ModulJadwal = {
         const norm1 = String(val1).toLowerCase().replace(/kelas\s*/i, "").trim();
         const norm2 = String(val2).toLowerCase().replace(/kelas\s*/i, "").trim();
         if (norm1 === norm2) return true;
+        const hasLetter1 = /[a-z]/i.test(norm1);
+        const hasLetter2 = /[a-z]/i.test(norm2);
+        if (hasLetter1 || hasLetter2) {
+            return false;
+        }
         const d1 = norm1.match(/\d+/)?.[0];
         const d2 = norm2.match(/\d+/)?.[0];
         return !!(d1 && d2 && d1 === d2);

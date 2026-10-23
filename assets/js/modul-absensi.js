@@ -29,11 +29,7 @@ const ModulAbsensi = {
         // Kunci kelas jika akun guru telah dimapping kelasnya saat buat akun
         if (role === "guru" && gInfo && gInfo.isGuruKelas) {
             const cleanK = String(gInfo.kelas || "1").replace(/kelas\s*/i, "").trim();
-            const matchedRombel = rombels.find(r => {
-                const d1 = String(r).replace(/\D/g, "");
-                const d2 = cleanK.replace(/\D/g, "");
-                return (d1 && d2 && d1 === d2) || String(r).toLowerCase().includes(cleanK.toLowerCase());
-            }) || `Kelas ${cleanK}`;
+            const matchedRombel = rombels.find(r => r.toLowerCase() === cleanK.toLowerCase()) || cleanK;
             const label = matchedRombel.toLowerCase().startsWith("kelas") ? matchedRombel : `Kelas ${matchedRombel}`;
 
             sel.innerHTML = `<option value="${Sec.esc(matchedRombel)}" selected>${Sec.esc(label)}</option>`;
@@ -43,11 +39,7 @@ const ModulAbsensi = {
             return;
         } else if (role === "guru" && gInfo && gInfo.isGuruMapel && gInfo.kelas && gInfo.kelas !== "Semua") {
             const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
-            const matchedRombel = rombels.find(r => {
-                const d1 = String(r).replace(/\D/g, "");
-                const d2 = cleanK.replace(/\D/g, "");
-                return (d1 && d2 && d1 === d2) || String(r).toLowerCase().includes(cleanK.toLowerCase());
-            }) || `Kelas ${cleanK}`;
+            const matchedRombel = rombels.find(r => r.toLowerCase() === cleanK.toLowerCase()) || cleanK;
             const label = matchedRombel.toLowerCase().startsWith("kelas") ? matchedRombel : `Kelas ${matchedRombel}`;
 
             sel.innerHTML = `<option value="${Sec.esc(matchedRombel)}" selected>${Sec.esc(label)}</option>`;
@@ -157,21 +149,17 @@ const ModulAbsensi = {
             const siswaList = DataStore.getSiswa();
             const targetKelas = this.selectedKelas;
             const filtered = (!targetKelas || targetKelas === "Semua") ? siswaList : siswaList.filter(s => {
-                const k1 = String(s.kelas || "").trim();
-                const k2 = String(s.rombel || "").trim();
-                const sel = String(targetKelas).trim();
+                const sel = String(targetKelas).replace(/^kelas\s*/i, "").trim().toLowerCase();
+                const k1 = String(s.kelas || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+                const k2 = String(s.rombel || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
 
                 if (k1 === sel || k2 === sel) return true;
-                if (k1.toLowerCase() === sel.toLowerCase() || k2.toLowerCase() === sel.toLowerCase()) return true;
-
-                const d1 = k1.replace(/\D/g, "");
-                const d2 = k2.replace(/\D/g, "");
-                const dSel = sel.replace(/\D/g, "");
-                if (dSel && (d1 === dSel || d2 === dSel)) return true;
-
-                if (k1 && sel && (k1.toLowerCase().includes(sel.toLowerCase()) || sel.toLowerCase().includes(k1.toLowerCase()))) return true;
-                if (k2 && sel && (k2.toLowerCase().includes(sel.toLowerCase()) || sel.toLowerCase().includes(k2.toLowerCase()))) return true;
-
+                if (!/[a-z]/i.test(sel)) {
+                    const dSel = sel.replace(/\D/g, "");
+                    const d1 = k1.replace(/\D/g, "");
+                    const d2 = k2.replace(/\D/g, "");
+                    if (dSel && (d1 === dSel || d2 === dSel)) return true;
+                }
                 return false;
             });
 

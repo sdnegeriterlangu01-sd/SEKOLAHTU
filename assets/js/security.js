@@ -160,7 +160,8 @@ const ACL = {
         cetak: ["admin", "kepsek"],
         absensi: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         tendik: ["admin", "kepsek", "guru"],
-        pengaturan: ["admin", "kepsek"]
+        pengaturan: ["admin", "kepsek"],
+        profile: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"]
     },
 
     check(list, role) {

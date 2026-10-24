@@ -495,11 +495,13 @@ const Auth = {
             if (window.VueStore) VueStore.refresh();
             if (window.ModulVue) ModulVue.applyRoleNavVisibility();
             if (App.renderQuickActions) App.renderQuickActions();
+            if (App.updateHeaderUserProfile) App.updateHeaderUserProfile();
             App.navigateTo(this.defaultRoute());
             return;
         }
         this._started = true;
         App.start();
+        if (App.updateHeaderUserProfile) App.updateHeaderUserProfile();
     },
 
     // Sembunyikan menu & tombol sesuai peran (UX saja; server tetap menegakkan)

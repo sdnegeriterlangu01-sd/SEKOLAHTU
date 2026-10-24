@@ -1,6 +1,39 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.1.0] - 2026-10-24
+
+### Penyempurnaan Antarmuka (UI/UX), Fitur Dark Mode, Interactive Onboarding Tour, Profil Tendik, dan Optimalisasi Resolusi Layar Standar 1366x768px
+- **Custom Dropdown & Pop-up Modal Tahun Ajaran Baru (`index.html` & `assets/js/modul-import.js`):**
+  - Dropdown selektor Tahun Ajaran di header kini didesain serasi dengan tema header dan dilengkapi popover menu custom.
+  - Mengganti fungsi `prompt()` bawaan browser dengan modal dialog pop-up bertema SEKOLAHTU (`#modal-tambah-ta`) untuk pengisian tahun ajaran baru dengan validasi format otomatis (`YYYY/YYYY`).
+- **Watermark Toga Wisuda pada Hero Banner Dasbor (`index.html`):**
+  - Mengganti ikon gedung sekolah (`fa-school`) pada latar belakang Hero Banner Dasbor menjadi ikon topi toga wisuda kelulusan (`fa-graduation-cap`).
+- **Indikator Status Online / Offline yang Ringkas (`index.html` & `assets/js/app.js`):**
+  - Menyederhanakan redaksi status koneksi cloud: menampilkan **"Online"** saat mode cloud aktif dengan pulsing dot hijau, dan **"Offline"** saat nonaktif (mode lokal).
+- **Redesign Tombol Sakelar Toggle On/Off Mode Cloud (`index.html` & `assets/js/app.js`):**
+  - Memperbarui komponen toggle di halaman Pengaturan menjadi *segmented switch pill* modern berpenampilan elegan dengan indikator warna tematik (emerald untuk Online dan slate untuk Offline).
+- **Optimalisasi Skala Layar Monitor Standar 1366x768px (`assets/css/style.css`):**
+  - Mengatasi tampilan yang terlalu besar pada monitor laptop resolusi 1366x768px (skala 100% browser) melalui media query khusus:
+    - Penyesuaian proporsi skala teks root (13.5px).
+    - Lebar sidebar dibuat lebih kompak (256px / `w-64`) untuk memberikan ruang horizontal lebih lega bagi tabel dan kartu konten.
+    - Penyesuaian padding kartu metrik dasbor, hero banner, header, dan padding sel tabel agar pas dilihat dan nyaman digunakan pada layar standar sekolah.
+    - Pembatasan tinggi maksimal modal pop-up (`max-h-[88vh]`) agar tidak meluap dari viewport 768px.
+- **Fitur Dark Mode & Light Mode Terintegrasi Penuh (`index.html`, `assets/css/style.css`, `assets/js/app.js`):**
+  - Tombol sakelar mode tampilan ditempatkan di header sebelah kiri box element "Online", memuat teks dinamis **"Gelap"** (dengan ikon bulan sabit) atau **"Terang"** (dengan ikon matahari).
+  - Dilengkapi sistem warna gelap komprehensif pada body, sidebar, header, glass card, modal, formulir input, dan tabel dengan persistensi di `localStorage` (`sekolahtu_theme`).
+- **Foto Profil Akun di Header & Halaman Profil Pengguna (`index.html`, `assets/js/app.js`, `assets/js/security.js`, `assets/js/auth.js`):**
+  - Menambahkan kartu profil di pojok kanan atas header yang menampilkan foto profil pengguna (atau inisial avatar), nama akun, dan peran (Admin, Guru, Kepala Sekolah, dll.).
+  - Navigasi sekali klik menuju halaman profil mandiri (`#view-profile`) yang memuat data lengkap kepegawaian bersumber dari master data Tendik (`DataStore.getTendik()`), mencakup NIP, NUPTK, jabatan, status kepegawaian, ijazah terakhir, jurusan, kontak, serta ringkasan hak akses peran.
+- **Interactive Onboarding Tour (Panduan untuk Staf) Berbasis Driver.js (`index.html`, `assets/css/style.css`, `assets/js/app.js`):**
+  - Pemasangan pustaka Driver.js via CDN jsDelivr tanpa proses build/npm.
+  - Penambahan tombol **'Panduan untuk Staf'** pada Welcome Hero Banner di halaman Dasbor.
+  - Implementasi walkthrough interaktif gamifikasi dengan efek spotlight gelap dan popover berbalut tema SEKOLAHTU serta tombol aksi berbahasa Indonesia: **'Sebelumnya'**, **'Lanjutkan'**, dan **'Selesai'**.
+- **Sinkronisasi Versi Seluruh Modul (`index.html`, `permohonan.html`, `verifikasi.html`, `backend/Code.gs`, `backend/Panduan_Deploy_GAS.md`):**
+  - Peningkatan versi resmi sistem ke **v3.1.0**.
+
+---
+
 ## [v3.0.0] - 2026-10-23
 
 ### Transformasi Identitas & Rebranding Resmi: SEKOLAHTU

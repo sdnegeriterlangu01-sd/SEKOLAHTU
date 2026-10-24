@@ -75,23 +75,96 @@ const ModulImport = {
     // ===================================================== SELEKTOR TAHUN AJARAN
     renderTASelect() {
         const sel = document.getElementById("ta-select");
-        if (!sel) return;
         const aktif = DataStore.getActiveTA();
-        sel.innerHTML = DataStore.getTAList().map(t => `<option value="${t}" ${t === aktif ? "selected" : ""}>TA ${t}</option>`).join("")
-            + (Auth.canDo("importStudents") ? `<option value="__new__">+ Tambah tahun ajaran…</option>` : "");
-        sel.onchange = () => this.onTAChange(sel.value);
+        const taList = DataStore.getTAList();
+
+        // Native select sync (backward compatibility)
+        if (sel) {
+            sel.innerHTML = taList.map(t => `<option value="${t}" ${t === aktif ? "selected" : ""}>TA ${t}</option>`).join("")
+                + (Auth.canDo("importStudents") ? `<option value="__new__">+ Tambah tahun ajaran…</option>` : "");
+            sel.value = aktif;
+            sel.onchange = () => this.onTAChange(sel.value);
+        }
+
+        // Custom styled dropdown in header
+        const labelEl = document.getElementById("ta-selected-label");
+        if (labelEl) labelEl.textContent = `TA ${aktif}`;
+
+        const itemsEl = document.getElementById("ta-dropdown-items");
+        if (itemsEl) {
+            itemsEl.innerHTML = taList.map(t => {
+                const isSelected = t === aktif;
+                return `
+                    <button type="button" onclick="ModulImport.onTAChange('${t}')"
+                        class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition text-left cursor-pointer ${isSelected ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60'}">
+                        <span>TA ${t}</span>
+                        ${isSelected ? '<i class="fa-solid fa-check text-xs text-blue-600 dark:text-blue-400"></i>' : ''}
+                    </button>
+                `;
+            }).join("");
+        }
+
+        const btnTambahTA = document.getElementById("btn-tambah-ta");
+        if (btnTambahTA) {
+            btnTambahTA.style.display = Auth.canDo("importStudents") ? "flex" : "none";
+        }
 
         document.querySelectorAll(".ta-aktif-text").forEach(el => el.textContent = aktif);
     },
 
+    openAddTAModal() {
+        // Tutup dropdown menu terlebih dahulu
+        const menu = document.getElementById("ta-dropdown-menu");
+        if (menu) menu.classList.add("hidden");
+
+        const modal = document.getElementById("modal-tambah-ta");
+        if (!modal) return;
+        const aktif = DataStore.getActiveTA();
+        const input = document.getElementById("input-new-ta");
+        const err = document.getElementById("ta-modal-error");
+        if (err) { err.textContent = ""; err.classList.add("hidden"); }
+        if (input) {
+            input.value = this.nextTA(aktif) || "";
+            setTimeout(() => input.focus(), 100);
+        }
+        modal.classList.remove("hidden");
+    },
+
+    closeAddTAModal() {
+        const modal = document.getElementById("modal-tambah-ta");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    saveNewTA() {
+        const input = document.getElementById("input-new-ta");
+        const err = document.getElementById("ta-modal-error");
+        const ta = (input?.value || "").trim();
+
+        if (!ta) {
+            if (err) { err.textContent = "Silakan masukkan tahun ajaran."; err.classList.remove("hidden"); }
+            return;
+        }
+        if (!this.validTA(ta)) {
+            if (err) { err.textContent = "Format tahun ajaran harus seperti 2027/2028 (tahun kedua = tahun pertama + 1)."; err.classList.remove("hidden"); }
+            return;
+        }
+
+        DataStore.addTA(ta);
+        DataStore.setActiveTA(ta);
+        this.closeAddTAModal();
+        this.renderTASelect();
+        App.refreshAll();
+        App.showToast(`Tahun ajaran baru ${ta} berhasil ditambahkan dan aktif.`, "success");
+    },
+
     onTAChange(value) {
+        // Tutup menu dropdown jika sedang terbuka
+        const menu = document.getElementById("ta-dropdown-menu");
+        if (menu) menu.classList.add("hidden");
+
         if (value === "__new__") {
-            const input = prompt("Masukkan tahun ajaran baru (format 2027/2028):", "");
-            const ta = (input || "").trim();
-            if (!ta) { this.renderTASelect(); return; }
-            if (!this.validTA(ta)) { App.showToast("Format tahun ajaran harus seperti 2027/2028.", "error"); this.renderTASelect(); return; }
-            DataStore.addTA(ta);
-            value = ta;
+            this.openAddTAModal();
+            return;
         }
         DataStore.setActiveTA(value);
         this.renderTASelect();

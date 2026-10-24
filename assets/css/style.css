@@ -823,3 +823,288 @@ body {
     color: #334155 !important;
   }
 }
+
+/* ==========================================================================
+   OPTIMALISASI SKALA LAYAR MONITOR STANDAR 1366x768px & LAPTOP
+   ========================================================================== */
+@media screen and (min-width: 1024px) and (max-width: 1440px), screen and (max-height: 800px) and (min-width: 1024px) {
+  html {
+    font-size: 13.5px !important;
+  }
+
+  #app-sidebar {
+    width: 16rem !important; /* 256px */
+  }
+
+  .lg\:pl-72 {
+    padding-left: 16rem !important;
+  }
+
+  #app-top-header {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  main {
+    padding: 1rem 1.25rem !important;
+  }
+
+  #view-dashboard .rounded-2xl.bg-gradient-to-r {
+    padding: 1.25rem 1.5rem !important;
+  }
+
+  #dashboard-hero-title {
+    font-size: 1.45rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #dashboard-hero-desc {
+    font-size: 0.78rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .glass-card {
+    padding: 0.85rem 1rem !important;
+  }
+
+  table th {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  table td {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .fixed.inset-0 > div {
+    max-height: 88vh !important;
+  }
+}
+
+/* ==========================================================================
+   SISTEM DARK MODE MENYELURUH (KOMPATIBILITAS PENUH)
+   ========================================================================== */
+html.dark {
+  --surface: #1e293b;
+  --surface-ground: #0f172a;
+  --surface-card: #1e293b;
+  --surface-border: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html.dark #app-sidebar {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+html.dark #app-top-header {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
+}
+
+html.dark #vue-sidebar-profile {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-color: #1e293b !important;
+}
+
+html.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #334155 !important;
+}
+
+html.dark .bg-slate-100\/80 {
+  background-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-100,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/60 {
+  border-color: #334155 !important;
+}
+
+html.dark .glass-card {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: #334155 !important;
+}
+
+html.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.92) !important;
+  border-color: #334155 !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.dark thead {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+html.dark thead th {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark tbody tr {
+  border-color: #334155 !important;
+}
+
+html.dark tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.45) !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* ==========================================================================
+   STYLING TEMA DRIVER.JS (INTERACTIVE ONBOARDING TOUR)
+   ========================================================================== */
+.driver-popover {
+  border-radius: 1.25rem !important;
+  padding: 1.25rem 1.35rem !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  max-width: 380px !important;
+}
+
+.driver-popover-title {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: #1e3a8a !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.driver-popover-description {
+  font-size: 0.8125rem !important;
+  line-height: 1.55 !important;
+  color: #475569 !important;
+}
+
+.driver-popover-footer {
+  margin-top: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.driver-popover-progress-text {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+}
+
+.driver-popover-next-btn {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border-radius: 0.75rem !important;
+  padding: 0.45rem 0.9rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  text-shadow: none !important;
+  transition: all 0.2s !important;
+}
+
+.driver-popover-next-btn:hover {
+  background: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+}
+
+.driver-popover-prev-btn {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.45rem 0.9rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border: 1px solid #cbd5e1 !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-close-btn {
+  color: #94a3b8 !important;
+  font-size: 1.25rem !important;
+}
+
+html.dark .driver-popover {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.dark .driver-popover-title {
+  color: #60a5fa !important;
+}
+
+html.dark .driver-popover-description {
+  color: #cbd5e1 !important;
+}
+
+html.dark .driver-popover-progress-text {
+  color: #94a3b8 !important;
+}
+
+html.dark .driver-popover-prev-btn {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}

@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     screens: {
@@ -38,6 +39,10 @@
 
     <!-- QRCode.js CDN for Document Verification -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Driver.js CDN (Interactive Onboarding Tour Panduan Staf) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
@@ -68,7 +73,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.0.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.1.0</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -163,25 +168,68 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
-                    <!-- Academic Year Selector -->
-                    <div class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200/80 px-1.5 sm:px-2.5 py-1 rounded-xl transition border border-slate-200/80 shadow-xs"
-                        title="Tahun Ajaran Aktif">
-                        <i class="fa-regular fa-calendar text-blue-700 text-[10px] sm:text-xs"></i>
-                        <select id="ta-select"
-                            class="bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 focus:outline-none cursor-pointer max-w-[72px] sm:max-w-none">
-                            <!-- populated by ModulImport.renderTASelect() -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5 md:gap-3 flex-shrink-0">
+                    <!-- Academic Year Custom Selector -->
+                    <div class="relative flex-shrink-0" id="ta-dropdown-container">
+                        <button type="button" id="ta-dropdown-btn" onclick="App.toggleTADropdown()"
+                            class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 px-2 sm:px-2.5 py-1 rounded-xl transition border border-slate-200/80 dark:border-slate-700 shadow-xs cursor-pointer text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200"
+                            title="Tahun Ajaran Aktif">
+                            <i class="fa-regular fa-calendar text-blue-700 dark:text-blue-400 text-[10px] sm:text-xs"></i>
+                            <span id="ta-selected-label">TA 2026/2027</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 ml-0.5"></i>
+                        </button>
+
+                        <!-- Custom TA Dropdown Menu Popover -->
+                        <div id="ta-dropdown-menu"
+                            class="hidden absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50">
+                            <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                Tahun Ajaran
+                            </div>
+                            <div id="ta-dropdown-items" class="space-y-0.5 max-h-48 overflow-y-auto">
+                                <!-- Populated dynamically by ModulImport.renderTASelect() -->
+                            </div>
+                            <div class="border-t border-slate-100 dark:border-slate-700/60 my-1"></div>
+                            <button type="button" id="btn-tambah-ta" onclick="ModulImport.openAddTAModal()"
+                                class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer">
+                                <i class="fa-solid fa-circle-plus text-xs"></i>
+                                <span>Tambah Tahun Ajaran…</span>
+                            </button>
+                        </div>
+                        <select id="ta-select" class="hidden">
+                            <!-- Populated by ModulImport.renderTASelect() -->
                         </select>
                     </div>
 
-                    <!-- Cloud Mode Indicator Badge -->
-                    <span id="cloud-status-badge"
-                        class="inline-flex items-center gap-1 px-1.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs"
-                        title="Mode Sinkronisasi Cloud: Google Sheets & Drive">
+                    <!-- Dark / Light Mode Toggle Button (Sebelah Kiri Element Box Online) -->
+                    <button id="theme-toggle-btn" type="button" onclick="App.toggleTheme()"
+                        class="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 border border-slate-200/80 dark:border-slate-700 shadow-xs transition cursor-pointer flex-shrink-0"
+                        title="Ganti Mode Tampilan (Gelap / Terang)">
+                        <i id="theme-toggle-icon" class="fa-solid fa-moon text-indigo-600 dark:text-amber-300 text-[10px] sm:text-xs"></i>
+                        <span id="theme-toggle-text">Gelap</span>
+                    </button>
+
+                    <!-- Cloud Mode Indicator Badge (Online / Offline) -->
+                    <span id="cloud-status-badge" onclick="App.navigateTo('pengaturan')"
+                        class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer hover:bg-emerald-200 transition dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700 flex-shrink-0"
+                        title="Status Mode Cloud: Online. Klik untuk membuka Pengaturan.">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
-                        <span class="hidden md:inline">Cloud Mode: Google Sheets & Drive</span>
-                        <span class="hidden xs:inline md:hidden font-bold">Cloud</span>
+                        <span id="cloud-status-text">Online</span>
                     </span>
+
+                    <!-- User Profile Header Card/Pill (Pojok Kanan Atas Header) -->
+                    <div id="header-user-profile" onclick="App.navigateTo('profile')"
+                        class="flex items-center gap-2 pl-1 sm:pl-1.5 pr-2 sm:pr-3 py-1 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl border border-slate-200/80 dark:border-slate-700 transition cursor-pointer shadow-xs select-none flex-shrink-0"
+                        title="Profil Pengguna: Klik untuk membuka Data Tendik & Biodata">
+                        <div id="header-user-avatar-wrap"
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 ring-1 ring-blue-500/30">
+                            <span id="header-user-initials">AD</span>
+                            <img id="header-user-photo" src="" alt="Foto Profil" class="w-full h-full object-cover hidden">
+                        </div>
+                        <div class="hidden sm:block text-left leading-tight max-w-[110px] md:max-w-[150px]">
+                            <div id="header-user-name" class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Administrator</div>
+                            <div id="header-user-role" class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">Admin</div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -209,21 +257,27 @@
                                 class="text-[11px] sm:text-xs md:text-sm text-blue-200 mt-1.5 sm:mt-2 leading-relaxed">
                                 <span class="font-semibold text-amber-300">"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"</span> — Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha sekolah dasar secara terpadu, paperless, dan otomatis.
                             </p>
-                            <!-- Tombol Aksi Cepat Mandiri (Dipisah di Bawah Selamat Datang Sesuai Revisi) -->
-                            <div class="mt-4 sm:mt-5 flex flex-wrap gap-2 sm:gap-2.5 items-center"
-                                id="vue-quick-actions">
-                                <button v-for="act in actions" :key="act.label" type="button" @click="run(act)"
-                                    class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
-                                    <span
-                                        class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
-                                        <i :class="['fa-solid', act.icon, act.color || 'text-amber-300']"></i>
-                                    </span>
-                                    <span>{{ act.label }}</span>
+                            <!-- Tombol Aksi Cepat Mandiri & Tombol Panduan Staf -->
+                            <div class="mt-4 sm:mt-5 flex flex-wrap gap-2 sm:gap-2.5 items-center">
+                                <button id="btn-start-tour" type="button" onclick="App.startOnboardingTour()"
+                                    class="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-blue-950 font-bold rounded-xl text-xs shadow-md hover:shadow-lg transition duration-150 cursor-pointer flex-shrink-0">
+                                    <i class="fa-solid fa-compass text-sm text-blue-950"></i>
+                                    <span>Panduan untuk Staf</span>
                                 </button>
+                                <div class="flex flex-wrap gap-2 sm:gap-2.5 items-center" id="vue-quick-actions">
+                                    <button v-for="act in actions" :key="act.label" type="button" @click="run(act)"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span
+                                            class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i :class="['fa-solid', act.icon, act.color || 'text-amber-300']"></i>
+                                        </span>
+                                        <span>{{ act.label }}</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="absolute right-6 -bottom-6 opacity-10 hidden md:block pointer-events-none">
-                            <i class="fa-solid fa-school text-[220px]"></i>
+                            <i class="fa-solid fa-graduation-cap text-[220px]"></i>
                         </div>
                     </div>
 
@@ -1279,30 +1333,30 @@
                                     <div class="flex items-center gap-2">
                                         <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                                             <i class="fa-solid fa-tower-broadcast text-blue-600"></i> Mode Operasi
-                                            Sistem
                                         </h3>
                                         <span id="cfg-cloud-mode-status-text"
-                                            class="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode
-                                            Cloud Aktif
+                                            class="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-500 mt-1">Pilih apakah sistem beroperasi online
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Pilih apakah sistem beroperasi online
                                         terhubung ke Cloud atau offline lokal di peramban.</p>
                                 </div>
 
-                                <!-- Switch On/Off Button -->
-                                <div
-                                    class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-xs self-start sm:self-auto">
-                                    <span class="text-xs font-bold text-slate-700">Lokal</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="cfg-cloud-mode"
-                                            onchange="App.toggleCloudMode(this.checked)" class="sr-only peer" checked>
-                                        <div
-                                            class="w-12 h-6.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner">
-                                        </div>
-                                    </label>
-                                    <span class="text-xs font-extrabold text-emerald-700">Cloud (On)</span>
+                                <!-- Redesigned Segmented Switch Button -->
+                                <div class="inline-flex p-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-sm self-start sm:self-auto gap-1">
+                                    <button type="button" id="btn-toggle-lokal" onclick="App.setCloudMode(false)"
+                                        class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                                        <i class="fa-solid fa-hard-drive text-xs"></i>
+                                        <span>Lokal (Off)</span>
+                                    </button>
+                                    <button type="button" id="btn-toggle-cloud" onclick="App.setCloudMode(true)"
+                                        class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-emerald-600 text-white shadow-sm font-extrabold">
+                                        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                        <i class="fa-solid fa-cloud text-xs"></i>
+                                        <span>Cloud (On)</span>
+                                    </button>
+                                    <input type="checkbox" id="cfg-cloud-mode" class="sr-only" checked>
                                 </div>
                             </div>
 
@@ -2021,6 +2075,165 @@
                     </div>
                 </section>
 
+                <!-- ==============================================================
+                     VIEW: PROFIL PENGGUNA (DATA TENDIK)
+                     ============================================================== -->
+                <section id="view-profile" class="app-view hidden space-y-5">
+                    <!-- Profile Header Card -->
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-5 sm:p-7 shadow-lg">
+                        <div class="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-5">
+                            <!-- Avatar / Photo Display -->
+                            <div class="relative flex-shrink-0">
+                                <div id="profile-avatar-container"
+                                    class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border-2 border-white/30 flex items-center justify-center shadow-xl">
+                                    <span id="profile-avatar-initials" class="text-3xl sm:text-4xl font-extrabold text-amber-300">AD</span>
+                                    <img id="profile-avatar-img" src="" alt="Foto User" class="w-full h-full object-cover hidden">
+                                </div>
+                            </div>
+
+                            <!-- Name, Role & Status -->
+                            <div class="flex-grow text-center md:text-left min-w-0">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 backdrop-blur-md border border-white/20 text-blue-200 mb-2">
+                                    <i class="fa-solid fa-id-badge text-amber-400"></i>
+                                    <span id="profile-badge-kepegawaian">PNS</span>
+                                </div>
+                                <h2 id="profile-display-name" class="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
+                                    Administrator
+                                </h2>
+                                <p id="profile-display-jabatan" class="text-xs sm:text-sm text-blue-200 mt-1">
+                                    Tenaga Administrasi Sekolah / Pengelola Sistem
+                                </p>
+                                <div class="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-2 text-xs">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-100 font-mono">
+                                        <i class="fa-solid fa-fingerprint text-amber-400"></i> NIP: <span id="profile-display-nip">-</span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-100">
+                                        <i class="fa-solid fa-shield-halved text-emerald-300"></i> Peran: <span id="profile-display-role" class="font-bold">Admin</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex flex-row md:flex-col gap-2 flex-shrink-0 self-center md:self-start">
+                                <button type="button" onclick="App.navigateTo('dashboard')"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-2 cursor-pointer shadow-sm">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>Dasbor</span>
+                                </button>
+                                <button type="button" onclick="window.print()"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-blue-950 transition flex items-center gap-2 cursor-pointer shadow-sm">
+                                    <i class="fa-solid fa-print"></i>
+                                    <span>Cetak Profil</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Details Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Card 1: Biodata Pribadi -->
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs space-y-3.5">
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                                <i class="fa-solid fa-user-check text-blue-600 dark:text-blue-400"></i>
+                                Biodata Pribadi
+                            </h3>
+                            <dl class="space-y-2.5 text-xs">
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">NUPTK</dt>
+                                    <dd id="profile-val-nuptk" class="font-semibold text-slate-800 dark:text-slate-100 font-mono">-</dd>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Jenis Kelamin</dt>
+                                        <dd id="profile-val-jk" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Agama</dt>
+                                        <dd id="profile-val-agama" class="font-semibold text-slate-800 dark:text-slate-100">Islam</dd>
+                                    </div>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Tempat, Tanggal Lahir</dt>
+                                    <dd id="profile-val-ttl" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Alamat Tempat Tinggal</dt>
+                                    <dd id="profile-val-alamat" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Card 2: Kepegawaian & Kualifikasi -->
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs space-y-3.5">
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                                <i class="fa-solid fa-briefcase text-emerald-600 dark:text-emerald-400"></i>
+                                Kepegawaian & Akademik
+                            </h3>
+                            <dl class="space-y-2.5 text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Status Kepegawaian</dt>
+                                        <dd id="profile-val-status" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Pangkat / Golongan</dt>
+                                        <dd id="profile-val-pangkat" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Ijazah Terakhir</dt>
+                                        <dd id="profile-val-ijazah" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-slate-400 text-[11px]">Jurusan</dt>
+                                        <dd id="profile-val-jurusan" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                    </div>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Tugas Tambahan</dt>
+                                    <dd id="profile-val-tugas" class="font-semibold text-slate-800 dark:text-slate-100">-</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Satuan Pendidikan Induk</dt>
+                                    <dd class="font-semibold text-slate-800 dark:text-slate-100 school-name-text">SD NEGERI TERLANGU 01</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Card 3: Kontak & Keamanan Akun -->
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs space-y-3.5">
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                                <i class="fa-solid fa-shield-halved text-amber-600 dark:text-amber-400"></i>
+                                Akun & Hak Akses
+                            </h3>
+                            <dl class="space-y-2.5 text-xs">
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Email Terdaftar / Login</dt>
+                                    <dd id="profile-val-email" class="font-semibold text-slate-800 dark:text-slate-100 font-mono">-</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Nomor HP / WhatsApp</dt>
+                                    <dd id="profile-val-hp" class="font-semibold text-slate-800 dark:text-slate-100 font-mono">-</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-400 text-[11px]">Hak Akses Modul</dt>
+                                    <dd id="profile-val-acl" class="font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                                        Penuh (Administrator Sistem)
+                                    </dd>
+                                </div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                                    <button type="button" onclick="Auth.logout()"
+                                        class="w-full py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <i class="fa-solid fa-right-from-bracket"></i>
+                                        <span>Keluar dari Akun</span>
+                                    </button>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </section>
+
             </main>
 
             <!-- Bottom Application Footer -->
@@ -2028,7 +2241,7 @@
                 class="no-print mt-auto border-t border-slate-200 bg-white px-6 py-4 text-center text-xs text-slate-500">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v3.0.0</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v3.1.0</span></span>
                     <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -2040,6 +2253,52 @@
     <!-- ==========================================================================
          MODALS (POPUP DIALOGS)
          ========================================================================== -->
+
+    <!-- MODAL POPUP: Tambah Tahun Ajaran Baru -->
+    <div id="modal-tambah-ta" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center text-sm">
+                        <i class="fa-regular fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Tambah Tahun Ajaran Baru</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Buat periode tahun ajaran baru di sistem</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ModulImport.closeAddTAModal()"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label for="input-new-ta" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Tahun Ajaran Baru <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="input-new-ta" placeholder="Contoh: 2027/2028"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        maxlength="9">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        Format 4 digit tahun berturutan dipisah garis miring (contoh: <code>2027/2028</code>).
+                    </p>
+                </div>
+                <div id="ta-modal-error" class="hidden p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs font-medium">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onclick="ModulImport.closeAddTAModal()"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    Batal
+                </button>
+                <button type="button" onclick="ModulImport.saveNewTA()"
+                    class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 transition shadow-sm inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-check text-xs"></i> Simpan Tahun Ajaran
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL 1: Upload Berkas Siswa (Bangkas Digital) -->
     <div id="modal-upload-berkas"

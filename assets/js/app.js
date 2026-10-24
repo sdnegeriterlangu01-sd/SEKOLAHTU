@@ -8,9 +8,11 @@ const App = {
     _isStarted: false,
 
     async init() {
+        this.initTheme();
         this.bindNavigation();
         this.loadSchoolSettings();
         this.bindBackupControls();
+        this.bindDropdownEvents();
 
         // Autentikasi (Supabase Auth / Demo Mode)
         // Jika sudah ada sesi, Auth.init() akan otomatis memanggil Auth.onAuthenticated() -> App.start()
@@ -32,6 +34,7 @@ const App = {
         this.syncAllKelasDropdowns();
         this.updateDashboardStats();
         this.updateConnectionStatusBadge();
+        this.updateHeaderUserProfile();
 
         // Auto pull fresh data jika cloud mode aktif
         if (ApiClient.isCloudActive()) {
@@ -115,12 +118,14 @@ const App = {
     refreshAll() {
         this.updateDashboardStats();
         this.syncAllKelasDropdowns();
+        this.updateHeaderUserProfile();
         if (this.currentRoute === "berkas") ModulBerkas.renderTable();
         else if (this.currentRoute === "cetak") ModulCetak.populateStudentSelect();
         else if (this.currentRoute === "absensi") ModulPresensi.onShow();
         else if (this.currentRoute === "scan-absensi") ModulPresensi.renderScanView();
         else if (this.currentRoute === "jadwal" && window.ModulJadwal) ModulJadwal.renderGrid();
         else if (this.currentRoute === "pip" && window.ModulPIP) ModulPIP.renderTab();
+        else if (this.currentRoute === "profile") this.renderUserProfile();
     },
 
     syncAllKelasDropdowns() {
@@ -206,6 +211,8 @@ const App = {
             if (window.ModulTendik) ModulTendik.renderTable();
         } else if (route === "pengaturan") {
             this.loadSchoolSettings();
+        } else if (route === "profile") {
+            this.renderUserProfile();
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -857,7 +864,7 @@ const App = {
         this.updateConnectionStatusBadge();
 
         if (checked) {
-            App.showToast("Mode Cloud Diaktifkan: Terhubung ke Google Sheets, Drive & Supabase Auth.", "success");
+            App.showToast("Mode Cloud Diaktifkan: Status Online (Google Sheets, Drive & Supabase).", "success");
             if (ApiClient.isCloudActive()) {
                 Sync.pullAll().then(() => {
                     App.updateDashboardStats();
@@ -865,26 +872,50 @@ const App = {
                 }).catch(e => console.warn("Pull on cloud toggle error:", e));
             }
         } else {
-            App.showToast("Mode Lokal Diaktifkan: Sistem beroperasi offline tanpa akses cloud (LocalStorage).", "info");
+            App.showToast("Mode Lokal Diaktifkan: Status Offline tanpa akses cloud (LocalStorage).", "info");
         }
+    },
+
+    setCloudMode(checked) {
+        this.toggleCloudMode(checked);
     },
 
     renderCloudModeVisual(isCloud) {
         const visualBadge = document.getElementById("cfg-cloud-mode-status-text");
         const container = document.getElementById("cfg-cloud-mode-card");
-        if (!visualBadge) return;
+        const btnLokal = document.getElementById("btn-toggle-lokal");
+        const btnCloud = document.getElementById("btn-toggle-cloud");
+        const inputCheck = document.getElementById("cfg-cloud-mode");
 
-        if (isCloud) {
-            visualBadge.className = "text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
-            visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Mode Cloud Aktif (Google Sheets, Drive & Supabase)`;
-            if (container) {
-                container.className = "p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 transition-all shadow-xs";
+        if (inputCheck) inputCheck.checked = !!isCloud;
+
+        if (visualBadge) {
+            if (isCloud) {
+                visualBadge.className = "text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
+                visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online`;
+                if (container) {
+                    container.className = "p-4 sm:p-5 rounded-2xl border-2 border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-700/60 transition-all shadow-xs space-y-3";
+                }
+            } else {
+                visualBadge.className = "text-xs font-bold text-slate-700 bg-slate-100 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
+                visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span> Offline`;
+                if (container) {
+                    container.className = "p-4 sm:p-5 rounded-2xl border-2 border-slate-300 bg-slate-50/60 dark:bg-slate-800/40 dark:border-slate-700 transition-all shadow-xs space-y-3";
+                }
             }
-        } else {
-            visualBadge.className = "text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-xs";
-            visualBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Mode Lokal Aktif (Simulasi Offline Browser LocalStorage)`;
-            if (container) {
-                container.className = "p-4 rounded-2xl border-2 border-amber-300 bg-amber-50/50 transition-all shadow-xs";
+        }
+
+        if (btnLokal && btnCloud) {
+            if (isCloud) {
+                btnCloud.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-emerald-600 text-white shadow-sm";
+                btnCloud.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span><i class="fa-solid fa-cloud text-xs"></i><span>Cloud (On)</span>`;
+                btnLokal.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+                btnLokal.innerHTML = `<i class="fa-solid fa-hard-drive text-xs"></i><span>Lokal (Off)</span>`;
+            } else {
+                btnLokal.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-slate-700 dark:bg-slate-600 text-white shadow-sm";
+                btnLokal.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><i class="fa-solid fa-hard-drive text-xs"></i><span>Lokal (Off)</span>`;
+                btnCloud.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200";
+                btnCloud.innerHTML = `<i class="fa-solid fa-cloud text-xs"></i><span>Cloud (On)</span>`;
             }
         }
     },
@@ -1041,13 +1072,13 @@ const App = {
 
         const isCloud = ApiClient.isCloudActive();
         if (isCloud) {
-            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer hover:bg-emerald-200 transition";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="hidden sm:inline">Cloud Mode: Google Sheets, Drive & Supabase</span><span class="sm:hidden font-bold">Cloud</span>`;
-            badge.title = "Mode Cloud Aktif. Klik untuk membuka Pengaturan.";
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer hover:bg-emerald-200 transition dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700 flex-shrink-0";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span> <span id="cloud-status-text">Online</span>`;
+            badge.title = "Mode Cloud Aktif (Online: Google Sheets, Drive & Supabase). Klik untuk membuka Pengaturan.";
         } else {
-            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs cursor-pointer hover:bg-amber-200 transition";
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> <span class="hidden sm:inline">Mode Lokal: Browser LocalStorage (Offline)</span><span class="sm:hidden font-bold">Lokal</span>`;
-            badge.title = "Mode Lokal Aktif. Klik untuk membuka Pengaturan.";
+            badge.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300 shadow-xs cursor-pointer hover:bg-slate-200 transition dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 flex-shrink-0";
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></span> <span id="cloud-status-text">Offline</span>`;
+            badge.title = "Mode Lokal Aktif (Offline: LocalStorage). Klik untuk membuka Pengaturan.";
         }
         badge.onclick = () => App.navigateTo('pengaturan');
     },
@@ -1317,6 +1348,276 @@ const App = {
             toast.style.transform = "translateX(50px)";
             setTimeout(() => toast.remove(), 300);
         }, 4000);
+    },
+
+    // ===================================================== TEMA TAMPILAN (DARK / LIGHT MODE)
+    initTheme() {
+        const saved = localStorage.getItem("sekolahtu_theme");
+        const isDark = saved === "dark";
+        this.applyTheme(isDark);
+    },
+
+    toggleTheme() {
+        const isDark = document.documentElement.classList.contains("dark");
+        this.applyTheme(!isDark);
+    },
+
+    applyTheme(isDark) {
+        const root = document.documentElement;
+        const icon = document.getElementById("theme-toggle-icon");
+        const text = document.getElementById("theme-toggle-text");
+        const btn = document.getElementById("theme-toggle-btn");
+
+        if (isDark) {
+            root.classList.add("dark");
+            localStorage.setItem("sekolahtu_theme", "dark");
+            if (icon) icon.className = "fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs";
+            if (text) text.textContent = "Gelap";
+            if (btn) btn.className = "inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-xs transition cursor-pointer flex-shrink-0";
+        } else {
+            root.classList.remove("dark");
+            localStorage.setItem("sekolahtu_theme", "light");
+            if (icon) icon.className = "fa-solid fa-sun text-amber-500 text-[10px] sm:text-xs";
+            if (text) text.textContent = "Terang";
+            if (btn) btn.className = "inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/80 shadow-xs transition cursor-pointer flex-shrink-0";
+        }
+    },
+
+    // ===================================================== CUSTOM TA DROPDOWN
+    toggleTADropdown() {
+        const menu = document.getElementById("ta-dropdown-menu");
+        if (menu) menu.classList.toggle("hidden");
+    },
+
+    bindDropdownEvents() {
+        document.addEventListener("click", (e) => {
+            const container = document.getElementById("ta-dropdown-container");
+            const menu = document.getElementById("ta-dropdown-menu");
+            if (container && menu && !container.contains(e.target)) {
+                menu.classList.add("hidden");
+            }
+        });
+    },
+
+    // ===================================================== HEADER PROFILE & VIEW PROFILE
+    updateHeaderUserProfile() {
+        const u = Auth.user();
+        if (!u) return;
+
+        let tendikList = [];
+        try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
+
+        const uClean = Auth.cleanPersonName ? Auth.cleanPersonName(u.nama) : (u.nama || "").toLowerCase();
+        const uNipClean = Util.cleanId(u.nip || "");
+        const matchedTendik = tendikList.find(t => {
+            if (uNipClean && Util.cleanId(t.nip) === uNipClean) return true;
+            if (u.nama && t.nama && (u.nama.toLowerCase().includes(t.nama.toLowerCase()) || t.nama.toLowerCase().includes(u.nama.toLowerCase()))) return true;
+            return false;
+        });
+
+        const displayName = matchedTendik?.nama || u.nama || "Pengguna";
+        const roleLabel = Auth.roleLabel ? Auth.roleLabel(u.role) : (u.role || "Staf").toUpperCase();
+        const photo = matchedTendik?.foto || u.foto || "";
+
+        const nameEl = document.getElementById("header-user-name");
+        const roleEl = document.getElementById("header-user-role");
+        const initialsEl = document.getElementById("header-user-initials");
+        const photoEl = document.getElementById("header-user-photo");
+
+        if (nameEl) nameEl.textContent = displayName;
+        if (roleEl) roleEl.textContent = roleLabel;
+
+        if (photo && photoEl && initialsEl) {
+            photoEl.src = photo;
+            photoEl.classList.remove("hidden");
+            initialsEl.classList.add("hidden");
+        } else if (initialsEl && photoEl) {
+            photoEl.classList.add("hidden");
+            initialsEl.classList.remove("hidden");
+            const parts = displayName.split(" ").filter(Boolean);
+            initialsEl.textContent = ((parts[0]?.[0] || "U") + (parts[1]?.[0] || "")).toUpperCase();
+        }
+    },
+
+    renderUserProfile() {
+        const u = Auth.user();
+        if (!u) return;
+
+        let tendikList = [];
+        try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
+
+        const uClean = Auth.cleanPersonName ? Auth.cleanPersonName(u.nama) : (u.nama || "").toLowerCase();
+        const uNipClean = Util.cleanId(u.nip || "");
+        const t = tendikList.find(item => {
+            if (uNipClean && Util.cleanId(item.nip) === uNipClean) return true;
+            if (u.nama && item.nama && (u.nama.toLowerCase().includes(item.nama.toLowerCase()) || item.nama.toLowerCase().includes(u.nama.toLowerCase()))) return true;
+            return false;
+        }) || {};
+
+        const displayName = t.nama || u.nama || "Pengguna";
+        const roleLabel = Auth.roleLabel ? Auth.roleLabel(u.role) : (u.role || "Staf").toUpperCase();
+        const photo = t.foto || u.foto || "";
+
+        // Header Card
+        const nameEl = document.getElementById("profile-display-name");
+        if (nameEl) nameEl.textContent = displayName;
+
+        const roleEl = document.getElementById("profile-display-role");
+        if (roleEl) roleEl.textContent = roleLabel;
+
+        const jabatanEl = document.getElementById("profile-display-jabatan");
+        if (jabatanEl) jabatanEl.textContent = t.jabatan || "Tenaga Administrasi / Staf Sekolah";
+
+        const nipEl = document.getElementById("profile-display-nip");
+        if (nipEl) nipEl.textContent = t.nip || u.nip || "-";
+
+        const badgeKepeg = document.getElementById("profile-badge-kepegawaian");
+        if (badgeKepeg) badgeKepeg.textContent = t.statusKepegawaian || (u.role === "admin" ? "Pengelola Utama" : "Tendik");
+
+        // Photo / Avatar
+        const avatarImg = document.getElementById("profile-avatar-img");
+        const avatarInitials = document.getElementById("profile-avatar-initials");
+        if (photo && avatarImg && avatarInitials) {
+            avatarImg.src = photo;
+            avatarImg.classList.remove("hidden");
+            avatarInitials.classList.add("hidden");
+        } else if (avatarInitials && avatarImg) {
+            avatarImg.classList.add("hidden");
+            avatarInitials.classList.remove("hidden");
+            const parts = displayName.split(" ").filter(Boolean);
+            avatarInitials.textContent = ((parts[0]?.[0] || "U") + (parts[1]?.[0] || "")).toUpperCase();
+        }
+
+        // Details fields
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val || "-";
+        };
+
+        setVal("profile-val-nuptk", t.nuptk);
+        setVal("profile-val-jk", t.jk || t.jenisKelamin);
+        setVal("profile-val-agama", t.agama || "Islam");
+        setVal("profile-val-ttl", (t.tempatLahir ? t.tempatLahir + ", " : "") + (t.tanggalLahir || "-"));
+        setVal("profile-val-alamat", t.alamat);
+
+        setVal("profile-val-status", t.statusKepegawaian);
+        setVal("profile-val-pangkat", t.pangkatGolongan || t.golongan || t.golJabatan);
+        setVal("profile-val-ijazah", t.ijazahTerakhir || t.pendidikanTerakhir);
+        setVal("profile-val-jurusan", t.jurusan);
+        setVal("profile-val-tugas", t.tugasTambahan);
+
+        setVal("profile-val-email", u.email || "-");
+        setVal("profile-val-hp", t.telepon || t.hp || t.noHp || "-");
+
+        const aclEl = document.getElementById("profile-val-acl");
+        if (aclEl) {
+            if (u.role === "admin") aclEl.textContent = "Penuh (Administrator Sistem & Integrasi Cloud)";
+            else if (u.role === "kepsek") aclEl.textContent = "Pimpinan (Verifikasi, Cetak SK & Validasi Arsip)";
+            else if (u.role === "guru") aclEl.textContent = "Guru (Presensi Harian, Berkas Siswa & Jadwal)";
+            else if (u.role === "perpustakaan") aclEl.textContent = "Tenaga Perpustakaan (Presensi & Arsip Siswa)";
+            else if (u.role === "penjaga") aclEl.textContent = "Penjaga Sekolah (Presensi Harian)";
+            else aclEl.textContent = `Akses Peran: ${roleLabel}`;
+        }
+    },
+
+    // ===================================================== INTERACTIVE ONBOARDING TOUR (DRIVER.JS)
+    startOnboardingTour() {
+        const driverLib = window.driver?.js?.driver || window.driver;
+        if (!driverLib) {
+            App.showToast("Library Driver.js sedang dimuat. Silakan coba kembali sesaat lagi.", "warning");
+            return;
+        }
+
+        if (this.currentRoute !== "dashboard") {
+            this.navigateTo("dashboard");
+        }
+
+        const driverObj = driverLib({
+            showProgress: true,
+            animate: true,
+            allowClose: true,
+            overlayColor: 'rgba(15, 23, 42, 0.82)',
+            nextBtnText: 'Lanjutkan &rarr;',
+            prevBtnText: '&larr; Sebelumnya',
+            doneBtnText: 'Selesai',
+            progressText: 'Langkah {{current}} dari {{total}}',
+            steps: [
+                {
+                    element: '#dashboard-hero-title',
+                    popover: {
+                        title: 'Selamat Datang di SEKOLAHTU',
+                        description: 'Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha Sekolah Dasar secara terpadu, paperless, dan otomatis.',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#btn-start-tour',
+                    popover: {
+                        title: 'Panduan untuk Staf',
+                        description: 'Tombol ini dapat diklik kapan saja untuk mengulang panduan interaktif ini.',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#vue-quick-actions',
+                    popover: {
+                        title: 'Aksi Cepat Dasbor',
+                        description: 'Akses instan sekali klik untuk tugas utama: Data Guru, Tambah Siswa, Nomor Surat, Presensi, dan Scan QR.',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#app-sidebar',
+                    popover: {
+                        title: 'Menu & Modul Utama',
+                        description: 'Akses seluruh modul: Arsip Digital Siswa, Penomoran Surat, Cetak Dokumen, Presensi, Jadwal, PIP, dan Pengaturan.',
+                        side: 'right',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#ta-dropdown-container',
+                    popover: {
+                        title: 'Pilihan Tahun Ajaran',
+                        description: 'Ganti periode tahun ajaran aktif atau tambah tahun ajaran baru dengan pop-up formulir terintegrasi.',
+                        side: 'bottom',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#theme-toggle-btn',
+                    popover: {
+                        title: 'Mode Gelap & Terang',
+                        description: 'Pilih kenyamanan visual Anda saat bertugas dengan beralih antara Mode Gelap (Dark Mode) dan Mode Terang.',
+                        side: 'bottom',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#cloud-status-badge',
+                    popover: {
+                        title: 'Status Online / Offline',
+                        description: 'Memantau sinkronisasi otomatis ke Google Sheets, Google Drive, dan Supabase secara waktu nyata.',
+                        side: 'bottom',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#header-user-profile',
+                    popover: {
+                        title: 'Profil Staf & Data Tendik',
+                        description: 'Klik di sini untuk melihat rincian biodata kepegawaian Anda yang tersimpan di pangkalan data sekolah.',
+                        side: 'bottom',
+                        align: 'end'
+                    }
+                }
+            ]
+        });
+
+        driverObj.drive();
     }
 };
 

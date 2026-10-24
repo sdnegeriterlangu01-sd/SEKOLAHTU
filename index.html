@@ -46,6 +46,9 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        [v-cloak] { display: none !important; }
+    </style>
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen">
@@ -73,7 +76,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.1.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.2.0</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -81,62 +84,105 @@
             </div>
 
             <!-- Navigation Links with Modular Vue 3 -->
-            <nav id="vue-sidebar-nav" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-1.5 font-medium text-xs">
+            <nav id="vue-sidebar-nav" v-cloak class="flex-1 min-h-0 overflow-y-auto p-4 space-y-1.5 font-medium text-xs">
                 <!-- Menu Utama -->
-                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama
-                </div>
+                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
 
-                <a v-for="item in mainMenuItems" :key="item.id" :href="'#' + item.route" :data-route="item.route"
-                    @click.prevent="navigate(item.route)"
-                    :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
-                    <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
-                    <span>{{ getMenuLabel(item) }}</span>
-                    <span v-if="item.badge"
-                        :class="['ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full', item.badgeColor || 'bg-slate-100 text-slate-700']">
-                        {{ item.badge }}
-                    </span>
+                <a href="#dashboard" data-route="dashboard" onclick="App.navigateTo('dashboard')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer active bg-blue-900 text-white shadow-sm">
+                    <i class="fa-solid fa-gauge-high text-sm w-5 text-center"></i>
+                    <span>Beranda & Ringkasan</span>
+                </a>
+                <a href="#tendik" data-route="tendik" onclick="App.navigateTo('tendik')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-chalkboard-user text-sm w-5 text-center"></i>
+                    <span>Data Guru & Tendik</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">GTK</span>
+                </a>
+                <a href="#jadwal" data-route="jadwal" onclick="App.navigateTo('jadwal')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-calendar-days text-sm w-5 text-center"></i>
+                    <span>Jadwal Pelajaran</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Jadwal</span>
+                </a>
+                <a href="#berkas" data-route="berkas" onclick="App.navigateTo('berkas')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-folder-closed text-sm w-5 text-center"></i>
+                    <span>Bangkas Digital Siswa</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">M1</span>
+                </a>
+                <a href="#pip" data-route="pip" onclick="App.navigateTo('pip')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-hand-holding-dollar text-sm w-5 text-center"></i>
+                    <span>Program PIP Siswa</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">PIP</span>
+                </a>
+                <a href="#surat" data-route="surat" onclick="App.navigateTo('surat')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-envelopes-bulk text-sm w-5 text-center"></i>
+                    <span>Penomoran & Surat</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">SRIKANDI</span>
+                </a>
+                <a href="#cetak" data-route="cetak" onclick="App.navigateTo('cetak')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-file-invoice text-sm w-5 text-center"></i>
+                    <span>Cetak Surat Otomatis</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">&lt;5 Detik</span>
+                </a>
+                <a href="#scan-absensi" data-route="scan-absensi" onclick="App.navigateTo('scan-absensi')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-qrcode text-indigo-600 text-sm w-5 text-center"></i>
+                    <span>Scan Absensi (Datang/Pulang)</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Scan QR</span>
+                </a>
+                <a href="#absensi" data-route="absensi" onclick="App.navigateTo('absensi')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-clipboard-user text-sm w-5 text-center"></i>
+                    <span>Presensi & Absensi</span>
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">M4</span>
                 </a>
 
                 <!-- Integrasi & Pengaturan -->
-                <div v-if="settingsMenuItems.length > 0"
-                    class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Integrasi & Pengaturan
-                </div>
-
-                <template v-for="item in settingsMenuItems" :key="item.id">
-                    <a v-if="item.isExternal" :href="item.url" target="_blank"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition">
-                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
-                        <span>{{ item.label }}</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
-                    </a>
-                    <a v-else :href="'#' + item.route" :data-route="item.route" @click.prevent="navigate(item.route)"
-                        :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
-                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
-                        <span>{{ item.label }}</span>
-                    </a>
-                </template>
+                <div class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Integrasi & Pengaturan</div>
+                <a href="#pengaturan" data-route="pengaturan" onclick="App.navigateTo('pengaturan')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-sliders text-sm w-5 text-center"></i>
+                    <span>Pengaturan & Backend GAS</span>
+                </a>
+                <a href="permohonan.html" target="_blank"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-paper-plane text-blue-600 text-sm w-5 text-center"></i>
+                    <span>Portal Permohonan Ortu</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                </a>
+                <a href="verifikasi.html" target="_blank"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-shield-halved text-emerald-600 text-sm w-5 text-center"></i>
+                    <span>Portal Verifikasi QR</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                </a>
             </nav>
 
             <!-- Sidebar Bottom Profile & School Info with Modular Vue 3 -->
-            <div id="vue-sidebar-profile" class="flex-shrink-0 p-4 border-t border-slate-100 bg-slate-50/70">
+            <div id="vue-sidebar-profile" class="flex-shrink-0 p-4 border-t border-slate-100 bg-slate-50/70 dark:bg-slate-900/80 dark:border-slate-800">
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-9 h-9 rounded-full bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0">
-                        {{ userInitials }}
+                    <div id="sidebar-user-avatar-wrap"
+                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-1 ring-blue-500/30">
+                        <span id="sidebar-user-initials">--</span>
+                        <img id="sidebar-user-photo" src="" alt="Foto Profil" class="w-full h-full object-cover hidden">
                     </div>
                     <div class="flex-grow min-w-0">
-                        <div class="font-bold text-xs text-slate-800 truncate">{{ userName }}</div>
-                        <div class="text-[10px] text-blue-700 font-semibold truncate">{{ userRoleLabel }}</div>
+                        <div id="sidebar-user-name" class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Pengguna</div>
+                        <div id="sidebar-user-role" class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">-</div>
                     </div>
-                    <button type="button" @click="logout" title="Keluar dari sistem"
-                        class="text-slate-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 flex-shrink-0">
+                    <button type="button" onclick="Auth.logout()" title="Keluar dari sistem"
+                        class="text-slate-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex-shrink-0">
                         <i class="fa-solid fa-right-from-bracket text-xs"></i>
                     </button>
                 </div>
                 <!-- Admin User Management Button -->
-                <div v-if="role === 'admin'" class="mt-2.5 pt-2 border-t border-slate-200/60">
-                    <button type="button" @click="openUserModal"
+                <div id="sidebar-admin-btn-wrap" class="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800 hidden">
+                    <button type="button" onclick="Auth.openUserModal()"
                         class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-900 to-indigo-800 hover:from-blue-800 hover:to-indigo-700 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
                         <i class="fa-solid fa-user-plus text-amber-300"></i> Kelola / Tambah Akun
                     </button>
@@ -147,7 +193,7 @@
         <!-- ==========================================================================
              MAIN CONTENT WRAPPER
              ========================================================================== -->
-        <div class="flex-grow lg:pl-72 flex flex-col min-h-screen">
+        <div class="flex-grow lg:pl-72 flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
 
             <!-- Top Header Bar -->
             <header id="app-top-header"
@@ -222,19 +268,106 @@
                         title="Profil Pengguna: Klik untuk membuka Data Tendik & Biodata">
                         <div id="header-user-avatar-wrap"
                             class="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 ring-1 ring-blue-500/30">
-                            <span id="header-user-initials">AD</span>
+                            <span id="header-user-initials">--</span>
                             <img id="header-user-photo" src="" alt="Foto Profil" class="w-full h-full object-cover hidden">
                         </div>
                         <div class="hidden sm:block text-left leading-tight max-w-[110px] md:max-w-[150px]">
-                            <div id="header-user-name" class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Administrator</div>
-                            <div id="header-user-role" class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">Admin</div>
+                            <div id="header-user-name" class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Pengguna</div>
+                            <div id="header-user-role" class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">-</div>
                         </div>
                     </div>
                 </div>
             </header>
 
+            <!-- Instant Synchronous Hydration (0ms delay on refresh, no hardcoded flash) -->
+            <script>
+                (function() {
+                    try {
+                        var rawSession = sessionStorage.getItem("sim_tas_session");
+                        if (!rawSession) return;
+                        var sess = JSON.parse(rawSession);
+                        var u = sess && (sess.user || sess);
+                        if (!u || !u.nama) return;
+
+                        var tendikList = [];
+                        try {
+                            var rawTendik = localStorage.getItem("sekolahtu_data_tendik");
+                            if (rawTendik) tendikList = JSON.parse(rawTendik) || [];
+                        } catch (e) {}
+
+                        var clean = function(s) {
+                            return String(s || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr)\b/gi, "").replace(/[^a-z0-9]/gi, " ").replace(/\s+/g, " ").trim();
+                        };
+                        var cleanId = function(s) { return String(s || "").replace(/\D/g, ""); };
+
+                        var uClean = clean(u.nama);
+                        var uNip = cleanId(u.nip || "");
+                        var matched = tendikList.find(function(t) {
+                            var tNip = cleanId(t.nip || "");
+                            if (uNip && tNip && (tNip === uNip || tNip.indexOf(uNip) !== -1 || uNip.indexOf(tNip) !== -1)) return true;
+                            var tClean = clean(t.nama);
+                            if (uClean && tClean && (uClean.indexOf(tClean) !== -1 || tClean.indexOf(uClean) !== -1)) return true;
+                            if (u.nama && t.nama && (u.nama.toLowerCase().indexOf(t.nama.toLowerCase()) !== -1 || t.nama.toLowerCase().indexOf(u.nama.toLowerCase()) !== -1)) return true;
+                            return false;
+                        });
+
+                        var displayName = (matched && matched.nama) || u.nama || "Pengguna";
+                        var r = (u.role || "").toLowerCase();
+                        var roleLabel = "Pengguna";
+                        if (r === "admin") roleLabel = "Administrator";
+                        else if (r === "kepsek") roleLabel = "Kepala Sekolah";
+                        else if (r === "perpustakaan") roleLabel = "Tenaga Perpustakaan";
+                        else if (r === "penjaga") roleLabel = "Penjaga Sekolah";
+                        else if (r === "guru") roleLabel = "Guru";
+                        else roleLabel = u.role || "Staf";
+
+                        var photo = (matched && matched.foto) || u.foto || "";
+                        var parts = displayName.trim().split(/\s+/);
+                        var initials = ((parts[0] ? parts[0][0] : "U") + (parts[1] ? parts[1][0] : "")).toUpperCase();
+
+                        // Header
+                        var hName = document.getElementById("header-user-name");
+                        var hRole = document.getElementById("header-user-role");
+                        var hInit = document.getElementById("header-user-initials");
+                        var hPhoto = document.getElementById("header-user-photo");
+                        if (hName) hName.textContent = displayName;
+                        if (hRole) hRole.textContent = roleLabel;
+                        if (photo && hPhoto && hInit) {
+                            hPhoto.src = photo;
+                            hPhoto.classList.remove("hidden");
+                            hInit.classList.add("hidden");
+                        } else if (hInit) {
+                            hInit.textContent = initials;
+                            if (hPhoto) hPhoto.classList.add("hidden");
+                            hInit.classList.remove("hidden");
+                        }
+
+                        // Sidebar
+                        var sName = document.getElementById("sidebar-user-name");
+                        var sRole = document.getElementById("sidebar-user-role");
+                        var sInit = document.getElementById("sidebar-user-initials");
+                        var sPhoto = document.getElementById("sidebar-user-photo");
+                        var sAdminBtn = document.getElementById("sidebar-admin-btn-wrap");
+                        if (sName) sName.textContent = displayName;
+                        if (sRole) sRole.textContent = roleLabel;
+                        if (photo && sPhoto && sInit) {
+                            sPhoto.src = photo;
+                            sPhoto.classList.remove("hidden");
+                            sInit.classList.add("hidden");
+                        } else if (sInit) {
+                            sInit.textContent = initials;
+                            if (sPhoto) sPhoto.classList.add("hidden");
+                            sInit.classList.remove("hidden");
+                        }
+                        if (sAdminBtn && r === "admin") {
+                            sAdminBtn.classList.remove("hidden");
+                        }
+                    } catch (err) {}
+                })();
+            </script>
+
             <!-- Main Dynamic Container -->
-            <main class="flex-grow p-3 sm:p-5 md:p-8 space-y-4 sm:space-y-6">
+            <main class="flex-grow p-3 sm:p-5 md:p-8 space-y-4 sm:space-y-6 min-w-0 max-w-full w-full overflow-x-hidden">
 
                 <!-- ==============================================================
                      VIEW 1: BERANDA & DASHBOARD ANALYTICS
@@ -404,6 +537,107 @@
                     <!-- Online Letter Application Alert Container -->
                     <div id="dashboard-pending-permohonan-alert" class="hidden"></div>
 
+                    <!-- Real-Time Rekapitulasi & Charts Section (Dipindah ke Dasbor Utama) -->
+                    <div id="dashboard-absensi-box" class="space-y-4 pt-1">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                            <div>
+                                <h3 class="font-extrabold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-blue-600 dark:text-blue-400"></i> Dasbor Grafik Rekapitulasi Kehadiran
+                                </h3>
+                                <p id="dashboard-absensi-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pemantauan distribusi kehadiran harian dan grafik tren bulanan siswa & tendik</p>
+                            </div>
+
+                            <!-- Segmented Switch Button: Siswa vs Tendik -->
+                            <div id="dashboard-absensi-toggle-container" class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs self-start sm:self-auto gap-1">
+                                <button type="button" id="btn-toggle-absensi-siswa" onclick="App.switchDashboardAbsensiMode('siswa')"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white dark:bg-slate-700 text-blue-900 dark:text-blue-300 shadow-sm cursor-pointer">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                    <span>Siswa</span>
+                                </button>
+                                <button type="button" id="btn-toggle-absensi-tendik" onclick="App.switchDashboardAbsensiMode('tendik')"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer">
+                                    <i class="fa-solid fa-chalkboard-user"></i>
+                                    <span>Guru & Tendik</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Metric Strip -->
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                <span class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Persentase Hadir</span>
+                                <div id="absen-stat-persen" class="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">0%</div>
+                            </div>
+                            <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                <span id="absen-stat-label-hadir" class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Total Hadir</span>
+                                <div id="absen-stat-hadir" class="text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5">0 Orang</div>
+                            </div>
+                            <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                <span id="absen-stat-label-sakit" class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Sakit</span>
+                                <div id="absen-stat-sakit" class="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">0 Orang</div>
+                            </div>
+                            <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                <span id="absen-stat-label-izin" class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Izin</span>
+                                <div id="absen-stat-izin" class="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">0 Orang</div>
+                            </div>
+                            <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                <span id="absen-stat-label-alpa" class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">Alpa</span>
+                                <div id="absen-stat-alpa" class="text-xl font-black text-rose-600 dark:text-rose-400 mt-0.5">0 Orang</div>
+                            </div>
+                        </div>
+
+                        <!-- 2 Charts Grid (Sejajar dan sama rata dengan Analisis Kelengkapan Berkas & Indikator PIP) -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <!-- Donut Chart: Proporsi Kehadiran (lg:col-span-5 sejajar sempurna dengan Analisis Berkas) -->
+                            <div class="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
+                                        <div>
+                                            <h4 id="donut-chart-title" class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                                <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i> Proporsi Kehadiran Siswa Hari Ini
+                                            </h4>
+                                            <p id="donut-chart-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Distribusi status hadir, sakit, izin, alpa</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative h-48 w-full flex items-center justify-center">
+                                        <canvas id="chart-presensi-donut"></canvas>
+                                    </div>
+                                </div>
+                                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
+                                    <button onclick="App.navigateTo('absensi')" class="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
+                                        Buka Presensi & Rekapitulasi Lengkap &rarr;
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Line Tren Bulanan (lg:col-span-7 sejajar sempurna dengan Indikator Program PIP) -->
+                            <div class="lg:col-span-7 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
+                                        <div>
+                                            <h4 id="tren-chart-title" class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                                <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400"></i> Grafik Tren Persentase Kehadiran Bulanan
+                                            </h4>
+                                            <p id="tren-chart-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Pemantauan konsistensi kehadiran 6 bulan terakhir</p>
+                                        </div>
+                                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hidden sm:inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-clock-rotate-left"></i> 6 Bulan
+                                        </span>
+                                    </div>
+                                    <div class="relative h-48 w-full">
+                                        <canvas id="chart-presensi-tren"></canvas>
+                                    </div>
+                                </div>
+                                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-500"></i> Target Efektif: &ge; 85%</span>
+                                    <button onclick="App.navigateTo('absensi')" class="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer">
+                                        Lihat Matriks Rekap Bulanan &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ROLE-AWARE SECTION A: KHUSUS GURU (Jadwal Hari Ini, Peringatan Berkas, PIP Rombel) -->
                     <div id="dashboard-guru-section" class="hidden space-y-6">
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -538,7 +772,7 @@
                                         + Google Sheets + Google Drive</p>
                                 </div>
                                 <span
-                                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">100%
+                                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">100%
                                     Free / Zero Cost</span>
                             </div>
 
@@ -1036,10 +1270,10 @@
 
                                 <!-- Mode 2: Nomor Baru Otomatis (Hidden by default) -->
                                 <div id="cetak-box-baru"
-                                    class="hidden p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
-                                    <span class="text-xs text-slate-600">Nomor Baru SRIKANDI:</span>
+                                    class="hidden p-2.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center justify-between">
+                                    <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Baru SRIKANDI:</span>
                                     <span id="cetak-preview-baru"
-                                        class="font-mono font-bold text-blue-900 text-xs">...</span>
+                                        class="font-mono font-bold text-blue-900 dark:text-blue-300 text-xs">...</span>
                                 </div>
 
                                 <!-- Mode 3: Manual Input (Hidden by default) -->
@@ -1047,13 +1281,13 @@
                                     <input type="text" id="cetak-input-manual"
                                         oninput="ModulCetak.onInputManualNomor(this.value)"
                                         placeholder="Contoh: 421.2/001/VII/2026"
-                                        class="w-full px-3 py-2 text-xs border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/30">
+                                        class="w-full px-3 py-2 text-xs border border-blue-300 dark:border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 dark:text-blue-200 bg-blue-50/30 dark:bg-blue-950/30">
                                 </div>
                             </div>
 
                             <!-- Jenis Surat -->
                             <div class="min-w-0">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Jenis Surat Keterangan
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Jenis Surat Keterangan
                                     Resmi</label>
                                 <select id="cetak-jenis-surat" onchange="ModulCetak.onSelectTemplate(this.value)"
                                     class="w-full max-w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium text-slate-800">
@@ -1071,7 +1305,7 @@
 
                             <!-- Keperluan Tambahan -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Keperluan Penerbitan
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keperluan Penerbitan
                                     Surat</label>
                                 <textarea id="cetak-keperluan" rows="3"
                                     class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed"></textarea>
@@ -1081,8 +1315,8 @@
                             <div id="cetak-extra-fields"></div>
 
                             <div
-                                class="p-3 bg-blue-50/60 rounded-xl border border-blue-200 text-[11px] text-blue-800 flex items-start gap-2">
-                                <i class="fa-solid fa-qrcode text-blue-600 mt-0.5 text-sm"></i>
+                                class="p-3 bg-blue-50/60 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-[11px] text-blue-800 dark:text-blue-200 flex items-start gap-2">
+                                <i class="fa-solid fa-qrcode text-blue-600 dark:text-blue-400 mt-0.5 text-sm"></i>
                                 <div>
                                     <strong>Keabsahan Dokumen:</strong>
                                     QR Code di pojok kiri bawah terhubung ke tautan verifikasi online publik untuk
@@ -1124,7 +1358,7 @@
                 <!-- ==============================================================
                      VIEW 5: MODUL 4 - PRESENSI / ABSENSI DIGITAL
                      ============================================================== -->
-                <section id="view-absensi" class="app-view hidden space-y-5">
+                <section id="view-absensi" class="app-view hidden space-y-5 min-w-0 max-w-full w-full">
 
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1237,75 +1471,13 @@
                                 </table>
                             </div>
                         </div>
-
-                        <!-- Real-Time Rekapitulasi & Charts Section -->
-                        <div class="space-y-4 pt-2">
-                            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-pie text-blue-600"></i> Dasbor Grafik Rekapitulasi Bulanan
-                            </h3>
-
-                            <!-- Metric Strip -->
-                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                <div class="p-3 bg-white rounded-xl border border-slate-200">
-                                    <span class="text-[10px] font-bold uppercase text-slate-400">Persentase Hadir</span>
-                                    <div id="absen-stat-persen" class="text-xl font-black text-emerald-600">0%</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-xl border border-slate-200">
-                                    <span class="text-[10px] font-bold uppercase text-slate-400">Total Hadir</span>
-                                    <div id="absen-stat-hadir" class="text-xl font-black text-slate-800">0 Orang</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-xl border border-slate-200">
-                                    <span class="text-[10px] font-bold uppercase text-slate-400">Sakit</span>
-                                    <div id="absen-stat-sakit" class="text-xl font-black text-amber-600">0 Orang</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-xl border border-slate-200">
-                                    <span class="text-[10px] font-bold uppercase text-slate-400">Izin</span>
-                                    <div id="absen-stat-izin" class="text-xl font-black text-blue-600">0 Orang</div>
-                                </div>
-                                <div class="p-3 bg-white rounded-xl border border-slate-200">
-                                    <span class="text-[10px] font-bold uppercase text-slate-400">Alpa</span>
-                                    <div id="absen-stat-alpa" class="text-xl font-black text-rose-600">0 Orang</div>
-                                </div>
-                            </div>
-
-                            <!-- 2 Charts Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                <!-- Donut Chart -->
-                                <div
-                                    class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-                                    <div>
-                                        <h4 class="font-bold text-xs text-slate-800 mb-1">Proporsi Kehadiran Hari Ini
-                                        </h4>
-                                        <p class="text-[11px] text-slate-400 mb-4">Distribusi status hadir, sakit, izin,
-                                            alpa</p>
-                                        <div class="h-52 relative">
-                                            <canvas id="chart-presensi-donut"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Line Tren Bulanan -->
-                                <div
-                                    class="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-                                    <div>
-                                        <h4 class="font-bold text-xs text-slate-800 mb-1">Grafik Tren Persentase
-                                            Kehadiran Bulanan</h4>
-                                        <p class="text-[11px] text-slate-400 mb-4">Pemantauan konsistensi kehadiran 6
-                                            bulan terakhir</p>
-                                        <div class="h-52 relative">
-                                            <canvas id="chart-presensi-tren"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- SUB-TAB 2: Rekap Bulanan Guru & Tendik (Sesuai Format Gambar) -->
-                    <div id="abs-tab-tendik" class="space-y-4 hidden"></div>
+                    <div id="abs-tab-tendik" class="space-y-4 hidden min-w-0 max-w-full w-full"></div>
 
                     <!-- SUB-TAB 4: Rekap Bulanan Siswa (Sesuai Format Gambar) -->
-                    <div id="abs-tab-siswa" class="space-y-4 hidden"></div>
+                    <div id="abs-tab-siswa" class="space-y-4 hidden min-w-0 max-w-full w-full"></div>
 
                     <!-- SUB-TAB 5: Cetak Kartu ID QR Guru & Tendik -->
                     <div id="abs-tab-qr" class="space-y-4 hidden"></div>
@@ -1361,23 +1533,23 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
-                                <div class="p-3 bg-white/80 rounded-xl border border-emerald-200/60">
-                                    <div class="font-bold text-emerald-900 flex items-center gap-1.5 mb-0.5">
-                                        <i class="fa-solid fa-cloud-check text-emerald-600"></i> Mode Cloud (On /
+                                <div class="p-3 bg-white/80 dark:bg-emerald-950/25 rounded-xl border border-emerald-200/60 dark:border-emerald-700/40">
+                                    <div class="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 mb-0.5">
+                                        <i class="fa-solid fa-cloud-check text-emerald-600 dark:text-emerald-400"></i> Mode Cloud (On /
                                         Disarankan):
                                     </div>
-                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                                         Sinkronisasi multi-perangkat real-time ke <strong>Google Sheets</strong>,
                                         pengarsipan berkas ke <strong>Google Drive</strong>, dan otentikasi zero-trust
                                         via <strong>Supabase Auth</strong>.
                                     </p>
                                 </div>
-                                <div class="p-3 bg-white/80 rounded-xl border border-slate-200/60">
-                                    <div class="font-bold text-slate-800 flex items-center gap-1.5 mb-0.5">
-                                        <i class="fa-solid fa-hard-drive text-amber-600"></i> Mode Lokal (Off / Demo
+                                <div class="p-3 bg-white/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                                    <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-0.5">
+                                        <i class="fa-solid fa-hard-drive text-amber-600 dark:text-amber-400"></i> Mode Lokal (Off / Demo
                                         Offline):
                                     </div>
-                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                                         Bekerja tanpa koneksi server cloud. Seluruh data disimpan mandiri di memori
                                         browser (<strong>LocalStorage</strong>) cocok untuk demonstrasi dan uji coba
                                         cepat.
@@ -1515,170 +1687,173 @@
                         </div>
 
                         <!-- Panel 2: Identitas Satuan Pendidikan & Kop Surat -->
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
                             <h3
-                                class="font-bold text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                                class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                                 <i class="fa-solid fa-school text-blue-600"></i> Identitas Satuan Pendidikan & Pejabat
                                 Penandatangan
                             </h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Satuan
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Satuan
                                         Pendidikan</label>
                                     <input type="text" id="cfg-nama-sekolah" required
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">NPSN</label>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NPSN</label>
                                     <input type="text" id="cfg-npsn" required
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Akreditasi</label>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Akreditasi</label>
                                     <input type="text" id="cfg-akreditasi"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Lengkap
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap
                                         Sekolah</label>
                                     <input type="text" id="cfg-alamat"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kabupaten /
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kabupaten /
                                         Kota</label>
                                     <input type="text" id="cfg-kabupaten"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Telepon
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Telepon
                                         Dinas</label>
                                     <input type="text" id="cfg-telepon"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email Resmi
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Resmi
                                         Sekolah</label>
                                     <input type="email" id="cfg-email"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Website / Laman
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Website / Laman
                                         Sekolah (Opsional)</label>
                                     <input type="text" id="cfg-website"
                                         placeholder="Contoh: https://... (kosongkan jika belum ada)"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kepala
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Kepala
                                         Sekolah</label>
                                     <input type="text" id="cfg-kepsek"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">NIP Kepala
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NIP Kepala
                                         Sekolah</label>
                                     <input type="text" id="cfg-nip"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pangkat / Golongan
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pangkat / Golongan
                                         Ruang</label>
                                     <input type="text" id="cfg-pangkat"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
-                                <!-- Panel 3: Pencadangan & Pemulihan Sistem (Backup & Restore) -->
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            </div>
+                        </div>
+
+                        <!-- Panel 3: Pencadangan & Pemulihan Sistem (Backup & Restore) -->
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 w-full">
+                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                        <i class="fa-solid fa-shield-heart text-blue-600"></i> Pencadangan
+                                        Sistem & Pemulihan (Backup & Restore)
+                                    </h3>
+                                    <p class="text-xs text-slate-400 mt-0.5">Cegah kehilangan data: sinkronisasi
+                                        otomatis Google Drive & berkas cadangan lokal.</p>
+                                </div>
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">Keamanan
+                                    Data</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Opsi 1: Google Drive Cloud Backup -->
+                                <div class="p-4 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/30 space-y-3">
+                                    <div class="flex items-center gap-2.5">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm shadow-xs">
+                                            <i class="fa-brands fa-google-drive"></i>
+                                        </div>
                                         <div>
-                                            <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                                                <i class="fa-solid fa-shield-heart text-blue-600"></i> Pencadangan
-                                                Sistem & Pemulihan (Backup & Restore)
-                                            </h3>
-                                            <p class="text-xs text-slate-400 mt-0.5">Cegah kehilangan data: sinkronisasi
-                                                otomatis Google Drive & berkas cadangan lokal.</p>
-                                        </div>
-                                        <span
-                                            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Keamanan
-                                            Data</span>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <!-- Opsi 1: Google Drive Cloud Backup -->
-                                        <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-3">
-                                            <div class="flex items-center gap-2.5">
-                                                <div
-                                                    class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm shadow-xs">
-                                                    <i class="fa-brands fa-google-drive"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-bold text-xs text-slate-800">Cadangan Cloud Google
-                                                        Drive</h4>
-                                                    <p class="text-[11px] text-slate-500">Tersimpan di folder <code
-                                                            class="font-mono bg-white px-1 py-0.5 rounded border border-blue-200">/SEKOLAHTU/Backup/</code>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p class="text-[11px] text-slate-600 leading-relaxed">
-                                                Mencadangkan seluruh tabel Google Sheets (Siswa, Tendik, Surat
-                                                Masuk/Keluar, Presensi) ke file snapshot JSON berstempel waktu di Google
-                                                Drive Anda.
+                                            <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100">Cadangan Cloud Google
+                                                Drive</h4>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Tersimpan di folder <code
+                                                    class="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800">/SEKOLAHTU/Backup/</code>
                                             </p>
-                                            <button type="button" id="btn-backup-drive" onclick="App.backupDrive()"
-                                                class="w-full py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition shadow-xs">
-                                                <i class="fa-solid fa-cloud-arrow-up"></i> Cadangkan ke Drive Sekarang
-                                            </button>
-                                        </div>
-
-                                        <!-- Opsi 2: Backup & Restore Berkas JSON Lokal -->
-                                        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
-                                            <div class="flex items-center gap-2.5">
-                                                <div
-                                                    class="w-8 h-8 rounded-lg bg-slate-700 text-white flex items-center justify-center text-sm shadow-xs">
-                                                    <i class="fa-solid fa-file-code"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-bold text-xs text-slate-800">Cadangan Lokal Komputer
-                                                        (.json)</h4>
-                                                    <p class="text-[11px] text-slate-500">Berkas portabel tanpa
-                                                        memerlukan cloud</p>
-                                                </div>
-                                            </div>
-                                            <p class="text-[11px] text-slate-600 leading-relaxed">
-                                                Unduh seluruh basis data browser ke berkas .json atau pulihkan sistem
-                                                kapan saja saat berpindah perangkat kerja.
-                                            </p>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <button type="button" onclick="App.downloadLocalBackup()"
-                                                    class="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition shadow-xs">
-                                                    <i class="fa-solid fa-download text-emerald-600"></i> Unduh JSON
-                                                </button>
-                                                <button type="button"
-                                                    onclick="document.getElementById('input-restore-json').click()"
-                                                    class="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition shadow-xs">
-                                                    <i class="fa-solid fa-upload text-blue-600"></i> Pulihkan JSON
-                                                </button>
-                                            </div>
-                                            <input type="file" id="input-restore-json" accept=".json" class="hidden">
                                         </div>
                                     </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Mencadangkan seluruh tabel Google Sheets (Siswa, Tendik, Surat
+                                        Masuk/Keluar, Presensi) ke file snapshot JSON berstempel waktu di Google
+                                        Drive Anda.
+                                    </p>
+                                    <button type="button" id="btn-backup-drive" onclick="App.backupDrive()"
+                                        class="w-full py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition shadow-xs cursor-pointer">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Cadangkan ke Drive Sekarang
+                                    </button>
                                 </div>
 
-                                <!-- Submit Buttons -->
-                                <div class="flex items-center justify-between">
-                                    <button type="button" onclick="App.resetAllData()"
-                                        class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition">
-                                        <i class="fa-solid fa-rotate-left"></i> Reset ke Data Bawaan Awal
-                                    </button>
-                                    <button type="submit"
-                                        class="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-md">
-                                        <i class="fa-solid fa-floppy-disk"></i> Simpan Seluruh Pengaturan
-                                    </button>
+                                <!-- Opsi 2: Backup & Restore Berkas JSON Lokal -->
+                                <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+                                    <div class="flex items-center gap-2.5">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-slate-700 text-white flex items-center justify-center text-sm shadow-xs">
+                                            <i class="fa-solid fa-file-code"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xs text-slate-800 dark:text-slate-100">Cadangan Lokal Komputer
+                                                (.json)</h4>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Berkas portabel tanpa
+                                                memerlukan cloud</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Unduh seluruh basis data browser ke berkas .json atau pulihkan sistem
+                                        kapan saja saat berpindah perangkat kerja.
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" onclick="App.downloadLocalBackup()"
+                                            class="py-2 px-3 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                            <i class="fa-solid fa-download text-emerald-600 dark:text-emerald-400"></i> Unduh JSON
+                                        </button>
+                                        <button type="button"
+                                            onclick="document.getElementById('input-restore-json').click()"
+                                            class="py-2 px-3 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                            <i class="fa-solid fa-upload text-blue-600 dark:text-blue-400"></i> Pulihkan JSON
+                                        </button>
+                                    </div>
+                                    <input type="file" id="input-restore-json" accept=".json" class="hidden">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex items-center justify-between pt-2">
+                            <button type="button" onclick="App.resetAllData()"
+                                class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800 border border-rose-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition cursor-pointer">
+                                <i class="fa-solid fa-rotate-left"></i> Reset ke Data Bawaan Awal
+                            </button>
+                            <button type="submit"
+                                class="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 transition shadow-md">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Seluruh Pengaturan
+                            </button>
+                        </div>
 
                     </form>
                 </section>
@@ -1947,9 +2122,9 @@
                                 </div>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <button onclick="ModulPIP.downloadTemplate('pengusulan')"
-                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
                                         title="Unduh Format Contoh Excel Pengusulan PIP">
-                                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Format Contoh
+                                        <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> Unduh Format Contoh
                                     </button>
                                     <button onclick="ModulPIP.triggerImport('pengusulan')"
                                         class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
@@ -2028,9 +2203,9 @@
                                 </div>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <button onclick="ModulPIP.downloadTemplate('penerima')"
-                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                                        class="px-3 py-1.5 bg-white hover:bg-emerald-50 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
                                         title="Unduh Format Contoh Excel Penerima PIP">
-                                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Unduh Format Contoh
+                                        <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> Unduh Format Contoh
                                     </button>
                                     <button onclick="ModulPIP.triggerImport('penerima')"
                                         class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition shadow-xs cursor-pointer"
@@ -2241,7 +2416,7 @@
                 class="no-print mt-auto border-t border-slate-200 bg-white px-6 py-4 text-center text-xs text-slate-500">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v3.1.0</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v3.2.0</span></span>
                     <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -2295,6 +2470,77 @@
                 <button type="button" onclick="ModulImport.saveNewTA()"
                     class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 transition shadow-sm inline-flex items-center gap-1.5">
                     <i class="fa-solid fa-check text-xs"></i> Simpan Tahun Ajaran
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP: Laporan Smart Audit PIP x Data Siswa -->
+    <div id="modal-smart-audit-pip" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-fade-in max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center text-base">
+                        <i class="fa-solid fa-shield-virus"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Laporan Smart Audit PIP</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pencocokan data usulan PIP dengan Database Siswa</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ModulPIP.closeAuditModal()"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Content Area (Scrollable) -->
+            <div class="space-y-3.5 overflow-y-auto flex-grow pr-1" id="audit-modal-content">
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50">
+                        <div class="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Siswa Valid & Padan
+                        </div>
+                        <div id="audit-valid-count" class="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">0</div>
+                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400/80 mt-0.5">Tercatat di DB Siswa Sekolah</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                        <div class="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Belum Tercatat di DB
+                        </div>
+                        <div id="audit-notfound-count" class="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">0</div>
+                        <div class="text-[10px] text-amber-600 dark:text-amber-400/80 mt-0.5">Perlu verifikasi mutasi / NISN</div>
+                    </div>
+                </div>
+
+                <!-- Unmatched Students List Container -->
+                <div id="audit-notfound-section" class="space-y-2">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <span>Daftar Siswa Usulan yang Belum Tercatat:</span>
+                        <span id="audit-notfound-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300">0 Siswa</span>
+                    </div>
+                    <div id="audit-notfound-list" class="space-y-1.5 max-h-44 overflow-y-auto p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Recommendation Box -->
+                <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 text-xs space-y-1.5">
+                    <div class="font-bold text-blue-950 dark:text-blue-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i> Rekomendasi Tindak Lanjut:
+                    </div>
+                    <ol class="list-decimal list-inside text-slate-600 dark:text-slate-300 space-y-1 text-[11px] leading-relaxed pl-1">
+                        <li>Periksa apakah siswa tersebut baru mutasi/pindah ke SDN Terlangu 01 dan belum terdaftar di menu Data Siswa.</li>
+                        <li>Periksa kesesuaian penulisan 10 digit NISN pada berkas usulan PIP dengan buku induk / Dapodik.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+                <button type="button" onclick="ModulPIP.closeAuditModal()"
+                    class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition shadow-sm cursor-pointer">
+                    Mengerti & Tutup
                 </button>
             </div>
         </div>
@@ -3302,40 +3548,168 @@
     <div id="modal-edit-kontak-ortu"
         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div
-            class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                    <h3 id="edit-kontak-title" class="font-bold text-sm text-slate-900">Perbarui Kontak Orang Tua Siswa
-                    </h3>
-                    <p id="edit-kontak-nama-siswa" class="text-xs text-slate-500 mt-0.5">Nama Siswa</p>
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-fade-in space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <div>
+                        <h3 id="edit-kontak-title" class="font-bold text-sm text-slate-900 dark:text-slate-100">Perbarui Kontak Orang Tua Siswa</h3>
+                        <p id="edit-kontak-nama-siswa" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nama Siswa</p>
+                    </div>
                 </div>
                 <button type="button" onclick="ModulBerkas.closeEditKontakModal()"
-                    class="text-slate-400 hover:text-slate-600">
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             <form onsubmit="ModulBerkas.saveKontakOrtu(event)" class="space-y-3">
                 <input type="hidden" id="edit-kontak-nisn">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Ayah / Ibu / Wali</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Ayah / Ibu / Wali</label>
                     <input type="text" id="edit-kontak-nama-ortu" placeholder="Nama Orang Tua Siswa" required
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Handphone / WhatsApp</label>
-                    <input type="tel" id="edit-kontak-hp-ortu" placeholder="08xxxxxxxxxx" required
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono">
-                    <p class="text-[10px] text-slate-400 mt-1">Nomor ini digunakan untuk pengiriman notifikasi berkas &
-                        surat sekolah otomatis.</p>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pekerjaan Orang Tua / Wali</label>
+                    <input type="text" id="edit-kontak-pekerjaan-ortu" placeholder="Wiraswasta/PNS/dsb"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Handphone / WhatsApp</label>
+                    <input type="tel" id="edit-kontak-hp-ortu" placeholder="08xxxxxxxxxx" required
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono">
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Nomor ini digunakan untuk pengiriman notifikasi berkas & surat sekolah via WhatsApp.</p>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" onclick="ModulBerkas.closeEditKontakModal()"
-                        class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                         Batal
                     </button>
                     <button type="submit"
-                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5">
                         <i class="fa-solid fa-floppy-disk"></i> Simpan Kontak
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 11: Edit Data Pokok Siswa -->
+    <div id="modal-edit-siswa"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-user-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Perbarui Data Pokok Siswa</h3>
+                        <p id="edit-siswa-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">NISN: -</p>
+                    </div>
+                </div>
+                <button type="button" onclick="ModulBerkas.closeEditSiswaModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="form-edit-siswa" onsubmit="ModulBerkas.submitEditSiswa(event)" class="space-y-3.5">
+                <input type="hidden" id="edit-siswa-original-nisn">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NISN (10 Digit) <span class="text-red-500">*</span></label>
+                        <input type="text" id="edit-siswa-nisn" required maxlength="10" readonly
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 rounded-lg font-mono cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NIS Sekolah</label>
+                        <input type="text" id="edit-siswa-nis" placeholder="2026001"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                    <input type="text" id="edit-siswa-nama" required placeholder="Nama Siswa"
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NIK</label>
+                        <input type="text" id="edit-siswa-nik" maxlength="16" placeholder="3374..."
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tempat Lahir</label>
+                        <input type="text" id="edit-siswa-tempat-lahir" placeholder="Semarang"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Lahir</label>
+                        <input type="date" id="edit-siswa-tgl-lahir"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Kelamin</label>
+                        <select id="edit-siswa-jk"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tingkat Kelas / Rombel</label>
+                        <select id="edit-siswa-kelas"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="1">Kelas 1</option>
+                            <option value="2">Kelas 2</option>
+                            <option value="3">Kelas 3</option>
+                            <option value="4">Kelas 4</option>
+                            <option value="5">Kelas 5</option>
+                            <option value="6">Kelas 6</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Orang Tua / Wali</label>
+                        <input type="text" id="edit-siswa-ortu" placeholder="Nama Orang Tua"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pekerjaan Ortu</label>
+                        <input type="text" id="edit-siswa-pekerjaan" placeholder="Wiraswasta/PNS/dsb"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor HP / WA</label>
+                        <input type="tel" id="edit-siswa-hp" placeholder="08xxxxxxxxxx"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Tempat Tinggal</label>
+                    <textarea id="edit-siswa-alamat" rows="2" placeholder="Nama Jalan, RT/RW, Kelurahan..."
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="ModulBerkas.closeEditSiswaModal()"
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Data
                     </button>
                 </div>
             </form>
@@ -3346,19 +3720,19 @@
     <div id="modal-ocr-scanner"
         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div
-            class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-magnifying-glass-chart text-blue-600"></i> OCR Scanner & Ekstraksi Cerdas
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass-chart text-blue-600 dark:text-blue-400"></i> OCR Scanner & Ekstraksi Cerdas
                         Dokumen
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        <span id="modal-ocr-student-info" class="font-bold text-slate-700">Nama Siswa</span> • Dokumen:
-                        <span id="modal-ocr-doc-type" class="font-semibold text-blue-700">Kartu Keluarga</span>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        <span id="modal-ocr-student-info" class="font-bold text-slate-700 dark:text-slate-200">Nama Siswa</span> • Dokumen:
+                        <span id="modal-ocr-doc-type" class="font-semibold text-blue-700 dark:text-blue-400">Kartu Keluarga</span>
                     </p>
                 </div>
-                <button type="button" onclick="ModulOCR.closeScanModal()" class="text-slate-400 hover:text-slate-600">
+                <button type="button" onclick="ModulOCR.closeScanModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -3366,16 +3740,16 @@
             <!-- Upload Area & Preprocessing -->
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas Scan Dokumen (Format
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih Berkas Scan Dokumen (Format
                         Gambar JPG/PNG/WEBP)</label>
                     <input type="file" id="ocr-file-input" accept="image/*"
                         onchange="ModulOCR.handleFileSelected(event)"
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <!-- Image Preview Container -->
                 <div id="ocr-preview-container"
-                    class="hidden p-3 bg-slate-100 rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
+                    class="hidden p-3 bg-slate-100 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center">
                     <img id="ocr-image-preview" src="" alt="Pratinjau Dokumen"
                         class="max-h-64 object-contain rounded-lg shadow-sm">
                     <button type="button" id="btn-start-ocr" onclick="ModulOCR.startOCR()"
@@ -3386,12 +3760,12 @@
                 </div>
 
                 <!-- Progress & Extraction Status -->
-                <div id="ocr-progress-box" class="hidden p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-2">
-                    <div class="flex items-center justify-between text-xs font-semibold text-blue-900">
+                <div id="ocr-progress-box" class="hidden p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2">
+                    <div class="flex items-center justify-between text-xs font-semibold text-blue-900 dark:text-blue-300">
                         <span id="ocr-progress-status">Memuat engine OCR...</span>
                         <span id="ocr-progress-percent">0%</span>
                     </div>
-                    <div class="w-full bg-blue-200 rounded-full h-2">
+                    <div class="w-full bg-blue-200 dark:bg-blue-900/50 rounded-full h-2">
                         <div id="ocr-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style="width: 0%"></div>
                     </div>
@@ -3403,12 +3777,12 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                <span class="text-[11px] text-slate-400">Tekan Sinkronisasi untuk memperbarui data siswa di
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                <span class="text-[11px] text-slate-400 dark:text-slate-500">Tekan Sinkronisasi untuk memperbarui data siswa di
                     database.</span>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="ModulOCR.closeScanModal()"
-                        class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                         Tutup
                     </button>
                     <button type="button" id="btn-apply-ocr" onclick="ModulOCR.applyOCRToDatabase()"

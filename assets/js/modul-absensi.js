@@ -417,6 +417,10 @@ const ModulAbsensi = {
     },
 
     renderRekapitulasi() {
+        if (window.App && typeof App.renderAbsensiDashboardBox === "function") {
+            App.renderAbsensiDashboardBox();
+            return;
+        }
         const absensiList = DataStore.getAbsensi();
         const today = this.selectedDate;
         const currentData = absensiList.filter(a => a.tanggal === today);

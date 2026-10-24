@@ -1,6 +1,35 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.2.0] - 2026-10-24
+
+### Presisi Rekap Absensi Bulanan, Integrasi Dasbor Presensi Multi-Sumber Simetris, Walkthrough Tour Auto-Scroll, dan Perbaikan Ikon FontAwesome
+- **Presisi & Penyelarasan Tabel Rekap Absensi Bulanan (`assets/js/modul-presensi.js` & `assets/css/style.css`):**
+  - Mengonfigurasi seluruh kolom angka, NIP/NISN, tanggal 1–31, dan rekapitulasi kehadiran (H, S, I, A) menjadi rata tengah (*center-aligned*) secara mutlak dan konsisten baik pada Rekap Tendik maupun Siswa.
+  - Mempertahankan kolom Nama Pegawai/Siswa tetap rata kiri (*left-aligned*) dengan `padding-left` yang proporsional agar nyaman diidentifikasi.
+  - Mengoptimalkan lebar sel tanggal sehingga 31 hari muat presisi dalam 1 layar (*fixed table layout*) tanpa scrollbar horizontal yang berlebih.
+  - Memperbarui styling CSS badge status kepegawaian (PNS, PPPK, Honorer) agar harmonis dengan tema SEKOLAHTU serta kontras warna yang nyaman di mata.
+  - Memperbarui format teks generator QR Code dan kartu tanda pengenal tendik dari format lama `SIMTAS|T|{NIP}` menjadi `SEKOLAHTU|T|{NIP}` untuk presensi mandiri.
+- **Relokasi & Redesain Dasbor Grafik Rekapitulasi Presensi (`index.html` & `assets/js/app.js`):**
+  - Memindahkan box grafik kehadiran dari tab internal modul presensi langsung ke halaman utama Dasbor (`view-dashboard`) tepat di bawah Ringkasan Eksekutif.
+  - Menyediakan tombol sakelar interaktif (*toggle switch*) antara **Absensi Siswa** dan **Absensi GTK / Tendik**.
+  - Mengubah konfigurasi grid dari 3 kolom tidak seimbang menjadi sistem grid 12 kolom (`grid-cols-1 lg:grid-cols-12 gap-6`) dengan proporsi Donut Chart `lg:col-span-5` dan Tren Line Chart `lg:col-span-7`, menyamakan lebar dan tinggi secara simetris berdampingan dengan box Analisis Kelengkapan Berkas & Indikator PIP.
+  - Penerapan kontrol hak akses berbasis peran (RBAC) pada grafik dasbor: Peran Penjaga Sekolah dan Petugas Perpustakaan otomatis dikunci khusus ke data Tendik dengan penonaktifan tombol Siswa.
+  - Grafik presensi terintegrasi penuh dengan pendeteksian mode Gelap/Terang (Dark Mode auto-recolor).
+- **Penyempurnaan Interactive Onboarding Walkthrough Tour (`assets/js/app.js`):**
+  - Mengeliminasi langkah selektor redundan `#main-sidebar` agar transisi sorotan lebih fokus ke menu spesifik.
+  - Menambahkan kapabilitas *smooth auto-scroll* terpusat (`onHighlightStarted` via `scrollIntoView({ behavior: 'smooth', block: 'center' })`) pada sidebar, memastikan elemen menu bawah otomatis terangkat ke tengah viewport monitor standar sekolah (1366x768px).
+  - Melengkapi langkah panduan tur staf dengan 4 menu navigasi sidebar bagian bawah: **Cetak Otomatis**, **Scan QR Presensi**, **Rekap Presensi Harian & Bulanan**, serta **Portal Verifikasi Keabsahan Surat**.
+- **Perbaikan Kompatibilitas Ikon FontAwesome 6 Free (`index.html`, `verifikasi.html`, `assets/js/modul-vue.js`, `assets/js/modul-surat.js`):**
+  - Mengganti ikon `fa-shield-check` (fitur FontAwesome Pro yang tidak tampil pada lisensi gratis) menjadi ikon `fa-shield-halved` (FontAwesome 6 Free) pada tombol menu sidebar, badge keabsahan verifikasi, dan modul persuratan.
+- **Pembaruan Backend Google Apps Script (GAS) v3.2.0 (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):**
+  - Sinkronisasi versi backend GAS ke `v3.2.0` pada header skrip, endpoint status `doGet()`, dan skrip backup database `getSystemHealth()`.
+  - Memperbarui petunjuk penerapan versi baru di `Panduan_Deploy_GAS.md` dengan deskripsi rilis: `SEKOLAHTU Production API v3.2.0 (Multi-Source Attendance, Symmetrical Dashboard Grid & Onboarding Enhancements)`.
+- **Sinkronisasi Versi Seluruh Aplikasi Frontend (`index.html`, `permohonan.html`, `verifikasi.html`, `assets/js/app.js`):**
+  - Peningkatan versi resmi sistem ke **v3.2.0**.
+
+---
+
 ## [v3.1.0] - 2026-10-24
 
 ### Penyempurnaan Antarmuka (UI/UX), Fitur Dark Mode, Interactive Onboarding Tour, Profil Tendik, dan Optimalisasi Resolusi Layar Standar 1366x768px

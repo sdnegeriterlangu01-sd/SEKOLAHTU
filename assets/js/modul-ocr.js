@@ -132,6 +132,7 @@ const ModulOCR = {
         const progressBox = document.getElementById("ocr-progress-box");
         const progressBar = document.getElementById("ocr-progress-bar");
         const progressStatus = document.getElementById("ocr-progress-status");
+        const progressPercent = document.getElementById("ocr-progress-percent");
         const btnStart = document.getElementById("btn-start-ocr");
 
         progressBox.classList.remove("hidden");
@@ -141,15 +142,18 @@ const ModulOCR = {
         try {
             progressStatus.textContent = "Menginisialisasi Engine Tesseract.js (Model Bahasa Indonesia)...";
             progressBar.style.width = "20%";
+            if (progressPercent) progressPercent.textContent = "20%";
 
             const Tesseract = await this.loadTesseract();
             
             progressStatus.textContent = "Melakukan Canvas Image Preprocessing...";
             progressBar.style.width = "40%";
+            if (progressPercent) progressPercent.textContent = "40%";
             const processedUrl = this.preprocessImage(imgEl);
 
             progressStatus.textContent = "Membaca teks dari gambar berkas fisik...";
             progressBar.style.width = "60%";
+            if (progressPercent) progressPercent.textContent = "60%";
 
             const result = await Tesseract.recognize(processedUrl, 'ind', {
                 logger: m => {
@@ -157,11 +161,13 @@ const ModulOCR = {
                         const pct = Math.round(m.progress * 100);
                         progressBar.style.width = `${60 + (pct * 0.35)}%`;
                         progressStatus.textContent = `Memindai teks: ${pct}%...`;
+                        if (progressPercent) progressPercent.textContent = `${pct}%`;
                     }
                 }
             });
 
             progressBar.style.width = "100%";
+            if (progressPercent) progressPercent.textContent = "100%";
             progressStatus.textContent = "Selesai! Mengekstrak entitas data...";
 
             const fullText = result.data.text || "";
@@ -171,6 +177,7 @@ const ModulOCR = {
             console.error("OCR Error:", err);
             App.showToast(`OCR Gagal: ${err.message}`, "error");
             progressStatus.textContent = `Gagal: ${err.message}`;
+            if (progressPercent) progressPercent.textContent = "0%";
         } finally {
             this.isProcessing = false;
             btnStart.disabled = false;
@@ -302,16 +309,16 @@ const ModulOCR = {
         ];
 
         let html = `
-            <div class="rounded-2xl border border-amber-200 overflow-hidden bg-white shadow-sm">
-                <div class="grid grid-cols-2 bg-amber-50 text-xs font-bold border-b border-amber-200 divide-x divide-amber-200">
-                    <div class="p-3 text-amber-950 flex items-center gap-2">
-                        <i class="fa-solid fa-database text-amber-600"></i> Data Eksisting di Database
+            <div class="rounded-2xl border border-amber-200 dark:border-amber-800/60 overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+                <div class="grid grid-cols-2 bg-amber-50 dark:bg-slate-800/90 text-xs font-bold border-b border-amber-200 dark:border-amber-800/60 divide-x divide-amber-200 dark:divide-amber-800/60">
+                    <div class="p-3 text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-amber-600 dark:text-amber-400"></i> Data Eksisting di Database
                     </div>
-                    <div class="p-3 text-amber-900 bg-amber-100/50 flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i> Hasil Deteksi OCR KTA Pramuka
+                    <div class="p-3 text-amber-900 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-950/40 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600 dark:text-amber-400"></i> Hasil Deteksi OCR KTA Pramuka
                     </div>
                 </div>
-                <div class="divide-y divide-slate-100 text-xs">
+                <div class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
         `;
 
         fields.forEach(f => {
@@ -322,33 +329,33 @@ const ModulOCR = {
             let rowBg = "";
             let matchBadge = "";
             if (!dbVal && ocrVal) {
-                rowBg = "bg-emerald-50/50";
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-plus"></i> Data Baru</span>`;
+                rowBg = "bg-emerald-50/50 dark:bg-emerald-950/20";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 dark:border dark:border-emerald-800/60"><i class="fa-solid fa-plus"></i> Data Baru</span>`;
             } else if (isMatch) {
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-check"></i> Cocok</span>`;
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:border dark:border-blue-800/60"><i class="fa-solid fa-check"></i> Cocok</span>`;
             } else if (dbVal && ocrVal && dbVal !== ocrVal) {
-                rowBg = "bg-amber-50/50";
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-triangle-exclamation"></i> Perbedaan</span>`;
+                rowBg = "bg-amber-50/50 dark:bg-amber-950/20";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 dark:border dark:border-amber-800/60"><i class="fa-solid fa-triangle-exclamation"></i> Perbedaan</span>`;
             }
 
             const isEditable = f.key === "nta";
 
             html += `
-                <div class="grid grid-cols-2 divide-x divide-slate-100 ${rowBg}">
+                <div class="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-800 ${rowBg}">
                     <div class="p-3">
-                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${f.label}</label>
-                        <div class="font-mono font-semibold text-slate-800 text-xs break-all">${Sec.esc(dbVal) || '<em class="text-slate-400 font-sans">Belum ada data</em>'}</div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 mb-1">${f.label}</label>
+                        <div class="font-mono font-semibold text-slate-800 dark:text-slate-100 text-xs break-all">${Sec.esc(dbVal) || '<em class="text-slate-400 dark:text-slate-500 font-sans">Belum ada data</em>'}</div>
                     </div>
-                    <div class="p-3 bg-amber-50/20">
+                    <div class="p-3 bg-amber-50/20 dark:bg-amber-950/10">
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[10px] uppercase font-bold text-amber-900">${f.label}</label>
+                            <label class="block text-[10px] uppercase font-bold text-amber-900 dark:text-amber-300">${f.label}</label>
                             ${matchBadge}
                         </div>
                         ${isEditable ? `
                             <input type="text" id="ocr-field-${f.key}" value="${Sec.esc(ocrVal)}" 
-                                class="w-full px-2.5 py-1.5 text-xs font-mono font-bold text-amber-900 bg-white border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Masukkan NTA Pramuka">
+                                class="w-full px-2.5 py-1.5 text-xs font-mono font-bold text-amber-900 dark:text-amber-200 bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-700/80 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Masukkan NTA Pramuka">
                         ` : `
-                            <div class="font-mono font-semibold text-slate-800 text-xs py-1.5">${Sec.esc(ocrVal)}</div>
+                            <div class="font-mono font-semibold text-slate-800 dark:text-slate-100 text-xs py-1.5">${Sec.esc(ocrVal)}</div>
                         `}
                     </div>
                 </div>
@@ -377,16 +384,16 @@ const ModulOCR = {
         ];
 
         let html = `
-            <div class="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-                <div class="grid grid-cols-2 bg-slate-100 text-xs font-bold border-b border-slate-200 divide-x divide-slate-200">
-                    <div class="p-3 text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-database text-blue-600"></i> Data Eksisting di Database
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+                <div class="grid grid-cols-2 bg-slate-100 dark:bg-slate-800/90 text-xs font-bold border-b border-slate-200 dark:border-slate-800 divide-x divide-slate-200 dark:divide-slate-800">
+                    <div class="p-3 text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-blue-600 dark:text-blue-400"></i> Data Eksisting di Database
                     </div>
-                    <div class="p-3 text-blue-900 bg-blue-50 flex items-center gap-2">
+                    <div class="p-3 text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 flex items-center gap-2">
                         <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Hasil Ekstraksi OCR (Bisa Diedit)
                     </div>
                 </div>
-                <div class="divide-y divide-slate-100 text-xs">
+                <div class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
         `;
 
         fields.forEach(f => {
@@ -398,28 +405,28 @@ const ModulOCR = {
             let rowBg = "";
             let matchBadge = "";
             if (!dbVal && ocrVal) {
-                rowBg = "bg-emerald-50/50";
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-plus"></i> Data Baru</span>`;
+                rowBg = "bg-emerald-50/50 dark:bg-emerald-950/20";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 dark:border dark:border-emerald-800/60"><i class="fa-solid fa-plus"></i> Data Baru</span>`;
             } else if (isMatch) {
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800"><i class="fa-solid fa-check"></i> Cocok</span>`;
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:border dark:border-blue-800/60"><i class="fa-solid fa-check"></i> Cocok</span>`;
             } else if (dbVal && ocrVal && dbVal !== ocrVal) {
-                rowBg = "bg-amber-50/50";
-                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800"><i class="fa-solid fa-triangle-exclamation"></i> Perbedaan</span>`;
+                rowBg = "bg-amber-50/50 dark:bg-amber-950/20";
+                matchBadge = `<span class="ml-2 text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 dark:border dark:border-amber-800/60"><i class="fa-solid fa-triangle-exclamation"></i> Perbedaan</span>`;
             }
 
             html += `
-                <div class="grid grid-cols-2 divide-x divide-slate-100 ${rowBg}">
+                <div class="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-800 ${rowBg}">
                     <div class="p-3">
-                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${f.label}</label>
-                        <div class="font-mono font-semibold text-slate-800 text-xs break-all">${Sec.esc(dbVal) || '<em class="text-slate-400 font-sans">Belum ada data</em>'}</div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 mb-1">${f.label}</label>
+                        <div class="font-mono font-semibold text-slate-800 dark:text-slate-100 text-xs break-all">${Sec.esc(dbVal) || '<em class="text-slate-400 dark:text-slate-500 font-sans">Belum ada data</em>'}</div>
                     </div>
-                    <div class="p-3 bg-blue-50/20">
+                    <div class="p-3 bg-blue-50/20 dark:bg-blue-950/10">
                         <div class="flex items-center justify-between mb-1">
-                            <label class="block text-[10px] uppercase font-bold text-blue-900">${f.label}</label>
+                            <label class="block text-[10px] uppercase font-bold text-blue-900 dark:text-blue-300">${f.label}</label>
                             ${matchBadge}
                         </div>
                         <input type="text" id="ocr-field-${f.key}" value="${Sec.esc(ocrVal)}" 
-                            class="w-full px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                            class="w-full px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-950 border border-blue-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none">
                     </div>
                 </div>
             `;
@@ -431,17 +438,17 @@ const ModulOCR = {
         const siblings = this.detectSiblings(dbData, ocrData);
         if (siblings.length > 0) {
             html += `
-                <div class="mt-3 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-950 flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 font-bold">
+                <div class="mt-3 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-950 dark:text-indigo-200 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center flex-shrink-0 font-bold">
                         <i class="fa-solid fa-people-roof text-sm"></i>
                     </div>
                     <div class="flex-grow min-w-0 text-xs">
-                        <strong class="font-bold text-indigo-900">Inovasi Cerdas: Ditemukan Saudara Kandung Satu KK!</strong>
-                        <p class="text-[11px] text-indigo-700 mt-0.5 leading-relaxed">
+                        <strong class="font-bold text-indigo-900 dark:text-indigo-200">Inovasi Cerdas: Ditemukan Saudara Kandung Satu KK!</strong>
+                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5 leading-relaxed">
                             Siswa <strong>${Sec.esc(siblings.map(s => `${s.nama} (Kelas ${s.rombel || s.kelas})`).join(", "))}</strong> memiliki kecocokan nomor KK atau orang tua. 
                             Terapkan data KK ini ke semua saudara kandung secara otomatis?
                         </p>
-                        <label class="inline-flex items-center gap-2 mt-2 font-bold text-indigo-900 cursor-pointer">
+                        <label class="inline-flex items-center gap-2 mt-2 font-bold text-indigo-900 dark:text-indigo-200 cursor-pointer">
                             <input type="checkbox" id="ocr-apply-to-siblings" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
                             Terapkan salinan nomor KK & kontak orang tua ini ke seluruh saudara kandung
                         </label>

@@ -553,7 +553,7 @@ const ApiClient = {
                 let code = String(payload.code || "").trim();
                 let nip = String(payload.nip || "").trim();
                 if (!nip && code) {
-                    const m = code.match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
+                    const m = code.match(/^(?:SEKOLAHTU|SIMTAS)\|T\|([A-Za-z0-9._-]{4,40})$/);
                     nip = m ? m[1] : code;
                 }
                 const cleanNip = Util.cleanId(nip);

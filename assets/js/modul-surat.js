@@ -181,7 +181,7 @@ const ModulSurat = {
                     </td>
                     <td class="px-4 py-3.5 text-center">
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <i class="fa-solid fa-shield-check"></i> Teregistrasi
+                            <i class="fa-solid fa-shield-halved"></i> Teregistrasi
                         </span>
                     </td>
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
@@ -655,41 +655,41 @@ const ModulSurat = {
         }
 
         container.innerHTML = filtered.map((p, idx) => {
-            let statusBadge = "bg-amber-100 text-amber-800 border-amber-300";
+            let statusBadge = "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
             let statusIcon = "fa-hourglass-half";
             if (p.status === "Disetujui TU" || p.status === "Diproses") {
-                statusBadge = "bg-blue-100 text-blue-800 border-blue-300";
+                statusBadge = "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
                 statusIcon = "fa-spinner fa-spin";
             } else if (p.status === "Siap Diambil") {
-                statusBadge = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                statusBadge = "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
                 statusIcon = "fa-circle-check";
             } else if (p.status === "Selesai") {
-                statusBadge = "bg-slate-100 text-slate-700 border-slate-300";
+                statusBadge = "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
                 statusIcon = "fa-check-double";
             } else if (p.status === "Ditolak") {
-                statusBadge = "bg-rose-100 text-rose-800 border-rose-300";
+                statusBadge = "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800";
                 statusIcon = "fa-circle-xmark";
             }
 
             return `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 transition text-xs">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 transition text-xs">
                     <td class="px-4 py-3">
-                        <div class="font-mono font-bold text-blue-900">${p.id}</div>
+                        <div class="font-mono font-bold text-blue-900 dark:text-blue-400">${p.id}</div>
                         <div class="text-[10px] text-slate-400">${p.createdAt || "-"}</div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="font-bold text-slate-800">${p.nama}</div>
-                        <div class="text-[11px] text-slate-500 font-mono">NISN: ${p.nisn} • Kelas ${p.kelas}</div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100">${p.nama}</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">NISN: ${p.nisn} • Kelas ${p.kelas}</div>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="inline-block px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-800 border border-slate-200">
+                        <span class="inline-block px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                             ${p.jenisSurat}
                         </span>
-                        <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-1 italic">${p.keperluan || "-"}</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 italic">${p.keperluan || "-"}</div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="font-semibold text-slate-700">${p.namaOrtu || p.namaPemohon || "-"}</div>
-                        <div class="text-[11px] font-mono text-slate-500">${p.hpOrtu || p.noWhatsApp || p.noHp || "-"}</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200">${p.namaOrtu || p.namaPemohon || "-"}</div>
+                        <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400">${p.hpOrtu || p.noWhatsApp || p.noHp || "-"}</div>
                     </td>
                     <td class="px-4 py-3 text-center">
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadge}">
@@ -713,24 +713,24 @@ const ModulSurat = {
                                         const cleanNisn = p.nisn || "";
                                         const matchedSK = skList.find(s => {
                                             const perihal = (s.perihal || "").toLowerCase();
-                                            const tujuan = (s.tujuan || "").toLowerCase();
-                                            return (cleanNisn && (perihal.includes(cleanNisn) || tujuan.includes(cleanNisn))) ||
-                                                   (cleanNama && (perihal.includes(cleanNama) || tujuan.includes(cleanNama)));
+                                            const目的 = (s.tujuan || "").toLowerCase();
+                                            return (cleanNisn && (perihal.includes(cleanNisn) || 目的.includes(cleanNisn))) ||
+                                                   (cleanNama && (perihal.includes(cleanNama) || 目的.includes(cleanNama)));
                                         });
                                         if (matchedSK && matchedSK.nomorSurat) noSuratTampil = matchedSK.nomorSurat;
                                     } catch (e) {}
                                 }
                             }
                             return noSuratTampil ? `
-                                <div class="text-[10px] font-mono font-bold text-blue-900 mt-1 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200">
-                                    <i class="fa-solid fa-file-signature text-blue-700 mr-1"></i>${noSuratTampil}
+                                <div class="text-[10px] font-mono font-bold text-blue-900 dark:text-blue-300 mt-1 bg-blue-50/80 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/80">
+                                    <i class="fa-solid fa-file-signature text-blue-700 dark:text-blue-400 mr-1"></i>${noSuratTampil}
                                 </div>
                             ` : '';
                         })()}
                     </td>
                     <td class="px-4 py-3 text-center">
                         <select onchange="ModulSurat.updateStatusPermohonan('${p.id}', this.value)"
-                            class="px-2 py-1 text-[11px] border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white">
+                            class="px-2 py-1 text-[11px] border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-slate-200">
                             <option value="Menunggu Verifikasi TU" ${p.status === "Menunggu Verifikasi TU" ? "selected" : ""}>Menunggu Verifikasi</option>
                             <option value="Disetujui TU" ${p.status === "Disetujui TU" ? "selected" : ""}>Disetujui TU</option>
                             <option value="Siap Diambil" ${p.status === "Siap Diambil" ? "selected" : ""}>Siap Diambil</option>

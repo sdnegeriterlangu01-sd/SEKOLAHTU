@@ -47,6 +47,10 @@
   padding: 0;
 }
 
+[v-cloak] {
+  display: none !important;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--surface-ground);
@@ -85,33 +89,73 @@ body {
   border-color: #cbd5e1;
 }
 
-/* Custom Scrollbar */
+/* ==========================================================================
+   GLOBAL CUSTOM SCROLLBAR (Sleek Modern Pill Style as per Image 1)
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+html.dark * {
+  scrollbar-color: #334155 #0f172a;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
+::-webkit-scrollbar-thumb:active {
+  background: #64748b;
+}
+
+/* Dark Mode Scrollbars */
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 9999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+html.dark ::-webkit-scrollbar-thumb:active {
+  background: #64748b;
+}
+
 /* Sidebar Nav Scrollbar */
 #vue-sidebar-nav {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f8fafc;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+html.dark #vue-sidebar-nav {
+  scrollbar-color: #334155 transparent;
 }
 
 #vue-sidebar-nav::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 
 #vue-sidebar-nav::-webkit-scrollbar-track {
@@ -123,8 +167,16 @@ body {
   border-radius: 9999px;
 }
 
+html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Navigation & Active Link Animations */
@@ -400,10 +452,43 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.qr-verification-badge canvas,
-.qr-verification-badge img {
-  width: 60px;
-  height: 60px;
+.qr-verification-badge #qrcode-container {
+  width: 104px !important;
+  height: 104px !important;
+  padding: 3px !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+/* Sembunyikan elemen qrcode yang dinonaktifkan oleh library agar tidak ganda */
+.qr-verification-badge canvas[style*="display: none"],
+.qr-verification-badge img[style*="display: none"],
+#qrcode-container canvas[style*="display: none"],
+#qrcode-container img[style*="display: none"],
+.qr-verification-badge canvas[style*="display:none"],
+.qr-verification-badge img[style*="display:none"],
+#qrcode-container canvas[style*="display:none"],
+#qrcode-container img[style*="display:none"] {
+  display: none !important;
+}
+
+.qr-verification-badge canvas:not([style*="display: none"]):not([style*="display:none"]),
+.qr-verification-badge img:not([style*="display: none"]):not([style*="display:none"]),
+#qrcode-container canvas:not([style*="display: none"]):not([style*="display:none"]),
+#qrcode-container img:not([style*="display: none"]):not([style*="display:none"]) {
+  width: 96px !important;
+  height: 96px !important;
+  max-width: 96px !important;
+  max-height: 96px !important;
+  display: block !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
 }
 
 .qr-verification-badge .qr-text {
@@ -825,10 +910,33 @@ body {
     print-color-adjust: exact !important;
   }
 
-  .qr-verification-badge canvas,
-  .qr-verification-badge img {
-    width: 50px !important;
-    height: 50px !important;
+  .qr-verification-badge #qrcode-container {
+    width: 90px !important;
+    height: 90px !important;
+    padding: 3px !important;
+    box-sizing: border-box !important;
+  }
+
+  .qr-verification-badge canvas[style*="display: none"],
+  .qr-verification-badge img[style*="display: none"],
+  #qrcode-container canvas[style*="display: none"],
+  #qrcode-container img[style*="display: none"],
+  .qr-verification-badge canvas[style*="display:none"],
+  .qr-verification-badge img[style*="display:none"],
+  #qrcode-container canvas[style*="display:none"],
+  #qrcode-container img[style*="display:none"] {
+    display: none !important;
+  }
+
+  .qr-verification-badge canvas:not([style*="display: none"]):not([style*="display:none"]),
+  .qr-verification-badge img:not([style*="display: none"]):not([style*="display:none"]),
+  #qrcode-container canvas:not([style*="display: none"]):not([style*="display:none"]),
+  #qrcode-container img:not([style*="display: none"]):not([style*="display:none"]) {
+    width: 84px !important;
+    height: 84px !important;
+    max-width: 84px !important;
+    max-height: 84px !important;
+    display: block !important;
   }
 
   .qr-verification-badge .qr-text {
@@ -1017,8 +1125,83 @@ html.dark .nav-link.active {
   box-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.5) !important;
 }
 
+/* ==========================================================================
+   STANDARISASI ELEMEN DROPDOWN & SELECT DENGAN STYLE WEBSITE (ITEM 4)
+   ========================================================================== */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 14px 14px;
+  padding-right: 2.25rem !important;
+  border-radius: 0.75rem !important;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+select:focus {
+  outline: none;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+}
+
+select option {
+  background-color: #ffffff;
+  color: #0f172a;
+  padding: 8px 12px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+html.dark select {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") !important;
+}
+
+html.dark select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+html.dark select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html.dark select option:hover,
+html.dark select option:focus,
+html.dark select option:checked {
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
+}
+
+/* Custom Dropdown Menus & Popovers */
+[id*="dropdown-menu"],
+.custom-dropdown-menu {
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.dark [id*="dropdown-menu"],
+html.dark .custom-dropdown-menu {
+  background-color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark [id*="dropdown-menu"] button:hover {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+  color: #f8fafc !important;
+}
+
 html.dark input:not([type="checkbox"]):not([type="radio"]),
-html.dark select,
 html.dark textarea {
   background-color: #0b1120 !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -1060,6 +1243,216 @@ html.dark tbody tr:hover {
 html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Toast Notifications Dark Mode */
+html.dark .toast {
+  background-color: #111a2e !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Bilah Sub-Tab & Sub-Navigation Dark Mode */
+html.dark .bg-slate-200,
+html.dark .bg-slate-200\/80,
+html.dark .bg-slate-200\/60,
+html.dark [class*="bg-slate-200"] {
+  background-color: #0d1527 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .pip-subtab-btn:not(.bg-white),
+html.dark #vue-absensi-tabs button:not(.bg-white),
+html.dark #surat-subtabs button:not(.bg-white) {
+  color: #94a3b8 !important;
+}
+
+html.dark .pip-subtab-btn:not(.bg-white):hover,
+html.dark #vue-absensi-tabs button:not(.bg-white):hover,
+html.dark #surat-subtabs button:not(.bg-white):hover {
+  color: #f8fafc !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark .pip-subtab-btn.bg-white,
+html.dark #vue-absensi-tabs button.bg-white,
+html.dark #surat-subtabs button.bg-white {
+  background-color: #1e293b !important;
+  color: #60a5fa !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Kartu & Wadah Pastel Dark Mode */
+html.dark .bg-white\/80 {
+  background-color: rgba(17, 26, 46, 0.85) !important;
+}
+
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/30,
+html.dark .bg-blue-50\/50,
+html.dark .bg-blue-50\/60,
+html.dark .bg-blue-50\/70 {
+  background-color: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/60 {
+  background-color: rgba(6, 78, 59, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/60 {
+  background-color: rgba(120, 53, 15, 0.25) !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/60 {
+  background-color: rgba(136, 19, 55, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.25) !important;
+}
+
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80 {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+}
+
+/* Penyelarasan Warna Teks Tematik pada Dark Mode */
+html.dark .text-emerald-900,
+html.dark .text-emerald-800,
+html.dark .text-emerald-700 {
+  color: #6ee7b7 !important;
+}
+
+html.dark .text-blue-900,
+html.dark .text-blue-800,
+html.dark .text-blue-700 {
+  color: #93c5fd !important;
+}
+
+html.dark .text-amber-900,
+html.dark .text-amber-800,
+html.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+html.dark .text-rose-900,
+html.dark .text-rose-800,
+html.dark .text-rose-700 {
+  color: #fda4af !important;
+}
+
+html.dark .text-indigo-900,
+html.dark .text-indigo-800,
+html.dark .text-indigo-700 {
+  color: #a5b4fc !important;
+}
+
+/* Tombol Reset Data & Tombol Aksi Pastel */
+html.dark button.bg-rose-50,
+html.dark button.text-rose-700 {
+  background-color: rgba(159, 18, 57, 0.28) !important;
+  color: #fda4af !important;
+  border-color: rgba(244, 63, 94, 0.35) !important;
+}
+
+html.dark button.bg-rose-50:hover {
+  background-color: rgba(159, 18, 57, 0.45) !important;
+  color: #ffffff !important;
+}
+
+/* Jam Digital Header Presensi */
+html.dark #scan-clock,
+html.dark #mscan-clock {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+  color: #a5b4fc !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+/* Status Badges Dark Mode */
+html.dark .badge-incomplete {
+  background-color: rgba(225, 29, 72, 0.2) !important;
+  color: #fda4af !important;
+  border-color: rgba(225, 29, 72, 0.4) !important;
+}
+
+html.dark .badge-complete {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+html.dark .badge-hadir {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+html.dark .badge-sakit {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+html.dark .badge-izin {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+html.dark .badge-alpa {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Hover States List & Table Items pada Dark Mode */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/80:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ==========================================================================
+   PRATINJAU DOKUMEN CETAK RESMI A4 (HARUS SELALU KERTAS PUTIH RESMI)
+   ========================================================================== */
+html.dark #view-cetak-preview-wrapper {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .kop-surat-preview,
+html.dark #kop-surat-print-area,
+.kop-surat-preview,
+#kop-surat-print-area {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.dark .kop-surat-preview *,
+html.dark #kop-surat-print-area * {
+  color: #000000 !important;
+}
+
+html.dark .kop-surat-preview .qr-verification-badge {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.dark .kop-surat-preview .qr-verification-badge .qr-text strong {
+  color: #0f172a !important;
+}
+
+html.dark .kop-surat-preview .qr-verification-badge .qr-text span {
+  color: #475569 !important;
+}
+
+html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
+  color: #1e3a8a !important;
 }
 
 /* ==========================================================================
@@ -1229,4 +1622,113 @@ html.dark .driver-popover-close-btn {
 
 html.dark .driver-popover-close-btn:hover {
   color: #f8fafc !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE OVERFLOW & SCROLL CONTROL FOR PRESENSI / REKAP BULANAN
+   ========================================================================== */
+#view-absensi,
+#abs-tab-siswa,
+#abs-tab-tendik,
+#abs-tab-harian,
+#abs-tab-qr {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.abs-grid-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+#rs-grid,
+#rt-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.abs-grid {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.abs-grid th,
+.abs-grid td {
+  vertical-align: middle !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+.abs-grid td.nama {
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 4px !important;
+}
+
+.abs-grid th {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.abs-grid td.sub {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.abs-grid-wrapper::-webkit-scrollbar,
+#rs-grid-wrapper::-webkit-scrollbar,
+#rt-grid-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 10px;
+}
+
+.abs-grid-wrapper::-webkit-scrollbar-track,
+#rs-grid-wrapper::-webkit-scrollbar-track,
+#rt-grid-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.abs-grid-wrapper::-webkit-scrollbar-thumb,
+#rs-grid-wrapper::-webkit-scrollbar-thumb,
+#rt-grid-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.abs-grid-wrapper::-webkit-scrollbar-thumb:hover,
+#rs-grid-wrapper::-webkit-scrollbar-thumb:hover,
+#rt-grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark .abs-grid-wrapper::-webkit-scrollbar-track,
+html.dark #rs-grid-wrapper::-webkit-scrollbar-track,
+html.dark #rt-grid-wrapper::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 9999px;
+}
+
+html.dark .abs-grid-wrapper::-webkit-scrollbar-thumb,
+html.dark #rs-grid-wrapper::-webkit-scrollbar-thumb,
+html.dark #rt-grid-wrapper::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+html.dark .abs-grid-wrapper::-webkit-scrollbar-thumb:hover,
+html.dark #rs-grid-wrapper::-webkit-scrollbar-thumb:hover,
+html.dark #rt-grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

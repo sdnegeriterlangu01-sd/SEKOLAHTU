@@ -262,6 +262,10 @@ const ModulPIP = {
             this.chartDesilInstance.destroy();
         }
 
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? "#cbd5e1" : "#475569";
+        const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
+
         const ctx = canvas.getContext("2d");
         this.chartDesilInstance = new Chart(ctx, {
             type: "bar",
@@ -290,15 +294,37 @@ const ModulPIP = {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: isDark ? "#0f172a" : "#1e293b",
+                        titleColor: "#ffffff",
+                        bodyColor: "#f1f5f9",
+                        borderColor: isDark ? "#334155" : "#475569",
+                        borderWidth: 1,
                         callbacks: {
                             label: (context) => ` ${context.parsed.y} Siswa Terdata`
                         }
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            color: textColor,
+                            font: { size: 11, weight: "500" }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, precision: 0 }
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0,
+                            color: textColor,
+                            font: { size: 11 }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
                     }
                 }
             }
@@ -447,30 +473,31 @@ const ModulPIP = {
             }
 
             const isSudahSK = item.statusSK && item.statusSK.toLowerCase().includes("sudah");
-            let desilColor = "bg-slate-100 text-slate-700";
-            if (Number(item.desil) <= 4) desilColor = "bg-rose-100 text-rose-800 font-bold border border-rose-200";
-            else if (Number(item.desil) <= 7) desilColor = "bg-amber-100 text-amber-800 font-bold border border-amber-200";
+            let desilColor = "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+            if (Number(item.desil) <= 4) desilColor = "bg-rose-100 text-rose-800 font-bold border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800";
+            else if (Number(item.desil) <= 7) desilColor = "bg-amber-100 text-amber-800 font-bold border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
+            else desilColor = "bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
 
             const ortuText = [item.namaAyah ? `Ayah: ${item.namaAyah}` : '', item.namaIbu ? `Ibu: ${item.namaIbu}` : ''].filter(Boolean).join(' • ') || '-';
             const rombelText = item.rombel || `Kelas ${item.kelas || '1'}`;
 
             return `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs transition">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-xs transition">
                     <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
                     <td class="p-3">
-                        <div class="font-bold text-slate-800 flex items-center flex-wrap gap-1">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center flex-wrap gap-1">
                             ${Sec.esc(item.nama)} ${auditBadge}
                         </div>
-                        <div class="text-[10px] text-blue-900 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)} ${item.nik ? `<span class="text-slate-400 font-normal">| NIK: ${Sec.esc(item.nik)}</span>` : ''}</div>
+                        <div class="text-[10px] text-blue-900 dark:text-blue-400 font-mono font-bold mt-0.5">NISN: ${Sec.esc(item.nisn)} ${item.nik ? `<span class="text-slate-400 font-normal">| NIK: ${Sec.esc(item.nik)}</span>` : ''}</div>
                         ${item.jk ? `<div class="text-[9px] text-slate-400">${item.jk === 'L' ? 'Laki-laki' : (item.jk === 'P' ? 'Perempuan' : Sec.esc(item.jk))} ${item.umur ? `• ${item.umur} Th` : ''}</div>` : ''}
                     </td>
                     <td class="p-3 text-center">
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                             ${Sec.esc(rombelText)}
                         </span>
                         <div class="text-[9px] text-slate-400 mt-0.5">${Sec.esc(item.namaFase || '-')}</div>
                     </td>
-                    <td class="p-3 text-slate-600">
+                    <td class="p-3 text-slate-600 dark:text-slate-300">
                         <div class="text-[11px] font-medium truncate max-w-[170px]" title="${Sec.esc(ortuText)}">${Sec.esc(ortuText)}</div>
                         ${item.pekerjaanAyah || item.pekerjaanIbu ? `<div class="text-[9px] text-slate-400 truncate max-w-[170px]">${Sec.esc(item.pekerjaanAyah || item.pekerjaanIbu || '')}</div>` : ''}
                     </td>
@@ -479,15 +506,15 @@ const ModulPIP = {
                         <div class="text-[9px] text-slate-400 mt-0.5">${Sec.esc(item.bank || 'BRI')} • ${Sec.esc(item.statusTabungan || 'Rekening')}</div>
                     </td>
                     <td class="p-3 text-center">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSudahSK ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500'}">
-                            <i class="fa-solid ${isSudahSK ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-start'}"></i>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSudahSK ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}">
+                            <i class="fa-solid ${isSudahSK ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-hourglass-start'}"></i>
                             ${isSudahSK ? 'Sudah SK' : 'Belum SK'}
                         </span>
-                        <div class="text-[9px] text-slate-500 mt-0.5 truncate max-w-[120px]" title="${Sec.esc(item.skAtasNama || item.nama)}">${Sec.esc(item.skAtasNama || item.nama)}</div>
+                        <div class="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[120px]" title="${Sec.esc(item.skAtasNama || item.nama)}">${Sec.esc(item.skAtasNama || item.nama)}</div>
                     </td>
                     <td class="p-3 text-right">
                         <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'aktif')" 
-                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar Siswa">
+                            class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900 dark:text-teal-300 dark:border dark:border-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar Siswa">
                             <i class="fa-solid fa-print"></i> Aktif Belajar
                         </button>
                     </td>
@@ -962,6 +989,11 @@ const ModulPIP = {
         App.showToast("Data penerima PIP berhasil diekspor!", "success");
     },
 
+    closeAuditModal() {
+        const modal = document.getElementById("modal-smart-audit-pip");
+        if (modal) modal.classList.add("hidden");
+    },
+
     runSmartAudit() {
         const pengusulan = DataStore.getPIPPengusulan();
         const students = DataStore.getSiswa();
@@ -977,19 +1009,40 @@ const ModulPIP = {
             }
         });
 
-        if (notFoundList.length > 0) {
-            const detailText = notFoundList.map(s => `• ${s.nama} (NISN: ${s.nisn}, Kelas: ${s.kelas || '-'})`).join("\n");
-            App.showToast(`Audit Selesai: ${matchCount} valid padan Dapodik, ${notFoundList.length} belum tercatat di DB Siswa.`, "warning");
-            alert(`Laporan Smart Audit PIP x Data Siswa (Dapodik):\n\n` +
-                  `✅ ${matchCount} Siswa Valid & Padan dengan Database Siswa.\n` +
-                  `⚠️ ${notFoundList.length} Siswa Pengusulan Belum Tercatat di DB Siswa Sekolah:\n\n` +
-                  detailText + `\n\n` +
-                  `💡 Rekomendasi Tindak Lanjut:\n` +
-                  `1. Periksa apakah siswa tersebut baru mutasi/pindah ke SDN Terlangu 01 dan belum terdaftar di menu Data Siswa.\n` +
-                  `2. Periksa kesesuaian penulisan 10 digit NISN pada file usulan PIP.`);
-        } else {
-            App.showToast(`Audit Selesai: Seluruh ${matchCount} siswa usulan PIP 100% valid padan dengan DB Siswa.`, "success");
+        const modal = document.getElementById("modal-smart-audit-pip");
+        const validEl = document.getElementById("audit-valid-count");
+        const notFoundEl = document.getElementById("audit-notfound-count");
+        const badgeEl = document.getElementById("audit-notfound-badge");
+        const listEl = document.getElementById("audit-notfound-list");
+        const notFoundSec = document.getElementById("audit-notfound-section");
+
+        if (validEl) validEl.textContent = matchCount;
+        if (notFoundEl) notFoundEl.textContent = notFoundList.length;
+        if (badgeEl) badgeEl.textContent = `${notFoundList.length} Siswa`;
+
+        if (listEl) {
+            if (notFoundList.length > 0) {
+                if (notFoundSec) notFoundSec.classList.remove("hidden");
+                listEl.innerHTML = notFoundList.map((s, idx) => `
+                    <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs shadow-xs">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px] flex items-center justify-center flex-shrink-0">${idx + 1}</span>
+                            <div class="truncate">
+                                <span class="font-bold text-slate-800 dark:text-slate-100">${s.nama}</span>
+                                <span class="text-[10px] text-slate-400 font-mono ml-1.5">NISN: ${s.nisn}</span>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap ml-2">Kelas ${s.kelas || '-'}</span>
+                    </div>
+                `).join("");
+            } else {
+                if (notFoundSec) notFoundSec.classList.add("hidden");
+                listEl.innerHTML = `<div class="p-3 text-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Seluruh siswa usulan PIP 100% valid padan dengan DB Siswa Sekolah.</div>`;
+            }
         }
+
+        if (modal) modal.classList.remove("hidden");
+        App.showToast(`Audit Selesai: ${matchCount} valid padan Dapodik, ${notFoundList.length} belum tercatat.`, notFoundList.length > 0 ? "warning" : "success");
     },
 
     renderRadarKemiskinan() {

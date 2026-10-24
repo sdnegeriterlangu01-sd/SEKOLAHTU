@@ -74,6 +74,41 @@ const ModulVue = {
         const store = this.store;
 
         const app = createApp({
+            template: `
+                <!-- Menu Utama -->
+                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
+
+                <a v-for="item in mainMenuItems" :key="item.id" :href="'#' + item.route" :data-route="item.route"
+                    @click.prevent="navigate(item.route)"
+                    :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
+                    <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                    <span>{{ getMenuLabel(item) }}</span>
+                    <span v-if="item.badge"
+                        :class="['ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full', item.badgeColor || 'bg-slate-100 text-slate-700']">
+                        {{ item.badge }}
+                    </span>
+                </a>
+
+                <!-- Integrasi & Pengaturan -->
+                <div v-if="settingsMenuItems.length > 0"
+                    class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Integrasi & Pengaturan
+                </div>
+
+                <template v-for="item in settingsMenuItems" :key="item.id">
+                    <a v-if="item.isExternal" :href="item.url" target="_blank"
+                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition">
+                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                        <span>{{ item.label }}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                    </a>
+                    <a v-else :href="'#' + item.route" :data-route="item.route" @click.prevent="navigate(item.route)"
+                        :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
+                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                        <span>{{ item.label }}</span>
+                    </a>
+                </template>
+            `,
             setup() {
                 const currentRoute = computed(() => store.currentRoute);
                 const role = computed(() => store.role);
@@ -91,7 +126,7 @@ const ModulVue = {
                     { id: "absensi", route: "absensi", label: "Presensi & Absensi", icon: "fa-clipboard-user", badge: "M4", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
                     { id: "pengaturan", route: "pengaturan", label: "Pengaturan & Backend GAS", icon: "fa-sliders", section: "settings" },
                     { id: "permohonan", url: "permohonan.html", label: "Portal Permohonan Ortu", icon: "fa-paper-plane", iconColor: "text-blue-600", isExternal: true, section: "settings" },
-                    { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-check", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
+                    { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-halved", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
                 ];
 
                 const canAccessRoute = (route) => {
@@ -166,18 +201,69 @@ const ModulVue = {
         const store = this.store;
 
         const app = createApp({
+            template: `
+                <div class="flex items-center gap-3">
+                    <div id="sidebar-user-avatar-wrap"
+                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-1 ring-blue-500/30">
+                        <img v-if="userPhoto" :src="userPhoto" alt="Foto Profil" class="w-full h-full object-cover">
+                        <span v-else>{{ userInitials }}</span>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">{{ userName }}</div>
+                        <div class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">{{ userRoleLabel }}</div>
+                    </div>
+                    <button type="button" @click="logout" title="Keluar dari sistem"
+                        class="text-slate-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex-shrink-0">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button>
+                </div>
+                <!-- Admin User Management Button -->
+                <div v-if="role === 'admin'" class="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                    <button type="button" @click="openUserModal"
+                        class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-900 to-indigo-800 hover:from-blue-800 hover:to-indigo-700 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-user-plus text-amber-300"></i> Kelola / Tambah Akun
+                    </button>
+                </div>
+            `,
             setup() {
                 const role = computed(() => store.role);
                 const user = computed(() => store.user);
 
+                const matchedTendik = computed(() => {
+                    const u = user.value;
+                    if (!u) return null;
+                    let tendikList = [];
+                    try {
+                        tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+                    } catch (e) {}
+
+                    const uClean = (typeof Auth !== "undefined" && Auth.cleanPersonName) ? Auth.cleanPersonName(u.nama) : (u.nama || "").toLowerCase();
+                    const uNipClean = (typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(u.nip || "") : (u.nip || "").replace(/\D/g, "");
+
+                    return tendikList.find(t => {
+                        const tNipClean = (typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(t.nip || "") : (t.nip || "").replace(/\D/g, "");
+                        if (uNipClean && tNipClean && (tNipClean === uNipClean || tNipClean.includes(uNipClean) || uNipClean.includes(tNipClean))) return true;
+                        const tClean = (typeof Auth !== "undefined" && Auth.cleanPersonName) ? Auth.cleanPersonName(t.nama) : (t.nama || "").toLowerCase();
+                        if (uClean && tClean && (uClean.includes(tClean) || tClean.includes(uClean))) return true;
+                        if (u.nama && t.nama && (u.nama.toLowerCase().includes(t.nama.toLowerCase()) || t.nama.toLowerCase().includes(u.nama.toLowerCase()))) return true;
+                        return false;
+                    }) || null;
+                });
+
+                const userPhoto = computed(() => {
+                    return matchedTendik.value?.foto || user.value?.foto || "";
+                });
+
+                const userName = computed(() => {
+                    return matchedTendik.value?.nama || user.value?.nama || "Pengguna";
+                });
+
                 const userInitials = computed(() => {
-                    const name = user.value?.nama || "User";
+                    const name = userName.value;
                     const parts = name.trim().split(/\s+/);
                     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
                     return name.substring(0, 2).toUpperCase();
                 });
-
-                const userName = computed(() => user.value?.nama || "Pengguna");
 
                 const userRoleLabel = computed(() => {
                     const r = role.value;
@@ -191,7 +277,7 @@ const ModulVue = {
                         if (g?.isGuruMapel) return `Guru Mapel (${g.namaMapel || 'PJOK/PAI'})`;
                         return "Guru";
                     }
-                    return r;
+                    return r || "Pengguna";
                 });
 
                 const logout = () => {
@@ -204,6 +290,7 @@ const ModulVue = {
 
                 return {
                     role,
+                    userPhoto,
                     userInitials,
                     userName,
                     userRoleLabel,

@@ -227,21 +227,21 @@ const ModulTendik = {
             const jabatanDisplay = jabatanAkun || t.jabatan || "Pendidik / Tenaga Kependidikan";
 
             // Status Badge Color
-            let statusColor = "bg-blue-100 text-blue-800 border-blue-200";
-            if (statusPeg === "PPPK") statusColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-            else if (["PTT", "GTT", "HONORER"].includes(statusPeg.toUpperCase())) statusColor = "bg-amber-100 text-amber-800 border-amber-200";
+            let statusColor = "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
+            if (statusPeg === "PPPK") statusColor = "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
+            else if (["PTT", "GTT", "HONORER"].includes(statusPeg.toUpperCase())) statusColor = "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
 
             // Tugas Tambahan Badge
             const tugasBadge = t.tugasTambahan ? `
-                <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/70">
-                    <i class="fa-solid fa-award text-purple-600"></i>
+                <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/70 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
+                    <i class="fa-solid fa-award text-purple-600 dark:text-purple-400"></i>
                     <span class="truncate max-w-[200px]" title="${Sec.esc(t.tugasTambahan)}">${Sec.esc(t.tugasTambahan)}</span>
                 </div>
             ` : '';
 
             // Avatar / Foto Profil
             const avatarHtml = t.foto ? `
-                <img src="${Sec.safeUrl(t.foto)}" alt="${Sec.esc(t.nama)}" class="w-16 h-16 rounded-2xl object-cover ring-2 ring-slate-100 shadow-sm mx-auto">
+                <img src="${Sec.safeUrl(t.foto)}" alt="${Sec.esc(t.nama)}" class="w-16 h-16 rounded-2xl object-cover ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm mx-auto">
             ` : `
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-900 text-white flex items-center justify-center text-xl font-black shadow-sm mx-auto">
                     ${this.getInitials(t.nama)}
@@ -249,7 +249,7 @@ const ModulTendik = {
             `;
 
             return `
-                <div class="bg-white rounded-2xl border border-slate-200 hover:border-blue-300 p-5 shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between relative group ${t.aktif === false ? "opacity-60 bg-slate-50" : ""}">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 p-5 shadow-xs hover:shadow-md transition duration-200 flex flex-col justify-between relative group ${t.aktif === false ? "opacity-60 bg-slate-50 dark:bg-slate-800/40" : ""}">
                     <!-- Header Kartu: Status & Gender -->
                     <div class="flex items-center justify-between gap-2 mb-3">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${statusColor}">
@@ -276,21 +276,21 @@ const ModulTendik = {
                             `}
                         </div>
 
-                        <h4 class="font-bold text-sm text-slate-900 leading-snug line-clamp-2" title="${Sec.esc(t.nama)}">${Sec.esc(t.nama)}</h4>
+                        <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug line-clamp-2" title="${Sec.esc(t.nama)}">${Sec.esc(t.nama)}</h4>
                         <div class="font-mono text-[11px] text-slate-400 mt-0.5">${Sec.esc(t.nip || "-")}</div>
 
                         <!-- Jabatan & Golongan -->
-                        <div class="mt-2 pt-2 border-t border-slate-100">
-                            <div class="text-xs font-semibold text-blue-950 flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-briefcase text-blue-600 text-[10px]"></i>
+                        <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="text-xs font-semibold text-blue-950 dark:text-blue-300 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-briefcase text-blue-600 dark:text-blue-400 text-[10px]"></i>
                                 <span class="truncate">${Sec.esc(jabatanDisplay)}</span>
                             </div>
-                            <div class="text-[11px] text-slate-500 mt-0.5">
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                 <span class="font-medium">${Sec.esc(golDisplay)}</span>
                             </div>
                             ${(t.ijazah || t.jurusan) ? `
-                                <div class="mt-1 text-[10px] text-indigo-900 inline-flex items-center gap-1 bg-indigo-50/80 px-2 py-0.5 rounded-md border border-indigo-200/60 max-w-[95%] truncate font-medium">
-                                    <i class="fa-solid fa-graduation-cap text-indigo-600 text-[10px]"></i>
+                                <div class="mt-1 text-[10px] text-indigo-900 dark:text-indigo-300 inline-flex items-center gap-1 bg-indigo-50/80 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800 max-w-[95%] truncate font-medium">
+                                    <i class="fa-solid fa-graduation-cap text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
                                     <span class="truncate">${Sec.esc(t.ijazah || '')} ${t.jurusan ? `• ${Sec.esc(t.jurusan)}` : ''}</span>
                                 </div>
                             ` : ''}
@@ -301,20 +301,20 @@ const ModulTendik = {
                     </div>
 
                     <!-- Footer Kartu: Aksi Cepat -->
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                    <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-1.5">
                         <button type="button" onclick="ModulTendik.showQrCard('${Sec.esc(nipClean)}')"
-                            class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-qrcode text-indigo-600"></i> QR
+                            class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-qrcode text-indigo-600 dark:text-indigo-400"></i> QR
                         </button>
 
                         <div class="flex items-center gap-1">
                             ${canEdit ? `
                                 <button type="button" onclick="ModulTendik.openModal('${Sec.esc(nipClean)}')"
-                                    class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold inline-flex items-center gap-1.5 transition" title="Ubah Profil & Foto">
+                                    class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900 dark:text-blue-300 text-blue-700 text-xs font-bold inline-flex items-center gap-1.5 transition" title="Ubah Profil & Foto">
                                     <i class="fa-solid fa-user-pen"></i> Ubah
                                 </button>
                                 <button type="button" onclick="ModulTendik.hapusTendik('${Sec.esc(nipClean)}', '${Sec.esc(t.nama)}')"
-                                    class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 hover:text-rose-700 text-xs transition" title="Hapus Tendik">
+                                    class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-rose-300 text-xs transition" title="Hapus Tendik">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             ` : `

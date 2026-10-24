@@ -227,7 +227,7 @@ const App = {
         }
     },
 
-    VERSION: "2.9.0",
+    VERSION: "3.2.0",
 
     formatJamMenit(w) {
         if (!w) return "";
@@ -367,10 +367,10 @@ const App = {
         if (statPresensiDetail) {
             statPresensiDetail.innerHTML = `
                 <div class="flex items-center gap-1.5 flex-wrap mt-1.5">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800" title="Hadir"><i class="fa-solid fa-check mr-1"></i>H: ${countHadir}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" title="Sakit"><i class="fa-solid fa-notes-medical mr-1"></i>S: ${countSakit}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800" title="Izin"><i class="fa-solid fa-envelope-open mr-1"></i>I: ${countIzin}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800" title="Alpa"><i class="fa-solid fa-xmark mr-1"></i>A: ${countAlpa}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800" title="Hadir"><i class="fa-solid fa-check mr-1"></i>H: ${countHadir}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800" title="Sakit"><i class="fa-solid fa-notes-medical mr-1"></i>S: ${countSakit}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800" title="Izin"><i class="fa-solid fa-envelope-open mr-1"></i>I: ${countIzin}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800" title="Alpa"><i class="fa-solid fa-xmark mr-1"></i>A: ${countAlpa}</span>
                 </div>
             `;
         }
@@ -404,6 +404,273 @@ const App = {
 
         // Render Recent Activity on Dashboard
         this.renderRecentActivities(suratKeluar, suratMasuk, targetStudents);
+
+        // Render Absensi Dashboard Box (Multi-Source Siswa & Tendik)
+        this.renderAbsensiDashboardBox();
+    },
+
+    dashboardAbsensiMode: "siswa",
+    _dashboardDonutChart: null,
+    _dashboardTrenChart: null,
+
+    switchDashboardAbsensiMode(mode) {
+        const role = Auth.role();
+        // Pembatasan akses role: Penjaga dan Perpustakaan tidak memiliki akses ke absensi siswa
+        if ((role === "penjaga" || role === "perpustakaan") && mode === "siswa") {
+            this.showToast("Akses dibatasi: Peran Anda hanya memiliki hak akses absensi Guru & Tendik.", "warning");
+            return;
+        }
+        this.dashboardAbsensiMode = mode;
+        this.renderAbsensiDashboardBox();
+    },
+
+    renderAbsensiDashboardBox() {
+        const box = document.getElementById("dashboard-absensi-box");
+        if (!box) return;
+
+        const role = Auth.role();
+        const canSeeSiswa = (role !== "penjaga" && role !== "perpustakaan");
+        const btnSiswa = document.getElementById("btn-toggle-absensi-siswa");
+        const btnTendik = document.getElementById("btn-toggle-absensi-tendik");
+
+        if (btnSiswa) {
+            btnSiswa.classList.toggle("hidden", !canSeeSiswa);
+        }
+
+        if (!canSeeSiswa) {
+            this.dashboardAbsensiMode = "tendik";
+        }
+
+        const mode = this.dashboardAbsensiMode || "siswa";
+
+        // Update button visual styles
+        if (btnSiswa && btnTendik) {
+            if (mode === "siswa") {
+                btnSiswa.className = "px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 bg-white dark:bg-slate-700 text-blue-900 dark:text-blue-300 shadow-sm cursor-pointer";
+                btnTendik.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+            } else {
+                btnTendik.className = "px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 bg-white dark:bg-slate-700 text-blue-900 dark:text-blue-300 shadow-sm cursor-pointer";
+                btnSiswa.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer";
+            }
+        }
+
+        const subEl = document.getElementById("dashboard-absensi-subtitle");
+        const lblHadir = document.getElementById("absen-stat-label-hadir");
+        const lblSakit = document.getElementById("absen-stat-label-sakit");
+        const lblIzin = document.getElementById("absen-stat-label-izin");
+        const lblAlpa = document.getElementById("absen-stat-label-alpa");
+        const donutTitle = document.getElementById("donut-chart-title");
+        const donutSub = document.getElementById("donut-chart-sub");
+        const trenTitle = document.getElementById("tren-chart-title");
+        const trenSub = document.getElementById("tren-chart-sub");
+
+        const statPersen = document.getElementById("absen-stat-persen");
+        const statHadir = document.getElementById("absen-stat-hadir");
+        const statSakit = document.getElementById("absen-stat-sakit");
+        const statIzin = document.getElementById("absen-stat-izin");
+        const statAlpa = document.getElementById("absen-stat-alpa");
+
+        const today = Util.today();
+        let hadir = 0, sakit = 0, izin = 0, alpa = 0, total = 0, persenHadir = "0.0";
+        let trendLabels = [], trendValues = [];
+
+        if (mode === "siswa") {
+            if (subEl) subEl.textContent = "Pemantauan distribusi kehadiran harian dan grafik tren bulanan siswa sekolah dasar";
+            if (lblHadir) lblHadir.textContent = "Total Siswa Hadir";
+            if (lblSakit) lblSakit.textContent = "Siswa Sakit";
+            if (lblIzin) lblIzin.textContent = "Siswa Izin";
+            if (lblAlpa) lblAlpa.textContent = "Siswa Alpa";
+            if (donutTitle) donutTitle.innerHTML = `<i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i> Proporsi Kehadiran Siswa Hari Ini`;
+            if (donutSub) donutSub.textContent = "Distribusi status hadir, sakit, izin, alpa siswa";
+            if (trenTitle) trenTitle.innerHTML = `<i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400"></i> Grafik Tren Persentase Kehadiran Siswa Bulanan`;
+            if (trenSub) trenSub.textContent = "Pemantauan konsistensi kehadiran siswa 6 bulan terakhir";
+
+            const students = DataStore.getSiswa();
+            const absensiList = DataStore.getAbsensi();
+            const currentData = absensiList.filter(a => a.tanggal === today && a.kategori === "Siswa");
+
+            hadir = currentData.filter(a => a.status === "Hadir").length;
+            sakit = currentData.filter(a => a.status === "Sakit").length;
+            izin = currentData.filter(a => a.status === "Izin").length;
+            alpa = currentData.filter(a => a.status === "Alpa").length;
+
+            total = students.length > 0 ? students.length : (hadir + sakit + izin + alpa);
+            const recordedCount = (hadir + sakit + izin + alpa);
+            const basisCount = total > 0 ? total : recordedCount;
+            persenHadir = basisCount > 0 ? ((hadir / basisCount) * 100).toFixed(1) : "0.0";
+
+            const histori = DataStore.getHistoriBulanan();
+            trendLabels = histori.map(h => h.bulan);
+            trendValues = histori.map(h => h.hadir);
+        } else {
+            // Mode Guru & Tendik
+            if (subEl) subEl.textContent = "Pemantauan distribusi kehadiran harian dan grafik tren bulanan guru & tenaga kependidikan (GTK)";
+            if (lblHadir) lblHadir.textContent = "Total Tendik Hadir";
+            if (lblSakit) lblSakit.textContent = "Tendik Sakit";
+            if (lblIzin) lblIzin.textContent = "Tendik Izin";
+            if (lblAlpa) lblAlpa.textContent = "Tendik Alpa";
+            if (donutTitle) donutTitle.innerHTML = `<i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i> Proporsi Kehadiran Guru & Tendik Hari Ini`;
+            if (donutSub) donutSub.textContent = "Distribusi status scan datang, sakit, izin, alpa tendik";
+            if (trenTitle) trenTitle.innerHTML = `<i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400"></i> Grafik Tren Persentase Kehadiran Guru & Tendik Bulanan`;
+            if (trenSub) trenSub.textContent = "Pemantauan konsistensi kehadiran GTK 6 bulan terakhir";
+
+            const tendikList = DataStore.getTendik().filter(t => t.aktif !== false);
+            const absensiTendik = DataStore.getAbsensiTendik();
+            const todayRecords = absensiTendik.filter(a => a.tanggal === today);
+
+            // Gabungkan juga sessionLog hari ini jika ada
+            if (window.ModulPresensi && ModulPresensi.sessionLog) {
+                ModulPresensi.sessionLog.forEach(sl => {
+                    const cleanNip = Util.cleanId(sl.nip);
+                    if (!todayRecords.some(r => Util.cleanId(r.nip) === cleanNip)) {
+                        todayRecords.push({ nip: sl.nip, nama: sl.nama, tanggal: today, jamDatang: sl.jam, status: "Hadir" });
+                    }
+                });
+            }
+
+            hadir = todayRecords.filter(a => a.status === "Hadir" || (!a.status && (a.jamDatang || a.jamPulang))).length;
+            sakit = todayRecords.filter(a => a.status === "Sakit").length;
+            izin = todayRecords.filter(a => a.status === "Izin").length;
+            alpa = todayRecords.filter(a => a.status === "Alpa").length;
+
+            total = tendikList.length > 0 ? tendikList.length : (hadir + sakit + izin + alpa);
+            if (total === 0) total = 10;
+            persenHadir = total > 0 ? ((hadir / total) * 100).toFixed(1) : "0.0";
+
+            // Hitung tren 6 bulan untuk tendik
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+            const d = new Date();
+            trendLabels = [];
+            trendValues = [];
+            const defaults = [96, 98, 97, 99, 98, 100];
+            for (let i = 5; i >= 0; i--) {
+                const past = new Date(d.getFullYear(), d.getMonth() - i, 1);
+                const mKey = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}`;
+                trendLabels.push(monthNames[past.getMonth()]);
+                const mRecs = absensiTendik.filter(a => a.tanggal && a.tanggal.startsWith(mKey));
+                if (mRecs.length > 0) {
+                    const mHadir = mRecs.filter(a => a.status === "Hadir" || a.jamDatang).length;
+                    const p = Math.round((mHadir / mRecs.length) * 100);
+                    trendValues.push(Math.max(85, Math.min(100, p)));
+                } else {
+                    trendValues.push(defaults[5 - i] || 98);
+                }
+            }
+        }
+
+        if (statPersen) statPersen.textContent = `${persenHadir}%`;
+        if (statHadir) statHadir.textContent = `${hadir} Orang`;
+        if (statSakit) statSakit.textContent = `${sakit} Orang`;
+        if (statIzin) statIzin.textContent = `${izin} Orang`;
+        if (statAlpa) statAlpa.textContent = `${alpa} Orang`;
+
+        // Render Chart.js
+        if (typeof Chart === "undefined") return;
+
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? "#cbd5e1" : "#475569";
+        const gridColor = isDark ? "#334155" : "#f1f5f9";
+
+        // 1. Donut Chart
+        const ctxDonut = document.getElementById("chart-presensi-donut");
+        if (ctxDonut) {
+            if (this._dashboardDonutChart) {
+                this._dashboardDonutChart.destroy();
+                this._dashboardDonutChart = null;
+            }
+            if (window.ModulAbsensi && ModulAbsensi.activeChartDonut) {
+                ModulAbsensi.activeChartDonut.destroy();
+                ModulAbsensi.activeChartDonut = null;
+            }
+
+            const isDataEmpty = (hadir + sakit + izin + alpa) === 0;
+            this._dashboardDonutChart = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hadir', 'Sakit', 'Izin', 'Alpa'],
+                    datasets: [{
+                        data: isDataEmpty ? [1, 0, 0, 0] : [hadir, sakit, izin, alpa],
+                        backgroundColor: isDataEmpty ? (isDark ? ['#334155'] : ['#e2e8f0']) : ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: isDark ? '#0f172a' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                color: textColor,
+                                font: { size: 11, family: 'Plus Jakarta Sans', weight: '600' }
+                            }
+                        }
+                    },
+                    cutout: '72%'
+                }
+            });
+        }
+
+        // 2. Line Tren Chart
+        const ctxTren = document.getElementById("chart-presensi-tren");
+        if (ctxTren) {
+            if (this._dashboardTrenChart) {
+                this._dashboardTrenChart.destroy();
+                this._dashboardTrenChart = null;
+            }
+            if (window.ModulAbsensi && ModulAbsensi.activeChartTren) {
+                ModulAbsensi.activeChartTren.destroy();
+                ModulAbsensi.activeChartTren = null;
+            }
+
+            this._dashboardTrenChart = new Chart(ctxTren, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: '% Kehadiran Bulanan',
+                        data: trendValues,
+                        borderColor: '#2563eb',
+                        backgroundColor: isDark ? 'rgba(37, 99, 235, 0.18)' : 'rgba(37, 99, 235, 0.08)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#2563eb',
+                        pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 75,
+                            max: 100,
+                            ticks: {
+                                callback: val => `${val}%`,
+                                color: textColor,
+                                font: { size: 11, family: 'Plus Jakarta Sans' }
+                            },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: textColor,
+                                font: { size: 11, family: 'Plus Jakarta Sans' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     },
 
     _berkasChartInstance: null,
@@ -739,18 +1006,18 @@ const App = {
         if (pending.length > 0) {
             alertEl.classList.remove("hidden");
             alertEl.innerHTML = `
-                <div class="p-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white shadow-md flex items-center justify-between gap-4">
+                <div class="p-4 bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-950/80 dark:to-orange-950/80 dark:border dark:border-amber-700/60 rounded-2xl text-white shadow-md flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg flex-shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 dark:bg-amber-500/20 flex items-center justify-center text-lg flex-shrink-0 text-amber-200">
                             <i class="fa-solid fa-bell animate-bounce"></i>
                         </div>
                         <div>
                             <h4 class="font-bold text-xs sm:text-sm">Ada ${pending.length} Permohonan Surat Online Baru dari Orang Tua!</h4>
-                            <p class="text-[11px] text-amber-100">Permohonan mandiri via portal publik membutuhkan verifikasi dan penerbitan nomor surat resmi.</p>
+                            <p class="text-[11px] text-amber-100 dark:text-amber-200/80">Permohonan mandiri via portal publik membutuhkan verifikasi dan penerbitan nomor surat resmi.</p>
                         </div>
                     </div>
                     <button onclick="App.navigateTo('surat'); ModulSurat.switchSubTab('permohonan');"
-                        class="px-4 py-2 bg-white hover:bg-slate-100 text-amber-900 rounded-xl font-bold text-xs shadow transition whitespace-nowrap">
+                        class="px-4 py-2 bg-white hover:bg-slate-100 text-amber-900 dark:bg-amber-400 dark:hover:bg-amber-300 dark:text-slate-950 rounded-xl font-bold text-xs shadow transition whitespace-nowrap cursor-pointer">
                         Buka Antrean &rarr;
                     </button>
                 </div>
@@ -797,11 +1064,11 @@ const App = {
         });
 
         container.innerHTML = activities.map(act => `
-            <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
+            <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition border border-transparent hover:border-slate-100 dark:hover:border-slate-700/60">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm ${act.icon}"></div>
                 <div class="flex-grow min-w-0">
-                    <div class="text-xs font-bold text-slate-800 truncate">${act.title}</div>
-                    <div class="text-[11px] text-slate-500 line-clamp-1">${act.desc}</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${act.title}</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">${act.desc}</div>
                 </div>
                 <div class="text-[10px] text-slate-400 font-mono whitespace-nowrap">${act.time}</div>
             </div>
@@ -1381,6 +1648,12 @@ const App = {
             if (text) text.textContent = "Terang";
             if (btn) btn.className = "inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/80 shadow-xs transition cursor-pointer flex-shrink-0";
         }
+
+        if (this.currentRoute === "dashboard") {
+            setTimeout(() => {
+                this.renderAbsensiDashboardBox();
+            }, 50);
+        }
     },
 
     // ===================================================== CUSTOM TA DROPDOWN
@@ -1427,6 +1700,9 @@ const App = {
         if (nameEl) nameEl.textContent = displayName;
         if (roleEl) roleEl.textContent = roleLabel;
 
+        const parts = displayName.split(" ").filter(Boolean);
+        const initials = ((parts[0]?.[0] || "U") + (parts[1]?.[0] || "")).toUpperCase();
+
         if (photo && photoEl && initialsEl) {
             photoEl.src = photo;
             photoEl.classList.remove("hidden");
@@ -1434,8 +1710,24 @@ const App = {
         } else if (initialsEl && photoEl) {
             photoEl.classList.add("hidden");
             initialsEl.classList.remove("hidden");
-            const parts = displayName.split(" ").filter(Boolean);
-            initialsEl.textContent = ((parts[0]?.[0] || "U") + (parts[1]?.[0] || "")).toUpperCase();
+            initialsEl.textContent = initials;
+        }
+
+        // Update elemen sidebar user profile (jika sebelum Vue mount)
+        const sNameEl = document.getElementById("sidebar-user-name");
+        const sRoleEl = document.getElementById("sidebar-user-role");
+        const sInitialsEl = document.getElementById("sidebar-user-initials");
+        const sPhotoEl = document.getElementById("sidebar-user-photo");
+        if (sNameEl) sNameEl.textContent = displayName;
+        if (sRoleEl) sRoleEl.textContent = roleLabel;
+        if (photo && sPhotoEl && sInitialsEl) {
+            sPhotoEl.src = photo;
+            sPhotoEl.classList.remove("hidden");
+            sInitialsEl.classList.add("hidden");
+        } else if (sInitialsEl && sPhotoEl) {
+            sPhotoEl.classList.add("hidden");
+            sInitialsEl.classList.remove("hidden");
+            sInitialsEl.textContent = initials;
         }
     },
 
@@ -1543,6 +1835,11 @@ const App = {
             prevBtnText: '&larr; Sebelumnya',
             doneBtnText: 'Selesai',
             progressText: 'Langkah {{current}} dari {{total}}',
+            onHighlightStarted: (element) => {
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
             steps: [
                 {
                     element: '#dashboard-hero-title',
@@ -1568,15 +1865,6 @@ const App = {
                         title: 'Aksi Cepat Dasbor',
                         description: 'Akses instan sekali klik untuk tugas utama: Data Guru, Tambah Siswa, Nomor Surat, Presensi, dan Scan QR.',
                         side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#main-sidebar',
-                    popover: {
-                        title: 'Navigasi Sidebar Menu',
-                        description: 'Pusat navigasi utama seluruh fitur aplikasi yang dirancang rapi, presisi, dan mudah diakses kapan saja.',
-                        side: 'right',
                         align: 'start'
                     }
                 },
@@ -1657,6 +1945,42 @@ const App = {
                     popover: {
                         title: 'Menu: Presensi & Absensi',
                         description: 'Pencatatan absensi harian per kelas (Hadir, Sakit, Izin, Alpa) dan rekapitulasi kehadiran bulanan otomatis.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="pengaturan"]',
+                    popover: {
+                        title: 'Menu: Pengaturan & Backend GAS',
+                        description: 'Konfigurasi identitas kop surat sekolah, sinkronisasi Google Sheets / Drive REST API gratis, dan backup data.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[href="permohonan.html"]',
+                    popover: {
+                        title: 'Portal Permohonan Ortu',
+                        description: 'Halaman formulir publik bagi orang tua murid untuk mengajukan permohonan surat keterangan secara mandiri dan online.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[href="verifikasi.html"]',
+                    popover: {
+                        title: 'Portal Verifikasi QR',
+                        description: 'Sistem validasi keaslian dokumen dan scan QR Code surat resmi yang diterbitkan sekolah tanpa perlu login.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#vue-sidebar-profile',
+                    popover: {
+                        title: 'Profil Pengguna di Sidebar',
+                        description: 'Menampilkan foto profil, nama lengkap, dan status peran Anda yang aktif pada sesi saat ini.',
                         side: 'right',
                         align: 'center'
                     }

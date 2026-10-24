@@ -329,17 +329,17 @@ const ModulBerkas = {
                         `}
                     </td>
                     ${this.showKontakColumn ? `
-                        <td class="px-4 py-3.5 text-xs text-slate-600">
-                            <div class="font-semibold text-slate-800 flex items-center justify-between">
+                        <td class="px-4 py-3.5 text-xs text-slate-600 dark:text-slate-300">
+                            <div class="font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between">
                                 <span>${s.namaOrtu || '-'}</span>
-                                <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="text-slate-400 hover:text-blue-600 ml-1 p-0.5" title="Edit Kontak Ortu">
+                                <button onclick="ModulBerkas.openEditSiswaModal('${s.nisn}')" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 ml-1 p-0.5 cursor-pointer" title="Edit Data Siswa & Orang Tua">
                                     <i class="fa-solid fa-pencil text-[10px]"></i>
                                 </button>
                             </div>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                                <span class="font-mono text-[11px] ${hasPhone ? 'text-blue-900 font-bold' : 'text-slate-400 italic'}">${s.noHp || 'Belum ada'}</span>
+                                <span class="font-mono text-[11px] ${hasPhone ? 'text-blue-900 dark:text-blue-400 font-bold' : 'text-slate-400 italic'}">${s.noHp || 'Belum ada'}</span>
                                 ${hasPhone && !isFull ? `
-                                    <a href="${this.getWhatsAppReminderLink(s)}" target="_blank" class="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition text-[11px]" title="Kirim Pengingat Berkas via WhatsApp">
+                                    <a href="${this.getWhatsAppReminderLink(s)}" target="_blank" class="p-1 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition text-[11px]" title="Kirim Pengingat Berkas via WhatsApp">
                                         <i class="fa-brands fa-whatsapp font-bold"></i>
                                     </a>
                                 ` : ''}
@@ -348,22 +348,22 @@ const ModulBerkas = {
                     ` : ''}
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
-                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kk')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Pindai & Ekstrak Data KK (OCR)">
+                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kk')" class="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition" title="Pindai & Ekstrak Data KK (OCR)">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                             </button>
-                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kta')" class="p-2 text-amber-700 hover:bg-amber-50 rounded-lg transition" title="Pindai & Ekstrak No. NTA KTA Pramuka (OCR)">
+                            <button onclick="ModulOCR.openScanModal('${s.nisn}', 'kta')" class="p-2 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 rounded-lg transition" title="Pindai & Ekstrak No. NTA KTA Pramuka (OCR)">
                                 <i class="fa-solid fa-id-badge"></i>
                             </button>
-                            <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Kontak Orang Tua">
+                            <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer" title="Edit Kontak Orang Tua (No. HP)">
                                 <i class="fa-solid fa-phone"></i>
                             </button>
-                            ${Auth.canDo("uploadStudentDoc") ? `<button onclick="ModulBerkas.openUploadModal('${s.nisn}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Unggah / Perbarui Berkas">
+                            ${Auth.canDo("uploadStudentDoc") ? `<button onclick="ModulBerkas.openUploadModal('${s.nisn}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition" title="Unggah / Perbarui Berkas">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
                             </button>` : ""}
-                            <button onclick="ModulBerkas.openDetailModal('${s.nisn}')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition" title="Lihat Profil Lengkap">
+                            <button onclick="ModulBerkas.openDetailModal('${s.nisn}')" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition" title="Lihat Profil Lengkap">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <button onclick="App.pindahKeCetakSurat('${s.nisn}')" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition" title="Cetak Surat Keterangan Siswa">
+                            <button onclick="App.pindahKeCetakSurat('${s.nisn}')" class="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 rounded-lg transition" title="Cetak Surat Keterangan Siswa">
                                 <i class="fa-solid fa-file-invoice"></i>
                             </button>
                         </div>
@@ -375,17 +375,27 @@ const ModulBerkas = {
 
     // Modal Edit Cepat Kontak Orang Tua
     openEditKontakModal(nisn) {
-        const student = DataStore.getSiswa().find(s => s.nisn === nisn);
+        const student = DataStore.getSiswa().find(s => String(s.nisn) === String(nisn));
         if (!student) return;
 
         this.selectedStudent = student;
         const modal = document.getElementById("modal-edit-kontak-ortu");
         if (!modal) return;
 
-        document.getElementById("modal-kontak-student-name").textContent = `${student.nama} (Kelas ${student.rombel || student.kelas})`;
-        document.getElementById("modal-kontak-nama-ortu").value = student.namaOrtu || "";
-        document.getElementById("modal-kontak-pekerjaan-ortu").value = student.pekerjaanOrtu || "";
-        document.getElementById("modal-kontak-no-hp").value = student.noHp || "";
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+        const studentLabel = `${student.nama} (Kelas ${student.rombel || student.kelas})`;
+        setTxt("modal-kontak-student-name", studentLabel);
+        setTxt("edit-kontak-nama-siswa", studentLabel);
+
+        setVal("edit-kontak-nisn", student.nisn);
+        setVal("modal-kontak-nama-ortu", student.namaOrtu || "");
+        setVal("edit-kontak-nama-ortu", student.namaOrtu || "");
+        setVal("modal-kontak-pekerjaan-ortu", student.pekerjaanOrtu || "");
+        setVal("edit-kontak-pekerjaan-ortu", student.pekerjaanOrtu || "");
+        setVal("modal-kontak-no-hp", student.noHp && student.noHp !== "-" ? student.noHp : "");
+        setVal("edit-kontak-hp-ortu", student.noHp && student.noHp !== "-" ? student.noHp : "");
 
         modal.classList.remove("hidden");
     },
@@ -395,24 +405,112 @@ const ModulBerkas = {
         if (modal) modal.classList.add("hidden");
     },
 
-    async saveKontakOrtu() {
+    async saveKontakOrtu(event) {
+        if (event && event.preventDefault) event.preventDefault();
         if (!this.selectedStudent) return;
-        const namaOrtu = document.getElementById("modal-kontak-nama-ortu")?.value?.trim() || "-";
-        const pekerjaanOrtu = document.getElementById("modal-kontak-pekerjaan-ortu")?.value?.trim() || "-";
-        const noHp = document.getElementById("modal-kontak-no-hp")?.value?.trim() || "-";
+
+        const getVal = (...ids) => {
+            for (const id of ids) {
+                const el = document.getElementById(id);
+                if (el && el.value !== undefined) return el.value.trim();
+            }
+            return "";
+        };
+
+        const namaOrtu = getVal("edit-kontak-nama-ortu", "modal-kontak-nama-ortu") || "-";
+        const pekerjaanOrtu = getVal("edit-kontak-pekerjaan-ortu", "modal-kontak-pekerjaan-ortu") || "-";
+        const noHp = getVal("edit-kontak-hp-ortu", "modal-kontak-no-hp") || "-";
+
+        DataStore.updateStudentField(this.selectedStudent.nisn, { namaOrtu, pekerjaanOrtu, noHp });
 
         const res = await ApiClient.request("updateStudentFields", {
             nisn: this.selectedStudent.nisn,
             fields: { namaOrtu, pekerjaanOrtu, noHp }
         });
 
-        if (res && res.success) {
-            App.showToast("Kontak orang tua berhasil diperbarui!", "success");
-            this.closeEditKontakModal();
-            this.renderTable();
-        } else {
-            App.showToast("Gagal memperbarui kontak", "error");
+        App.showToast("Kontak orang tua berhasil diperbarui!", "success");
+        this.closeEditKontakModal();
+        this.renderTable();
+    },
+
+    // Modal Edit Lengkap Data Pokok Siswa
+    openEditSiswaModal(nisn) {
+        const student = DataStore.getSiswa().find(s => String(s.nisn) === String(nisn));
+        if (!student) return;
+
+        this.selectedStudent = student;
+        const modal = document.getElementById("modal-edit-siswa");
+        if (!modal) return;
+
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+        setTxt("edit-siswa-subtitle", `NISN: ${student.nisn} • ${student.nama}`);
+        setVal("edit-siswa-original-nisn", student.nisn);
+        setVal("edit-siswa-nisn", student.nisn);
+        setVal("edit-siswa-nis", student.nis || student.nipd || "");
+        setVal("edit-siswa-nama", student.nama || "");
+        setVal("edit-siswa-nik", student.nik || "");
+        setVal("edit-siswa-tempat-lahir", student.tempatLahir && student.tempatLahir !== "-" ? student.tempatLahir : "");
+        setVal("edit-siswa-tgl-lahir", student.tanggalLahir && student.tanggalLahir !== "-" ? student.tanggalLahir : "");
+        setVal("edit-siswa-jk", student.jk || "Laki-laki");
+
+        const kelasSelect = document.getElementById("edit-siswa-kelas");
+        if (kelasSelect) {
+            const currentKelas = String(student.kelas || "1").replace(/\D/g, "") || "1";
+            kelasSelect.value = currentKelas;
         }
+
+        setVal("edit-siswa-ortu", student.namaOrtu && student.namaOrtu !== "-" ? student.namaOrtu : "");
+        setVal("edit-siswa-pekerjaan", student.pekerjaanOrtu && student.pekerjaanOrtu !== "-" ? student.pekerjaanOrtu : "");
+        setVal("edit-siswa-hp", student.noHp && student.noHp !== "-" ? student.noHp : "");
+        setVal("edit-siswa-alamat", student.alamat && student.alamat !== "-" ? student.alamat : "");
+
+        modal.classList.remove("hidden");
+    },
+
+    closeEditSiswaModal() {
+        const modal = document.getElementById("modal-edit-siswa");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    async submitEditSiswa(event) {
+        if (event && event.preventDefault) event.preventDefault();
+        const getVal = id => (document.getElementById(id)?.value || "").trim();
+        const nisn = getVal("edit-siswa-original-nisn") || getVal("edit-siswa-nisn");
+        const nama = getVal("edit-siswa-nama");
+        const kelas = getVal("edit-siswa-kelas");
+
+        if (!nisn || !nama) {
+            App.showToast("NISN dan Nama Lengkap wajib diisi!", "error");
+            return;
+        }
+
+        const kelasNum = kelas.replace(/\D/g, "") || kelas;
+        const updatedFields = {
+            nisn: nisn,
+            nis: getVal("edit-siswa-nis"),
+            nipd: getVal("edit-siswa-nis"),
+            nama: nama,
+            nik: getVal("edit-siswa-nik"),
+            tempatLahir: getVal("edit-siswa-tempat-lahir") || "-",
+            tanggalLahir: getVal("edit-siswa-tgl-lahir") || "-",
+            jk: getVal("edit-siswa-jk") || "Laki-laki",
+            kelas: kelasNum,
+            rombel: kelas,
+            namaOrtu: getVal("edit-siswa-ortu") || "-",
+            pekerjaanOrtu: getVal("edit-siswa-pekerjaan") || "-",
+            noHp: getVal("edit-siswa-hp") || "-",
+            alamat: getVal("edit-siswa-alamat") || "-"
+        };
+
+        DataStore.updateStudentField(nisn, updatedFields);
+        const res = await ApiClient.request("saveStudent", updatedFields);
+
+        App.showToast("Data pokok siswa berhasil diperbarui!", "success");
+        this.closeEditSiswaModal();
+        this.renderTable();
+        if (window.App && App.updateDashboardStats) App.updateDashboardStats();
     },
 
     previewOrUpload(nisn, docType) {

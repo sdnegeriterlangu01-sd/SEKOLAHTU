@@ -28,36 +28,49 @@ const ModulPresensi = {
     ],
 
     GRID_CSS: `
-        .abs-grid-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;position:relative}
-        .abs-grid{border-collapse:collapse;font-size:10px;background:#fff;color:#111827;width:max-content;min-width:100%}
-        .abs-grid th,.abs-grid td{border:1px solid #1f2937;padding:1px 3px;text-align:center;line-height:1.25;height:19px;min-width:19px}
-        .abs-grid th{background:#f1f5f9;font-weight:700}
-        .abs-grid td.nama{text-align:left;padding:2px 6px;white-space:nowrap;font-weight:600}
-        .abs-grid td.sub{font-size:9px;font-weight:400;white-space:nowrap}
-        .abs-grid td.t{font-size:8.5px;letter-spacing:-.2px}
-        .abs-grid .off{background:#7f7f7f !important;color:#fff}
+        .abs-grid-wrapper{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;max-width:100%;position:relative;box-sizing:border-box}
+        .abs-grid{border-collapse:separate;border-spacing:0;font-size:9.5px;background:#fff;color:#111827;width:100% !important;table-layout:fixed !important;box-sizing:border-box}
+        .abs-grid thead th{position:sticky;top:0;background:#f8fafc;z-index:10;font-size:8.5px;font-weight:700;white-space:nowrap;vertical-align:middle !important;text-align:center !important}
+        .abs-grid thead tr:nth-child(2) th{top:19px;z-index:10}
+        .abs-grid th,.abs-grid td{border-right:1px solid #334155;border-bottom:1px solid #334155;padding:0px;text-align:center !important;vertical-align:middle !important;line-height:1.2;box-sizing:border-box}
+        .abs-grid thead tr:first-child th{border-top:1px solid #334155}
+        .abs-grid tr th:first-child, .abs-grid tr td:first-child{border-left:1px solid #334155}
+        .abs-grid td.nama{text-align:left !important;padding:2px 5px !important;font-weight:600;font-size:8.5px;line-height:1.2;word-break:break-word;white-space:normal}
+        .abs-grid td.sub{font-size:8px;font-weight:600;padding:0 1px;white-space:nowrap;text-align:center !important}
+        .abs-grid td.t{font-size:7.5px;letter-spacing:-.3px;padding:0;white-space:nowrap;text-align:center !important}
+        .abs-grid .off{background:#64748b !important;color:#fff}
         .abs-grid td.cell{cursor:pointer}
         .abs-grid td.cell:hover{background:#dbeafe}
-        .abs-grid td.mk-S{background:#fde68a;font-weight:700}
-        .abs-grid td.mk-I{background:#bfdbfe;font-weight:700}
-        .abs-grid td.mk-A{background:#fecaca;font-weight:700}
-        .abs-grid td.mk-H{background:#d1fae5;color:#047857;font-weight:700}
-        .abs-grid td.ok{color:#047857;font-weight:700}
-        .abs-grid tr.grp-end td{border-bottom:2px solid #111827}
-        .abs-grid .sticky-col{position:sticky;background:#fff;z-index:2}
-        .abs-grid .sticky-no{left:0;min-width:26px;z-index:2}
-        .abs-grid .sticky-nama{left:26px;min-width:180px;z-index:2;box-shadow:2px 0 5px -2px rgba(0,0,0,0.18)}
-        .abs-grid thead th.sticky-col{background:#f1f5f9;z-index:4}
+        .abs-grid td.mk-S{background:#fde68a;font-weight:700;text-align:center !important}
+        .abs-grid td.mk-I{background:#bfdbfe;font-weight:700;text-align:center !important}
+        .abs-grid td.mk-A{background:#fecaca;font-weight:700;text-align:center !important}
+        .abs-grid td.mk-H{background:#d1fae5;color:#047857;font-weight:700;text-align:center !important}
+        .abs-grid td.ok{color:#047857;font-weight:700;text-align:center !important}
+        .abs-grid tr.grp-end td{border-bottom:2px solid #334155}
+
+        /* Dark Mode Support for Rekap Grid */
+        html.dark .abs-grid { background:#0f172a !important; color:#f8fafc !important; }
+        html.dark .abs-grid th, html.dark .abs-grid td { border-color: #334155 !important; color:#f8fafc; }
+        html.dark .abs-grid th, html.dark .abs-grid thead th { background:#1e293b !important; color:#cbd5e1 !important; border-color: #334155 !important; }
+        html.dark .abs-grid td.nama { color:#f8fafc !important; }
+        html.dark .abs-grid td.sub { color:#94a3b8 !important; }
+        html.dark .abs-grid td.cell:hover { background:#1e3a8a !important; }
+        html.dark .abs-grid tr.grp-end td { border-bottom:2px solid #64748b !important; }
+        html.dark .abs-grid td.mk-S { background:rgba(245,158,11,0.35) !important; color:#fef08a !important; }
+        html.dark .abs-grid td.mk-I { background:rgba(59,130,246,0.35) !important; color:#bfdbfe !important; }
+        html.dark .abs-grid td.mk-A { background:rgba(239,68,68,0.35) !important; color:#fecaca !important; }
+        html.dark .abs-grid td.mk-H, html.dark .abs-grid td.ok { background:rgba(16,185,129,0.35) !important; color:#a7f3d0 !important; }
     `,
 
     // ===================================================================== INIT
     init() {
-        if (!document.getElementById("presensi-css")) {
-            const st = document.createElement("style");
+        let st = document.getElementById("presensi-css");
+        if (!st) {
+            st = document.createElement("style");
             st.id = "presensi-css";
-            st.textContent = this.GRID_CSS;
             document.head.appendChild(st);
         }
+        st.textContent = this.GRID_CSS;
         this.buildTabs();
         this.switchTab(this.firstAllowedTab());
     },
@@ -256,19 +269,19 @@ const ModulPresensi = {
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Alat scan barcode USB / ketik NIP manual</label>
                             <input type="text" id="${prefix}-input" autocomplete="off" placeholder="Arahkan scanner ke sini lalu scan… (Enter)"
                                 class="w-full px-3.5 py-2.5 text-sm border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
-                            <p class="text-[11px] text-slate-400 mt-1">Mendukung format QR <span class="font-mono text-indigo-600 font-bold">SIMTAS|T|&lt;NIP&gt;</span> atau langsung kode NIP</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Mendukung format QR <span class="font-mono text-indigo-600 dark:text-indigo-400 font-bold">SEKOLAHTU|T|&lt;NIP&gt;</span> atau langsung kode NIP</p>
                         </div>
                     </div>
                     <div id="${prefix}-result" class="hidden rounded-2xl p-5 text-center border-2"></div>
                 </div>
                 <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                            <i class="fa-regular fa-calendar-check text-indigo-600"></i> Kehadiran Hari Ini <span id="${prefix}-today-label" class="font-mono text-slate-500 font-bold ml-1"></span>
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/60">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar-check text-indigo-600 dark:text-indigo-400"></i> Kehadiran Hari Ini <span id="${prefix}-today-label" class="font-mono text-slate-500 dark:text-slate-400 font-bold ml-1"></span>
                         </span>
                         <div class="flex items-center gap-1.5">
                             <span class="text-[11px] text-slate-400 hidden sm:inline">Waktu Sekarang:</span>
-                            <span id="${prefix}-clock" class="font-mono font-bold text-indigo-700 text-sm bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100 shadow-xs"></span>
+                            <span id="${prefix}-clock" class="font-mono font-bold text-indigo-700 dark:text-indigo-300 text-sm bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-0.5 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-xs"></span>
                         </div>
                     </div>
                     <div class="overflow-x-auto flex-grow max-h-[460px]">
@@ -354,7 +367,7 @@ const ModulPresensi = {
         this._lastCode = code; this._lastAt = now;
 
         let nip = code;
-        const m = code.match(/^SIMTAS\|T\|([A-Za-z0-9._-]{4,40})$/);
+        const m = code.match(/^(?:SEKOLAHTU|SIMTAS)\|T\|([A-Za-z0-9._-]{4,40})$/);
         if (m) nip = m[1];
 
         const res = await ApiClient.request("scanTendik", { code, nip });
@@ -546,27 +559,27 @@ const ModulPresensi = {
         if (!el.dataset.built) {
             el.dataset.built = "1";
             el.innerHTML = `
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-end justify-between gap-3">
-                    <div class="flex items-end gap-3 flex-wrap">
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bulan</label>
-                            <input type="month" id="rt-bulan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></div>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 w-full max-w-full min-w-0 box-border">
+                    <div class="flex items-center gap-3 flex-wrap min-w-0">
+                        <div class="flex-shrink-0"><label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Bulan</label>
+                            <input type="month" id="rt-bulan" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium"></div>
                         ${isGuru ? `
-                        <div class="pb-1">
-                            <label class="inline-flex items-center gap-2 text-xs text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg cursor-pointer font-semibold transition">
+                        <div class="pb-0.5 flex-shrink-0">
+                            <label class="inline-flex items-center gap-2 text-xs text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 px-3 py-1.5 rounded-lg cursor-pointer font-semibold transition">
                                 <input type="checkbox" id="rt-toggle-all" class="rounded text-blue-600 focus:ring-0">
                                 <span>Tampilkan Semua Guru & Tendik</span>
                             </label>
                         </div>` : ''}
-                        <div class="text-[11px] text-slate-500 pb-1.5"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1"></span> Minggu / libur nasional
-                            <span class="mx-2">•</span> <b>S</b>akit <b>I</b>zin <b>A</b>lpa, <b>JML</b> = S+I+A</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1 rounded-xs"></span> Minggu / libur nasional
+                            <span class="mx-1.5">•</span> <b>S</b>akit <b>I</b>zin <b>A</b>lpa, <b>JML</b> = S+I+A</div>
                     </div>
-                    <div class="flex gap-2 flex-wrap">
-                        <button type="button" onclick="ModulPresensi.cetakTendik()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-print text-blue-600"></i> Cetak / PDF</button>
-                        <button type="button" onclick="ModulPresensi.exportTendikCSV()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor CSV</button>
+                    <div class="flex items-center gap-2 flex-wrap flex-shrink-0 self-end xl:self-auto">
+                        <button type="button" onclick="ModulPresensi.cetakTendik()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"><i class="fa-solid fa-print text-blue-600 dark:text-blue-400"></i> Cetak / PDF</button>
+                        <button type="button" onclick="ModulPresensi.exportTendikCSV()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"><i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> Ekspor CSV</button>
                     </div>
                 </div>
-                <p id="rt-hint" class="text-[11px] text-slate-400 mt-2"></p>
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rt-grid" class="p-3"></div></div>`;
+                <p id="rt-hint" class="text-[11px] text-slate-400 dark:text-slate-500 mt-2"></p>
+                <div id="rt-grid-wrapper" class="abs-grid-wrapper bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mt-3 w-full max-w-full box-border" style="max-height:72vh"><div id="rt-grid" class="p-1 sm:p-2 w-full max-w-full"></div></div>`;
             el.querySelector("#rt-bulan").addEventListener("change", (e) => { if (e.target.value) { this.bulanTendik = e.target.value; this.renderTendik(); } });
             
             const toggleAll = el.querySelector("#rt-toggle-all");
@@ -649,9 +662,21 @@ const ModulPresensi = {
         });
 
         const offCls = h => h.off ? " off" : "";
-        let html = `<table class="abs-grid"><thead>
-            <tr><th rowspan="2">NO</th><th rowspan="2" style="min-width:190px">NAMA</th><th rowspan="2" colspan="2">JAM</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
-            <tr>${hari.map(h => `<th class="${offCls(h).trim()}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
+        let html = `<table class="abs-grid">
+            <colgroup>
+                <col style="width:28px">
+                <col style="width:155px">
+                <col style="width:48px">
+                <col style="width:38px">
+                ${hari.map(() => `<col>`).join("")}
+                <col style="width:18px">
+                <col style="width:18px">
+                <col style="width:18px">
+                <col style="width:30px">
+            </colgroup>
+            <thead>
+            <tr style="height:19px"><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NO</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NAMA</th><th rowspan="2" colspan="2" style="text-align:center !important;vertical-align:middle !important">JAM</th><th colspan="${hari.length}" style="text-align:center !important;vertical-align:middle !important">TANGGAL</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">S</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">I</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">A</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">JML</th></tr>
+            <tr style="height:19px">${hari.map(h => `<th class="${offCls(h).trim()}" style="text-align:center !important;vertical-align:middle !important" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 
         if (tendik.length === 0) html += `<tr><td colspan="${hari.length + 8}" style="padding:18px">Belum ada data guru/tendik.</td></tr>`;
 
@@ -680,7 +705,7 @@ const ModulPresensi = {
                 let a = attrs;
                 if (a.includes('class="')) a = a.replace('class="', `class="${(tcls + extra).trim()} `);
                 else a = ` class="${(tcls + extra).trim()}"` + a;
-                return `<td${a}>${inner}</td>`;
+                return `<td${a} style="vertical-align:middle;text-align:center !important">${inner}</td>`;
             }).join("");
 
             hari.forEach(h => {
@@ -689,13 +714,33 @@ const ModulPresensi = {
             });
 
             html += `
-                <tr><td rowspan="4">${i + 1}</td>
-                    <td rowspan="4" class="nama" style="vertical-align:middle"><div>${Sec.esc(t.nama)}</div><div style="font-weight:400;font-size:9px;margin-top:6px">NIP. ${Sec.esc(t.nip)}</div></td>
-                    <td rowspan="2" class="sub">Datang</td><td class="sub">Pukul</td>${cells("dp")}
-                    <td rowspan="4">${S || ""}</td><td rowspan="4">${I || ""}</td><td rowspan="4">${A || ""}</td><td rowspan="4"><b>${(S + I + A) || ""}</b></td></tr>
-                <tr><td class="sub">parap</td>${cells("da")}</tr>
-                <tr><td rowspan="2" class="sub">Pulang</td><td class="sub">Pukul</td>${cells("pp")}</tr>
-                <tr class="grp-end"><td class="sub">parap</td>${cells("pa")}</tr>`;
+                <tr style="height:19px">
+                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${i + 1}</td>
+                    <td rowspan="4" class="nama" style="vertical-align:middle;text-align:left !important">
+                        <div style="font-weight:700">${Sec.esc(t.nama)}</div>
+                        <div style="font-weight:400;font-size:8.5px;margin-top:2px;opacity:0.8">NIP. ${Sec.esc(t.nip)}</div>
+                    </td>
+                    <td rowspan="2" class="sub" style="vertical-align:middle;text-align:center !important">Datang</td>
+                    <td class="sub" style="vertical-align:middle;text-align:center !important">Pukul</td>
+                    ${cells("dp")}
+                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${S || ""}</td>
+                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${I || ""}</td>
+                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${A || ""}</td>
+                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:800">${(S + I + A) || ""}</td>
+                </tr>
+                <tr style="height:19px">
+                    <td class="sub" style="vertical-align:middle;text-align:center !important">parap</td>
+                    ${cells("da")}
+                </tr>
+                <tr style="height:19px">
+                    <td rowspan="2" class="sub" style="vertical-align:middle;text-align:center !important">Pulang</td>
+                    <td class="sub" style="vertical-align:middle;text-align:center !important">Pukul</td>
+                    ${cells("pp")}
+                </tr>
+                <tr class="grp-end" style="height:19px">
+                    <td class="sub" style="vertical-align:middle;text-align:center !important">parap</td>
+                    ${cells("pa")}
+                </tr>`;
         });
         return html + `</tbody></table>`;
     },
@@ -1000,24 +1045,24 @@ const ModulPresensi = {
         if (!el.dataset.built) {
             el.dataset.built = "1";
             el.innerHTML = `
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-end justify-between gap-3">
-                    <div class="flex items-end gap-3 flex-wrap">
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Kelas / Rombel</label>
-                            <select id="rs-kelas" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></select></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bulan</label>
-                            <input type="month" id="rs-bulan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Guru / TTD Absen</label>
-                            <select id="rs-guru-penandatangan" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium bg-white"></select></div>
-                        <div class="text-[11px] text-slate-500 pb-1.5"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1"></span> Minggu / libur
-                            <span class="mx-2">•</span> kosong = hadir; klik sel: <b>S</b> → <b>I</b> → <b>A</b> → kosong</div>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 w-full max-w-full min-w-0 box-border">
+                    <div class="flex items-center gap-3 flex-wrap min-w-0">
+                        <div class="flex-shrink-0"><label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Kelas / Rombel</label>
+                            <select id="rs-kelas" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium"></select></div>
+                        <div class="flex-shrink-0"><label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Bulan</label>
+                            <input type="month" id="rs-bulan" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium"></div>
+                        <div class="min-w-0 max-w-xs sm:max-w-sm"><label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Guru / TTD Absen</label>
+                            <select id="rs-guru-penandatangan" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium w-full truncate"></select></div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1 rounded-xs"></span> Minggu / libur
+                            <span class="mx-1.5">•</span> kosong = hadir; klik sel: <b>S</b> → <b>I</b> → <b>A</b> → kosong</div>
                     </div>
-                    <div class="flex gap-2 flex-wrap">
-                        <button type="button" id="rs-save" onclick="ModulPresensi.simpanSiswa()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Simpan Absensi</button>
-                        <button type="button" onclick="ModulPresensi.cetakSiswa()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-print text-blue-600"></i> Cetak / PDF</button>
-                        <button type="button" onclick="ModulPresensi.exportSiswaCSV()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600"></i> CSV</button>
+                    <div class="flex items-center gap-2 flex-wrap flex-shrink-0 self-end xl:self-auto">
+                        <button type="button" id="rs-save" onclick="ModulPresensi.simpanSiswa()" class="px-3.5 sm:px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-sm transition cursor-pointer"><i class="fa-solid fa-cloud-arrow-up"></i> Simpan Absensi</button>
+                        <button type="button" onclick="ModulPresensi.cetakSiswa()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"><i class="fa-solid fa-print text-blue-600 dark:text-blue-400"></i> Cetak / PDF</button>
+                        <button type="button" onclick="ModulPresensi.exportSiswaCSV()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"><i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> CSV</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rs-grid" class="p-3"></div></div>`;
+                <div id="rs-grid-wrapper" class="abs-grid-wrapper bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mt-3 w-full max-w-full box-border" style="max-height:72vh"><div id="rs-grid" class="p-1 sm:p-2 w-full max-w-full"></div></div>`;
             el.querySelector("#rs-kelas").addEventListener("change", (e) => {
                 this.kelasSiswa = e.target.value;
                 this.updatePenandatanganOptions();
@@ -1078,9 +1123,20 @@ const ModulPresensi = {
         const hari = this.hariBulan(this.bulanSiswa);
         const siswa = this.siswaKelas();
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
-        let html = `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
-            <tr><th rowspan="2" class="sticky-col sticky-no">NO</th><th rowspan="2" class="sticky-col sticky-nama" style="min-width:180px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
-            <tr>${hari.map(h => `<th class="${h.off ? "off" : ""}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
+        let html = `<table class="abs-grid">
+            <colgroup>
+                <col style="width:28px">
+                <col style="width:165px">
+                <col style="width:80px">
+                ${hari.map(() => `<col>`).join("")}
+                <col style="width:18px">
+                <col style="width:18px">
+                <col style="width:18px">
+                <col style="width:30px">
+            </colgroup>
+            <thead>
+            <tr style="height:19px"><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NO</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NAMA</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NISN</th><th colspan="${hari.length}" style="text-align:center !important;vertical-align:middle !important">TANGGAL</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">S</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">I</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">A</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">JML</th></tr>
+            <tr style="height:19px">${hari.map(h => `<th class="${h.off ? "off" : ""}" style="text-align:center !important;vertical-align:middle !important" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 
         if (siswa.length === 0) html += `<tr><td colspan="${hari.length + 7}" style="padding:18px">Belum ada siswa pada kelas/TA ini. Impor data siswa terlebih dahulu.</td></tr>`;
 
@@ -1090,10 +1146,10 @@ const ModulPresensi = {
             const tds = hari.map(h => {
                 const mk = h.off ? "" : (marks[h.dd] || "");
                 if (mk === "S") S++; else if (mk === "I") I++; else if (mk === "A") A++;
-                if (h.off) return `<td class="off"></td>`;
+                if (h.off) return `<td class="off" style="vertical-align:middle;text-align:center !important"></td>`;
                 const display = mk === "H" ? "✓" : mk;
                 const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
-                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
+                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}" style="vertical-align:middle;text-align:center !important">${display}</td>`;
             }).join("");
 
             // Jika hadir semua (S=0, I=0, A=0), kolom S/I/A dan Jumlah diisi garis "-"
@@ -1102,10 +1158,18 @@ const ModulPresensi = {
             const aVal = A > 0 ? A : "-";
             const jVal = (S + I + A) > 0 ? (S + I + A) : "-";
 
-            html += `<tr><td class="sticky-col sticky-no">${i + 1}</td><td class="nama sticky-col sticky-nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
-                <td data-sum="S">${sVal}</td><td data-sum="I">${iVal}</td><td data-sum="A">${aVal}</td><td data-sum="J"><b>${jVal}</b></td></tr>`;
+            html += `<tr style="height:22px">
+                <td style="font-weight:700;vertical-align:middle;text-align:center !important">${i + 1}</td>
+                <td class="nama" style="vertical-align:middle;text-align:left !important">${Sec.esc(s.nama)}</td>
+                <td style="font-size:8.5px;text-align:center !important;vertical-align:middle;font-family:monospace">${Sec.esc(s.nisn)}</td>
+                ${tds}
+                <td data-sum="S" style="vertical-align:middle;text-align:center !important;font-weight:700">${sVal}</td>
+                <td data-sum="I" style="vertical-align:middle;text-align:center !important;font-weight:700">${iVal}</td>
+                <td data-sum="A" style="vertical-align:middle;text-align:center !important;font-weight:700">${aVal}</td>
+                <td data-sum="J" style="vertical-align:middle;text-align:center !important;font-weight:800">${jVal}</td>
+            </tr>`;
         });
-        return html + `</tbody></table></div>`;
+        return html + `</tbody></table>`;
     },
 
     cycleMark(td) {
@@ -1177,7 +1241,7 @@ const ModulPresensi = {
     },
 
     // ===================================================================== 4. KARTU ID QR
-    qrPayload(t) { return `SIMTAS|T|${Util.cleanId(t.nip)}`; },
+    qrPayload(t) { return `SEKOLAHTU|T|${Util.cleanId(t.nip)}`; },
 
     // Hasilkan PNG (data URL) dari teks QR
     qrDataUrl(text, size = 256) {
@@ -1202,14 +1266,14 @@ const ModulPresensi = {
         if (!el) return;
         const list = DataStore.getTendik();
         el.innerHTML = `
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div><h3 class="font-bold text-sm text-slate-900"><i class="fa-solid fa-id-card text-indigo-600 mr-1"></i> Kartu ID QR Guru & Tendik</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">QR tergenerate otomatis dari NIP (teks: <span class="font-mono">SIMTAS|T|NIP</span>). Cetak sebagai kartu, atau simpan ke Google Drive.</p></div>
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div><h3 class="font-bold text-sm text-slate-900 dark:text-white"><i class="fa-solid fa-id-card text-indigo-600 dark:text-indigo-400 mr-1"></i> Kartu ID QR Guru & Tendik</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">QR tergenerate otomatis dari NIP (teks: <span class="font-mono">SEKOLAHTU|T|NIP</span>). Cetak sebagai kartu, atau simpan ke Google Drive.</p></div>
                 <div class="flex gap-2 flex-wrap">
-                    <button type="button" onclick="ModulPresensi.openTendikForm()" class="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Tambah Guru/Tendik</button>
-                    <button type="button" onclick="ModulPresensi.openImportTendikModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs"><i class="fa-solid fa-file-excel"></i> Impor Guru/Tendik (Excel)</button>
-                    <button type="button" onclick="ModulPresensi.cetakKartu()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-print text-blue-600"></i> Cetak Semua Kartu</button>
-                    <button type="button" id="btn-qr-drive" onclick="ModulPresensi.simpanQrDrive()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2"><i class="fa-brands fa-google-drive"></i> Simpan Semua QR ke Google Drive</button>
+                    <button type="button" onclick="ModulPresensi.openTendikForm()" class="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs cursor-pointer"><i class="fa-solid fa-user-plus"></i> Tambah Guru/Tendik</button>
+                    <button type="button" onclick="ModulPresensi.openImportTendikModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs cursor-pointer"><i class="fa-solid fa-file-excel"></i> Impor Guru/Tendik (Excel)</button>
+                    <button type="button" onclick="ModulPresensi.cetakKartu()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs cursor-pointer"><i class="fa-solid fa-print text-blue-600 dark:text-blue-400"></i> Cetak Semua Kartu</button>
+                    <button type="button" id="btn-qr-drive" onclick="ModulPresensi.simpanQrDrive()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs cursor-pointer"><i class="fa-brands fa-google-drive"></i> Simpan Semua QR ke Google Drive</button>
                 </div>
             </div>
             <div id="qr-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></div>`;
@@ -1217,20 +1281,30 @@ const ModulPresensi = {
         const wrap = el.querySelector("#qr-cards");
         for (const t of list) {
             const url = await this.qrDataUrl(this.qrPayload(t), 200);
+            const statusPeg = String(t.statusKepegawaian || "PNS").toUpperCase();
+            let statusBadgeClass = "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800";
+            if (statusPeg === "PPPK") {
+                statusBadgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800";
+            } else if (["PTT", "GTT", "HONORER"].includes(statusPeg)) {
+                statusBadgeClass = "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800";
+            }
+
             const card = document.createElement("div");
-            card.className = `bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-xs ${t.aktif === false ? "opacity-50" : ""}`;
+            card.className = `bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-xs ${t.aktif === false ? "opacity-50" : ""}`;
             card.innerHTML = `
-                <img src="${url}" alt="QR ${Sec.esc(t.nama)}" class="w-36 h-36 mx-auto">
-                <div class="font-bold text-xs text-slate-900 mt-2">${Sec.esc(t.nama)}</div>
-                <div class="mt-1 flex items-center justify-center gap-1.5 flex-wrap">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">${Sec.esc(t.statusKepegawaian || "PNS")}</span>
-                    <span class="text-[11px] text-slate-700 font-semibold">${Sec.esc(t.golJabatan || t.golongan || t.jabatan || "-")}</span>
+                <div class="bg-white p-2 rounded-xl inline-block mx-auto shadow-sm">
+                    <img src="${url}" alt="QR ${Sec.esc(t.nama)}" class="w-36 h-36 mx-auto">
                 </div>
-                <div class="font-mono text-[10px] text-slate-400 mt-1">${Sec.esc(this.qrPayload(t))}</div>
+                <div class="font-bold text-xs text-slate-900 dark:text-slate-100 mt-2">${Sec.esc(t.nama)}</div>
+                <div class="mt-1 flex items-center justify-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusBadgeClass}">${Sec.esc(t.statusKepegawaian || "PNS")}</span>
+                    <span class="text-[11px] text-slate-700 dark:text-slate-300 font-semibold">${Sec.esc(t.golJabatan || t.golongan || t.jabatan || "-")}</span>
+                </div>
+                <div class="font-mono text-[10px] text-slate-400 dark:text-slate-400 mt-1">${Sec.esc(this.qrPayload(t))}</div>
                 <div class="flex justify-center gap-1.5 mt-3">
-                    <a href="${url}" download="QR_${Sec.esc(Util.cleanId(t.nip))}.png" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-download"></i> PNG</a>
-                    <button type="button" onclick="ModulPresensi.openTendikForm('${Sec.esc(Util.cleanId(t.nip))}')" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 rounded-lg"><i class="fa-solid fa-pen"></i> Ubah</button>
-                    <button type="button" onclick="ModulPresensi.hapusTendik('${Sec.esc(Util.cleanId(t.nip))}', '${Sec.esc(t.nama)}')" class="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-lg" title="Hapus Guru/Tendik"><i class="fa-solid fa-trash-can"></i></button>
+                    <a href="${url}" download="QR_${Sec.esc(Util.cleanId(t.nip))}.png" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"><i class="fa-solid fa-download"></i> PNG</a>
+                    <button type="button" onclick="ModulPresensi.openTendikForm('${Sec.esc(Util.cleanId(t.nip))}')" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"><i class="fa-solid fa-pen"></i> Ubah</button>
+                    <button type="button" onclick="ModulPresensi.hapusTendik('${Sec.esc(Util.cleanId(t.nip))}', '${Sec.esc(t.nama)}')" class="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg" title="Hapus Guru/Tendik"><i class="fa-solid fa-trash-can"></i></button>
                 </div>`;
             wrap.appendChild(card);
         }

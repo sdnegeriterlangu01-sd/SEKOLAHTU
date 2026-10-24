@@ -692,21 +692,9 @@ const ModulCetak = {
             kalimatIsi = `Selama menempuh pendidikan di satuan pendidikan kami pada Tahun Ajaran ${tahunAjaranSurat}, siswa yang bersangkutan senantiasa berkelakuan baik, mematuhi tata tertib sekolah, dan tidak pernah terlibat dalam tindakan kriminalitas atau pelanggaran disiplin berat. Surat ini diterbitkan untuk: <strong>${keperluan}</strong>.`;
         }
 
-        // Payload ringkas verifikasi mandiri QR
-        const compactPayload = encodeURIComponent(JSON.stringify({
-            no: this.generatedNomorSurat,
-            nama: student.nama,
-            nisn: student.nisn,
-            kelas: student.kelas,
-            perihal: `${judulSurat} an. ${student.nama}`,
-            jenis: judulSurat,
-            tgl: new Date().toISOString().split('T')[0],
-            sekolah: config.namaSekolah || "SD NEGERI TERLANGU 01",
-            npsn: config.npsn || "20326713",
-            kepsek: config.namaKepalaSekolah,
-            nipKepsek: config.nipKepalaSekolah
-        }));
-        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}&d=${compactPayload}`;
+        // URL Verifikasi Dokumen Resmi Versi 2.8.0 (Ringkas, hanya parameter nomor surat resmi)
+        // Memastikan QR Code memiliki modul besar, kontras optimal, dan cepat dibaca oleh kamera HP
+        const verifyUrl = `${baseUrl}?no=${encodeURIComponent(this.generatedNomorSurat)}`;
 
         // =========================================================================
         // TEMPLATE 1: SURAT KETERANGAN PINDAH SEKOLAH (DENGAN KOP RESMI)
@@ -796,7 +784,7 @@ const ModulCetak = {
                     <!-- Tanda Tangan & QR Code Keabsahan Mutasi -->
                     <div class="surat-ttd-container" style="margin-top: 4px; margin-bottom: 8px;">
                         <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 8px;">
-                            <div id="qrcode-container" style="background: #ffffff; padding: 3px; border: 1px solid #cbd5e1; border-radius: 6px; width: 85px; height: 85px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                            <div id="qrcode-container" style="background: #ffffff; padding: 3px; border: 1px solid #cbd5e1; border-radius: 6px; width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box;"></div>
                             <div class="qr-text" style="max-width: 150px; text-align: left;">
                                 <strong style="color: #0f172a; display: block; font-size: 8pt;">DOKUMEN TERVERIFIKASI</strong>
                                 <span style="font-size: 6.5pt; color: #475569; display: block; margin-top: 1px;">Pindai QR-Code untuk verifikasi keaslian surat mutasi.</span>
@@ -986,7 +974,7 @@ const ModulCetak = {
                 <!-- Tanda Tangan & QR Code Keabsahan -->
                 <div class="surat-ttd-container" style="margin-top: 10px;">
                     <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 10px;">
-                        <div id="qrcode-container" style="background: #ffffff; padding: 4px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                        <div id="qrcode-container" style="background: #ffffff; padding: 3px; border: 1px solid #cbd5e1; border-radius: 8px; width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box;"></div>
                         <div class="qr-text" style="max-width: 160px; text-align: left;">
                             <strong style="color: #0f172a; display: block; font-size: 8pt;">DOKUMEN RESMI TERVERIFIKASI</strong>
                             <span style="font-size: 7pt; color: #475569; display: block; margin-top: 2px;">Pindai QR-Code untuk verifikasi kesediaan mutasi masuk.</span>
@@ -1072,7 +1060,7 @@ const ModulCetak = {
             <div class="surat-ttd-container">
                 <!-- QR Code Verifikasi Standar Dokumen Elektronik -->
                 <div class="qr-verification-badge" style="display: flex; align-items: center; gap: 10px;">
-                    <div id="qrcode-container" style="background: #ffffff; padding: 4px; border: 1px solid #cbd5e1; border-radius: 8px; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                    <div id="qrcode-container" style="background: #ffffff; padding: 3px; border: 1px solid #cbd5e1; border-radius: 8px; width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box;"></div>
                     <div class="qr-text" style="max-width: 160px; text-align: left;">
                         <strong style="color: #0f172a; display: block; font-size: 8.5pt;">DOKUMEN RESMI TERVERIFIKASI</strong>
                         <span style="font-size: 7.5pt; color: #475569; display: block; margin-top: 2px;">Pindai QR-Code dengan kamera HP untuk cek keaslian surat pada portal resmi.</span>
@@ -1102,18 +1090,26 @@ const ModulCetak = {
         `;
         }
 
-        // Render QR Code di dalam Dokumen
+        // Render QR Code di dalam Dokumen (Kembali ke versi 2.8.0 & hampir memenuhi kotak QR)
         const qrBox = document.getElementById("qrcode-container");
         if (qrBox && typeof QRCode !== "undefined") {
             qrBox.innerHTML = "";
             new QRCode(qrBox, {
                 text: verifyUrl,
-                width: 102,
-                height: 102,
+                width: 96,
+                height: 96,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.M
             });
+
+            // qrcode.js membuat elemen <canvas> dan <img> sekaligus.
+            // Hapus canvas cadangan agar hanya 1 elemen (img) yang tampil rapi di dalam kotak
+            const canvasEl = qrBox.querySelector("canvas");
+            const imgEl = qrBox.querySelector("img");
+            if (canvasEl && imgEl) {
+                canvasEl.remove();
+            }
         }
     },
 

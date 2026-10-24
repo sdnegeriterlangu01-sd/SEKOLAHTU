@@ -814,14 +814,18 @@ const DataStore = {
         // Mode cloud: jangan menyemai data contoh (data asli datang dari Google Sheets setelah login)
         const cloud = this.isCloudConfigured();
         const seed = (key, demo, empty = []) => {
-            if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(cloud ? empty : demo));
+            const raw = localStorage.getItem(key);
+            if (!raw || (raw === "[]" && !cloud)) {
+                localStorage.setItem(key, JSON.stringify(cloud ? empty : demo));
+            }
         };
         seed(this.KEYS.SISWA, SEED_SISWA);
         this.migratePeriodik();
         seed(this.KEYS.TENDIK, SEED_TENDIK);
         seed(this.KEYS.SURAT_KELUAR, SEED_SURAT_KELUAR);
         seed(this.KEYS.SURAT_MASUK, SEED_SURAT_MASUK);
-        if (!localStorage.getItem(this.KEYS.ABSENSI)) {
+        const rawAbsensi = localStorage.getItem(this.KEYS.ABSENSI);
+        if (!rawAbsensi || (rawAbsensi === "[]" && !cloud)) {
             localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(cloud ? [] : generateSeedAbsensi()));
         }
         seed(this.KEYS.HISTORI_BULANAN, SEED_HISTORI_BULANAN);
@@ -832,6 +836,8 @@ const DataStore = {
     },
 
     isCloudConfigured() {
+        const isFile = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
+        if (isFile) return false;
         const c = this.getConfig();
         return !!(c.isCloudMode && c.gasApiUrl);
     },
@@ -848,6 +854,7 @@ const DataStore = {
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem(this.KEYS.CONFIG)); } catch (e) { stored = null; }
         const cfg = { ...DEFAULT_SCHOOL_CONFIG, ...(stored || {}) };
+        const isFile = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
         if (!cfg.supabaseUrl && typeof window !== "undefined" && window.SIMTAS_CONFIG && window.SIMTAS_CONFIG.SUPABASE_URL) {
             cfg.supabaseUrl = window.SIMTAS_CONFIG.SUPABASE_URL;
         }
@@ -858,7 +865,9 @@ const DataStore = {
             cfg.gasApiUrl = window.SIMTAS_CONFIG.GAS_API_URL;
         }
         if (typeof cfg.isCloudMode === "undefined") {
-            cfg.isCloudMode = !!(cfg.gasApiUrl);
+            cfg.isCloudMode = isFile ? false : !!(cfg.gasApiUrl);
+        } else if (isFile && (!stored || stored.isCloudMode === undefined)) {
+            cfg.isCloudMode = false;
         }
         if (!cfg.tahunAjaranAktif) cfg.tahunAjaranAktif = Util.defaultTahunAjaran();
         if (!Array.isArray(cfg.daftarTahunAjaran) || cfg.daftarTahunAjaran.length === 0) {

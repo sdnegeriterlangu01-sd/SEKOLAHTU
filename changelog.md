@@ -36,6 +36,7 @@ Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah das
   - **Presisi Dimensi Sorotan Judul Dasbor:** Mengubah `#dashboard-hero-title` menjadi `inline-block w-fit` dengan konfigurasi `stagePadding: 8` dan `stageRadius: 10` pada Driver.js sehingga spotlight membungkus teks judul secara proporsional.
   - **Pembaruan Skema Dark Mode Premium:** Mengadopsi palet obsidian navy modern (`#0a0f1d` dan `#111a2e`) dengan border tipis elegan `rgba(255, 255, 255, 0.08)`, kontras teks optimal, dan elevasi shadow natural pada kartu metrik dasbor serta formulir.
   - **Ekspansi Langkah Walkthrough Navbar Sisi Kiri:** Memperluas urutan langkah "Panduan untuk Staf" (17 langkah terarah) yang memandu staf melintasi seluruh menu di sidebar kiri (GTK, Jadwal, Berkas Digital, PIP, Surat & Penomoran, Cetak Otomatis, Scan QR, dan Presensi).
+  - **Deteksi Otomatis Mode Offline untuk Protokol File (`file://`):** Mengatasi kendala status online terus-menerus saat `index.html` dibuka langsung melalui berkas lokal. Sistem kini otomatis mendeteksi protokol `file://`, menonaktifkan permintaan Supabase (yang rentan diblokir CORS pada origin `null`), mengatur status indikator menjadi **Offline (Mode Demo/Lokal)**, menyediakan tombol cepat uji coba akun (`admin / admin123`, `guru`, `kepsek`, dll.), dan menyemai ulang basis data contoh lokal secara otomatis.
 - **Sinkronisasi Versi Seluruh Modul (`index.html`, `permohonan.html`, `verifikasi.html`, `backend/Code.gs`, `backend/Panduan_Deploy_GAS.md`):**
   - Peningkatan versi resmi sistem ke **v3.1.0**.
 

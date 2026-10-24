@@ -21,6 +21,8 @@ const Auth = {
     // Akun contoh (Bisa dipakai baik di Mode Demo maupun pengujian cepat)
     DEMO_USERS: {
         admin: { pw: "admin123", nama: "Administrator (Demo)", role: "admin" },
+        tu: { pw: "tu123", nama: "Tata Usaha (Demo)", role: "admin" },
+        operator: { pw: "operator123", nama: "Operator Sekolah (Demo)", role: "admin" },
         kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
         perpustakaan: { pw: "perpus123", nama: "Tenaga Perpustakaan (Demo)", role: "perpustakaan" },
         penjaga: { pw: "penjaga123", nama: "Penjaga Sekolah (Demo)", role: "penjaga" },
@@ -46,6 +48,10 @@ const Auth = {
         };
     },
     usesSupabase() {
+        // Otomatis offline / demo lokal jika dibuka lewat berkas lokal (file://)
+        const isFileProtocol = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
+        if (isFileProtocol) return false;
+
         let stored = {};
         try {
             if (typeof DataStore !== "undefined" && DataStore.getConfig) {
@@ -452,18 +458,52 @@ const Auth = {
         });
     },
 
+    fillDemo(user, pass) {
+        const emailInput = document.getElementById("login-email");
+        const pwInput = document.getElementById("login-password");
+        if (emailInput) {
+            emailInput.value = user;
+            emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        if (pwInput) {
+            pwInput.value = pass;
+            pwInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        const btn = document.getElementById("login-btn");
+        if (btn) btn.focus();
+    },
+
     renderLoginMode() {
         const note = document.getElementById("login-mode-note");
         const emailInput = document.getElementById("login-email");
         if (!note || !emailInput) return;
+        const isFileProtocol = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
+
         if (this.usesSupabase()) {
-            note.innerHTML = `<i class="fa-solid fa-shield-halved text-emerald-400"></i> Terhubung ke Supabase Auth. Akun dikelola oleh administrator sekolah.`;
+            note.className = "text-[11px] p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 mt-2 text-left leading-relaxed";
+            note.innerHTML = `<i class="fa-solid fa-shield-halved text-emerald-500"></i> Terhubung ke Supabase Auth (Online). Akun dikelola oleh administrator sekolah.`;
             emailInput.type = "email";
             emailInput.placeholder = "email@sekolah.sch.id";
         } else {
-            note.innerHTML = `<i class="fa-solid fa-flask text-amber-400"></i> <b>Mode Demo</b> (Supabase belum dikonfigurasi). Akun uji: <code>admin / admin123</code>, <code>tu / tu123</code>, <code>guru / guru123</code>, <code>kepsek / kepsek123</code>, <code>kiosk / kiosk123</code>.`;
+            note.className = "text-[11px] p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 mt-2 text-left leading-relaxed";
+            const fileBadge = isFileProtocol ? `<span class="inline-block px-1.5 py-0.2 rounded bg-amber-200/90 dark:bg-amber-800 text-amber-950 dark:text-amber-100 font-bold text-[10px] mr-1">Protokol file://</span> ` : ``;
+            note.innerHTML = `
+                <div class="font-bold flex items-center gap-1.5 mb-1 text-xs text-amber-800 dark:text-amber-300">
+                    <i class="fa-solid fa-flask text-amber-500"></i> ${fileBadge}Mode Offline (Demo / Lokal)
+                </div>
+                <div class="text-[11px] text-slate-600 dark:text-slate-300 mb-1.5">
+                    Klik tombol akun uji coba di bawah untuk mengisi otomatis:
+                </div>
+                <div class="flex flex-wrap gap-1.5 pt-0.5">
+                    <button type="button" onclick="Auth.fillDemo('admin', 'admin123')" class="px-2 py-0.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200 font-bold text-[10px] transition cursor-pointer">Admin (admin123)</button>
+                    <button type="button" onclick="Auth.fillDemo('guru', 'guru123')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-200 font-bold text-[10px] transition cursor-pointer">Guru (guru123)</button>
+                    <button type="button" onclick="Auth.fillDemo('kepsek', 'kepsek123')" class="px-2 py-0.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-200 font-bold text-[10px] transition cursor-pointer">Kepsek (kepsek123)</button>
+                    <button type="button" onclick="Auth.fillDemo('penjaga', 'penjaga123')" class="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-bold text-[10px] transition cursor-pointer">Penjaga</button>
+                    <button type="button" onclick="Auth.fillDemo('perpustakaan', 'perpus123')" class="px-2 py-0.5 rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 dark:bg-teal-900/60 dark:text-teal-200 font-bold text-[10px] transition cursor-pointer">Perpus</button>
+                </div>
+            `;
             emailInput.type = "text";
-            emailInput.placeholder = "nama pengguna (demo)";
+            emailInput.placeholder = "nama pengguna (contoh: admin, guru, kepsek)";
         }
     },
 

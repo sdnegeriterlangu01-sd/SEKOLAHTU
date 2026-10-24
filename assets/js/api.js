@@ -23,6 +23,10 @@ const ApiClient = {
     },
 
     isCloudActive() {
+        // Otomatis offline jika dibuka lewat berkas lokal (file://) untuk mencegah galat CORS & otentikasi
+        const isFileProtocol = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
+        if (isFileProtocol) return false;
+
         const cfg = this.getConfig();
         if (cfg && cfg.isCloudMode === false) return false;
         const url = this.getGasUrl();

@@ -1536,7 +1536,9 @@ const App = {
             showProgress: true,
             animate: true,
             allowClose: true,
-            overlayColor: 'rgba(15, 23, 42, 0.82)',
+            stagePadding: 8,
+            stageRadius: 10,
+            overlayColor: 'rgba(11, 15, 25, 0.85)',
             nextBtnText: 'Lanjutkan &rarr;',
             prevBtnText: '&larr; Sebelumnya',
             doneBtnText: 'Selesai',
@@ -1555,7 +1557,7 @@ const App = {
                     element: '#btn-start-tour',
                     popover: {
                         title: 'Panduan untuk Staf',
-                        description: 'Tombol ini dapat diklik kapan saja untuk mengulang panduan interaktif ini.',
+                        description: 'Tombol ini dapat diklik kapan saja untuk mengulang panduan interaktif pengoperasian sistem ini.',
                         side: 'bottom',
                         align: 'start'
                     }
@@ -1570,19 +1572,100 @@ const App = {
                     }
                 },
                 {
-                    element: '#app-sidebar',
+                    element: '#main-sidebar',
                     popover: {
-                        title: 'Menu & Modul Utama',
-                        description: 'Akses seluruh modul: Arsip Digital Siswa, Penomoran Surat, Cetak Dokumen, Presensi, Jadwal, PIP, dan Pengaturan.',
+                        title: 'Navigasi Sidebar Menu',
+                        description: 'Pusat navigasi utama seluruh fitur aplikasi yang dirancang rapi, presisi, dan mudah diakses kapan saja.',
                         side: 'right',
                         align: 'start'
+                    }
+                },
+                {
+                    element: 'a[data-route="dashboard"]',
+                    popover: {
+                        title: 'Menu: Beranda & Ringkasan',
+                        description: 'Menampilkan analitik metrik siswa, status kelengkapan berkas, nomor surat terbaru, dan ringkasan absensi harian.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="tendik"]',
+                    popover: {
+                        title: 'Menu: Data Guru & Tendik (GTK)',
+                        description: 'Manajemen basis data kepegawaian sekolah: GTK, NIP, status kepegawaian, riwayat pendidikan, dan biodata staf.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="jadwal"]',
+                    popover: {
+                        title: 'Menu: Jadwal Pelajaran',
+                        description: 'Penyusunan jadwal mata pelajaran mingguan per rombel/kelas dan pembagian tugas jam mengajar guru.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="berkas"]',
+                    popover: {
+                        title: 'Menu: Brankas Digital Siswa',
+                        description: 'Penyimpanan arsip digital dokumen siswa (KK, Akta Kelahiran, KIP/KKS) terhubung langsung ke Google Drive.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="pip"]',
+                    popover: {
+                        title: 'Menu: Program PIP Siswa',
+                        description: 'Pemantauan alokasi Program Indonesia Pintar, riwayat pencairan, buku tabungan SimPel, dan upload berkas.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="surat"]',
+                    popover: {
+                        title: 'Menu: Penomoran & Surat',
+                        description: 'Buku agenda surat masuk dan surat keluar berstandar kode klasifikasi arsip baku (SRIKANDI).',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="cetak"]',
+                    popover: {
+                        title: 'Menu: Cetak Surat Otomatis',
+                        description: 'Generator penerbitan surat keterangan resmi (Aktif, Pindah, dll.) otomatis < 5 detik dengan barcode verifikasi.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="scan-absensi"]',
+                    popover: {
+                        title: 'Menu: Scan Absensi QR',
+                        description: 'Pemindai kamera presensi mandiri datang/pulang siswa dan staf secara cepat, akurat, dan tanpa antrean.',
+                        side: 'right',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: 'a[data-route="absensi"]',
+                    popover: {
+                        title: 'Menu: Presensi & Absensi',
+                        description: 'Pencatatan absensi harian per kelas (Hadir, Sakit, Izin, Alpa) dan rekapitulasi kehadiran bulanan otomatis.',
+                        side: 'right',
+                        align: 'center'
                     }
                 },
                 {
                     element: '#ta-dropdown-container',
                     popover: {
                         title: 'Pilihan Tahun Ajaran',
-                        description: 'Ganti periode tahun ajaran aktif atau tambah tahun ajaran baru dengan pop-up formulir terintegrasi.',
+                        description: 'Ganti periode tahun ajaran aktif atau tambah tahun ajaran baru dengan formulir pop-up terintegrasi.',
                         side: 'bottom',
                         align: 'center'
                     }
@@ -1591,7 +1674,7 @@ const App = {
                     element: '#theme-toggle-btn',
                     popover: {
                         title: 'Mode Gelap & Terang',
-                        description: 'Pilih kenyamanan visual Anda saat bertugas dengan beralih antara Mode Gelap (Dark Mode) dan Mode Terang.',
+                        description: 'Pilih kenyamanan visual Anda saat bertugas dengan beralih antara Mode Gelap modern dan Mode Terang.',
                         side: 'bottom',
                         align: 'center'
                     }
@@ -1599,7 +1682,7 @@ const App = {
                 {
                     element: '#cloud-status-badge',
                     popover: {
-                        title: 'Status Online / Offline',
+                        title: 'Status Sinkronisasi Cloud',
                         description: 'Memantau sinkronisasi otomatis ke Google Sheets, Google Drive, dan Supabase secara waktu nyata.',
                         side: 'bottom',
                         align: 'center'

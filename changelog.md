@@ -29,6 +29,13 @@ Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah das
   - Pemasangan pustaka Driver.js via CDN jsDelivr tanpa proses build/npm.
   - Penambahan tombol **'Panduan untuk Staf'** pada Welcome Hero Banner di halaman Dasbor.
   - Implementasi walkthrough interaktif gamifikasi dengan efek spotlight gelap dan popover berbalut tema SEKOLAHTU serta tombol aksi berbahasa Indonesia: **'Sebelumnya'**, **'Lanjutkan'**, dan **'Selesai'**.
+- **Penyempurnaan UI/UX Evaluasi Lanjutan (Revisi 4 Poin Penting):**
+  - **Penyelarasan Margin & Lebar Sidebar:** Menyinkronkan selector media query `#main-sidebar` (sebelumnya `#app-sidebar`) agar lebar sidebar (256px) konsisten dengan padding kontainer utama (`lg:pl-72`), menuntaskan masalah overlap 32px yang memotong teks nama sekolah pada header.
+  - **Eliminasi Overflow Border-Left Nav Link:** Mengganti styling `.nav-link.active` dari `border-left: 4px` berkurva menjadi pill active state modern bergradien biru elektrik (`#1e3a8a` ke `#2563eb`) dengan shadow lembut yang rapi dan presisi di dalam kontainer.
+  - **Penanganan Stacking Context & Overlay Tour:** Mengonfigurasi `z-index` mutlak pada `.driver-overlay` (`99998`) dan popover (`100000`), serta memastikan `#main-sidebar` dan `#app-top-header` otomatis berada di bawah overlay saat langkah tur berfokus pada konten utama, dan terangkat secara presisi saat elemen navigasi sedang disorot.
+  - **Presisi Dimensi Sorotan Judul Dasbor:** Mengubah `#dashboard-hero-title` menjadi `inline-block w-fit` dengan konfigurasi `stagePadding: 8` dan `stageRadius: 10` pada Driver.js sehingga spotlight membungkus teks judul secara proporsional.
+  - **Pembaruan Skema Dark Mode Premium:** Mengadopsi palet obsidian navy modern (`#0a0f1d` dan `#111a2e`) dengan border tipis elegan `rgba(255, 255, 255, 0.08)`, kontras teks optimal, dan elevasi shadow natural pada kartu metrik dasbor serta formulir.
+  - **Ekspansi Langkah Walkthrough Navbar Sisi Kiri:** Memperluas urutan langkah "Panduan untuk Staf" (17 langkah terarah) yang memandu staf melintasi seluruh menu di sidebar kiri (GTK, Jadwal, Berkas Digital, PIP, Surat & Penomoran, Cetak Otomatis, Scan QR, dan Presensi).
 - **Sinkronisasi Versi Seluruh Modul (`index.html`, `permohonan.html`, `verifikasi.html`, `backend/Code.gs`, `backend/Panduan_Deploy_GAS.md`):**
   - Peningkatan versi resmi sistem ke **v3.1.0**.
 

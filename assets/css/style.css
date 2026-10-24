@@ -130,18 +130,32 @@ body {
 /* Navigation & Active Link Animations */
 .nav-link {
   position: relative;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.nav-link:hover:not(.active) {
+  transform: translateX(3px);
+  background: rgba(241, 245, 249, 0.85);
+  color: var(--primary);
 }
 
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(13, 148, 136, 0.1));
-  color: var(--primary);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
   font-weight: 700;
-  border-left: 4px solid var(--primary);
+  box-shadow: 0 4px 14px -2px rgba(30, 58, 138, 0.35) !important;
+  border-left: none !important;
 }
 
+.nav-link.active i,
 .nav-link.active svg {
-  color: var(--primary);
+  color: #ffffff !important;
+}
+
+.nav-link.active .badge-pill,
+.nav-link.active span:last-child {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
 /* Micro Animations */
@@ -832,8 +846,9 @@ body {
     font-size: 13.5px !important;
   }
 
+  #main-sidebar,
   #app-sidebar {
-    width: 16rem !important; /* 256px */
+    width: 16rem !important; /* 256px presisi sinkron dengan lg:pl-72 */
   }
 
   .lg\:pl-72 {
@@ -891,13 +906,13 @@ body {
 }
 
 /* ==========================================================================
-   SISTEM DARK MODE MENYELURUH (KOMPATIBILITAS PENUH)
+   SISTEM DARK MODE MENYELURUH (MODERN, ELEGAN & PREMIUM)
    ========================================================================== */
 html.dark {
-  --surface: #1e293b;
-  --surface-ground: #0f172a;
-  --surface-card: #1e293b;
-  --surface-border: #334155;
+  --surface: #111a2e;
+  --surface-ground: #0a0f1d;
+  --surface-card: #111a2e;
+  --surface-border: rgba(255, 255, 255, 0.08);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-light: #64748b;
@@ -905,39 +920,44 @@ html.dark {
 }
 
 html.dark body {
-  background-color: #0f172a !important;
+  background-color: #0a0f1d !important;
   color: #f8fafc !important;
 }
 
+html.dark #main-sidebar,
 html.dark #app-sidebar {
-  background-color: #0f172a !important;
-  border-color: #1e293b !important;
+  background-color: #0d1527 !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35) !important;
 }
 
 html.dark #app-top-header {
-  background-color: rgba(15, 23, 42, 0.95) !important;
-  border-color: #1e293b !important;
+  background-color: rgba(13, 21, 39, 0.9) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3) !important;
 }
 
 html.dark #vue-sidebar-profile {
-  background-color: rgba(15, 23, 42, 0.7) !important;
-  border-color: #1e293b !important;
+  background-color: rgba(10, 15, 29, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 html.dark .bg-white {
-  background-color: #1e293b !important;
+  background-color: #111a2e !important;
 }
 
 html.dark .bg-slate-50 {
-  background-color: #0f172a !important;
+  background-color: #0a0f1d !important;
 }
 
 html.dark .bg-slate-100 {
-  background-color: #334155 !important;
+  background-color: rgba(30, 41, 59, 0.7) !important;
 }
 
 html.dark .bg-slate-100\/80 {
-  background-color: rgba(51, 65, 85, 0.8) !important;
+  background-color: rgba(30, 41, 59, 0.85) !important;
 }
 
 html.dark .text-slate-900,
@@ -950,10 +970,7 @@ html.dark .text-slate-600 {
   color: #cbd5e1 !important;
 }
 
-html.dark .text-slate-500 {
-  color: #94a3b8 !important;
-}
-
+html.dark .text-slate-500,
 html.dark .text-slate-400 {
   color: #94a3b8 !important;
 }
@@ -962,87 +979,131 @@ html.dark .border-slate-200,
 html.dark .border-slate-100,
 html.dark .border-slate-200\/80,
 html.dark .border-slate-200\/60 {
-  border-color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark .glass-card {
-  background: rgba(30, 41, 59, 0.95) !important;
-  border-color: #334155 !important;
+  background: rgba(17, 26, 46, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .glass-card:hover {
+  border-color: rgba(96, 165, 250, 0.35) !important;
+  box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.55), 0 0 15px rgba(59, 130, 246, 0.15) !important;
 }
 
 html.dark .glass-panel {
-  background: rgba(30, 41, 59, 0.92) !important;
-  border-color: #334155 !important;
+  background: rgba(17, 26, 46, 0.9) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .nav-link {
+  color: #94a3b8 !important;
+}
+
+html.dark .nav-link:hover:not(.active) {
+  background: rgba(30, 41, 59, 0.6) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .nav-link.active {
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.5) !important;
 }
 
 html.dark input:not([type="checkbox"]):not([type="radio"]),
 html.dark select,
 html.dark textarea {
-  background-color: #0f172a !important;
-  border-color: #334155 !important;
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
   color: #f8fafc !important;
+  transition: all 0.2s ease;
+}
+
+html.dark input:focus:not([type="checkbox"]):not([type="radio"]),
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
 html.dark thead {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
+  background-color: #111a2e !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark thead th {
-  background-color: #1e293b !important;
+  background-color: #111a2e !important;
   color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark tbody tr {
-  border-color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 html.dark tbody tr:hover {
-  background-color: rgba(51, 65, 85, 0.45) !important;
+  background-color: rgba(30, 41, 59, 0.45) !important;
 }
 
 html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 /* ==========================================================================
    STYLING TEMA DRIVER.JS (INTERACTIVE ONBOARDING TOUR)
    ========================================================================== */
+.driver-overlay {
+  z-index: 99998 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
+}
+
 .driver-popover {
   border-radius: 1.25rem !important;
   padding: 1.25rem 1.35rem !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
   background: #ffffff !important;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
   border: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
-  max-width: 380px !important;
+  max-width: 390px !important;
+  z-index: 100000 !important;
 }
 
 .driver-popover-title {
   font-size: 1rem !important;
   font-weight: 800 !important;
   color: #1e3a8a !important;
-  margin-bottom: 0.4rem !important;
+  margin-bottom: 0.45rem !important;
+  line-height: 1.35 !important;
 }
 
 .driver-popover-description {
   font-size: 0.8125rem !important;
-  line-height: 1.55 !important;
+  line-height: 1.6 !important;
   color: #475569 !important;
 }
 
 .driver-popover-footer {
-  margin-top: 1rem !important;
+  margin-top: 1.15rem !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
+  gap: 0.75rem !important;
 }
 
 .driver-popover-progress-text {
@@ -1052,43 +1113,86 @@ html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
 }
 
 .driver-popover-next-btn {
-  background: #1e3a8a !important;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
   color: #ffffff !important;
   border-radius: 0.75rem !important;
-  padding: 0.45rem 0.9rem !important;
+  padding: 0.5rem 1rem !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   border: none !important;
   text-shadow: none !important;
-  transition: all 0.2s !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
 }
 
 .driver-popover-next-btn:hover {
-  background: #1d4ed8 !important;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
   transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
 }
 
 .driver-popover-prev-btn {
   background: #f1f5f9 !important;
   color: #334155 !important;
   border-radius: 0.75rem !important;
-  padding: 0.45rem 0.9rem !important;
+  padding: 0.5rem 0.9rem !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   border: 1px solid #cbd5e1 !important;
   text-shadow: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 .driver-popover-close-btn {
   color: #94a3b8 !important;
   font-size: 1.25rem !important;
+  transition: color 0.2s !important;
 }
 
+.driver-popover-close-btn:hover {
+  color: #0f172a !important;
+}
+
+/* Stacking Context Penanganan Driver Overlay & Sorotan */
+.driver-active-element {
+  position: relative !important;
+  z-index: 99999 !important;
+  border-radius: inherit;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Saat mode tour aktif, elemen fixed/sticky di luar sorotan turun di belakang overlay */
+body.driver-active #main-sidebar {
+  z-index: 40 !important;
+}
+
+body.driver-active #main-sidebar.driver-active-element,
+body.driver-active #main-sidebar:has(.driver-active-element) {
+  z-index: 99999 !important;
+}
+
+body.driver-active #app-top-header {
+  z-index: 30 !important;
+}
+
+body.driver-active #app-top-header.driver-active-element,
+body.driver-active #app-top-header:has(.driver-active-element) {
+  z-index: 99999 !important;
+}
+
+/* Dark Mode Driver Popover */
 html.dark .driver-popover {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+  background: #111a2e !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
   color: #f8fafc !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark .driver-popover-title {
@@ -1103,8 +1207,26 @@ html.dark .driver-popover-progress-text {
   color: #94a3b8 !important;
 }
 
+html.dark .driver-popover-next-btn {
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
+}
+
 html.dark .driver-popover-prev-btn {
-  background: #334155 !important;
+  background: #1e293b !important;
   color: #e2e8f0 !important;
-  border-color: #475569 !important;
+  border-color: #334155 !important;
+}
+
+html.dark .driver-popover-prev-btn:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+html.dark .driver-popover-close-btn {
+  color: #64748b !important;
+}
+
+html.dark .driver-popover-close-btn:hover {
+  color: #f8fafc !important;
 }

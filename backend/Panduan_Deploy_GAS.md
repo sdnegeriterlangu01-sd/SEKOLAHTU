@@ -1,5 +1,5 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SEKOLAHTU (Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha) v3.3.0
+## SEKOLAHTU (Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha) v3.3.1
 > **"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"**
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.
@@ -63,9 +63,9 @@ Jika ingin mengatur properti script secara manual di Apps Script:
 ### Langkah 5: Publikasikan sebagai Web App (Penerapan Baru atau Update Versi)
 1. Di pojok kanan atas Apps Script:
    - **Jika baru pertama kali:** Klik **Terapkan** > **Penerapan Baru** (`Deploy` > `New deployment`), pilih jenis **Aplikasi Web** (`Web app`).
-   - **Jika memperbarui kode (Update v3.3.0):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
+   - **Jika memperbarui kode (Update v3.3.1):** Klik **Terapkan** > **Kelola Penerapan** (`Deploy` > `Manage deployments`), klik ikon pensil (Edit), pilih **Versi: Versi Baru** (`New version`), lalu klik **Terapkan** (`Deploy`).
 2. Konfigurasikan:
-   - **Deskripsi**: `SEKOLAHTU Production API v3.3.0 (Smart Surat Auto-Increment, NSS School Config, Filter Periode & Theme-Adaptive Popups)`
+   - **Deskripsi**: `SEKOLAHTU Production API v3.3.1 (Theme-Adaptive Modals, Dark Mode Footer Styling & File Upload Fix)`
    - **Jalankan sebagai**: `Saya (emailanda@gmail.com)`
    - **Siapa yang memiliki akses**: `Semua orang` (**Anyone**) *(Penting agar aplikasi frontend dapat berinteraksi tanpa kendala).*
 3. Klik **Terapkan** (`Deploy`).

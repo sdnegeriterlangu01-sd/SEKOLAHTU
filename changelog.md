@@ -1,6 +1,21 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.1] - 2026-10-25
+
+### Penyelarasan Tema Pop-up Modal Dialog (Dark & Light Mode), Perbaikan Kontras Footer, dan Standardisasi Upload Berkas
+- **Penyelarasan Tema Pop-Up Modal Surat Keluar & Surat Masuk (`index.html` & `assets/css/style.css`):**
+  - Mengatasi masalah tampilan pop-up dialog "Pendaftaran Nomor Surat Keluar (SRIKANDI)" dan "Catat Agenda Surat Masuk & Scan" yang tidak sesuai tema saat dark mode aktif.
+  - Memperbaiki bilah footer bawah modal yang sebelumnya menampilkan blok warna putih terang statis (`bg-slate-50/90`) menjadi sepenuhnya adaptif terhadap tema: `bg-slate-50 dark:bg-slate-900/90` dengan border pembatas `border-t border-slate-200 dark:border-slate-800`.
+  - Memperbaiki kontras tombol "Batal" pada tema gelap (`dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800`) sehingga tidak lagi terlihat pudar atau putih di atas putih (white-on-white).
+  - Menyelaraskan tombol aksi utama (Simpan Nomor & Catat Surat Masuk) dengan styling kontras hover yang proporsional di mode gelap maupun terang.
+- **Harmonisasi Komponen Input File Upload (`index.html` & `assets/css/style.css`):**
+  - Mendesain ulang komponen input file berkas surat keluar dan surat masuk agar terintegrasi seragam dengan tema sistem: tombol unggah dengan aksen tematik (navy untuk SRIKANDI Surat Keluar, amber untuk Surat Masuk), latar input `dark:bg-slate-900`, dan border lembut `dark:border-slate-700`.
+- **Proteksi Tema Otomatis untuk Seluruh Pop-Up Modal Dialog (`assets/css/style.css`):**
+  - Menambahkan aturan CSS komprehensif pada selector `html.dark [id^="modal-"]` untuk mengamankan seluruh pop-up dialog aplikasi (termasuk modal detail siswa, upload berkas, manajemen user, impor, dan jadwal) agar latar belakang, pembatas, form kontrol, label, tombol pembatalan, dan tombol tutup silang (x) selalu konsisten dan serasi dengan tema aplikasi.
+
+---
+
 ## [v3.3.0] - 2026-10-25
 
 ### Penomoran Surat Manual ke Otomatis & Filter Periode, Desil 1-10 PIP, Chart Berkas Dinamis, Dark Mode Banner Libur, Field NSS Pengaturan, dan Penyelarasan Font Cetak Surat

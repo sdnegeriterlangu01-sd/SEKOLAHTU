@@ -1428,9 +1428,98 @@ html.dark .bg-rose-200 {
 }
 
 html.dark .bg-slate-50\/70,
-html.dark .bg-slate-50\/80 {
-  background-color: rgba(15, 23, 42, 0.75) !important;
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/90,
+html.dark .bg-slate-50\/95,
+html.dark [class*="bg-slate-50\/"] {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
+
+/* ==========================================================================
+   PENYELARASAN TEMA POPUP / MODAL DIALOG (DARK & LIGHT MODE)
+   ========================================================================== */
+html.dark [id^="modal-"] > div:not(.driver-popover) {
+  background-color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+
+html.dark [id^="modal-"] .bg-white {
+  background-color: #0f172a !important;
+}
+
+html.dark [id^="modal-"] .bg-slate-50,
+html.dark [id^="modal-"] [class*="bg-slate-50"] {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Modal Headers */
+html.dark [id^="modal-"] div[class*="border-b"] {
+  background-color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Modal Footers (Sticky bottom bar) */
+html.dark [id^="modal-"] div[class*="border-t"],
+html.dark [id^="modal-"] div[class*="rounded-b-2xl"],
+html.dark [id^="modal-"] footer {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Tombol Batal & Secondary Buttons di Dalam Modal */
+html.dark [id^="modal-"] button[type="button"]:not([class*="bg-blue"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="text-white"]):not([class*="fa-"]) {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #e2e8f0 !important;
+}
+
+html.dark [id^="modal-"] button[type="button"]:not([class*="bg-blue"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="text-white"]):not([class*="fa-"]):hover {
+  background-color: rgba(51, 65, 85, 0.85) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Close Icon Button (X) */
+html.dark [id^="modal-"] button:has(.fa-xmark),
+html.dark [id^="modal-"] button:has(i[class*="fa-xmark"]) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #94a3b8 !important;
+}
+
+html.dark [id^="modal-"] button:has(.fa-xmark):hover,
+html.dark [id^="modal-"] button:has(i[class*="fa-xmark"]):hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+
+/* Modal Inputs, Selects, & Textarea */
+html.dark [id^="modal-"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html.dark [id^="modal-"] select,
+html.dark [id^="modal-"] textarea {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #f8fafc !important;
+}
+
+html.dark [id^="modal-"] input[type="file"] {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #94a3b8 !important;
+}
+
+html.dark [id^="modal-"] label {
+  color: #e2e8f0 !important;
+}
+
+html.dark [id^="modal-"] h3 {
+  color: #f8fafc !important;
+}
+
 
 /* Penyelarasan Warna Teks Tematik pada Dark Mode */
 html.dark .text-emerald-900,

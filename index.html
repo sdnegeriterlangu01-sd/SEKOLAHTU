@@ -98,7 +98,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.1</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -2665,7 +2665,7 @@
                 class="no-print mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.0</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.1</span></span>
                     <span class="text-[11px] text-slate-400 dark:text-slate-500">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -3049,16 +3049,16 @@
     <div id="modal-tambah-surat-keluar"
         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
             <!-- Header Modal (Sticky/Fixed) -->
-            <div class="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white dark:bg-slate-900">
                 <div>
-                    <h3 id="sk-modal-title" class="font-bold text-sm text-slate-900">Pendaftaran Nomor Surat Keluar
+                    <h3 id="sk-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Pendaftaran Nomor Surat Keluar
                         (SRIKANDI)</h3>
-                    <p id="sk-modal-subtitle" class="text-xs text-slate-400 mt-0.5">Penomoran terpusat otomatis tanpa
+                    <p id="sk-modal-subtitle" class="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Penomoran terpusat otomatis tanpa
                         risiko nomor ganda.</p>
                 </div>
-                <button type="button" onclick="ModulSurat.closeModalSuratKeluar()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+                <button type="button" onclick="ModulSurat.closeModalSuratKeluar()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -3068,110 +3068,110 @@
                 <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
                     <input type="hidden" id="sk-edit-id" value="">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Klasifikasi Arsip Baku</label>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Klasifikasi Arsip Baku</label>
                         <select id="sk-kode-klasifikasi"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
                             <!-- Populated by JS -->
                         </select>
                     </div>
 
                     <!-- Opsi Mode Nomor Manual vs Otomatis -->
-                    <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl">
                         <label for="sk-is-manual"
-                            class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                            class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                             <input type="checkbox" id="sk-is-manual" onchange="ModulSurat.toggleManualNomor(this.checked)"
-                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer">
                             <span>Input Nomor Surat Manual</span>
                         </label>
-                        <span class="text-[10px] text-slate-400">Centang jika ada nomor baku sendiri</span>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-400">Centang jika ada nomor baku sendiri</span>
                     </div>
 
                     <!-- Input Nomor Manual (Hidden secara default) -->
                     <div id="sk-manual-container" class="hidden">
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketik Nomor Surat Resmi <span
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ketik Nomor Surat Resmi <span
                                 class="text-red-500">*</span></label>
                         <input type="text" id="sk-nomor-manual"
                             placeholder="Contoh: 421.2/001/VII/2026 atau nomor dinas khusus"
-                            class="w-full px-3 py-2 text-xs border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/40">
+                            class="w-full px-3 py-2 text-xs border border-blue-300 dark:border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 dark:text-blue-300 bg-blue-50/40 dark:bg-blue-950/40">
                     </div>
 
                     <!-- Preview Nomor yang Diterbitkan Otomatis -->
                     <div id="sk-preview-container"
-                        class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
-                        <span class="text-xs text-slate-600">Nomor Surat Otomatis SRIKANDI:</span>
+                        class="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center justify-between">
+                        <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Surat Otomatis SRIKANDI:</span>
                         <span id="sk-preview-nomor"
-                            class="font-mono font-bold text-blue-900 text-xs px-2.5 py-1 bg-white rounded border border-blue-200">
+                            class="font-mono font-bold text-blue-900 dark:text-blue-300 text-xs px-2.5 py-1 bg-white dark:bg-slate-900 rounded border border-blue-200 dark:border-blue-800/60">
                             421.2/001/VII/2026
                         </span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat</label>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Surat</label>
                             <input type="date" id="sk-tanggal" required
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Pengonsep Surat</label>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pengonsep Surat</label>
                             <input type="text" id="sk-pengonsep" value="Staf TU"
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tujuan / Penerima Surat <span
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tujuan / Penerima Surat <span
                                 class="text-red-500">*</span></label>
                         <input type="text" id="sk-tujuan" required placeholder="Contoh: Korwilcam Bidang Pendidikan..."
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal / Isi Ringkas Surat <span
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Perihal / Isi Ringkas Surat <span
                                 class="text-red-500">*</span></label>
                         <textarea id="sk-perihal" required rows="2"
                             placeholder="Contoh: Pengajuan usulan sarana prasarana sekolah..."
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Penandatangan Surat</label>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Penandatangan Surat</label>
                         <input type="text" id="sk-penandatangan"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan Tambahan</label>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Keterangan Tambahan</label>
                         <input type="text" id="sk-keterangan" placeholder="Contoh: Lampiran 1 berkas fisik"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <!-- Unggah Berkas Surat Keluar -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Berkas / Scan Surat
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Unggah Berkas / Scan Surat
                             Keluar</label>
                         <input type="file" id="sk-file" accept=".pdf,image/*"
-                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1">
-                        <p class="text-[10px] text-slate-400 mt-1">Opsional: Lampirkan softcopy berkas surat keluar
+                            class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-950/60 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/60 border border-slate-300 dark:border-slate-700 rounded-lg p-1 bg-white dark:bg-slate-900">
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Opsional: Lampirkan softcopy berkas surat keluar
                             (PDF/Foto, maks 8 MB) untuk diarsipkan ke Google Drive.</p>
                         <div id="sk-current-file-container"
-                            class="mt-2 hidden text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
-                            <span class="text-slate-600 flex items-center gap-1.5"><i
+                            class="mt-2 hidden text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 flex items-center justify-between">
+                            <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5"><i
                                     class="fa-solid fa-file-pdf text-red-500"></i> Berkas tersimpan saat ini:</span>
                             <a id="sk-current-file-link" href="#" target="_blank" rel="noopener noreferrer"
-                                class="font-bold text-blue-700 hover:underline">Buka Berkas <i
+                                class="font-bold text-blue-700 dark:text-blue-400 hover:underline">Buka Berkas <i
                                     class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
                         </div>
                     </div>
                 </div>
 
                 <!-- Footer Modal (Sticky/Fixed di Bawah) -->
-                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/90 rounded-b-2xl flex-shrink-0">
+                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 rounded-b-2xl flex-shrink-0">
                     <button type="button" onclick="ModulSurat.closeModalSuratKeluar()"
-                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-white transition">
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit" id="btn-submit-sk"
-                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2">
+                        class="px-5 py-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-check"></i> Simpan & Terbitkan Nomor
                     </button>
                 </div>
@@ -3183,15 +3183,15 @@
     <div id="modal-tambah-surat-masuk"
         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
+            class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
             <!-- Header Modal (Sticky/Fixed) -->
-            <div class="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white dark:bg-slate-900">
                 <div>
-                    <h3 class="font-bold text-sm text-slate-900">Catat Agenda Surat Masuk & Scan</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Pendaftaran buku agenda surat masuk & pengarsipan scan
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Catat Agenda Surat Masuk & Scan</h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Pendaftaran buku agenda surat masuk & pengarsipan scan
                         fisik.</p>
                 </div>
-                <button type="button" onclick="ModulSurat.closeModalSuratMasuk()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+                <button type="button" onclick="ModulSurat.closeModalSuratMasuk()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -3199,81 +3199,81 @@
             <!-- Form & Scrollable Body -->
             <form id="form-tambah-surat-masuk" onsubmit="ModulSurat.submitSuratMasuk(event)" class="flex flex-col flex-1 overflow-hidden min-h-0 m-0">
                 <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
-                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-                        <span class="text-xs text-slate-700">Nomor Agenda Otomatis:</span>
+                    <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl flex items-center justify-between">
+                        <span class="text-xs text-slate-700 dark:text-slate-300">Nomor Agenda Otomatis:</span>
                         <span id="sm-preview-agenda"
-                            class="font-mono font-bold text-amber-900 text-xs px-2.5 py-1 bg-white rounded border border-amber-200">
+                            class="font-mono font-bold text-amber-900 dark:text-amber-300 text-xs px-2.5 py-1 bg-white dark:bg-slate-900 rounded border border-amber-200 dark:border-amber-800/60">
                             SM/2026/001
                         </span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Surat Asli Pengirim <span
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Surat Asli Pengirim <span
                                     class="text-red-500">*</span></label>
                             <input type="text" id="sm-no-asli" required placeholder="Contoh: 420/124/DISDIK/2026"
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Asal Pengirim Surat <span
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Asal Pengirim Surat <span
                                     class="text-red-500">*</span></label>
                             <input type="text" id="sm-pengirim" required placeholder="Contoh: Dinas Pendidikan Kota..."
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat Asli</label>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Surat Asli</label>
                             <input type="date" id="sm-tgl-surat" required
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Diterima Sekolah</label>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Diterima Sekolah</label>
                             <input type="date" id="sm-tgl-terima" required
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal Surat <span
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Perihal Surat <span
                                 class="text-red-500">*</span></label>
                         <textarea id="sm-perihal" required rows="2" placeholder="Isi ringkas perihal surat..."
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Disposisi Kepala Sekolah
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Disposisi Kepala Sekolah
                                 Ke</label>
                             <input type="text" id="sm-disposisi-ke" placeholder="Guru Kelas / Kurikulum / UKS"
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Instruksi Disposisi</label>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Instruksi Disposisi</label>
                             <input type="text" id="sm-instruksi" placeholder="Tindak lanjuti & arsipkan"
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Scan Fisik Surat
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Unggah Scan Fisik Surat
                             (PDF/Gambar)</label>
                         <input type="file" id="sm-scan-file" accept=".pdf,.jpg,.jpeg,.png"
-                            class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <p class="text-[10px] text-slate-400 mt-1">Disimpan langsung ke Google Drive /SEKOLAHTU/Surat_Masuk/
+                            class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-800 dark:file:text-amber-300 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/60 border border-slate-300 dark:border-slate-700 rounded-lg p-1 bg-white dark:bg-slate-900">
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Disimpan langsung ke Google Drive /SEKOLAHTU/Surat_Masuk/
                         </p>
                     </div>
                 </div>
 
                 <!-- Footer Modal (Sticky/Fixed di Bawah) -->
-                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/90 rounded-b-2xl flex-shrink-0">
+                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 rounded-b-2xl flex-shrink-0">
                     <button type="button" onclick="ModulSurat.closeModalSuratMasuk()"
-                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-white transition">
+                        class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit" id="btn-submit-sm"
-                        class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2">
+                        class="px-5 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-check"></i> Catat Surat Masuk
                     </button>
                 </div>

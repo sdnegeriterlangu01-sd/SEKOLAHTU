@@ -29,7 +29,7 @@ const ModulCetak = {
             pList.forEach(p => {
                 if (p.nomorSuratTerbit === "421" || p.nomorSuratTerbit === "421.") {
                     const rawKet = p.keteranganTindak || p.keterangan || "";
-                    const mS = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+                    const mS = rawKet.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
                     if (mS) {
                         p.nomorSuratTerbit = mS[1].trim().replace(/\.+$/, "");
                         changed = true;
@@ -1135,7 +1135,7 @@ const ModulCetak = {
                 penandatangan: config.namaKepalaSekolah,
                 keterangan: `Diterbitkan instan via Modul Cetak Mandiri (${this.nomorMode === 'manual' ? 'Nomor Manual' : 'Nomor Baru'})`
             });
-            App.showToast(`Surat ${this.generatedNomorSurat} siap dicetak & nomor terarsip di SRIKANDI!`, "success");
+            App.showToast(`Surat ${this.generatedNomorSurat} siap dicetak & nomor terarsip di agenda keluar!`, "success");
         } else {
             App.showToast(`Mencetak surat dengan Nomor Terbit: ${this.generatedNomorSurat}`, "success");
         }
@@ -1152,7 +1152,7 @@ const ModulCetak = {
         }
 
         if (targetPermohonan && noSurat) {
-            const ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.`;
+            const ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Agenda Dinas (Standar SRIKANDI): ${noSurat}.`;
             targetPermohonan.status = "Siap Diambil";
             targetPermohonan.nomorSuratTerbit = noSurat;
             targetPermohonan.keteranganTindak = ketTindak;
@@ -1171,7 +1171,7 @@ const ModulCetak = {
                 console.warn("Gagal update cloud permohonan:", err);
             }
 
-            App.showToast(`Permohonan ${targetPermohonan.id} status: Siap Diambil. No. Registrasi SRIKANDI: ${noSurat}`, "success");
+            App.showToast(`Permohonan ${targetPermohonan.id} status: Siap Diambil. Nomor Agenda (Standar SRIKANDI): ${noSurat}`, "success");
             this.activePermohonanId = null;
             this.activePermohonan = null;
             if (window.ModulSurat) ModulSurat.renderPermohonanTable();

@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.0
+ * Backend REST API - Google Apps Script (GAS) v3.3.2
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -2316,7 +2316,7 @@ function handleGetPermohonanSurat(ss, payload) {
     const namaWali = String(r[5] || "");
     const hpWali = String(r[6] || "");
     const ketStr = String(r[10] || "");
-    const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+    const matchSrikandi = ketStr.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
     let noTerbit = (r.length > 12 && r[12]) ? String(r[12]).trim() : "";
     if (!noTerbit && matchSrikandi) {
       noTerbit = matchSrikandi[1].trim().replace(/\.+$/, "");
@@ -2487,7 +2487,7 @@ function handleTrackPermohonanSurat(ss, payload) {
 
     if (isIdMatch || isNisnMatch || isHpMatch) {
       const ketStr = String(r[10] || "");
-      const matchSrikandi = ketStr.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+      const matchSrikandi = ketStr.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
       let noTerbit = (r.length > 12 && r[12]) ? String(r[12]).trim() : "";
       if (!noTerbit && matchSrikandi) {
         noTerbit = matchSrikandi[1].trim().replace(/\.+$/, "");
@@ -2571,7 +2571,7 @@ function handleUpdatePermohonanSurat(ss, payload) {
     }
   }
 
-  const ket = payload.keteranganTindak || payload.keterangan || (noSurat ? `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}.` : "");
+  const ket = payload.keteranganTindak || payload.keterangan || (noSurat ? `Surat Anda telah selesai diterbitkan dengan Nomor Agenda Dinas (Standar SRIKANDI): ${noSurat}.` : "");
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
   const data = sheet.getDataRange().getValues();
 

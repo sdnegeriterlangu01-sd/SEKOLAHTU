@@ -387,7 +387,7 @@ const ModulSurat = {
         const titleEl = document.getElementById("sk-modal-title");
         const subTitleEl = document.getElementById("sk-modal-subtitle");
         const btnSubmit = document.getElementById("btn-submit-sk");
-        if (titleEl) titleEl.textContent = "Pendaftaran Nomor Surat Keluar (SRIKANDI)";
+        if (titleEl) titleEl.textContent = "Pendaftaran Nomor Surat Keluar (Standar Klasifikasi SRIKANDI)";
         if (subTitleEl) subTitleEl.textContent = "Penomoran terpusat otomatis tanpa risiko nomor ganda.";
         if (btnSubmit) btnSubmit.innerHTML = `<i class="fa-solid fa-check"></i> Simpan & Terbitkan Nomor`;
 
@@ -577,7 +577,7 @@ const ModulSurat = {
     async hapusSuratKeluar(id, nomor) {
         const ok = await App.confirmDialog({
             title: "Hapus Nomor Surat Keluar?",
-            message: "Nomor registrasi surat ini akan dihapus permanen dari buku register arsip SRIKANDI.",
+            message: "Nomor surat ini akan dihapus permanen dari buku agenda surat keluar (Standar Klasifikasi SRIKANDI).",
             itemHighlight: nomor,
             badgeLabel: "Nomor Registrasi Surat",
             note: "Data yang dihapus tidak dapat dipulihkan kembali.",
@@ -882,7 +882,7 @@ const ModulSurat = {
                             let noSuratTampil = p.nomorSuratTerbit || "";
                             if (!noSuratTampil || noSuratTampil === "421" || noSuratTampil === "421.") {
                                 const rawKet = p.keteranganTindak || p.keterangan || "";
-                                const mSrikandi = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+                                const mSrikandi = rawKet.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
                                 if (mSrikandi) {
                                     noSuratTampil = mSrikandi[1].trim().replace(/\.+$/, "");
                                 } else {
@@ -1027,7 +1027,7 @@ const ModulSurat = {
                     }
                 }
                 if (noSurat) {
-                    ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${noSurat}. Silakan mengambil fisik surat di ruang Tata Usaha SDN Terlangu 01.`;
+                    ketTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Agenda Dinas (Standar SRIKANDI): ${noSurat}. Silakan mengambil fisik surat bertanda tangan dan berstempel basah Kepala Sekolah di ruang Tata Usaha SDN Terlangu 01.`;
                 }
             }
 
@@ -1146,11 +1146,11 @@ const ModulSurat = {
 
         const school = DataStore.getConfig()?.namaSekolah || "SD Negeri Terlangu 01";
         const namaOrtu = item.namaOrtu || item.namaPemohon || "Orang Tua Siswa";
-        const noReg = item.nomorSuratTerbit ? `\n*Nomor Registrasi SRIKANDI:* ${item.nomorSuratTerbit}` : "";
+        const noReg = item.nomorSuratTerbit ? `\n*Nomor Agenda Surat (Standar SRIKANDI):* ${item.nomorSuratTerbit}` : "";
 
         const message = `Yth. Bapak/Ibu ${namaOrtu},\n\nKami menginformasikan bahwa permohonan surat *${item.jenisSurat}* atas nama ananda *${item.nama}* (NISN: ${item.nisn}) dengan kode permohonan *${item.id}* di ${school} saat ini berstatus: *${item.status.toUpperCase()}*.${noReg}\n\n` +
             (item.status === "Siap Diambil"
-                ? `Surat resmi telah dicetak dan diterbitkan dengan Nomor Registrasi SRIKANDI: ${item.nomorSuratTerbit || '421.2/SD/2026'}.\nSilakan mengambil surat fisik di Ruang Tata Usaha ${school} pada jam operasional sekolah (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
+                ? `Surat dinas resmi telah diterbitkan dengan Nomor Agenda (Standar SRIKANDI): ${item.nomorSuratTerbit || '421.2/SD/2026'}.\nSilakan mengambil lembaran fisik surat bertanda tangan dan berstempel basah Kepala Sekolah di Ruang Tata Usaha ${school} pada jam operasional dinas (07.30 - 13.00 WIB) dengan menunjukkan pesan ini atau kode tiket.\n\n`
                 : `Anda dapat memantau status secara berkala melalui tautan portal kami.\n\n`) +
             `Terima kasih.\n_Tata Usaha ${school}_`;
 

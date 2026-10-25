@@ -1083,7 +1083,7 @@
                 noReg = "";
                 const rawKet = found.keteranganTindak || found.keterangan || "";
                 if (rawKet) {
-                    const match = rawKet.match(/SRIKANDI:\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i) ||
+                    const match = rawKet.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i) ||
                                   rawKet.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
                     if (match) noReg = (match[1] || match[0]).trim().replace(/\.+$/, "");
                 }
@@ -1128,7 +1128,7 @@
                 setStepState(4, "completed", "4", "4. Siap Diambil", "Telah dicetak & stempel");
 
                 if (noReg) {
-                    document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Registrasi SRIKANDI: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel dinas.`;
+                    document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah selesai diterbitkan dengan <strong>Nomor Surat Resmi: ${noReg}</strong>.<br>Silakan datang ke ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB) untuk mengambil lembaran fisik bertanda tangan dan berstempel basah Kepala Sekolah.`;
                 } else {
                     document.getElementById("res-tindak-text").innerHTML = `Surat Anda telah disetujui dan <strong>siap diambil</strong> di ruang Tata Usaha SDN Terlangu 01 pada jam dinas (Senin - Sabtu, pukul 07.30 - 13.00 WIB).<br>Silakan tunjukkan nomor tiket <strong>${found.id}</strong> kepada petugas Tata Usaha untuk pengambilan fisik surat.`;
                 }

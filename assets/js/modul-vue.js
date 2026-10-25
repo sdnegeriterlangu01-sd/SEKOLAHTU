@@ -356,7 +356,7 @@ const ModulVue = {
                             { label: "Data Guru & Tendik", icon: "fa-chalkboard-user", color: "text-sky-300", action: () => App.navigateTo("tendik") },
                             { label: "Rekap Presensi Guru & Tendik", icon: "fa-clipboard-user", color: "text-indigo-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("tendik"); } },
                             { label: "Rekap Absensi Siswa", icon: "fa-table-cells", color: "text-sky-300", action: () => { App.navigateTo("absensi"); if (window.ModulPresensi) ModulPresensi.switchTab("siswa"); } },
-                            { label: "Buku Register Surat SRIKANDI", icon: "fa-envelopes-bulk", color: "text-amber-300", action: () => App.navigateTo("surat") },
+                            { label: "Buku Agenda Surat (Standar SRIKANDI)", icon: "fa-envelopes-bulk", color: "text-amber-300", action: () => App.navigateTo("surat") },
                             { label: "Cetak Surat Keterangan", icon: "fa-print", color: "text-teal-300", action: () => App.navigateTo("cetak") }
                         ];
                     }

@@ -922,8 +922,8 @@ const ApiClient = {
                     if (payload.nomorSuratTerbit) item.nomorSuratTerbit = payload.nomorSuratTerbit;
                     if (payload.keteranganTindak !== undefined) item.keteranganTindak = payload.keteranganTindak;
                     if (payload.keterangan !== undefined) item.keterangan = payload.keterangan;
-                    if (item.nomorSuratTerbit && (!item.keteranganTindak || !item.keteranganTindak.includes("SRIKANDI:"))) {
-                        item.keteranganTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Registrasi SRIKANDI: ${item.nomorSuratTerbit}.`;
+                    if (item.nomorSuratTerbit && (!item.keteranganTindak || (!item.keteranganTindak.includes("SRIKANDI:") && !item.keteranganTindak.includes("Standar SRIKANDI:")))) {
+                        item.keteranganTindak = `Surat Anda telah selesai diterbitkan dengan Nomor Agenda Dinas (Standar SRIKANDI): ${item.nomorSuratTerbit}.`;
                     }
                     DataStore.savePermohonanSurat(list);
                     return { success: true, message: `Status permohonan ${item.id} berhasil diperbarui!`, data: item };

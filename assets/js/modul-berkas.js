@@ -635,7 +635,7 @@ const ModulBerkas = {
                     </div>
                     <div class="text-left">
                         <div class="text-xs font-mono font-bold text-slate-800">${autoName}</div>
-                        <div class="text-[11px] text-slate-500">Ukuran: ${(file.size / 1024).toFixed(1)} KB • Otomatis direname standar SRIKANDI</div>
+                        <div class="text-[11px] text-slate-500">Ukuran: ${(file.size / 1024).toFixed(1)} KB • Otomatis direname format baku</div>
                     </div>
                 </div>
                 <button type="button" onclick="document.getElementById('upload-file-input').value = ''; ModulBerkas.openUploadModal('${this.selectedStudent.nisn}')" class="text-slate-400 hover:text-red-500 text-sm">

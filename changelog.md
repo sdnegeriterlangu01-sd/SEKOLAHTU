@@ -1,6 +1,22 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.2] - 2026-10-25
+
+### Standardisasi Nomenklatur Kearsipan Dinamis SRIKANDI/ANRI, Penegasan Alur Tanda Tangan & Stempel Basah, Pembaruan Regex Nomor Agenda, dan Sinkronisasi Berkas Lomba Inovasi
+- **Standardisasi Pola Klasifikasi Baku Kearsipan SRIKANDI (`index.html`, `assets/js/modul-surat.js`, `assets/js/modul-vue.js`, `assets/js/modul-cetak.js`, & `backend/Code.gs`):**
+  - Menyelaraskan seluruh label menu, modal pop-up, dan pesan konfirmasi dari klaim "Sistem SRIKANDI" menjadi **"Adopsi Pola Klasifikasi Baku Kearsipan Dinamis Nasional (Standar SRIKANDI / ANRI)"** sesuai PermenPAN-RB No. 67 Tahun 2020 dan Peraturan ANRI No. 5 Tahun 2021.
+  - Memperbarui label tombol navigasi cepat menjadi *"Buku Agenda Surat (Standar SRIKANDI)"* dan modal registrasi surat keluar menjadi *"Pendaftaran Nomor Surat Keluar (Standar Klasifikasi SRIKANDI)"*.
+- **Penegasan Alur Fisik Pengesahan Tanda Tangan & Stempel Basah Kepala Sekolah (`assets/js/modul-surat.js`, `permohonan.html`, & `backend/Code.gs`):**
+  - Mengubah narasi notifikasi WhatsApp dan pelacakan tiket permohonan surat: menegaskan bahwa surat dicetak instan oleh sistem ber-QR Code validasi, lalu disahkan secara fisik menggunakan tanda tangan asli dan stempel basah Kepala Sekolah di ruang Tata Usaha.
+- **Pembaruan Parser Regex Nomor Agenda Surat Terbit (`assets/js/modul-surat.js`, `assets/js/modul-cetak.js`, `assets/js/api.js`, `permohonan.html`, & `backend/Code.gs`):**
+  - Memperluas ekspresi reguler (regex) pencarian nomor surat resmi agar mengenali pola `SRIKANDI:`, `Agenda Dinas:`, `Surat Keluar:`, maupun `Surat Resmi:` secara fleksibel dan kompatibel mundur (*backward compatible*).
+- **Penyelarasan Naskah & Dokumen Lomba Karya Inovasi 2026 Tendik Brebes (`Inovasi_SEKOLAHTU_SDN TERLANGU 01/`):**
+  - Memperbarui naskah artikel ilmiah Inkuiri Kolaboratif, dokumen profil 12 modul lengkap, rencana aksi timeline, dan lembar pernyataan keaslian bermaterai atas nama **TASRONI** (NIP: `19970917 202521 1 076`, Pangkat/Gol: `- (PPPK PW)`).
+  - Menambahkan dasar hukum kearsipan resmi ANRI pada Daftar Pustaka dan memperbarui storyboard video lomba 7–10 menit tanpa musik latar sesuai Juknis Dindikpora Kab. Brebes 2026.
+
+---
+
 ## [v3.3.1] - 2026-10-25
 
 ### Penyelarasan Tema Pop-up Modal Dialog (Dark & Light Mode), Perbaikan Kontras Footer, dan Standardisasi Upload Berkas

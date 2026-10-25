@@ -98,7 +98,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.1</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.2</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -615,9 +615,9 @@
                                                     '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-table-cells text-sky-300"></i></span>' +
                                                     '<span>Rekap Absensi Siswa</span>' +
                                                 '</button>' +
-                                                '<button type="button" onclick="App.navigateTo(\'surat\');" class="' + btnClass + '">' +
+                                                    '<button type="button" onclick="App.navigateTo(\'surat\');" class="' + btnClass + '">' +
                                                     '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-envelopes-bulk text-amber-300"></i></span>' +
-                                                    '<span>Buku Register Surat SRIKANDI</span>' +
+                                                    '<span>Buku Agenda Surat (Standar SRIKANDI)</span>' +
                                                 '</button>' +
                                                 '<button type="button" onclick="App.navigateTo(\'cetak\');" class="' + btnClass + '">' +
                                                     '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-print text-teal-300"></i></span>' +
@@ -685,7 +685,7 @@
                             <div class="flex items-center justify-between mb-1.5 sm:mb-3">
                                 <span
                                     class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Surat
-                                    SRIKANDI</span>
+                                    (Standar SRIKANDI)</span>
                                 <div
                                     class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xs sm:text-base flex-shrink-0">
                                     <i class="fa-solid fa-envelope-circle-check"></i>
@@ -1202,8 +1202,8 @@
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-xl font-extrabold text-slate-900">Penomoran & Pengarsipan Surat (Adopsi
-                                SRIKANDI)</h2>
+                            <h2 class="text-xl font-extrabold text-slate-900">Penomoran & Pengarsipan Surat (Standar
+                                Klasifikasi SRIKANDI)</h2>
                             <p class="text-xs text-slate-500 mt-0.5">Penomoran surat keluar otomatis berbasis
                                 klasifikasi baku (tanpa nomor ganda) & buku agenda surat masuk.</p>
                         </div>
@@ -1273,7 +1273,7 @@
                                 <span id="total-surat-keluar-count" class="text-xs font-bold text-slate-600">0 Surat
                                     Terdaftar</span>
                                 <div class="text-[11px] text-slate-400">
-                                    Format SRIKANDI: <span
+                                    Format Baku (Standar SRIKANDI): <span
                                         class="font-mono font-semibold text-slate-600">[Kode]/[NoUrut]/SD/[Tahun]</span>
                                 </div>
                             </div>
@@ -1503,7 +1503,7 @@
                                 <!-- Mode 2: Nomor Baru Otomatis (Hidden by default) -->
                                 <div id="cetak-box-baru"
                                     class="hidden p-2.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center justify-between">
-                                    <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Baru SRIKANDI:</span>
+                                    <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Baru Agenda (Standar SRIKANDI):</span>
                                     <span id="cetak-preview-baru"
                                         class="font-mono font-bold text-blue-900 dark:text-blue-300 text-xs">...</span>
                                 </div>
@@ -2665,7 +2665,7 @@
                 class="no-print mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.1</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.2</span></span>
                     <span class="text-[11px] text-slate-400 dark:text-slate-500">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
@@ -3054,7 +3054,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white dark:bg-slate-900">
                 <div>
                     <h3 id="sk-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Pendaftaran Nomor Surat Keluar
-                        (SRIKANDI)</h3>
+                        (Standar Klasifikasi SRIKANDI)</h3>
                     <p id="sk-modal-subtitle" class="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Penomoran terpusat otomatis tanpa
                         risiko nomor ganda.</p>
                 </div>
@@ -3098,7 +3098,7 @@
                     <!-- Preview Nomor yang Diterbitkan Otomatis -->
                     <div id="sk-preview-container"
                         class="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl flex items-center justify-between">
-                        <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Surat Otomatis SRIKANDI:</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-300">Nomor Surat Otomatis (Standar SRIKANDI):</span>
                         <span id="sk-preview-nomor"
                             class="font-mono font-bold text-blue-900 dark:text-blue-300 text-xs px-2.5 py-1 bg-white dark:bg-slate-900 rounded border border-blue-200 dark:border-blue-800/60">
                             421.2/001/VII/2026

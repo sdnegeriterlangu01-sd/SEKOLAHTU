@@ -1531,7 +1531,7 @@ const App = {
                 </button>
                 <button type="button" onclick="App.navigateTo('surat');" class="${btnClass}">
                     <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-envelopes-bulk text-amber-300"></i></span>
-                    <span>Buku Register Surat SRIKANDI</span>
+                    <span>Buku Agenda Surat (Standar SRIKANDI)</span>
                 </button>
                 <button type="button" onclick="App.navigateTo('cetak');" class="${btnClass}">
                     <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-print text-teal-300"></i></span>
@@ -2228,7 +2228,7 @@ const App = {
                 element: 'a[data-route="surat"]',
                 popover: {
                     title: 'Menu: Penomoran & Surat',
-                    description: 'Buku agenda surat masuk dan surat keluar berstandar kode klasifikasi arsip baku (SRIKANDI).',
+                    description: 'Buku agenda surat masuk dan surat keluar berstandar kode klasifikasi arsip baku adopsi SRIKANDI.',
                     side: 'right',
                     align: 'center'
                 }

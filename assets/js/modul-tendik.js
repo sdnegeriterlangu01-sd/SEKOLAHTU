@@ -277,7 +277,9 @@ const ModulTendik = {
                         </div>
 
                         <h4 class="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug line-clamp-2" title="${Sec.esc(t.nama)}">${Sec.esc(t.nama)}</h4>
-                        <div class="font-mono text-[11px] text-slate-400 mt-0.5">${Sec.esc(t.nip || "-")}</div>
+                        <div class="font-mono text-[11px] text-slate-400 mt-0.5">
+                            ${Sec.esc(t.nip || "-")}${t.nuptk ? ` <span class="text-slate-300 dark:text-slate-600">•</span> NUPTK: <span class="text-slate-600 dark:text-slate-300 font-semibold">${Sec.esc(t.nuptk)}</span>` : ''}
+                        </div>
 
                         <!-- Jabatan & Golongan -->
                         <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -364,7 +366,9 @@ const ModulTendik = {
                             ${avatarImg}
                             <div>
                                 <div class="font-bold text-slate-900">${Sec.esc(t.nama)}</div>
-                                <div class="font-mono text-[10px] text-slate-400">${Sec.esc(t.nip || "-")}</div>
+                                <div class="font-mono text-[10px] text-slate-400">
+                                    NIP: ${Sec.esc(t.nip || "-")}${t.nuptk ? ` • NUPTK: <span class="text-slate-600 font-semibold">${Sec.esc(t.nuptk)}</span>` : ''}
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -508,11 +512,19 @@ const ModulTendik = {
 
                 <!-- Bagian 2: Data Pribadi & Kepegawaian -->
                 <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">NIP / ID Pegawai <span class="text-red-500">*</span></label>
-                        <input id="mt-nip" ${t ? "readonly" : ""} value="${v("nip")}" maxlength="40" placeholder="19820820 200604 1 008"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-mono ${t ? "bg-slate-50 cursor-not-allowed" : "focus:ring-2 focus:ring-blue-500"}">
-                        <p class="text-[10px] text-slate-400 mt-0.5">4–40 karakter huruf/angka. Honorer tanpa NIP: gunakan format ID unik, misal: GTT001.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">NIP / ID Pegawai <span class="text-red-500">*</span></label>
+                            <input id="mt-nip" ${t ? "readonly" : ""} value="${v("nip")}" maxlength="40" placeholder="19820820 200604 1 008"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-mono ${t ? "bg-slate-50 cursor-not-allowed" : "focus:ring-2 focus:ring-blue-500"}">
+                            <p class="text-[10px] text-slate-400 mt-0.5">4–40 karakter huruf/angka.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">NUPTK</label>
+                            <input id="mt-nuptk" value="${v("nuptk")}" maxlength="25" placeholder="Contoh: 1234567890123456"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl font-mono focus:ring-2 focus:ring-blue-500">
+                            <p class="text-[10px] text-slate-400 mt-0.5">Nomor Unik Pendidik & Tenaga Kependidikan.</p>
+                        </div>
                     </div>
 
                     <div>
@@ -759,9 +771,11 @@ const ModulTendik = {
         const golJabatan = g("mt-gol-jabatan") || "-";
         const jabatan = g("mt-jabatan") || golJabatan;
         const statusKepegawaian = g("mt-status") || "PNS";
+        const nuptk = g("mt-nuptk");
 
         const tendikData = {
             nip,
+            nuptk,
             nama,
             jabatan,
             golJabatan,
@@ -812,7 +826,18 @@ const ModulTendik = {
     },
 
     async hapusTendik(nipClean, nama) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus data ${nama} (NIP/ID: ${nipClean})?\nData kartu ID dan presensi akan dihapus.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Hapus Data Guru / Tendik?",
+            message: `Data kepegawaian, kartu ID, dan riwayat presensi ${nama} akan dihapus dari sistem.`,
+            itemHighlight: `${nama} (NIP/ID: ${nipClean})`,
+            badgeLabel: "Guru / Tenaga Kependidikan",
+            note: "Data yang dihapus tidak dapat dipulihkan kembali.",
+            confirmText: "Ya, Hapus Data",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
         const res = await ApiClient.request("deleteTendik", { nip: nipClean });
         if (res && res.success) {
             App.showToast(res.message || `Data ${nama} berhasil dihapus.`, "success");
@@ -824,10 +849,247 @@ const ModulTendik = {
     },
 
     showQrCard(nipClean) {
-        App.navigateTo("absensi");
-        if (window.ModulPresensi) {
-            ModulPresensi.switchTab("qr");
+        const clean = Util.cleanId(nipClean);
+        const list = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+        const t = list.find(x => Util.cleanId(x.nip) === clean);
+        if (!t) {
+            if (window.App && App.showToast) App.showToast("Data Guru/Tendik tidak ditemukan.", "error");
+            return;
         }
+        this.openQrModal(t);
+    },
+
+    openQrModal(t) {
+        if (!t) return;
+        const nipClean = Util.cleanId(t.nip);
+        const config = (typeof DataStore !== "undefined" && DataStore.getConfig) ? DataStore.getConfig() : {};
+        const namaSekolah = config.namaSekolah || "SD NEGERI TERLANGU 01";
+        const jabatanAkun = (typeof Auth !== "undefined" && Auth.getJabatanFromAccount) ? Auth.getJabatanFromAccount(t) : "";
+        const jabatanDisplay = jabatanAkun || t.jabatan || "Pendidik / Tenaga Kependidikan";
+        const statusPeg = t.statusKepegawaian || "PNS";
+        const golDisplay = t.golJabatan || t.golongan || "-";
+        const payload = (window.ModulPresensi && ModulPresensi.qrPayload) ? ModulPresensi.qrPayload(t) : `SEKOLAHTU|T|${nipClean}`;
+
+        let statusBadgeClass = "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
+        if (statusPeg === "PPPK") statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
+        else if (["PTT", "GTT", "HONORER"].includes(statusPeg.toUpperCase())) statusBadgeClass = "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
+
+        const avatarHtml = t.foto ? `
+            <img src="${Sec.safeUrl(t.foto)}" alt="${Sec.esc(t.nama)}" class="w-14 h-14 rounded-2xl object-cover ring-2 ring-slate-200 dark:ring-slate-700 shadow-sm flex-shrink-0">
+        ` : `
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-900 text-white flex items-center justify-center text-lg font-black shadow-sm flex-shrink-0">
+                ${this.getInitials(t.nama)}
+            </div>
+        `;
+
+        let modal = document.getElementById("modal-qr-tendik");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "modal-qr-tendik";
+            modal.className = "fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4";
+            modal.onclick = (e) => {
+                if (e.target === modal) ModulTendik.closeQrModal();
+            };
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[92vh] overflow-y-auto animate-fade-in" onclick="event.stopPropagation()">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shadow-xs">
+                            <i class="fa-solid fa-qrcode text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Kartu QR Presensi Pegawai</h3>
+                            <p class="text-[11px] text-slate-400">${Sec.esc(namaSekolah)}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="ModulTendik.closeQrModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Profil Tendik Card -->
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-3.5">
+                    ${avatarHtml}
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusBadgeClass}">${Sec.esc(statusPeg)}</span>
+                            <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">${Sec.esc(golDisplay)}</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white truncate mt-0.5" title="${Sec.esc(t.nama)}">${Sec.esc(t.nama)}</h4>
+                        <div class="text-[11px] text-blue-900 dark:text-blue-300 font-medium truncate">${Sec.esc(jabatanDisplay)}</div>
+                        <div class="font-mono text-[10px] text-slate-400 mt-0.5">NIP: ${Sec.esc(t.nip || "-")} ${t.nuptk ? `• NUPTK: ${Sec.esc(t.nuptk)}` : ''}</div>
+                    </div>
+                </div>
+
+                <!-- QR Code Box -->
+                <div class="bg-gradient-to-b from-slate-50 to-indigo-50/40 dark:from-slate-800/40 dark:to-indigo-950/20 p-5 rounded-2xl border border-indigo-100/80 dark:border-indigo-900/40 text-center space-y-3">
+                    <div class="bg-white p-3 rounded-2xl inline-block mx-auto shadow-md border border-slate-100 ring-4 ring-indigo-50/50 dark:ring-indigo-900/20">
+                        <div id="tendik-qr-canvas-holder" class="flex items-center justify-center min-w-[180px] min-h-[180px]"></div>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-mono font-bold">
+                            <i class="fa-solid fa-fingerprint text-indigo-500"></i> ${Sec.esc(payload)}
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+                            Gunakan QR Code ini saat presensi datang & pulang di pemindai SEKOLAHTU.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="ModulTendik.closeQrModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer">
+                        Tutup
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <a id="btn-tendik-download-qr" download="QR_${Sec.esc(nipClean)}.png" href="#" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+                            <i class="fa-solid fa-download"></i> Unduh PNG
+                        </a>
+                        <button type="button" onclick="ModulTendik.printSingleQrPocket('${Sec.esc(nipClean)}')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-blue-950 inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+                            <i class="fa-solid fa-print"></i> Cetak Kartu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove("hidden");
+
+        // Render QR Code via QRCode library
+        const holder = document.getElementById("tendik-qr-canvas-holder");
+        if (holder && typeof QRCode !== "undefined") {
+            holder.innerHTML = "";
+            new QRCode(holder, {
+                text: payload,
+                width: 180,
+                height: 180,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Set Download URL after canvas is rendered
+            setTimeout(() => {
+                const canvas = holder.querySelector("canvas");
+                const img = holder.querySelector("img");
+                const dlBtn = document.getElementById("btn-tendik-download-qr");
+                if (dlBtn) {
+                    const dataUrl = canvas ? canvas.toDataURL("image/png") : (img ? img.src : "");
+                    if (dataUrl) dlBtn.href = dataUrl;
+                }
+            }, 100);
+        }
+    },
+
+    closeQrModal() {
+        const modal = document.getElementById("modal-qr-tendik");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    async printSingleQrPocket(nipClean) {
+        const clean = Util.cleanId(nipClean);
+        const list = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+        const t = list.find(x => Util.cleanId(x.nip) === clean);
+        if (!t) return;
+
+        const config = (typeof DataStore !== "undefined" && DataStore.getConfig) ? DataStore.getConfig() : {};
+        const namaSekolah = config.namaSekolah || "SD NEGERI TERLANGU 01";
+        const ta = (window.App && App.selectedTA) || config.tahunAjaran || "2026/2027";
+        const jabatanAkun = (typeof Auth !== "undefined" && Auth.getJabatanFromAccount) ? Auth.getJabatanFromAccount(t) : "";
+        const jabatan = jabatanAkun || t.jabatan || "Pendidik / Tenaga Kependidikan";
+        const statusPeg = t.statusKepegawaian || "PNS";
+        const gol = t.golJabatan || t.golongan || "-";
+
+        let qrUrl = "";
+        try {
+            if (window.ModulPresensi && ModulPresensi.qrDataUrl) {
+                qrUrl = await ModulPresensi.qrDataUrl(`SEKOLAHTU|T|${clean}`, 200);
+            }
+        } catch (e) {}
+
+        const printWin = window.open("", "_blank");
+        if (!printWin) {
+            if (window.App && App.showToast) App.showToast("Gagal membuka jendela cetak. Izinkan pop-up.", "warning");
+            return;
+        }
+
+        const photoHtml = t.foto 
+            ? `<img src="${Sec.safeUrl(t.foto)}" alt="Foto" style="width:36px;height:44px;object-fit:cover;border-radius:4px;border:1px solid #cbd5e1;flex-shrink:0;">`
+            : `<div style="width:36px;height:44px;border-radius:4px;background:#1e3a8a;color:#fff;font-weight:bold;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${this.getInitials(t.nama)}</div>`;
+
+        const qrSectionHtml = qrUrl ? `
+            <div class="qr-row">
+                <div class="qr-text">
+                    <strong>QR Presensi Resmi Pegawai</strong><br>
+                    Simpan kartu saku ini di dompet atau kartu tanda pengenal (ID Card).
+                </div>
+                <img src="${qrUrl}" alt="QR Code" class="qr-img">
+            </div>
+        ` : '';
+
+        const cardHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kartu Saku QR - ${t.nama}</title>
+    <style>
+        @page { size: portrait; margin: 10mm; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 10px; background: #fff; color: #0f172a; }
+        .card { width: 85mm; border: 2px solid #1e3a8a; border-radius: 12px; padding: 10px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #ffffff; page-break-inside: avoid; }
+        .header { text-align: center; background: #1e3a8a; color: white; padding: 6px; border-radius: 8px; margin-bottom: 8px; }
+        .header h4 { margin: 0; font-size: 10.5pt; font-weight: 800; letter-spacing: 0.5px; }
+        .header p { margin: 2px 0 0; font-size: 7.5pt; opacity: 0.95; }
+        .profile-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1; }
+        .profile-info { flex: 1; min-width: 0; }
+        .profile-name { font-size: 9pt; font-weight: 800; color: #1e3a8a; line-height: 1.2; word-break: break-word; }
+        .profile-sub { font-size: 7.5pt; color: #475569; margin-top: 1px; font-weight: 600; }
+        .profile-nip { font-size: 7.2pt; font-family: monospace; color: #64748b; margin-top: 1px; }
+        .badge { display: inline-block; font-size: 6.5pt; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #e0e7ff; color: #3730a3; margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; font-size: 7.2pt; }
+        th, td { border: 1px solid #cbd5e1; padding: 2.5px 4px; text-align: left; vertical-align: top; }
+        th { background: #f8fafc; font-weight: bold; width: 34%; color: #334155; }
+        td { color: #0f172a; }
+        .qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; }
+        .qr-img { width: 44px; height: 44px; flex-shrink: 0; }
+        .qr-text { font-size: 6.5pt; color: #64748b; line-height: 1.3; }
+        .footer { text-align: center; font-size: 6.8pt; color: #64748b; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h4>KARTU PRESENSI PEGAWAI</h4>
+            <p>${namaSekolah} • TA ${ta}</p>
+        </div>
+        <div class="profile-head">
+            ${photoHtml}
+            <div class="profile-info">
+                <div class="profile-name">${Sec.esc(t.nama)}</div>
+                <div class="profile-sub">${Sec.esc(jabatan)}</div>
+                <div class="profile-nip">NIP: ${Sec.esc(t.nip || "-")}</div>
+                <div><span class="badge">${Sec.esc(statusPeg)}${gol !== '-' ? ' • ' + Sec.esc(gol) : ''}</span></div>
+            </div>
+        </div>
+        <table>
+            <tbody>
+                <tr><th>NUPTK</th><td>${Sec.esc(t.nuptk || "-")}</td></tr>
+                <tr><th>Jenis Kelamin</th><td>${Sec.esc(t.jk || "Laki-laki")}</td></tr>
+                <tr><th>Pendidikan</th><td>${Sec.esc(t.ijazah || "-")} ${t.jurusan ? `• ${Sec.esc(t.jurusan)}` : ''}</td></tr>
+                <tr><th>Tugas Tambahan</th><td>${Sec.esc(t.tugasTambahan || "-")}</td></tr>
+            </tbody>
+        </table>
+        ${qrSectionHtml}
+        <div class="footer">Simpan di dompet / meja kerja • Dicetak via SEKOLAHTU</div>
+    </div>
+    <script>window.onload = function() { window.print(); };</script>
+</body>
+</html>`;
+
+        printWin.document.write(cardHtml);
+        printWin.document.close();
     },
 
     // -------------------------------------------------------------------------
@@ -871,7 +1133,7 @@ const ModulTendik = {
                 <td style="text-align:center;padding:6px;border:1px solid #333;">${i + 1}</td>
                 <td style="padding:6px;border:1px solid #333;">
                     <strong>${Sec.esc(t.nama)}</strong><br>
-                    <span style="font-family:monospace;font-size:10px;color:#555;">NIP: ${Sec.esc(t.nip || "-")}</span>
+                    <span style="font-family:monospace;font-size:10px;color:#555;">NIP: ${Sec.esc(t.nip || "-")}${t.nuptk ? ` • NUPTK: ${Sec.esc(t.nuptk)}` : ''}</span>
                 </td>
                 <td style="padding:6px;border:1px solid #333;">${Sec.esc(Auth.getJabatanFromAccount ? (Auth.getJabatanFromAccount(t) || t.jabatan) : t.jabatan)}</td>
                 <td style="padding:6px;border:1px solid #333;">${Sec.esc(t.golJabatan || t.golongan || "-")}</td>

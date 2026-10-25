@@ -89,6 +89,21 @@ body {
   border-color: #cbd5e1;
 }
 
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ==========================================================================
    GLOBAL CUSTOM SCROLLBAR (Sleek Modern Pill Style as per Image 1)
    ========================================================================== */
@@ -205,8 +220,7 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
   color: #ffffff !important;
 }
 
-.nav-link.active .badge-pill,
-.nav-link.active span:last-child {
+.nav-link.active .badge-pill {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
@@ -390,21 +404,35 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
   margin: 0;
 }
 
-.surat-body {
-  font-size: 11pt;
+.surat-body,
+.surat-paragraf {
+  font-size: 11pt !important;
+  font-family: 'Times New Roman', Times, serif !important;
   text-align: justify;
+  line-height: 1.45;
 }
 
 .surat-table-data {
-  width: 100%;
-  margin: 12px 0 15px 0;
+  width: 95%;
+  margin: 6px 0 10px 15px;
   border-collapse: collapse;
 }
 
 .surat-table-data td {
-  padding: 4px 6px;
+  padding: 3px 6px;
   vertical-align: top;
-  font-size: 11pt;
+  font-size: 11pt !important;
+  font-family: 'Times New Roman', Times, serif !important;
+  line-height: 1.4;
+  color: #000000;
+}
+
+.surat-table-data .font-mono,
+.surat-body .font-mono {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 11pt !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px;
 }
 
 .surat-ttd-container {
@@ -609,13 +637,14 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
     font-size: 7pt;
   }
 
-  .surat-body {
-    font-size: 9.5pt;
+  .surat-body,
+  .surat-paragraf {
+    font-size: 9.5pt !important;
   }
 
   .surat-table-data td {
-    font-size: 9pt;
-    padding: 1px 3px;
+    font-size: 9.5pt !important;
+    padding: 1.5px 3px;
   }
 
   .surat-ttd-box {
@@ -833,15 +862,16 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
   }
 
   /* Isi Surat & Paragraf */
-  .surat-body {
-    font-size: 10.5pt !important;
+  .surat-body,
+  .surat-paragraf {
+    font-size: 11pt !important;
+    font-family: 'Times New Roman', Times, serif !important;
     line-height: 1.4 !important;
     text-align: justify !important;
   }
 
   .surat-paragraf {
     margin-bottom: 6px !important;
-    line-height: 1.4 !important;
     text-indent: 32px !important;
   }
 
@@ -854,9 +884,17 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
 
   .surat-table-data td {
     padding: 1.5px 4px !important;
-    font-size: 10.5pt !important;
-    line-height: 1.3 !important;
+    font-size: 11pt !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    line-height: 1.35 !important;
     vertical-align: top !important;
+  }
+
+  .surat-table-data .font-mono,
+  .surat-body .font-mono {
+    font-family: 'Times New Roman', Times, serif !important;
+    font-size: 11pt !important;
+    font-weight: 700 !important;
   }
 
   /* Tanda Tangan & QR Code */
@@ -992,7 +1030,7 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
     padding: 0.85rem 1rem !important;
   }
 
-  table th {
+  table:not(.abs-grid) th {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     padding-left: 0.75rem !important;
@@ -1000,7 +1038,7 @@ html.dark #vue-sidebar-nav::-webkit-scrollbar-thumb:hover {
     font-size: 0.72rem !important;
   }
 
-  table td {
+  table:not(.abs-grid) td {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     padding-left: 0.75rem !important;
@@ -1221,15 +1259,83 @@ html.dark textarea::placeholder {
   color: #475569 !important;
 }
 
-html.dark thead {
+html.dark thead:not(.abs-grid thead) {
   background-color: #111a2e !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-html.dark thead th {
+html.dark thead:not(.abs-grid thead) th:not(.abs-grid th) {
   background-color: #111a2e !important;
   color: #cbd5e1 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Mode Gelap Tabel Rekap Presensi Absensi (.abs-grid) */
+html.dark .abs-grid {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+html.dark .abs-grid th,
+html.dark .abs-grid td {
+  border-color: #334155 !important;
+}
+html.dark .abs-grid td {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+html.dark .abs-grid thead th {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+html.dark .abs-grid td.nama {
+  color: #f8fafc !important;
+}
+html.dark .abs-grid td.sub {
+  color: #94a3b8 !important;
+}
+html.dark .abs-grid td.t {
+  color: #cbd5e1 !important;
+}
+html.dark .abs-grid td.off,
+html.dark .abs-grid .off {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+html.dark .abs-grid td.cell:hover {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+html.dark .abs-grid tr.grp-end td {
+  border-bottom: 2px solid #475569 !important;
+}
+html.dark .abs-grid td.mk-S {
+  background: rgba(245, 158, 11, 0.3) !important;
+  color: #fde047 !important;
+}
+html.dark .abs-grid td.mk-I {
+  background: rgba(59, 130, 246, 0.3) !important;
+  color: #93c5fd !important;
+}
+html.dark .abs-grid td.mk-A {
+  background: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+html.dark .abs-grid td.mk-H,
+html.dark .abs-grid td.ok {
+  background: rgba(16, 185, 129, 0.3) !important;
+  color: #6ee7b7 !important;
+}
+html.dark .abs-grid .sticky-col {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+html.dark .abs-grid thead th.sticky-col {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+html.dark .abs-grid .sticky-nama {
+  box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.5) !important;
 }
 
 html.dark tbody tr {
@@ -1310,9 +1416,15 @@ html.dark .bg-amber-50\/60 {
 }
 
 html.dark .bg-rose-50,
-html.dark .bg-rose-50\/60 {
-  background-color: rgba(136, 19, 55, 0.25) !important;
-  border-color: rgba(244, 63, 94, 0.25) !important;
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/80 {
+  background-color: rgba(136, 19, 55, 0.28) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+html.dark .bg-rose-200 {
+  background-color: rgba(159, 18, 57, 0.6) !important;
+  color: #ffe4e6 !important;
 }
 
 html.dark .bg-slate-50\/70,
@@ -1462,7 +1574,6 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
   z-index: 99998 !important;
   position: fixed !important;
   inset: 0 !important;
-  pointer-events: auto !important;
 }
 
 .driver-popover {
@@ -1474,7 +1585,8 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
   border: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
   max-width: 390px !important;
-  z-index: 100000 !important;
+  z-index: 100002 !important;
+  pointer-events: auto !important;
 }
 
 .driver-popover-title {
@@ -1517,6 +1629,9 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
   box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25) !important;
   transition: all 0.2s ease !important;
   cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 100003 !important;
 }
 
 .driver-popover-next-btn:hover {
@@ -1536,6 +1651,9 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
   text-shadow: none !important;
   transition: all 0.2s ease !important;
   cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 100003 !important;
 }
 
 .driver-popover-prev-btn:hover {
@@ -1547,6 +1665,10 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
   color: #94a3b8 !important;
   font-size: 1.25rem !important;
   transition: color 0.2s !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 100003 !important;
 }
 
 .driver-popover-close-btn:hover {
@@ -1555,29 +1677,23 @@ html.dark .kop-surat-preview .qr-verification-badge .qr-text span:last-child {
 
 /* Stacking Context Penanganan Driver Overlay & Sorotan */
 .driver-active-element {
-  position: relative !important;
-  z-index: 99999 !important;
-  border-radius: inherit;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  position: relative;
+  box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.6), 0 10px 25px -5px rgba(0, 0, 0, 0.35) !important;
+  transition: box-shadow 0.2s ease, border-radius 0.2s ease !important;
 }
 
-/* Saat mode tour aktif, elemen fixed/sticky di luar sorotan turun di belakang overlay */
+/* Elemen tanpa radius kelas rounded bawaan diberikan radius halus 12px */
+.driver-active-element:not([class*="rounded"]) {
+  border-radius: 0.75rem !important;
+}
+
+/* Pertahankan z-index sidebar dan header di bawah driver-overlay (99998) agar SVG cutout menyorot secara presisi */
 body.driver-active #main-sidebar {
   z-index: 40 !important;
 }
 
-body.driver-active #main-sidebar.driver-active-element,
-body.driver-active #main-sidebar:has(.driver-active-element) {
-  z-index: 99999 !important;
-}
-
 body.driver-active #app-top-header {
   z-index: 30 !important;
-}
-
-body.driver-active #app-top-header.driver-active-element,
-body.driver-active #app-top-header:has(.driver-active-element) {
-  z-index: 99999 !important;
 }
 
 /* Dark Mode Driver Popover */
@@ -1622,113 +1738,4 @@ html.dark .driver-popover-close-btn {
 
 html.dark .driver-popover-close-btn:hover {
   color: #f8fafc !important;
-}
-
-/* ==========================================================================
-   RESPONSIVE OVERFLOW & SCROLL CONTROL FOR PRESENSI / REKAP BULANAN
-   ========================================================================== */
-#view-absensi,
-#abs-tab-siswa,
-#abs-tab-tendik,
-#abs-tab-harian,
-#abs-tab-qr {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.abs-grid-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: auto !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  position: relative !important;
-  box-sizing: border-box !important;
-}
-
-#rs-grid,
-#rt-grid {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.abs-grid {
-  width: 100% !important;
-  table-layout: fixed !important;
-  border-collapse: separate !important;
-  border-spacing: 0 !important;
-  box-sizing: border-box !important;
-}
-
-.abs-grid th,
-.abs-grid td {
-  vertical-align: middle !important;
-  text-align: center !important;
-  box-sizing: border-box !important;
-}
-
-.abs-grid td.nama {
-  text-align: left !important;
-  padding-left: 6px !important;
-  padding-right: 4px !important;
-}
-
-.abs-grid th {
-  white-space: nowrap !important;
-  text-align: center !important;
-}
-
-.abs-grid td.sub {
-  white-space: nowrap !important;
-  text-align: center !important;
-}
-
-.abs-grid-wrapper::-webkit-scrollbar,
-#rs-grid-wrapper::-webkit-scrollbar,
-#rt-grid-wrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 10px;
-}
-
-.abs-grid-wrapper::-webkit-scrollbar-track,
-#rs-grid-wrapper::-webkit-scrollbar-track,
-#rt-grid-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 9999px;
-}
-
-.abs-grid-wrapper::-webkit-scrollbar-thumb,
-#rs-grid-wrapper::-webkit-scrollbar-thumb,
-#rt-grid-wrapper::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-.abs-grid-wrapper::-webkit-scrollbar-thumb:hover,
-#rs-grid-wrapper::-webkit-scrollbar-thumb:hover,
-#rt-grid-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-html.dark .abs-grid-wrapper::-webkit-scrollbar-track,
-html.dark #rs-grid-wrapper::-webkit-scrollbar-track,
-html.dark #rt-grid-wrapper::-webkit-scrollbar-track {
-  background: #0f172a;
-  border-radius: 9999px;
-}
-
-html.dark .abs-grid-wrapper::-webkit-scrollbar-thumb,
-html.dark #rs-grid-wrapper::-webkit-scrollbar-thumb,
-html.dark #rt-grid-wrapper::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 9999px;
-}
-
-html.dark .abs-grid-wrapper::-webkit-scrollbar-thumb:hover,
-html.dark #rs-grid-wrapper::-webkit-scrollbar-thumb:hover,
-html.dark #rt-grid-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #475569;
 }

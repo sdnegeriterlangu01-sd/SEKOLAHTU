@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.2.0
+ * Backend REST API - Google Apps Script (GAS) v3.3.0
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,7 +104,7 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.2.0",
+    version: "3.3.0",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
@@ -517,6 +517,7 @@ function setupDatabaseAndFolders() {
     sheetCfg.appendRow(["KEY", "VALUE"]);
     sheetCfg.appendRow(["NAMA_SEKOLAH", "SD NEGERI TERLANGU 01"]);
     sheetCfg.appendRow(["NPSN", "20326713"]);
+    sheetCfg.appendRow(["NSS", "101032916052"]);
     sheetCfg.appendRow(["KEPALA_SEKOLAH", "Aisah Suciati, S.Pd.SD., M.Pd."]);
     sheetCfg.appendRow(["NIP_KEPALA_SEKOLAH", "19690808 199201 2 002"]);
     sheetCfg.appendRow(["SUPABASE_URL", DEFAULT_SUPABASE_URL]);
@@ -627,7 +628,7 @@ function handleBackupDatabase(ss) {
 
   const dump = {
     _app: "SEKOLAHTU",
-    _version: "3.2.0",
+    _version: "3.3.0",
     _created: now.toISOString(),
     spreadsheetId: ss.getId(),
     tables: {}
@@ -871,6 +872,7 @@ function handleGetTendik(ss) {
   const colTugas = headers.indexOf("TUGAS_TAMBAHAN");
   const colIjazah = headers.indexOf("IJAZAH");
   const colJurusan = headers.indexOf("JURUSAN");
+  const colNuptk = headers.indexOf("NUPTK");
 
   const list = values.map(row => {
     const nip = colNip >= 0 ? String(row[colNip] || "") : String(row[0] || "");
@@ -899,9 +901,11 @@ function handleGetTendik(ss) {
     const tugasTambahan = colTugas >= 0 ? String(row[colTugas] || "") : (row.length > 10 ? String(row[10] || "") : "");
     const ijazah = colIjazah >= 0 ? String(row[colIjazah] || "") : (row.length > 11 ? String(row[11] || "") : "");
     const jurusan = colJurusan >= 0 ? String(row[colJurusan] || "") : (row.length > 12 ? String(row[12] || "") : "");
+    const nuptk = colNuptk >= 0 ? String(row[colNuptk] || "") : (row.length > 14 ? String(row[14] || "") : "");
 
     return {
       nip,
+      nuptk,
       nama,
       jabatan,
       golongan: golongan || "-",
@@ -931,13 +935,13 @@ function handleSaveTendik(ss, payload) {
     return { success: false, message: "Tidak ada data guru/tendik yang dikirim." };
   }
 
-  const requiredHeaders = ["NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN", "IJAZAH", "JURUSAN"];
+  const requiredHeaders = ["NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN", "IJAZAH", "JURUSAN", "NUPTK"];
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(requiredHeaders);
     sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
   } else {
     const curHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).toUpperCase());
-    if (!curHeaders.includes("STATUS_KEPEGAWAIAN") || !curHeaders.includes("IJAZAH")) {
+    if (!curHeaders.includes("STATUS_KEPEGAWAIAN") || !curHeaders.includes("IJAZAH") || !curHeaders.includes("NUPTK")) {
       sheet.getRange(1, 1, 1, requiredHeaders.length).setValues([requiredHeaders]);
       sheet.getRange(1, 1, 1, requiredHeaders.length).setFontWeight("bold").setBackground("#d0e0e3");
     }
@@ -959,11 +963,12 @@ function handleSaveTendik(ss, payload) {
     const tugas = t.tugasTambahan || "";
     const ijazah = t.ijazah || "";
     const jurusan = t.jurusan || "";
+    const nuptk = t.nuptk || "";
 
     const rowData = [
       nip, t.nama || "", t.jabatan || "", gol, statusPeg, t.jk || "",
       t.noHp || "", t.kodeQr || "", t.urlQr || "", t.aktif !== false,
-      foto, tugas, ijazah, jurusan
+      foto, tugas, ijazah, jurusan, nuptk
     ];
 
     if (row) {
@@ -1118,35 +1123,68 @@ function handleGetSuratKeluar(ss) {
   return { success: true, data: list.reverse() };
 }
 
+function extractNoUrutSurat(str) {
+  if (!str) return 0;
+  const s = String(str).trim();
+  if (!s) return 0;
+  if (/^\d+$/.test(s)) return parseInt(s, 10) || 0;
+  const parts = s.split("/").map(function(p){ return p.trim(); });
+  if (parts.length >= 2) {
+    // parts[0] adalah kodeKlasifikasi (misal 421, 421.2) -> jangan diambil
+    // Cari NoSurat di index >= 1
+    for (var i = 1; i < parts.length; i++) {
+      var p = parts[i];
+      if (/^(19|20)\d{2}$/.test(p)) continue;
+      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+      if (/^\d{1,4}$/.test(p)) {
+        var n = parseInt(p, 10);
+        if (!isNaN(n) && n > 0) return n;
+      }
+    }
+    for (var j = 1; j < parts.length; j++) {
+      var pj = parts[j];
+      if (/^(19|20)\d{2}$/.test(pj)) continue;
+      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(pj)) continue;
+      var m = pj.match(/\b0*(\d{1,4})\b/);
+      if (m) {
+        var nm = parseInt(m[1], 10);
+        if (!isNaN(nm) && nm > 0) return nm;
+      }
+    }
+  }
+  return 0;
+}
+
 function handleGetNextNomorSuratKeluar(ss, payload) {
   const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
   const kode = payload.kodeKlasifikasi || "421.2";
   const tahun = parseInt(payload.tahun || new Date().getFullYear(), 10);
 
   let nextNo = 1;
+  let maxNo = 0;
   if (sheet && sheet.getLastRow() > 1) {
     const values = sheet.getRange(2, 2, sheet.getLastRow() - 1, 4).getValues();
-    let maxNo = 0;
     values.forEach(row => {
-      const nomorSurat = String(row[0] || "");
+      const nomorSurat = String(row[0] || "").trim();
       let rNo = parseInt(row[2], 10); // col 4 is NO_URUT
       let rThn = parseInt(row[3], 10); // col 5 is TAHUN
       if (!rThn && nomorSurat.indexOf(String(tahun)) !== -1) rThn = tahun;
       if (rThn === tahun) {
         if (!rNo || isNaN(rNo)) {
-          const parts = nomorSurat.split("/").map(function(p){ return p.trim(); });
-          if (parts.length >= 2) {
-            const pNo = parseInt(parts[1], 10);
-            if (!isNaN(pNo)) rNo = pNo;
-          }
+          rNo = extractNoUrutSurat(nomorSurat);
         }
         if (rNo > maxNo) {
           maxNo = rNo;
         }
       }
     });
-    nextNo = maxNo + 1;
   }
+
+  if (payload.baseNoUrut) {
+    const b = parseInt(payload.baseNoUrut, 10);
+    if (!isNaN(b) && b > maxNo) maxNo = b;
+  }
+  nextNo = maxNo + 1;
 
   const romawiBulan = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
   const bulan = romawiBulan[new Date().getMonth()];
@@ -1168,7 +1206,13 @@ function handleSaveSuratKeluar(ss, payload) {
 
   // Ambil nomor berikutnya secara atomik untuk mencegah nomor ganda (kecuali nomor manual ditentukan)
   const nextInfo = handleGetNextNomorSuratKeluar(ss, { kodeKlasifikasi: payload.kodeKlasifikasi, tahun: tahun }).data;
-  const noUrut = payload.noUrut || nextInfo.nextNo;
+  
+  let manualNo = 0;
+  if (payload.nomorSuratManual) {
+    manualNo = extractNoUrutSurat(payload.nomorSuratManual);
+  }
+
+  const noUrut = payload.noUrut || (manualNo > 0 ? manualNo : nextInfo.nextNo);
   const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || nextInfo.nomorSurat;
   const id = payload.id || `SK-${tahun}-${String(noUrut).padStart(3, '0')}`;
   const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
@@ -1775,6 +1819,7 @@ function handleGetConfig(ss) {
       config[k] = val;
       if (k === "NAMA_SEKOLAH") config.namaSekolah = val;
       if (k === "NPSN") config.npsn = val;
+      if (k === "NSS") config.nss = String(val);
       if (k === "KEPALA_SEKOLAH" || k === "NAMA_KEPALA_SEKOLAH") config.namaKepalaSekolah = val;
       if (k === "NIP_KEPALA_SEKOLAH") config.nipKepalaSekolah = val;
       if (k === "ALAMAT") config.alamat = val;

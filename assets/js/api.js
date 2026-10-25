@@ -289,11 +289,57 @@ const ApiClient = {
                 const list = DataStore.getSuratKeluar();
                 const kode = payload.kodeKlasifikasi || "421.2";
                 const tgl = payload.tanggalSurat ? new Date(payload.tanggalSurat + "T00:00:00") : new Date();
-                const tahun = tgl.getFullYear();
+                const tahun = payload.tahun ? parseInt(payload.tahun, 10) : tgl.getFullYear();
                 const bulanRomawi = ROMAWI_BULAN[tgl.getMonth()];
 
+                const extractNo = (str) => {
+                    if (!str) return 0;
+                    const s = String(str).trim();
+                    if (!s) return 0;
+                    if (/^\d+$/.test(s)) return parseInt(s, 10) || 0;
+                    const parts = s.split("/").map(p => p.trim());
+                    if (parts.length >= 2) {
+                        for (let i = 1; i < parts.length; i++) {
+                            const p = parts[i];
+                            if (/^(19|20)\d{2}$/.test(p)) continue;
+                            if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                            if (/^\d{1,4}$/.test(p)) {
+                                const n = parseInt(p, 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                        for (let i = 1; i < parts.length; i++) {
+                            const p = parts[i];
+                            if (/^(19|20)\d{2}$/.test(p)) continue;
+                            if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                            const m = p.match(/\b0*(\d{1,4})\b/);
+                            if (m) {
+                                const n = parseInt(m[1], 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                    }
+                    const matches = [...s.matchAll(/(?:^|\/|\s)0*(\d{1,4})(?:\/|\s|$)/g)];
+                    if (matches.length >= 2) {
+                        for (let i = 1; i < matches.length; i++) {
+                            const val = matches[i][1];
+                            if (!/^(19|20)\d{2}$/.test(val)) {
+                                const n = parseInt(val, 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                    } else if (matches.length === 1) {
+                        const val = matches[0][1];
+                        if (!/^(19|20)\d{2}$/.test(val)) {
+                            const n = parseInt(val, 10);
+                            if (!isNaN(n) && n > 0) return n;
+                        }
+                    }
+                    return 0;
+                };
+
                 // Ekstrak nomor urut tertinggi terakhir dari database (memeriksa noUrut maupun string nomorSurat)
-                const maxNo = list.reduce((max, s) => {
+                let maxNo = list.reduce((max, s) => {
                     let sTahun = s.tahun;
                     if (!sTahun && s.tanggalSurat) sTahun = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
                     if (!sTahun && s.nomorSurat) {
@@ -304,14 +350,15 @@ const ApiClient = {
 
                     let cand = parseInt(s.noUrut, 10);
                     if (isNaN(cand) || cand <= 0) {
-                        const parts = String(s.nomorSurat || "").split("/").map(p => p.trim());
-                        if (parts.length >= 2) {
-                            const pNo = parseInt(parts[1], 10);
-                            if (!isNaN(pNo)) cand = pNo;
-                        }
+                        cand = extractNo(s.nomorSurat);
                     }
                     return (!isNaN(cand) && cand > max) ? cand : max;
                 }, 0);
+
+                if (payload.baseNoUrut) {
+                    const b = parseInt(payload.baseNoUrut, 10);
+                    if (!isNaN(b) && b > maxNo) maxNo = b;
+                }
 
                 const nextNo = maxNo + 1;
                 const nomorSurat = `${kode}/${String(nextNo).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
@@ -321,11 +368,57 @@ const ApiClient = {
             case "saveSuratKeluar": {
                 const list = DataStore.getSuratKeluar();
                 const tgl = payload.tanggalSurat ? new Date(payload.tanggalSurat + "T00:00:00") : new Date();
-                const tahun = tgl.getFullYear();
+                const tahun = payload.tahun ? parseInt(payload.tahun, 10) : tgl.getFullYear();
                 const bulanRomawi = ROMAWI_BULAN[tgl.getMonth()];
 
+                const extractNo = (str) => {
+                    if (!str) return 0;
+                    const s = String(str).trim();
+                    if (!s) return 0;
+                    if (/^\d+$/.test(s)) return parseInt(s, 10) || 0;
+                    const parts = s.split("/").map(p => p.trim());
+                    if (parts.length >= 2) {
+                        for (let i = 1; i < parts.length; i++) {
+                            const p = parts[i];
+                            if (/^(19|20)\d{2}$/.test(p)) continue;
+                            if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                            if (/^\d{1,4}$/.test(p)) {
+                                const n = parseInt(p, 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                        for (let i = 1; i < parts.length; i++) {
+                            const p = parts[i];
+                            if (/^(19|20)\d{2}$/.test(p)) continue;
+                            if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                            const m = p.match(/\b0*(\d{1,4})\b/);
+                            if (m) {
+                                const n = parseInt(m[1], 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                    }
+                    const matches = [...s.matchAll(/(?:^|\/|\s)0*(\d{1,4})(?:\/|\s|$)/g)];
+                    if (matches.length >= 2) {
+                        for (let i = 1; i < matches.length; i++) {
+                            const val = matches[i][1];
+                            if (!/^(19|20)\d{2}$/.test(val)) {
+                                const n = parseInt(val, 10);
+                                if (!isNaN(n) && n > 0) return n;
+                            }
+                        }
+                    } else if (matches.length === 1) {
+                        const val = matches[0][1];
+                        if (!/^(19|20)\d{2}$/.test(val)) {
+                            const n = parseInt(val, 10);
+                            if (!isNaN(n) && n > 0) return n;
+                        }
+                    }
+                    return 0;
+                };
+
                 // Ekstrak nomor tertinggi untuk auto-increment jika noUrut belum ditentukan
-                const maxNo = list.reduce((max, s) => {
+                let maxNo = list.reduce((max, s) => {
                     let sTahun = s.tahun;
                     if (!sTahun && s.tanggalSurat) sTahun = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
                     if (!sTahun && s.nomorSurat) {
@@ -336,16 +429,18 @@ const ApiClient = {
 
                     let cand = parseInt(s.noUrut, 10);
                     if (isNaN(cand) || cand <= 0) {
-                        const parts = String(s.nomorSurat || "").split("/").map(p => p.trim());
-                        if (parts.length >= 2) {
-                            const pNo = parseInt(parts[1], 10);
-                            if (!isNaN(pNo)) cand = pNo;
-                        }
+                        cand = extractNo(s.nomorSurat);
                     }
                     return (!isNaN(cand) && cand > max) ? cand : max;
                 }, 0);
 
-                const noUrut = payload.noUrut || (maxNo + 1);
+                let parsedManual = null;
+                if (payload.nomorSuratManual) {
+                    const extracted = extractNo(payload.nomorSuratManual);
+                    if (extracted > 0) parsedManual = extracted;
+                }
+
+                const noUrut = payload.noUrut || parsedManual || (maxNo + 1);
                 const nomorSurat = payload.nomorSuratManual || payload.nomorSurat || `${payload.kodeKlasifikasi || "421.2"}/${String(noUrut).padStart(3, "0")}/${bulanRomawi}/${tahun}`;
 
                 const existingIdx = list.findIndex(s => (payload.id && s.id === payload.id) || (payload.oldNomorSurat && s.nomorSurat === payload.oldNomorSurat));
@@ -517,6 +612,7 @@ const ApiClient = {
                     const prev = idx >= 0 ? list[idx] : {};
                     const rec = {
                         nip: p.nip,
+                        nuptk: p.nuptk !== undefined ? p.nuptk : (prev.nuptk || ""),
                         nama: p.nama,
                         jabatan: p.jabatan || prev.jabatan || "-",
                         golJabatan: p.golJabatan || p.golongan || prev.golJabatan || prev.golongan || "-",

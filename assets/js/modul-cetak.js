@@ -365,11 +365,6 @@ const ModulCetak = {
                                 placeholder="Contoh: Mengikuti Orang Tua"
                                 class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">NSS Sekolah Asal (12 Digit)</label>
-                            <input type="text" id="cetak-nss-sekolah" value="101032916052" maxlength="12" oninput="ModulCetak.generatePreview()"
-                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold">
-                        </div>
                     </div>
                 `;
             }
@@ -648,7 +643,7 @@ const ModulCetak = {
             kalimatIsi = `Adalah benar-benar peserta didik aktif terdaftar pada satuan pendidikan kami di <strong>Kelas ${student.kelas}</strong> pada Tahun Ajaran ${tahunAjaranSurat}, serta tercatat secara sah sebagai <strong>Penerima Bantuan Program Indonesia Pintar (PIP)</strong> dengan data rincian sebagai berikut:`;
 
             extraPipHtml = `
-                <table class="surat-table-data" style="margin-left: 20px; width: 95%; margin-top: 6px; margin-bottom: 8px;">
+                <table class="surat-table-data" style="margin-left: 20px; width: 95%; margin-top: 6px; margin-bottom: 8px; font-size: 11pt; line-height: 1.4; font-family: 'Times New Roman', Times, serif;">
                     <tr>
                         <td style="width: 200px;">Nomor SK PIP</td>
                         <td style="width: 15px;">:</td>
@@ -702,7 +697,7 @@ const ModulCetak = {
         if (type === "mutasi") {
             const sekolahTujuan = document.getElementById("cetak-sekolah-tujuan")?.value || "SD Islam Al – Islamiyah Kelurahan Kalibaru Kecamatan Cilincing Kota Jakarta Utara";
             const alasanPindah = document.getElementById("cetak-alasan-pindah")?.value || document.getElementById("cetak-keperluan")?.value || "Mengikuti Orang Tua";
-            const nssSekolah = document.getElementById("cetak-nss-sekolah")?.value || config.nss || "101032916052";
+            const nssSekolah = config.nss || "101032916052";
             const nssBoxes = this.renderNssBoxes(nssSekolah);
             const blankNssBoxes = this.renderBlankNssBoxes(12);
 
@@ -713,7 +708,7 @@ const ModulCetak = {
                 <!-- Kop Surat Resmi (Sesuai Template Surat Lainnya) -->
                 ${this.renderKopHtml(config)}
 
-                <div style="font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.4; padding: 0 5px; font-size: 10.5pt;">
+                <div style="font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.45; padding: 0 5px; font-size: 11pt;">
                     <!-- NSS Pojok Kanan Atas Sesuai Format Kedinasan -->
                     <div style="text-align: right; margin-bottom: 6px; font-size: 10pt;">
                         <span style="font-weight: normal; margin-right: 4px;">NSS : </span>
@@ -723,16 +718,16 @@ const ModulCetak = {
                     <!-- Judul Surat Mutasi -->
                     <div style="text-align: center; margin-bottom: 12px;">
                         <h3 style="font-size: 12.5pt; font-weight: bold; margin: 0; padding: 0; text-decoration: underline; letter-spacing: 0.5px;">SURAT KETERANGAN PINDAH SEKOLAH</h3>
-                        <p style="font-size: 10.5pt; margin: 3px 0 0 0;">Nomor : <span class="font-bold font-mono">${this.generatedNomorSurat}</span></p>
+                        <p style="font-size: 11pt; margin: 3px 0 0 0;">Nomor : <span class="font-bold font-mono">${this.generatedNomorSurat}</span></p>
                     </div>
 
                     <!-- Paragraf Pembuka -->
-                    <p style="text-align: justify; margin-bottom: 6px; line-height: 1.4; text-indent: 0; font-size: 10.5pt;">
+                    <p style="text-align: justify; margin-bottom: 6px; line-height: 1.45; text-indent: 0; font-size: 11pt;">
                         Yang bertanda tangan di bawah ini Kepala ${config.namaSekolah} Dinas Pendidikan Pemuda dan Olahraga Kecamatan ${kecClean} Kabupaten ${kabClean} Provinsi ${config.provinsi || "Jawa Tengah"}, menerangkan bahwa :
                     </p>
 
                     <!-- Identitas Siswa -->
-                    <table style="width: 100%; border-collapse: collapse; margin-left: 0; margin-bottom: 4px; font-size: 10.5pt; line-height: 1.35;">
+                    <table style="width: 100%; border-collapse: collapse; margin-left: 0; margin-bottom: 4px; font-size: 11pt; line-height: 1.4;">
                         <tr>
                             <td style="width: 175px; vertical-align: top;">Nama</td>
                             <td style="width: 18px; vertical-align: top;">:</td>
@@ -774,10 +769,10 @@ const ModulCetak = {
                     </table>
 
                     <!-- Keterangan Pindah & Buku Raport -->
-                    <p style="text-align: justify; margin-top: 4px; margin-bottom: 3px; line-height: 1.35; font-size: 10.5pt;">
+                    <p style="text-align: justify; margin-top: 4px; margin-bottom: 3px; line-height: 1.45; font-size: 11pt;">
                         Telah mengajukan pindah ke <strong>${sekolahTujuan}</strong> dengan alasan <strong>${alasanPindah}</strong>.
                     </p>
-                    <p style="margin-top: 3px; margin-bottom: 8px; line-height: 1.35; font-size: 10.5pt;">
+                    <p style="margin-top: 3px; margin-bottom: 8px; line-height: 1.45; font-size: 11pt;">
                         Bersama ini kami sertakan Buku Raport yang bersangkutan.
                     </p>
 
@@ -793,9 +788,9 @@ const ModulCetak = {
                         </div>
 
                         <div class="surat-ttd-box" style="text-align: left; width: 250px;">
-                            <p style="margin: 0 0 2px 0; font-size: 10.5pt;">${kabClean}, ${tglStr}</p>
-                            <p style="margin: 0 0 45px 0; font-weight: bold; font-size: 10.5pt;">Kepala Sekolah,</p>
-                            <p style="font-weight: bold; text-decoration: underline; margin: 0 0 1px 0; font-size: 10.5pt;">${config.namaKepalaSekolah}</p>
+                            <p style="margin: 0 0 2px 0; font-size: 11pt;">${kabClean}, ${tglStr}</p>
+                            <p style="margin: 0 0 45px 0; font-weight: bold; font-size: 11pt;">Kepala Sekolah,</p>
+                            <p style="font-weight: bold; text-decoration: underline; margin: 0 0 1px 0; font-size: 11pt;">${config.namaKepalaSekolah}</p>
                             <p style="margin: 0; font-size: 10pt; font-family: 'Times New Roman';">NIP. ${config.nipKepalaSekolah}</p>
                         </div>
                     </div>
@@ -889,15 +884,15 @@ const ModulCetak = {
 
                 <div class="surat-title">
                     <h3 style="font-size: 12pt; font-weight: bold; margin: 0; padding: 0; text-decoration: underline; letter-spacing: 0.5px;">SURAT KETERANGAN BERSEDIA MENERIMA SISWA PINDAH / MUTASI</h3>
-                    <p style="font-size: 10.5pt; margin: 4px 0 0 0;">Nomor: <span class="font-mono font-bold">${this.generatedNomorSurat}</span></p>
+                    <p style="font-size: 11pt; margin: 4px 0 0 0;">Nomor: <span class="font-mono font-bold">${this.generatedNomorSurat}</span></p>
                 </div>
 
-                <div class="surat-body" style="font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; line-height: 1.4;">
-                    <p class="surat-paragraf" style="margin-bottom: 8px; text-indent: 32px; text-align: justify;">
+                <div class="surat-body" style="font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.45;">
+                    <p class="surat-paragraf" style="margin-bottom: 8px; text-indent: 32px; text-align: justify; font-size: 11pt;">
                         Yang bertanda tangan di bawah ini Kepala ${config.namaSekolah || "SD Negeri Terlangu 01"} Dinas Pendidikan Pemuda dan Olahraga Kecamatan ${kecClean} Kabupaten ${kabClean} Provinsi ${config.provinsi || "Jawa Tengah"}, menerangkan bahwa:
                     </p>
 
-                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 10.5pt; line-height: 1.35; margin-bottom: 8px;">
+                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 11pt; line-height: 1.4; margin-bottom: 8px;">
                         <tr>
                             <td style="width: 210px; vertical-align: top;">Nama Lengkap Siswa</td>
                             <td style="width: 15px; vertical-align: top;">:</td>
@@ -930,7 +925,7 @@ const ModulCetak = {
                         </tr>
                     </table>
 
-                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-indent: 32px; text-align: justify; line-height: 1.4;">
+                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-indent: 32px; text-align: justify; line-height: 1.45; font-size: 11pt;">
                         Sesuai dengan permohonan pindah sekolah dari orang tua / wali siswa yang bersangkutan dan setelah memperhatikan formasi serta daya tampung rombongan belajar pada satuan pendidikan kami, maka dengan ini menyatakan bahwa satuan pendidikan kami:
                     </p>
 
@@ -940,11 +935,11 @@ const ModulCetak = {
                         </span>
                     </div>
 
-                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-align: justify; line-height: 1.4;">
+                    <p class="surat-paragraf" style="margin-top: 6px; margin-bottom: 6px; text-align: justify; line-height: 1.45; font-size: 11pt;">
                         Siswa tersebut di atas untuk pindah / mutasi masuk menjadi peserta didik di <strong>${config.namaSekolah || "SD Negeri Terlangu 01"}</strong> pada Tahun Ajaran ${tahunAjaranSurat}, yang bersangkutan berasal dari:
                     </p>
 
-                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 10.5pt; line-height: 1.35; margin-bottom: 8px;">
+                    <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 11pt; line-height: 1.4; margin-bottom: 8px;">
                         <tr>
                             <td style="width: 210px; vertical-align: top;">Nama Sekolah Asal</td>
                             <td style="width: 15px; vertical-align: top;">:</td>
@@ -1011,7 +1006,7 @@ const ModulCetak = {
                 </p>
 
                 <!-- Revisi Item 2: Hapus NIK, Pekerjaan Ortu, dan Alamat Tempat Tinggal -->
-                <table class="surat-table-data" style="margin-left: 20px; width: 95%;">
+                <table class="surat-table-data" style="margin-left: 20px; width: 95%; font-size: 11pt; line-height: 1.4; font-family: 'Times New Roman', Times, serif;">
                     <tr>
                         <td style="width: 200px;">Nama Lengkap</td>
                         <td style="width: 15px;">:</td>

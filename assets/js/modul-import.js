@@ -602,7 +602,18 @@ const ModulImport = {
             rows.push(copy);
         });
 
-        if (!confirm(`Salin ${rows.length} siswa dari TA ${fromTA} ke TA ${toTA} dengan kenaikan kelas otomatis?\n${lulus} siswa kelas 6 dianggap lulus dan tidak disalin.\n\nSiswa yang sudah ada di TA ${toTA} tidak diubah.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Kenaikan Kelas & Salin Siswa?",
+            message: `Salin ${rows.length} siswa dari TA ${fromTA} ke TA ${toTA} dengan kenaikan kelas otomatis. Sebanyak ${lulus} siswa kelas 6 dianggap lulus dan tidak disalin. Siswa yang sudah ada di TA ${toTA} tidak diubah.`,
+            itemHighlight: `${fromTA} ➔ ${toTA} (${rows.length} Siswa)`,
+            badgeLabel: "Kenaikan Kelas & Salin Rombel",
+            note: "Pastikan data tahun ajaran tujuan sudah sesuai.",
+            confirmText: "Ya, Salin & Naikkan Kelas",
+            cancelText: "Batal",
+            icon: "fa-graduation-cap",
+            type: "warning"
+        });
+        if (!ok) return;
 
         const res = await ApiClient.request("importStudents", { tahunAjaran: toTA, mode: "skip", rows });
         if (res.success) {

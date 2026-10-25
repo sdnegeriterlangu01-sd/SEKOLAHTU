@@ -198,14 +198,14 @@ const ModulAbsensi = {
         }
 
         const holidayRow = holidayInfo ? `
-            <tr class="bg-rose-50/80 border-b-2 border-rose-200">
+            <tr class="bg-rose-50/80 dark:bg-rose-950/40 border-b-2 border-rose-200 dark:border-rose-900/60 transition-colors">
                 <td colspan="5" class="p-3">
-                    <div class="flex items-center justify-between text-xs text-rose-900">
+                    <div class="flex items-center justify-between text-xs text-rose-900 dark:text-rose-200">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-xmark text-rose-600 text-sm"></i>
-                            <span>Tanggal <strong>${this.selectedDate}</strong> bertepatan dengan <strong>${holidayInfo.name}</strong> (${holidayInfo.type}).</span>
+                            <i class="fa-solid fa-calendar-xmark text-rose-600 dark:text-rose-400 text-sm"></i>
+                            <span>Tanggal <strong class="text-rose-950 dark:text-rose-100 font-bold">${this.selectedDate}</strong> bertepatan dengan <strong class="text-rose-950 dark:text-rose-100 font-bold">${holidayInfo.name}</strong> (${holidayInfo.type}).</span>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-200 text-rose-800 uppercase tracking-wider">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-200 dark:bg-rose-900/80 text-rose-800 dark:text-rose-100 border border-rose-300 dark:border-rose-700/60 uppercase tracking-wider">
                             Hari Libur
                         </span>
                     </div>
@@ -455,79 +455,101 @@ const ModulAbsensi = {
         // 1. Chart Donut Kehadiran Hari Ini
         const ctxDonut = document.getElementById("chart-presensi-donut");
         if (ctxDonut) {
-            if (this.activeChartDonut) this.activeChartDonut.destroy();
+            try {
+                const existingDonut = Chart.getChart(ctxDonut);
+                if (existingDonut) existingDonut.destroy();
+            } catch (e) {}
+            if (this.activeChartDonut) {
+                try { this.activeChartDonut.destroy(); } catch (e) {}
+                this.activeChartDonut = null;
+            }
 
-            const isDataEmpty = (hadir + sakit + izin + alpa) === 0;
-            this.activeChartDonut = new Chart(ctxDonut, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Hadir', 'Sakit', 'Izin', 'Alpa'],
-                    datasets: [{
-                        data: isDataEmpty ? [1, 0, 0, 0] : [hadir, sakit, izin, alpa],
-                        backgroundColor: isDataEmpty ? ['#e2e8f0'] : ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Plus Jakarta Sans' } } }
+            try {
+                const isDataEmpty = (hadir + sakit + izin + alpa) === 0;
+                this.activeChartDonut = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Hadir', 'Sakit', 'Izin', 'Alpa'],
+                        datasets: [{
+                            data: isDataEmpty ? [1, 0, 0, 0] : [hadir, sakit, izin, alpa],
+                            backgroundColor: isDataEmpty ? ['#e2e8f0'] : ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
                     },
-                    cutout: '72%'
-                }
-            });
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Plus Jakarta Sans' } } }
+                        },
+                        cutout: '72%'
+                    }
+                });
+            } catch (eDonut) {
+                console.warn("[ModulAbsensi] Error donut chart:", eDonut);
+            }
         }
 
         // 2. Chart Tren Kehadiran Bulanan (Line/Bar)
         const ctxTren = document.getElementById("chart-presensi-tren");
         if (ctxTren) {
-            if (this.activeChartTren) this.activeChartTren.destroy();
+            try {
+                const existingTren = Chart.getChart(ctxTren);
+                if (existingTren) existingTren.destroy();
+            } catch (e) {}
+            if (this.activeChartTren) {
+                try { this.activeChartTren.destroy(); } catch (e) {}
+                this.activeChartTren = null;
+            }
 
-            const histori = DataStore.getHistoriBulanan();
-            const labels = histori.map(h => h.bulan);
-            const hadirValues = histori.map(h => h.hadir);
+            try {
+                const histori = DataStore.getHistoriBulanan();
+                const labels = histori.map(h => h.bulan);
+                const hadirValues = histori.map(h => h.hadir);
 
-            this.activeChartTren = new Chart(ctxTren, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '% Kehadiran Bulanan',
-                        data: hadirValues,
-                        borderColor: '#1e3a8a',
-                        backgroundColor: 'rgba(30, 58, 138, 0.08)',
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#1e3a8a',
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
+                this.activeChartTren = new Chart(ctxTren, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '% Kehadiran Bulanan',
+                            data: hadirValues,
+                            borderColor: '#1e3a8a',
+                            backgroundColor: 'rgba(30, 58, 138, 0.08)',
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#1e3a8a',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
                     },
-                    scales: {
-                        y: {
-                            min: 80,
-                            max: 100,
-                            ticks: {
-                                callback: val => `${val}%`,
-                                font: { size: 11, family: 'Plus Jakarta Sans' }
-                            },
-                            grid: { color: '#f1f5f9' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
                         },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }
+                        scales: {
+                            y: {
+                                min: 80,
+                                max: 100,
+                                ticks: {
+                                    callback: val => `${val}%`,
+                                    font: { size: 11, family: 'Plus Jakarta Sans' }
+                                },
+                                grid: { color: '#f1f5f9' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }
+                            }
                         }
                     }
-                }
-            });
+                });
+            } catch (eTren) {
+                console.warn("[ModulAbsensi] Error tren chart:", eTren);
+            }
         }
     },
 

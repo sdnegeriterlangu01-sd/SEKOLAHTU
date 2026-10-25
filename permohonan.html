@@ -4,10 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Layanan Mandiri Publik Pengajuan Surat - SEKOLAHTU</title>
+    <!-- Instant Theme Detection Script (Anti-FOUC: 0ms white flash prevention) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('sekolahtu_theme');
+                if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     screens: {
@@ -28,7 +42,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800">
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800 dark:text-slate-100 transition-colors">
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
@@ -51,6 +65,13 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Theme Toggle (Gelap/Terang) -->
+                <button id="theme-toggle-btn" type="button" onclick="toggleTheme()"
+                    class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs transition cursor-pointer flex-shrink-0"
+                    title="Alihkan Mode Gelap / Terang">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs"></i>
+                    <span id="theme-toggle-text">Gelap</span>
+                </button>
                 <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Masuk</span> SEKOLAHTU
                 </a>
@@ -80,66 +101,66 @@
         </div>
 
         <!-- Navigation Tabs (Ajukan Baru vs Cek Status Resi) -->
-        <div class="flex items-center p-1.5 bg-slate-200/80 rounded-2xl gap-1">
+        <div class="flex items-center p-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-2xl gap-1">
             <button type="button" id="tab-btn-ajukan" onclick="switchPortalTab('ajukan')" 
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm">
                 <i class="fa-solid fa-file-circle-plus"></i> Ajukan Permohonan Baru
             </button>
             <button type="button" id="tab-btn-tracking" onclick="switchPortalTab('tracking')" 
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
                 <i class="fa-solid fa-magnifying-glass-chart"></i> Lacak Status Resi Pengajuan
             </button>
         </div>
 
         <!-- SECTION 1: FORMULIR PENGAJUAN BARU -->
-        <div id="section-ajukan" class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div id="section-ajukan" class="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
             <form id="form-permohonan-publik" onsubmit="handlePublicSubmit(event)" class="space-y-6">
 
                 <!-- Step 1: Cari Data Siswa via NISN -->
-                <div id="step-1-container" class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-3">
-                    <div class="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wide">
+                <div id="step-1-container" class="p-4 rounded-2xl bg-blue-50/70 dark:bg-slate-800/70 border border-blue-200 dark:border-slate-700 space-y-3">
+                    <div class="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-bold text-xs uppercase tracking-wide">
                         <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
                         Identitas Peserta Didik
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Induk Siswa Nasional (NISN) <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor Induk Siswa Nasional (NISN) <span class="text-rose-500">*</span></label>
                         <div class="flex gap-2">
                             <input type="text" id="req-nisn" required maxlength="10" placeholder="Contoh: 0134567890"
-                                class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                                class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
                             <button type="button" onclick="verifyStudentByNISN()" 
-                                class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0">
+                                class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer">
                                 <i class="fa-solid fa-magnifying-glass"></i> Cek Data
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">NISN dapat dilihat pada Rapor siswa, Kartu Identitas Anak (KIA), atau ditanyakan ke wali kelas.</p>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-1">NISN dapat dilihat pada Rapor siswa, Kartu Identitas Anak (KIA), atau ditanyakan ke wali kelas.</p>
                     </div>
 
                     <!-- Verified Student Preview Card -->
-                    <div id="verified-student-card" class="hidden p-3.5 bg-white border border-emerald-300 rounded-xl space-y-2 animate-fade-in">
+                    <div id="verified-student-card" class="hidden p-3.5 bg-white dark:bg-slate-900/90 border border-emerald-300 dark:border-emerald-600/70 rounded-xl space-y-2 animate-fade-in shadow-xs">
                         <div class="flex items-center justify-between">
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Siswa Terverifikasi di SDN Terlangu 01
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/70 dark:border dark:border-emerald-700/60 px-2.5 py-0.5 rounded-full">
+                                <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400"></i> Siswa Terverifikasi di SDN Terlangu 01
                             </span>
-                            <span id="card-verified-kelas" class="font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">Kelas -</span>
+                            <span id="card-verified-kelas" class="font-bold text-xs text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 px-2 py-0.5 rounded-md">Kelas -</span>
                         </div>
-                        <div class="text-sm font-black text-slate-900" id="card-verified-nama">-</div>
-                        <div class="text-[11px] text-slate-500" id="card-verified-ortu">Orang Tua: -</div>
+                        <div class="text-sm font-black text-slate-900 dark:text-white" id="card-verified-nama">-</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-300 font-medium" id="card-verified-ortu">Orang Tua: -</div>
                     </div>
 
                     <!-- Manual Student Fallback (Jika NISN siswa baru/belum tercatat) -->
-                    <div id="manual-student-box" class="hidden p-3.5 bg-amber-50 border border-amber-300 rounded-xl space-y-3 animate-fade-in text-xs">
-                        <div class="font-bold text-amber-900 flex items-center gap-1.5">
-                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> NISN belum ditemukan pada database sekolah
+                    <div id="manual-student-box" class="hidden p-3.5 bg-amber-50 dark:bg-slate-900/90 border border-amber-300 dark:border-amber-600/50 rounded-xl space-y-3 animate-fade-in text-xs shadow-xs">
+                        <div class="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400"></i> NISN belum ditemukan pada database sekolah
                         </div>
-                        <p class="text-[11px] text-amber-800">Bapak/Ibu tetap dapat mengajukan permohonan dengan mengisi nama dan kelas siswa di bawah ini:</p>
+                        <p class="text-[11px] text-amber-800 dark:text-slate-300">Bapak/Ibu tetap dapat mengajukan permohonan dengan mengisi nama dan kelas siswa di bawah ini:</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
-                                <input type="text" id="req-manual-nama" placeholder="Contoh: Muhammad Rizky" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white">
+                                <label class="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
+                                <input type="text" id="req-manual-nama" placeholder="Contoh: Muhammad Rizky" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kelas Saat Ini <span class="text-rose-500">*</span></label>
-                                <select id="req-manual-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white">
+                                <label class="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Kelas Saat Ini <span class="text-rose-500">*</span></label>
+                                <select id="req-manual-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                                     <option value="1">Kelas 1</option>
                                     <option value="2">Kelas 2</option>
                                     <option value="3">Kelas 3</option>
@@ -149,23 +170,23 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" onclick="useManualStudent()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition">
+                        <button type="button" onclick="useManualStudent()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 transition cursor-pointer">
                             <i class="fa-solid fa-check"></i> Gunakan Data Siswa Ini
                         </button>
                     </div>
                 </div>
 
                 <!-- Step 2: Jenis Surat & Keperluan -->
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                    <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wide">
-                        <span class="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px]">2</span>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-4">
+                    <div class="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide">
+                        <span class="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-600 text-white flex items-center justify-center text-[10px]">2</span>
                         Detail Permohonan Surat
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Surat yang Dibutuhkan <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Surat yang Dibutuhkan <span class="text-rose-500">*</span></label>
                         <select id="req-jenis" required onchange="onJenisSuratChange(this.value)"
-                            class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                            class="w-full px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white dark:bg-slate-900">
                             <option value="">-- Pilih Jenis Surat --</option>
                             <option value="Surat Keterangan Aktif Belajar (Umum)">Surat Keterangan Aktif Belajar (Umum)</option>
                             <option value="Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP">Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP</option>
@@ -176,47 +197,47 @@
                         </select>
                     </div>
 
-                    <!-- Kotak Form Khusus: Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi (Sesuai Revisi Item 5) -->
-                    <div id="box-mutasi-masuk-form" class="hidden p-4 rounded-2xl bg-amber-50/80 border border-amber-300 space-y-4 text-xs animate-fade-in">
-                        <div class="flex items-center gap-2 text-amber-950 font-bold text-xs uppercase tracking-wide border-b border-amber-200/80 pb-2">
-                            <i class="fa-solid fa-school-flag text-amber-600 text-sm"></i>
+                    <!-- Kotak Form Khusus: Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi -->
+                    <div id="box-mutasi-masuk-form" class="hidden p-4 rounded-2xl bg-amber-50/80 dark:bg-slate-900/80 border border-amber-300 dark:border-amber-600/40 space-y-4 text-xs animate-fade-in shadow-xs">
+                        <div class="flex items-center gap-2 text-amber-950 dark:text-amber-300 font-bold text-xs uppercase tracking-wide border-b border-amber-200/80 dark:border-amber-800/50 pb-2">
+                            <i class="fa-solid fa-school-flag text-amber-600 dark:text-amber-400 text-sm"></i>
                             Formulir Data Siswa Pindahan & Sekolah Asal
                         </div>
-                        <p class="text-[11px] text-amber-800 leading-relaxed">
-                            Bapak/Ibu orang tua/wali calon siswa pindahan, silakan lengkapi data siswa, sekolah asal, dan domisili di bawah ini untuk penerbitan <strong>Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi</strong>:
+                        <p class="text-[11px] text-amber-800 dark:text-slate-300 leading-relaxed">
+                            Bapak/Ibu orang tua/wali calon siswa pindahan, silakan lengkapi data siswa, sekolah asal, dan domisili di bawah ini untuk penerbitan <strong class="dark:text-amber-300">Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi</strong>:
                         </p>
 
                         <!-- Sub-blok 1: Data Siswa Pindahan -->
-                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
-                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
-                                <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Calon Pindahan
+                        <div class="space-y-2.5 p-3.5 bg-white dark:bg-slate-800/70 rounded-xl border border-amber-200 dark:border-slate-700 shadow-xs">
+                            <div class="font-bold text-blue-950 dark:text-blue-300 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-graduate text-blue-600 dark:text-blue-400"></i> Identitas Siswa Calon Pindahan
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-nama" placeholder="Contoh: Muhammad Bima Satria"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-medium">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">NISN Siswa <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">NISN Siswa <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-nisn" maxlength="10" placeholder="Contoh: 0134567890"
-                                        class="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                        class="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tempat Lahir <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Tempat Lahir <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-tempat-lahir" placeholder="Contoh: Brebes"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Lahir <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal Lahir <span class="text-rose-500">*</span></label>
                                     <input type="date" id="req-mutasi-tanggal-lahir"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelas yang Dituju <span class="text-rose-500">*</span></label>
-                                    <select id="req-mutasi-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-600">
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Kelas yang Dituju <span class="text-rose-500">*</span></label>
+                                    <select id="req-mutasi-kelas" class="w-full px-3 py-2 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600">
                                         <option value="1">Kelas 1</option>
                                         <option value="2">Kelas 2</option>
                                         <option value="3">Kelas 3</option>
@@ -229,72 +250,86 @@
                         </div>
 
                         <!-- Sub-blok 2: Data Sekolah Asal -->
-                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
-                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
-                                <i class="fa-solid fa-school text-blue-600"></i> Sekolah Asal
+                        <div class="space-y-2.5 p-3.5 bg-white dark:bg-slate-800/70 rounded-xl border border-amber-200 dark:border-slate-700 shadow-xs">
+                            <div class="font-bold text-blue-950 dark:text-blue-300 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-school text-blue-600 dark:text-blue-400"></i> Sekolah Asal
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Sekolah Asal <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Sekolah Asal <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-sekolah-asal" placeholder="Contoh: SDN Pejagan 02"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-medium">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">NPSN Sekolah Asal <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">NPSN Sekolah Asal <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-npsn-asal" maxlength="12" placeholder="Contoh: 20326789"
-                                        class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                        class="w-full px-3 py-2 text-xs font-mono border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Sekolah Asal <span class="text-rose-500">*</span></label>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Alamat Sekolah Asal <span class="text-rose-500">*</span></label>
                                 <input type="text" id="req-mutasi-alamat-sekolah-asal" placeholder="Contoh: Jl. Raya Pejagan No. 12, Kec. Tanjung, Kab. Brebes"
-                                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                    class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                             </div>
                         </div>
 
                         <!-- Sub-blok 3: Data Orang Tua / Wali & Alamat -->
-                        <div class="space-y-2.5 p-3.5 bg-white rounded-xl border border-amber-200 shadow-xs">
-                            <div class="font-bold text-blue-950 text-xs flex items-center gap-1.5">
-                                <i class="fa-solid fa-house-user text-blue-600"></i> Orang Tua / Wali & Alamat Domisili
+                        <div class="space-y-2.5 p-3.5 bg-white dark:bg-slate-800/70 rounded-xl border border-amber-200 dark:border-slate-700 shadow-xs">
+                            <div class="font-bold text-blue-950 dark:text-blue-300 text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-house-user text-blue-600 dark:text-blue-400"></i> Orang Tua / Wali & Alamat Domisili
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Orang Tua / Wali <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Orang Tua / Wali <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-ortu-nama" placeholder="Nama lengkap ayah/ibu"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white font-medium">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-medium">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Domisili / Tempat Tinggal <span class="text-rose-500">*</span></label>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Alamat Domisili / Tempat Tinggal <span class="text-rose-500">*</span></label>
                                     <input type="text" id="req-mutasi-ortu-alamat" placeholder="Contoh: RT 02 RW 03 Desa Terlangu Kec. Brebes"
-                                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white">
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Alasan / Keperluan Permohonan <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Alasan / Keperluan Permohonan <span class="text-rose-500">*</span></label>
                         <textarea id="req-keperluan" required rows="2" placeholder="Contoh: Pencairan dana PIP di Bank BRI Unit Jatibarang / Persyaratan perpanjangan PKH Desa"
-                            class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"></textarea>
+                            class="w-full px-3.5 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-white transition duration-200"></textarea>
+
+                        <!-- Pilihan Contoh Alasan / Permohonan Orang Tua Berdasarkan Template Surat -->
+                        <div id="quick-reasons-box" class="mt-2 p-3 rounded-xl bg-blue-50/70 dark:bg-slate-900/60 border border-blue-200/80 dark:border-slate-700/80 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-blue-950 dark:text-blue-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                                    <span>Contoh Alasan Orang Tua (Klik untuk menggunakan langsung):</span>
+                                </span>
+                                <span class="text-[10px] text-slate-400">Bisa diedit</span>
+                            </div>
+                            <div id="quick-reasons-chips" class="flex flex-wrap gap-1.5">
+                                <span class="text-[11px] text-slate-400 italic">Silakan pilih jenis surat di atas untuk melihat contoh alasan permohonan.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Step 3: Identitas Pemohon & Nomor WhatsApp -->
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                    <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wide">
-                        <span class="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px]">3</span>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-4">
+                    <div class="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wide">
+                        <span class="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-600 text-white flex items-center justify-center text-[10px]">3</span>
                         Kontak Orang Tua / Pemohon
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Orang Tua / Wali Pemohon <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Orang Tua / Wali Pemohon <span class="text-rose-500">*</span></label>
                             <input type="text" id="req-pemohon-nama" required placeholder="Nama lengkap ayah/ibu"
-                                class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                                class="w-full px-3.5 py-2.5 text-xs border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Hubungan dengan Siswa <span class="text-rose-500">*</span></label>
-                            <select id="req-pemohon-hubungan" required class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hubungan dengan Siswa <span class="text-rose-500">*</span></label>
+                            <select id="req-pemohon-hubungan" required class="w-full px-3.5 py-2.5 text-xs border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                                 <option value="Ayah Kandung">Ayah Kandung</option>
                                 <option value="Ibu Kandung">Ibu Kandung</option>
                                 <option value="Wali Siswa">Wali Siswa</option>
@@ -303,13 +338,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
                         <div class="relative">
                             <i class="fa-brands fa-whatsapp absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 text-sm"></i>
                             <input type="tel" id="req-pemohon-wa" required placeholder="081234567890 (Wajib aktif untuk pemberitahuan saat surat selesai)"
-                                class="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
+                                class="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">Petugas TU akan mengirimkan pesan WhatsApp saat surat telah selesai ditandatangani dan siap diambil.</p>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-1">Petugas TU akan mengirimkan pesan WhatsApp saat surat telah selesai ditandatangani dan siap diambil.</p>
                     </div>
                 </div>
 
@@ -351,31 +386,31 @@
         </div>
 
         <!-- SECTION 2: LIVE TRACKING RESI PERMOHONAN -->
-        <div id="section-tracking" class="hidden bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div id="section-tracking" class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
             <div class="max-w-md mx-auto text-center space-y-2">
-                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center mx-auto text-xl font-bold">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 flex items-center justify-center mx-auto text-xl font-bold">
                     <i class="fa-solid fa-magnifying-glass-chart"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-slate-900">Cek Status & Lacak Resi Surat</h3>
-                <p class="text-xs text-slate-500">Masukkan Kode Resi (contoh: REQ-2026-0001 atau 0001), nomor NISN siswa, atau nomor WhatsApp yang didaftarkan.</p>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Status & Lacak Resi Surat</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Masukkan Kode Resi (contoh: REQ-2026-0001 atau 0001), nomor NISN siswa, atau nomor WhatsApp yang didaftarkan.</p>
                 <div class="flex gap-2 pt-2">
                     <input type="text" id="input-track-code" placeholder="Kode Resi / NISN / No WhatsApp" 
-                        class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none uppercase">
+                        class="flex-grow px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white dark:placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none uppercase">
                     <button type="button" onclick="searchTrackingResi()"
-                        class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-search"></i> Lacak
                     </button>
                 </div>
             </div>
 
             <!-- Tracking Result Display Container -->
-            <div id="tracking-result-box" class="hidden space-y-6 pt-4 border-t border-slate-100 animate-fade-in">
+            <div id="tracking-result-box" class="hidden space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
                 <!-- Meta Card -->
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                     <div>
                         <span class="text-[10px] uppercase font-bold text-slate-400 block">Kode Resi Permohonan</span>
-                        <div class="text-base font-mono font-black text-blue-900" id="res-track-code">-</div>
-                        <div class="text-slate-600 font-bold mt-0.5" id="res-track-nama">-</div>
+                        <div class="text-base font-mono font-black text-blue-900 dark:text-blue-300" id="res-track-code">-</div>
+                        <div class="text-slate-600 dark:text-slate-200 font-bold mt-0.5" id="res-track-nama">-</div>
                         <div class="text-[11px] text-slate-400" id="res-track-jenis">-</div>
                     </div>
                     <div class="text-left sm:text-right">
@@ -392,7 +427,7 @@
                     <h4 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-4">Linimasa Proses Pengurusan Surat</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                         <!-- Step 1 -->
-                        <div id="step-1" class="p-3 rounded-2xl border transition bg-emerald-50 border-emerald-300 text-emerald-900">
+                        <div id="step-1" class="p-3 rounded-2xl border transition bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700/60 text-emerald-900 dark:text-emerald-200">
                             <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
                                 <i class="fa-solid fa-check"></i>
                             </div>
@@ -400,24 +435,24 @@
                             <span class="text-[10px] opacity-75">Tercatat di sistem</span>
                         </div>
                         <!-- Step 2 -->
-                        <div id="step-2" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
-                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                        <div id="step-2" class="p-3 rounded-2xl border transition bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
                                 2
                             </div>
                             <strong class="block text-xs">2. Verifikasi TU</strong>
                             <span class="text-[10px] opacity-75">Pengecekan berkas</span>
                         </div>
                         <!-- Step 3 -->
-                        <div id="step-3" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
-                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                        <div id="step-3" class="p-3 rounded-2xl border transition bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
                                 3
                             </div>
                             <strong class="block text-xs">3. Disetujui</strong>
                             <span class="text-[10px] opacity-75">Penomoran surat</span>
                         </div>
                         <!-- Step 4 -->
-                        <div id="step-4" class="p-3 rounded-2xl border transition bg-slate-50 border-slate-200 text-slate-400">
-                            <div class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
+                        <div id="step-4" class="p-3 rounded-2xl border transition bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                            <div class="w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto text-xs font-bold mb-1.5">
                                 4
                             </div>
                             <strong class="block text-xs">4. Siap Diambil</strong>
@@ -427,19 +462,19 @@
                 </div>
 
                 <!-- Info Box Keterangan TU -->
-                <div id="res-tindak-box" class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-900 leading-relaxed">
-                    <strong>Catatan Petugas Tata Usaha:</strong>
-                    <p id="res-tindak-text" class="mt-1">Permohonan Anda sedang dalam antrean verifikasi staf TU SDN Terlangu 01.</p>
+                <div id="res-tindak-box" class="p-4 rounded-2xl bg-blue-50 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-900 dark:text-blue-200 leading-relaxed">
+                    <strong class="font-bold">Catatan Petugas Tata Usaha:</strong>
+                    <p id="res-tindak-text" class="mt-1 text-slate-700 dark:text-slate-300">Permohonan Anda sedang dalam antrean verifikasi staf TU SDN Terlangu 01.</p>
                 </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
         <div class="max-w-4xl mx-auto px-4 space-y-1">
-            <div class="font-semibold text-slate-600">SEKOLAHTU Versi 3.2.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713</div>
-            <div class="text-[11px] text-slate-400">Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha — <span class="italic text-slate-500">"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"</span></div>
+            <div class="font-semibold text-slate-600 dark:text-slate-400">SEKOLAHTU Versi 3.3.0 • SD Negeri Terlangu 01 Brebes • NPSN: 20326713</div>
+            <div class="text-[11px] text-slate-400 dark:text-slate-500">Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha — <span class="italic text-slate-500 dark:text-slate-400">"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"</span></div>
         </div>
     </footer>
 
@@ -464,6 +499,42 @@
 
         window.App = { showToast };
 
+        // ===================================================== TEMA TAMPILAN (DARK / LIGHT MODE)
+        function initTheme() {
+            const saved = localStorage.getItem("sekolahtu_theme");
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = saved === "dark" || (!saved && prefersDark);
+            applyTheme(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains("dark");
+            applyTheme(!isDark);
+        }
+
+        function applyTheme(isDark) {
+            const root = document.documentElement;
+            const icon = document.getElementById("theme-toggle-icon");
+            const text = document.getElementById("theme-toggle-text");
+            const btn = document.getElementById("theme-toggle-btn");
+
+            if (isDark) {
+                root.classList.add("dark");
+                localStorage.setItem("sekolahtu_theme", "dark");
+                if (icon) icon.className = "fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs";
+                if (text) text.textContent = "Gelap";
+                if (btn) btn.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-xs transition cursor-pointer flex-shrink-0";
+            } else {
+                root.classList.remove("dark");
+                localStorage.setItem("sekolahtu_theme", "light");
+                if (icon) icon.className = "fa-solid fa-sun text-amber-400 text-[10px] sm:text-xs";
+                if (text) text.textContent = "Terang";
+                if (btn) btn.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs transition cursor-pointer flex-shrink-0";
+            }
+        }
+
+        initTheme();
+
         function switchPortalTab(tab) {
             const secAjukan = document.getElementById("section-ajukan");
             const secTracking = document.getElementById("section-tracking");
@@ -473,13 +544,13 @@
             if (tab === "ajukan") {
                 secAjukan.classList.remove("hidden");
                 secTracking.classList.add("hidden");
-                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm";
-                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800";
+                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm";
+                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
             } else {
                 secAjukan.classList.add("hidden");
                 secTracking.classList.remove("hidden");
-                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white text-blue-900 shadow-sm";
-                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-800";
+                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm";
+                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
             }
         }
 
@@ -591,6 +662,59 @@
             showToast(`Data siswa siap digunakan: ${nama} (Kelas ${kelas})`, "success");
         }
 
+        const TEMPLATE_REASONS = {
+            "Surat Keterangan Aktif Belajar (Umum)": {
+                defaultText: "Pengurusan tunjangan anak / tunjangan keluarga gaji orang tua dan kelengkapan administrasi instansi.",
+                chips: [
+                    "Pengurusan Tunjangan Gaji / Tunjangan Anak Orang Tua",
+                    "Persyaratan Administrasi BPJS Kesehatan / KIS",
+                    "Pendaftaran Asuransi Pendidikan Anak",
+                    "Kelengkapan Berkas Administrasi Kependudukan"
+                ]
+            },
+            "Surat Keterangan Aktif Belajar dan Rekomendasi Pencairan Dana PIP": {
+                defaultText: "Aktivasi rekening SimPel dan pencairan dana bantuan Program Indonesia Pintar (PIP) siswa di Bank Penyalur (BRI).",
+                chips: [
+                    "Pencairan Dana Bantuan PIP Siswa di Bank BRI",
+                    "Aktivasi Rekening Tabungan SimPel PIP Baru",
+                    "Konfirmasi & Rekomendasi Penerima Manfaat PIP Tahap Berjalan"
+                ]
+            },
+            "Surat Keterangan Pindah Sekolah (Mutasi Keluar)": {
+                defaultText: "Mengikuti kepindahan domisili tugas / tempat kerja orang tua ke luar daerah sehingga siswa melanjutkan sekolah baru.",
+                chips: [
+                    "Mengikuti Kepindahan Tugas / Tempat Kerja Orang Tua",
+                    "Pindah Domisili Tempat Tinggal Keluarga",
+                    "Pindah Mengikuti Tempat Tinggal Kakek / Nenek",
+                    "Melanjutkan Pendidikan ke Pondok Pesantren Luar Daerah"
+                ]
+            },
+            "Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi": {
+                defaultText: "Permohonan diterima sebagai siswa pindahan (mutasi masuk) di SDN Terlangu 01 karena domisili dekat dengan lokasi sekolah.",
+                chips: [
+                    "Domisili Tempat Tinggal Dekat Lokasi SDN Terlangu 01",
+                    "Mengikuti Kepindahan Domisili Orang Tua ke Desa Terlangu",
+                    "Pindah Mengikuti Domisili Wali Siswa"
+                ]
+            },
+            "Surat Rekomendasi Siswa (Lomba / Beasiswa / Berprestasi)": {
+                defaultText: "Persyaratan pendaftaran beasiswa prestasi pendidikan dan seleksi kompetisi / lomba siswa tingkat kecamatan.",
+                chips: [
+                    "Pendaftaran Beasiswa Prestasi Pendidikan",
+                    "Mengikuti Seleksi Lomba / Kejuaraan Siswa Tingkat Kecamatan",
+                    "Persyaratan Masuk Lembaga Pelatihan / Sanggar Bakat"
+                ]
+            },
+            "Surat Keterangan Kelakuan Baik Siswa": {
+                defaultText: "Kelengkapan berkas pendaftaran ke jenjang SMP/MTs dan bukti integritas perilaku baik peserta didik.",
+                chips: [
+                    "Pendaftaran Masuk Jenjang SMP / MTs / Pondok Pesantren",
+                    "Kelengkapan Berkas Beasiswa Pendidikan",
+                    "Persyaratan Administrasi Lembaga Khusus"
+                ]
+            }
+        };
+
         function onJenisSuratChange(val) {
             const isMutasiMasuk = val === "Surat Keterangan Bersedia Menerima Siswa Pindah / Mutasi";
             const boxMutasi = document.getElementById("box-mutasi-masuk-form");
@@ -602,13 +726,46 @@
             if (reqNisn) reqNisn.required = !isMutasiMasuk;
 
             const keperluanInp = document.getElementById("req-keperluan");
-            if (isMutasiMasuk) {
-                if (keperluanInp && (!keperluanInp.value || keperluanInp.value.includes("Pencairan dana PIP"))) {
-                    keperluanInp.value = "Permohonan Pindah Sekolah (Mutasi Masuk) ke SDN Terlangu 01";
+            const chipsContainer = document.getElementById("quick-reasons-chips");
+
+            if (val && TEMPLATE_REASONS[val]) {
+                const tmpl = TEMPLATE_REASONS[val];
+                if (keperluanInp) {
+                    keperluanInp.value = tmpl.defaultText;
+                    keperluanInp.classList.add("ring-2", "ring-blue-400");
+                    setTimeout(() => keperluanInp.classList.remove("ring-2", "ring-blue-400"), 600);
                 }
+
+                if (chipsContainer) {
+                    chipsContainer.innerHTML = tmpl.chips.map(chip => `
+                        <button type="button" onclick="setQuickReason('${escapeHtml(chip)}')" 
+                            class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-slate-700 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white hover:border-transparent transition shadow-2xs inline-flex items-center gap-1 cursor-pointer group">
+                            <i class="fa-solid fa-plus text-[9px] text-blue-500 group-hover:text-white"></i>
+                            <span>${escapeHtml(chip)}</span>
+                        </button>
+                    `).join("");
+                }
+            } else {
+                if (chipsContainer) {
+                    chipsContainer.innerHTML = `<span class="text-[11px] text-slate-400 italic">Silakan pilih jenis surat di atas untuk melihat contoh alasan permohonan.</span>`;
+                }
+            }
+
+            if (isMutasiMasuk) {
                 const pemohonNama = document.getElementById("req-pemohon-nama")?.value.trim();
                 const ortuNamaInp = document.getElementById("req-mutasi-ortu-nama");
                 if (pemohonNama && ortuNamaInp && !ortuNamaInp.value) ortuNamaInp.value = pemohonNama;
+            }
+        }
+
+        function setQuickReason(text) {
+            const inp = document.getElementById("req-keperluan");
+            if (inp) {
+                inp.value = text;
+                inp.focus();
+                inp.classList.add("ring-2", "ring-emerald-500");
+                setTimeout(() => inp.classList.remove("ring-2", "ring-emerald-500"), 600);
+                showToast("Contoh alasan diterapkan pada formulir.", "info");
             }
         }
 

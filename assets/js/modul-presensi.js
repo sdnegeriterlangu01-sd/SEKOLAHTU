@@ -28,38 +28,45 @@ const ModulPresensi = {
     ],
 
     GRID_CSS: `
-        .abs-grid-wrapper{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;max-width:100%;position:relative;box-sizing:border-box}
-        .abs-grid{border-collapse:separate;border-spacing:0;font-size:9.5px;background:#fff;color:#111827;width:100% !important;table-layout:fixed !important;box-sizing:border-box}
-        .abs-grid thead th{position:sticky;top:0;background:#f8fafc;z-index:10;font-size:8.5px;font-weight:700;white-space:nowrap;vertical-align:middle !important;text-align:center !important}
-        .abs-grid thead tr:nth-child(2) th{top:19px;z-index:10}
-        .abs-grid th,.abs-grid td{border-right:1px solid #334155;border-bottom:1px solid #334155;padding:0px;text-align:center !important;vertical-align:middle !important;line-height:1.2;box-sizing:border-box}
-        .abs-grid thead tr:first-child th{border-top:1px solid #334155}
-        .abs-grid tr th:first-child, .abs-grid tr td:first-child{border-left:1px solid #334155}
-        .abs-grid td.nama{text-align:left !important;padding:2px 5px !important;font-weight:600;font-size:8.5px;line-height:1.2;word-break:break-word;white-space:normal}
-        .abs-grid td.sub{font-size:8px;font-weight:600;padding:0 1px;white-space:nowrap;text-align:center !important}
-        .abs-grid td.t{font-size:7.5px;letter-spacing:-.3px;padding:0;white-space:nowrap;text-align:center !important}
-        .abs-grid .off{background:#64748b !important;color:#fff}
+        .abs-grid-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;position:relative;box-sizing:border-box}
+        .abs-grid{border-collapse:collapse !important;font-size:10px !important;background:#fff !important;color:#111827 !important;width:max-content !important;min-width:100% !important;box-sizing:border-box !important}
+        .abs-grid th,.abs-grid td{border:1px solid #1f2937 !important;padding:1px 3px !important;text-align:center !important;vertical-align:middle !important;line-height:1.25 !important;height:19px !important;min-width:19px !important;box-sizing:border-box !important}
+        .abs-grid th{background:#f1f5f9 !important;color:#0f172a !important;font-weight:700 !important}
+        .abs-grid td.nama{text-align:left !important;padding:2px 6px !important;white-space:nowrap;font-weight:600 !important;color:#111827 !important}
+        .abs-grid td.sub{font-size:9px !important;font-weight:400;white-space:nowrap;padding:0 2px !important;color:#111827 !important}
+        .abs-grid td.t{font-size:8.5px !important;letter-spacing:-.2px;padding:0 1px !important;color:#111827 !important}
+        .abs-grid .off{background:#7f7f7f !important;color:#fff !important}
         .abs-grid td.cell{cursor:pointer}
-        .abs-grid td.cell:hover{background:#dbeafe}
-        .abs-grid td.mk-S{background:#fde68a;font-weight:700;text-align:center !important}
-        .abs-grid td.mk-I{background:#bfdbfe;font-weight:700;text-align:center !important}
-        .abs-grid td.mk-A{background:#fecaca;font-weight:700;text-align:center !important}
-        .abs-grid td.mk-H{background:#d1fae5;color:#047857;font-weight:700;text-align:center !important}
-        .abs-grid td.ok{color:#047857;font-weight:700;text-align:center !important}
-        .abs-grid tr.grp-end td{border-bottom:2px solid #334155}
+        .abs-grid td.cell:hover{background:#dbeafe !important}
+        .abs-grid td.mk-S{background:#fde68a !important;font-weight:700;color:#111827 !important}
+        .abs-grid td.mk-I{background:#bfdbfe !important;font-weight:700;color:#111827 !important}
+        .abs-grid td.mk-A{background:#fecaca !important;font-weight:700;color:#111827 !important}
+        .abs-grid td.mk-H{background:#d1fae5 !important;color:#047857 !important;font-weight:700}
+        .abs-grid td.ok{color:#047857 !important;font-weight:700}
+        .abs-grid tr.grp-end td{border-bottom:2px solid #111827 !important}
+        .abs-grid .sticky-col{position:sticky !important;background:#fff !important;z-index:2}
+        .abs-grid .sticky-no{left:0 !important;min-width:26px !important;z-index:2}
+        .abs-grid .sticky-nama{left:26px !important;min-width:170px !important;z-index:2;box-shadow:2px 0 5px -2px rgba(0,0,0,0.18)}
+        .abs-grid thead th.sticky-col{background:#f1f5f9 !important;color:#0f172a !important;z-index:4}
 
-        /* Dark Mode Support for Rekap Grid */
-        html.dark .abs-grid { background:#0f172a !important; color:#f8fafc !important; }
-        html.dark .abs-grid th, html.dark .abs-grid td { border-color: #334155 !important; color:#f8fafc; }
-        html.dark .abs-grid th, html.dark .abs-grid thead th { background:#1e293b !important; color:#cbd5e1 !important; border-color: #334155 !important; }
-        html.dark .abs-grid td.nama { color:#f8fafc !important; }
-        html.dark .abs-grid td.sub { color:#94a3b8 !important; }
-        html.dark .abs-grid td.cell:hover { background:#1e3a8a !important; }
-        html.dark .abs-grid tr.grp-end td { border-bottom:2px solid #64748b !important; }
-        html.dark .abs-grid td.mk-S { background:rgba(245,158,11,0.35) !important; color:#fef08a !important; }
-        html.dark .abs-grid td.mk-I { background:rgba(59,130,246,0.35) !important; color:#bfdbfe !important; }
-        html.dark .abs-grid td.mk-A { background:rgba(239,68,68,0.35) !important; color:#fecaca !important; }
-        html.dark .abs-grid td.mk-H, html.dark .abs-grid td.ok { background:rgba(16,185,129,0.35) !important; color:#a7f3d0 !important; }
+        /* Mode Gelap (Dark Mode) - Warna menyesuaikan tema tanpa mengubah ukuran / padding */
+        html.dark .abs-grid{background:#0f172a !important;color:#f8fafc !important}
+        html.dark .abs-grid th,html.dark .abs-grid td{border-color:#334155 !important}
+        html.dark .abs-grid td{background:#0f172a !important;color:#f8fafc !important}
+        html.dark .abs-grid thead th{background:#1e293b !important;color:#f8fafc !important;border-color:#334155 !important}
+        html.dark .abs-grid td.nama{color:#f8fafc !important}
+        html.dark .abs-grid td.sub{color:#94a3b8 !important}
+        html.dark .abs-grid td.t{color:#cbd5e1 !important}
+        html.dark .abs-grid td.off,html.dark .abs-grid .off{background:#334155 !important;color:#94a3b8 !important}
+        html.dark .abs-grid td.cell:hover{background:#1d4ed8 !important;color:#ffffff !important}
+        html.dark .abs-grid tr.grp-end td{border-bottom:2px solid #475569 !important}
+        html.dark .abs-grid td.mk-S{background:rgba(245,158,11,0.3) !important;color:#fde047 !important}
+        html.dark .abs-grid td.mk-I{background:rgba(59,130,246,0.3) !important;color:#93c5fd !important}
+        html.dark .abs-grid td.mk-A{background:rgba(239,68,68,0.3) !important;color:#fca5a5 !important}
+        html.dark .abs-grid td.mk-H,html.dark .abs-grid td.ok{background:rgba(16,185,129,0.3) !important;color:#6ee7b7 !important}
+        html.dark .abs-grid .sticky-col{background:#0f172a !important;color:#f8fafc !important}
+        html.dark .abs-grid thead th.sticky-col{background:#1e293b !important;color:#f8fafc !important}
+        html.dark .abs-grid .sticky-nama{box-shadow:2px 0 5px -2px rgba(0,0,0,0.5) !important}
     `,
 
     // ===================================================================== INIT
@@ -461,11 +468,25 @@ const ModulPresensi = {
             });
 
             let tendik = DataStore.getTendik().filter(t => t.aktif !== false);
-            if (Auth.role() === "guru") {
-                const u = Auth.user();
+            const role = Auth.role();
+            const u = Auth.user();
+
+            if (role === "guru") {
                 const filtered = tendik.filter(t => 
-                    (u?.nama && t.nama && t.nama.toLowerCase().includes(u.nama.toLowerCase())) ||
+                    (u?.nama && t.nama && (t.nama.toLowerCase().includes(u.nama.toLowerCase()) || u.nama.toLowerCase().includes(t.nama.toLowerCase()))) ||
                     (u?.email && t.nip && t.nip.includes(u.email.split("@")[0]))
+                );
+                if (filtered.length > 0) tendik = filtered;
+            } else if (role === "penjaga") {
+                const filtered = tendik.filter(t => 
+                    (t.jabatan && t.jabatan.toLowerCase().includes("penjaga")) ||
+                    (u?.nama && t.nama && (t.nama.toLowerCase().includes(u.nama.toLowerCase()) || u.nama.toLowerCase().includes(t.nama.toLowerCase())))
+                );
+                if (filtered.length > 0) tendik = filtered;
+            } else if (role === "perpustakaan") {
+                const filtered = tendik.filter(t => 
+                    (t.jabatan && t.jabatan.toLowerCase().includes("perpustakaan")) ||
+                    (u?.nama && t.nama && (t.nama.toLowerCase().includes(u.nama.toLowerCase()) || u.nama.toLowerCase().includes(t.nama.toLowerCase())))
                 );
                 if (filtered.length > 0) tendik = filtered;
             }
@@ -476,26 +497,26 @@ const ModulPresensi = {
 
             body.innerHTML = tendik.map((t, i) => {
                 const r = rows.find(x => Util.cleanId(x.nip) === Util.cleanId(t.nip));
-                const st = r && r.status && r.status !== "Hadir" ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${Sec.esc(r.status)}</span>` : "";
+                const st = r && r.status && r.status !== "Hadir" ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">${Sec.esc(r.status)}</span>` : "";
                 const isSudahScan = r && (r.jamDatang || r.jamPulang);
-                return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                    <td class="px-4 py-2 text-xs text-slate-400 w-8">${i + 1}</td>
+                return `<tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                    <td class="px-4 py-2 text-xs text-slate-400 dark:text-slate-500 w-8">${i + 1}</td>
                     <td class="px-2 py-2">
-                        <div class="text-xs font-bold text-slate-800">${Sec.esc(t.nama)}</div>
-                        <div class="text-[10px] text-slate-400">${Sec.esc(t.jabatan || "")} • NIP: ${Sec.esc(t.nip || "-")}</div>
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${Sec.esc(t.nama)}</div>
+                        <div class="text-[10px] text-slate-400 dark:text-slate-400">${Sec.esc(t.jabatan || "")} • NIP: ${Sec.esc(t.nip || "-")}</div>
                     </td>
-                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamDatang ? "text-emerald-700 font-bold" : "text-slate-300"}">
+                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamDatang ? "text-emerald-700 dark:text-emerald-400 font-bold" : "text-slate-300 dark:text-slate-600"}">
                         ${r && r.jamDatang ? "▶ " + Sec.esc(Util.formatTime(r.jamDatang)) : "—"}
                     </td>
-                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamPulang ? "text-blue-700 font-bold" : "text-slate-300"}">
+                    <td class="px-2 py-2 text-xs font-mono ${r && r.jamPulang ? "text-blue-700 dark:text-blue-400 font-bold" : "text-slate-300 dark:text-slate-600"}">
                         ${r && r.jamPulang ? "◀ " + Sec.esc(Util.formatTime(r.jamPulang)) : "—"}
                     </td>
                     <td class="px-2 py-2 text-right">
                         ${st}
-                        ${isSudahScan ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.jamPulang ? "bg-blue-100 text-blue-800 border border-blue-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"}"><i class="fa-solid fa-check mr-1"></i>${r.jamPulang ? "Sudah Pulang" : "Sudah Datang"}</span>` : (!st ? `<span class="text-[10px] text-slate-400 italic">Belum scan</span>` : "")}
+                        ${isSudahScan ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.jamPulang ? "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800" : "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"}"><i class="fa-solid fa-check mr-1"></i>${r.jamPulang ? "Sudah Pulang" : "Sudah Datang"}</span>` : (!st ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 italic">Belum scan</span>` : "")}
                     </td>
                 </tr>`;
-            }).join("") || `<tr><td colspan="5" class="p-6 text-center text-xs text-slate-400">Belum ada data guru/tendik.</td></tr>`;
+            }).join("") || `<tr><td colspan="5" class="p-6 text-center text-xs text-slate-400 dark:text-slate-500">Belum ada data guru/tendik.</td></tr>`;
         } catch (err) {
             console.error("renderTodayLog error:", err);
             body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-xs text-rose-500">Gagal memuat log presensi: ${Sec.esc(err.message)}</td></tr>`;
@@ -570,7 +591,7 @@ const ModulPresensi = {
                                 <span>Tampilkan Semua Guru & Tendik</span>
                             </label>
                         </div>` : ''}
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1 rounded-xs"></span> Minggu / libur nasional
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] dark:bg-slate-700 mr-1 rounded-xs"></span> Minggu / libur nasional
                             <span class="mx-1.5">•</span> <b>S</b>akit <b>I</b>zin <b>A</b>lpa, <b>JML</b> = S+I+A</div>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap flex-shrink-0 self-end xl:self-auto">
@@ -579,7 +600,7 @@ const ModulPresensi = {
                     </div>
                 </div>
                 <p id="rt-hint" class="text-[11px] text-slate-400 dark:text-slate-500 mt-2"></p>
-                <div id="rt-grid-wrapper" class="abs-grid-wrapper bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mt-3 w-full max-w-full box-border" style="max-height:72vh"><div id="rt-grid" class="p-1 sm:p-2 w-full max-w-full"></div></div>`;
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rt-grid" class="p-3"></div></div>`;
             el.querySelector("#rt-bulan").addEventListener("change", (e) => { if (e.target.value) { this.bulanTendik = e.target.value; this.renderTendik(); } });
             
             const toggleAll = el.querySelector("#rt-toggle-all");
@@ -662,21 +683,9 @@ const ModulPresensi = {
         });
 
         const offCls = h => h.off ? " off" : "";
-        let html = `<table class="abs-grid">
-            <colgroup>
-                <col style="width:28px">
-                <col style="width:155px">
-                <col style="width:48px">
-                <col style="width:38px">
-                ${hari.map(() => `<col>`).join("")}
-                <col style="width:18px">
-                <col style="width:18px">
-                <col style="width:18px">
-                <col style="width:30px">
-            </colgroup>
-            <thead>
-            <tr style="height:19px"><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NO</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NAMA</th><th rowspan="2" colspan="2" style="text-align:center !important;vertical-align:middle !important">JAM</th><th colspan="${hari.length}" style="text-align:center !important;vertical-align:middle !important">TANGGAL</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">S</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">I</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">A</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">JML</th></tr>
-            <tr style="height:19px">${hari.map(h => `<th class="${offCls(h).trim()}" style="text-align:center !important;vertical-align:middle !important" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
+        let html = `<table class="abs-grid"><thead>
+            <tr><th rowspan="2">NO</th><th rowspan="2" style="min-width:190px">NAMA</th><th rowspan="2" colspan="2">JAM</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
+            <tr>${hari.map(h => `<th class="${offCls(h).trim()}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 
         if (tendik.length === 0) html += `<tr><td colspan="${hari.length + 8}" style="padding:18px">Belum ada data guru/tendik.</td></tr>`;
 
@@ -705,7 +714,7 @@ const ModulPresensi = {
                 let a = attrs;
                 if (a.includes('class="')) a = a.replace('class="', `class="${(tcls + extra).trim()} `);
                 else a = ` class="${(tcls + extra).trim()}"` + a;
-                return `<td${a} style="vertical-align:middle;text-align:center !important">${inner}</td>`;
+                return `<td${a}>${inner}</td>`;
             }).join("");
 
             hari.forEach(h => {
@@ -714,33 +723,13 @@ const ModulPresensi = {
             });
 
             html += `
-                <tr style="height:19px">
-                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${i + 1}</td>
-                    <td rowspan="4" class="nama" style="vertical-align:middle;text-align:left !important">
-                        <div style="font-weight:700">${Sec.esc(t.nama)}</div>
-                        <div style="font-weight:400;font-size:8.5px;margin-top:2px;opacity:0.8">NIP. ${Sec.esc(t.nip)}</div>
-                    </td>
-                    <td rowspan="2" class="sub" style="vertical-align:middle;text-align:center !important">Datang</td>
-                    <td class="sub" style="vertical-align:middle;text-align:center !important">Pukul</td>
-                    ${cells("dp")}
-                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${S || ""}</td>
-                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${I || ""}</td>
-                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:700">${A || ""}</td>
-                    <td rowspan="4" style="vertical-align:middle;text-align:center !important;font-weight:800">${(S + I + A) || ""}</td>
-                </tr>
-                <tr style="height:19px">
-                    <td class="sub" style="vertical-align:middle;text-align:center !important">parap</td>
-                    ${cells("da")}
-                </tr>
-                <tr style="height:19px">
-                    <td rowspan="2" class="sub" style="vertical-align:middle;text-align:center !important">Pulang</td>
-                    <td class="sub" style="vertical-align:middle;text-align:center !important">Pukul</td>
-                    ${cells("pp")}
-                </tr>
-                <tr class="grp-end" style="height:19px">
-                    <td class="sub" style="vertical-align:middle;text-align:center !important">parap</td>
-                    ${cells("pa")}
-                </tr>`;
+                <tr><td rowspan="4">${i + 1}</td>
+                    <td rowspan="4" class="nama" style="vertical-align:middle"><div>${Sec.esc(t.nama)}</div><div style="font-weight:400;font-size:9px;margin-top:6px">NIP. ${Sec.esc(t.nip)}</div></td>
+                    <td rowspan="2" class="sub">Datang</td><td class="sub">Pukul</td>${cells("dp")}
+                    <td rowspan="4">${S || ""}</td><td rowspan="4">${I || ""}</td><td rowspan="4">${A || ""}</td><td rowspan="4"><b>${(S + I + A) || ""}</b></td></tr>
+                <tr><td class="sub">parap</td>${cells("da")}</tr>
+                <tr><td rowspan="2" class="sub">Pulang</td><td class="sub">Pukul</td>${cells("pp")}</tr>
+                <tr class="grp-end"><td class="sub">parap</td>${cells("pa")}</tr>`;
         });
         return html + `</tbody></table>`;
     },
@@ -1053,7 +1042,7 @@ const ModulPresensi = {
                             <input type="month" id="rs-bulan" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium"></div>
                         <div class="min-w-0 max-w-xs sm:max-w-sm"><label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">Guru / TTD Absen</label>
                             <select id="rs-guru-penandatangan" class="px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg font-medium w-full truncate"></select></div>
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] mr-1 rounded-xs"></span> Minggu / libur
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight"><span class="inline-block w-3 h-3 align-middle bg-[#7f7f7f] dark:bg-slate-700 mr-1 rounded-xs"></span> Minggu / libur
                             <span class="mx-1.5">•</span> kosong = hadir; klik sel: <b>S</b> → <b>I</b> → <b>A</b> → kosong</div>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap flex-shrink-0 self-end xl:self-auto">
@@ -1062,7 +1051,7 @@ const ModulPresensi = {
                         <button type="button" onclick="ModulPresensi.exportSiswaCSV()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"><i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> CSV</button>
                     </div>
                 </div>
-                <div id="rs-grid-wrapper" class="abs-grid-wrapper bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mt-3 w-full max-w-full box-border" style="max-height:72vh"><div id="rs-grid" class="p-1 sm:p-2 w-full max-w-full"></div></div>`;
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-auto mt-3" style="max-height:70vh"><div id="rs-grid" class="p-3"></div></div>`;
             el.querySelector("#rs-kelas").addEventListener("change", (e) => {
                 this.kelasSiswa = e.target.value;
                 this.updatePenandatanganOptions();
@@ -1123,20 +1112,9 @@ const ModulPresensi = {
         const hari = this.hariBulan(this.bulanSiswa);
         const siswa = this.siswaKelas();
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
-        let html = `<table class="abs-grid">
-            <colgroup>
-                <col style="width:28px">
-                <col style="width:165px">
-                <col style="width:80px">
-                ${hari.map(() => `<col>`).join("")}
-                <col style="width:18px">
-                <col style="width:18px">
-                <col style="width:18px">
-                <col style="width:30px">
-            </colgroup>
-            <thead>
-            <tr style="height:19px"><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NO</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NAMA</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">NISN</th><th colspan="${hari.length}" style="text-align:center !important;vertical-align:middle !important">TANGGAL</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">S</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">I</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">A</th><th rowspan="2" style="text-align:center !important;vertical-align:middle !important">JML</th></tr>
-            <tr style="height:19px">${hari.map(h => `<th class="${h.off ? "off" : ""}" style="text-align:center !important;vertical-align:middle !important" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
+        let html = `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
+            <tr><th rowspan="2" class="sticky-col sticky-no">NO</th><th rowspan="2" class="sticky-col sticky-nama" style="min-width:180px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
+            <tr>${hari.map(h => `<th class="${h.off ? "off" : ""}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 
         if (siswa.length === 0) html += `<tr><td colspan="${hari.length + 7}" style="padding:18px">Belum ada siswa pada kelas/TA ini. Impor data siswa terlebih dahulu.</td></tr>`;
 
@@ -1146,10 +1124,10 @@ const ModulPresensi = {
             const tds = hari.map(h => {
                 const mk = h.off ? "" : (marks[h.dd] || "");
                 if (mk === "S") S++; else if (mk === "I") I++; else if (mk === "A") A++;
-                if (h.off) return `<td class="off" style="vertical-align:middle;text-align:center !important"></td>`;
+                if (h.off) return `<td class="off"></td>`;
                 const display = mk === "H" ? "✓" : mk;
                 const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
-                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}" style="vertical-align:middle;text-align:center !important">${display}</td>`;
+                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
             }).join("");
 
             // Jika hadir semua (S=0, I=0, A=0), kolom S/I/A dan Jumlah diisi garis "-"
@@ -1158,18 +1136,10 @@ const ModulPresensi = {
             const aVal = A > 0 ? A : "-";
             const jVal = (S + I + A) > 0 ? (S + I + A) : "-";
 
-            html += `<tr style="height:22px">
-                <td style="font-weight:700;vertical-align:middle;text-align:center !important">${i + 1}</td>
-                <td class="nama" style="vertical-align:middle;text-align:left !important">${Sec.esc(s.nama)}</td>
-                <td style="font-size:8.5px;text-align:center !important;vertical-align:middle;font-family:monospace">${Sec.esc(s.nisn)}</td>
-                ${tds}
-                <td data-sum="S" style="vertical-align:middle;text-align:center !important;font-weight:700">${sVal}</td>
-                <td data-sum="I" style="vertical-align:middle;text-align:center !important;font-weight:700">${iVal}</td>
-                <td data-sum="A" style="vertical-align:middle;text-align:center !important;font-weight:700">${aVal}</td>
-                <td data-sum="J" style="vertical-align:middle;text-align:center !important;font-weight:800">${jVal}</td>
-            </tr>`;
+            html += `<tr><td class="sticky-col sticky-no">${i + 1}</td><td class="nama sticky-col sticky-nama">${Sec.esc(s.nama)}</td><td style="font-size:9px">${Sec.esc(s.nisn)}</td>${tds}
+                <td data-sum="S">${sVal}</td><td data-sum="I">${iVal}</td><td data-sum="A">${aVal}</td><td data-sum="J"><b>${jVal}</b></td></tr>`;
         });
-        return html + `</tbody></table>`;
+        return html + `</tbody></table></div>`;
     },
 
     cycleMark(td) {
@@ -1372,9 +1342,16 @@ const ModulPresensi = {
                     <h3 class="font-bold text-sm text-slate-900">${t ? "Ubah" : "Tambah"} Guru / Tendik</h3>
                     <button type="button" onclick="document.getElementById('modal-tendik').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div><label class="block text-xs font-semibold text-slate-700 mb-1">NIP / ID Pegawai <span class="text-red-500">*</span></label>
-                    <input id="td-nip" ${t ? "readonly" : ""} value="${v("nip")}" maxlength="40" placeholder="19680512 199303 1 004" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono ${t ? "bg-slate-50" : ""}">
-                    <p class="text-[10px] text-slate-400 mt-0.5">4–40 karakter huruf/angka (spasi diabaikan pada QR). Guru honorer tanpa NIP: gunakan ID unik, mis. GTT001.</p></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">NIP / ID Pegawai <span class="text-red-500">*</span></label>
+                        <input id="td-nip" ${t ? "readonly" : ""} value="${v("nip")}" maxlength="40" placeholder="19680512 199303 1 004" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono ${t ? "bg-slate-50" : ""}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">NUPTK</label>
+                        <input id="td-nuptk" value="${v("nuptk")}" maxlength="25" placeholder="Nomor NUPTK" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono">
+                    </div>
+                </div>
                 <div><label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
                     <input id="td-nama" value="${v("nama")}" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
                 <div class="grid grid-cols-2 gap-3">
@@ -1421,6 +1398,7 @@ const ModulPresensi = {
 
         const tendikData = {
             nip,
+            nuptk: g("td-nuptk"),
             nama: g("td-nama"),
             jabatan: g("td-jabatan") || g("td-gol-jabatan"),
             golJabatan: g("td-gol-jabatan"),
@@ -1454,7 +1432,18 @@ const ModulPresensi = {
     },
 
     async hapusTendik(nipClean, nama) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus data ${nama} (NIP/ID: ${nipClean})?\nData kartu ID dan presensi akan dihapus.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Hapus Data Guru / Tendik?",
+            message: `Data kepegawaian, kartu ID, dan riwayat presensi ${nama} akan dihapus dari sistem.`,
+            itemHighlight: `${nama} (NIP/ID: ${nipClean})`,
+            badgeLabel: "Guru / Tenaga Kependidikan",
+            note: "Data yang dihapus tidak dapat dipulihkan kembali.",
+            confirmText: "Ya, Hapus Data",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
         const res = await ApiClient.request("deleteTendik", { nip: nipClean });
         if (res && res.success) {
             App.showToast(res.message || `Data ${nama} berhasil dihapus.`, "success");

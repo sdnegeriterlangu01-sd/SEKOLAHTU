@@ -1,32 +1,81 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.0] - 2026-10-25
+
+### Penomoran Surat Manual ke Otomatis & Filter Periode, Desil 1-10 PIP, Chart Berkas Dinamis, Dark Mode Banner Libur, Field NSS Pengaturan, dan Penyelarasan Font Cetak Surat
+- **Penomoran Surat Manual Lanjutan Otomatis & Filter Tanggal/Tahun (`assets/js/modul-surat.js`, `assets/js/api.js`, `index.html`, & `backend/Code.gs`):**
+  - Input nomor surat manual (misal `033` atau format resmi `{kodeKlasifikasi}/{NoSurat}/{bulan romawi}/{year}`) secara spesifik mengekstrak tanda `{NoSurat}` (mengabaikan kode klasifikasi arsip di bagian awal) dan menyimpannya sebagai nomor urut (`33`).
+  - Saat beralih dari manual ke opsi penomoran otomatis di modal maupun saat menerbitkan surat otomatis berikutnya, nomor urut otomatis melanjutkan ke nomor berikutnya (`034`), baik saat database masih kosong maupun sudah ada data.
+  - Menambahkan kontrol filter Tahun (`filter-tahun-surat-keluar`) dan Tanggal (`filter-tanggal-surat-keluar`) di toolbar menu penomoran surat keluar.
+  - Saat filter tanggal/tahun aktif, tabel surat terfilter dan pembukaan modal nomor baru langsung mengadopsi tanggal/tahun tersebut serta menghitung nomor urut dari periode yang dipilih.
+- **Pecah Dropdown Filter Desil PIP Menjadi Desil 1 s/d 10 (`index.html` & `assets/js/modul-pip.js`):**
+  - Dropdown filter desil pada tab Pengusulan PIP kini menyediakan opsi spesifik: Desil 1, Desil 2, Desil 3, Desil 4, Desil 5, Desil 6, Desil 7, Desil 8, Desil 9, dan Desil 10, di samping opsi gabungan dan Semua Desil.
+- **Visualisasi Komprehensif Seluruh Kolom Dokumen pada Chart Kelengkapan Berkas (`assets/js/app.js` & `index.html`):**
+  - Mengubah grafik analisis kelengkapan berkas di dashboard menjadi grafik batang horizontal terakumulasi (stacked bar) yang memuat seluruh dokumen pokok sesuai tabel kelengkapan berkas: **KK**, **Akta**, **Foto**, **Kartu PIP**, dan **Kartu KTA**.
+  - Dilengkapi perhitungan persentase kelengkapan, label kontras tinggi, dan penyesuaian warna otomatis pada tema gelap (dark mode).
+- **Perbaikan Warna & Kontras Notifikasi Hari Libur pada Dark Mode (`assets/js/modul-absensi.js` & `assets/css/style.css`):**
+  - Mengatasi tampilan banner hari libur di tabel absensi harian yang sebelumnya pucat/washed-out dan teks pink-on-pink (merujuk `Screenshot 2026-10-25 092408.png`).
+  - Menerapkan latar belakang dark ruby/rose transparan (`dark:bg-rose-950/40`), teks terang berkontras tajam (`dark:text-rose-200`), dan badge Hari Libur yang tegas (`dark:bg-rose-900/80 dark:text-rose-100`).
+- **Penambahan Field NSS Sekolah pada Menu Pengaturan (`index.html`, `assets/js/data.js`, `assets/js/app.js`, `assets/js/modul-cetak.js`, & `backend/Code.gs`):**
+  - Menambahkan field input **NSS Sekolah** (12 Digit) pada formulir profil satuan pendidikan di menu Pengaturan.
+  - Menghapus input manual NSS pada form cetak surat pindah sekolah otomatis, di mana data NSS kini diambil langsung secara terpusat dari menu Pengaturan (`config.nss`).
+- **Penyelarasan Ukuran Font Data Dinamis pada Cetak Surat Otomatis (`assets/js/modul-cetak.js` & `assets/css/style.css`):**
+  - Menyelaraskan ukuran teks data dinamis identitas siswa, data sekolah asal, dan data rincian PIP menjadi `11pt Times New Roman`, identik dan seimbang dengan font paragraf badan surat resmi.
+  - Menghapus pengecilan inline `10.5pt` dan mengoptimalkan styling kelas `.font-mono` di dalam surat agar tidak terlihat lebih kecil dari teks sekitarnya.
+- **Optimalisasi Responsivitas Modal Pop-Up Dialog Surat Keluar & Masuk (`index.html`):**
+  - Mengatasi masalah kotak dialog formulir "Pendaftaran Nomor Surat Keluar (SRIKANDI)" yang terpotong di bagian bawah pada layar laptop / skala normal (100%).
+  - Menerapkan arsitektur flex-modal: header tetap terkunci di atas (*sticky header*), area formulir dapat digulir secara mandiri (*scrollable body* `overflow-y-auto` dengan pembatas `max-h-[90vh]`), dan bilah tombol aksi Batal / Simpan terkunci di bawah (*sticky footer action*).
+  - Menghilangkan risiko tombol aksi terpotong di bawah layar sehingga pengguna dapat langsung mengakses tombol "Simpan & Terbitkan Nomor" dengan mudah di segala resolusi dan tingkat zoom browser.
+  - Menerapkan proteksi yang sama pada Modal Surat Masuk, Modal Upload Berkas, Modal Manajemen Pengguna, dan Modal Impor Tendik.
+- **Standardisasi Seluruh Pop-Up Konfirmasi Aplikasi Adaptif Tema Gelap & Terang (`index.html`, `assets/js/app.js`, `assets/js/modul-surat.js`, `assets/js/modul-tendik.js`, `assets/js/modul-presensi.js`, `assets/js/modul-jadwal.js`, `assets/js/modul-import.js`, & `assets/css/style.css`):**
+  - Mengeliminasi seluruh kotak dialog konfirmasi bawaan browser (`window.confirm`) yang kaku di seluruh aplikasi dan menggantikannya dengan pop-up modal dialog kustom modern (`#modal-confirm-dialog`).
+  - Tampilan pop-up menyesuaikan tema aktif secara otomatis:
+    - *Light Mode*: Latar belakang putih bersih, border lembut, teks kontras gelap, dan tombol hapus merah menyala.
+    - *Dark Mode*: Latar belakang slate gelap (`dark:bg-slate-900`), border gelap (`dark:border-slate-800`), teks terang (`dark:text-white`), badge entitas (`dark:bg-slate-800`), serta tombol aksi Batal/Hapus dengan kontras proporsional.
+  - Menampilkan badge entitas yang diproses secara terpusat (`font-mono font-bold break-all`), ikon aksi dinamis (tempat sampah, penghapus, kurikulum, basis data), catatan peringatan, serta dukungan penutupan dengan tombol Escape atau klik backdrop.
+  - Diterapkan pada seluruh modul aplikasi:
+    1. Hapus Nomor Surat Keluar SRIKANDI (`modul-surat.js`)
+    2. Hapus Agenda Surat Masuk (`modul-surat.js`)
+    3. Hapus Permohonan Surat Online (`modul-surat.js`)
+    4. Hapus Data Guru & Tendik (`modul-tendik.js` & `modul-presensi.js`)
+    5. Kosongkan Slot Jadwal Pelajaran (`modul-jadwal.js`)
+    6. Hapus Semua Jadwal Pelajaran Kelas (`modul-jadwal.js`)
+    7. Terapkan Preset Jadwal Kurikulum Merdeka (`modul-jadwal.js`)
+    8. Kenaikan Kelas & Salin Rombel Siswa (`modul-import.js`)
+    9. Pemulihan Basis Data dari Cadangan JSON (`app.js`)
+    10. Reset Seluruh Database ke Data Awal Seed (`app.js`)
+
+---
+
 ## [v3.2.0] - 2026-10-24
 
-### Presisi Rekap Absensi Bulanan, Integrasi Dasbor Presensi Multi-Sumber Simetris, Walkthrough Tour Auto-Scroll, dan Perbaikan Ikon FontAwesome
-- **Presisi & Penyelarasan Tabel Rekap Absensi Bulanan (`assets/js/modul-presensi.js` & `assets/css/style.css`):**
-  - Mengonfigurasi seluruh kolom angka, NIP/NISN, tanggal 1–31, dan rekapitulasi kehadiran (H, S, I, A) menjadi rata tengah (*center-aligned*) secara mutlak dan konsisten baik pada Rekap Tendik maupun Siswa.
-  - Mempertahankan kolom Nama Pegawai/Siswa tetap rata kiri (*left-aligned*) dengan `padding-left` yang proporsional agar nyaman diidentifikasi.
-  - Mengoptimalkan lebar sel tanggal sehingga 31 hari muat presisi dalam 1 layar (*fixed table layout*) tanpa scrollbar horizontal yang berlebih.
-  - Memperbarui styling CSS badge status kepegawaian (PNS, PPPK, Honorer) agar harmonis dengan tema SEKOLAHTU serta kontras warna yang nyaman di mata.
-  - Memperbarui format teks generator QR Code dan kartu tanda pengenal tendik dari format lama `SIMTAS|T|{NIP}` menjadi `SEKOLAHTU|T|{NIP}` untuk presensi mandiri.
-- **Relokasi & Redesain Dasbor Grafik Rekapitulasi Presensi (`index.html` & `assets/js/app.js`):**
-  - Memindahkan box grafik kehadiran dari tab internal modul presensi langsung ke halaman utama Dasbor (`view-dashboard`) tepat di bawah Ringkasan Eksekutif.
-  - Menyediakan tombol sakelar interaktif (*toggle switch*) antara **Absensi Siswa** dan **Absensi GTK / Tendik**.
-  - Mengubah konfigurasi grid dari 3 kolom tidak seimbang menjadi sistem grid 12 kolom (`grid-cols-1 lg:grid-cols-12 gap-6`) dengan proporsi Donut Chart `lg:col-span-5` dan Tren Line Chart `lg:col-span-7`, menyamakan lebar dan tinggi secara simetris berdampingan dengan box Analisis Kelengkapan Berkas & Indikator PIP.
-  - Penerapan kontrol hak akses berbasis peran (RBAC) pada grafik dasbor: Peran Penjaga Sekolah dan Petugas Perpustakaan otomatis dikunci khusus ke data Tendik dengan penonaktifan tombol Siswa.
-  - Grafik presensi terintegrasi penuh dengan pendeteksian mode Gelap/Terang (Dark Mode auto-recolor).
-- **Penyempurnaan Interactive Onboarding Walkthrough Tour (`assets/js/app.js`):**
-  - Mengeliminasi langkah selektor redundan `#main-sidebar` agar transisi sorotan lebih fokus ke menu spesifik.
-  - Menambahkan kapabilitas *smooth auto-scroll* terpusat (`onHighlightStarted` via `scrollIntoView({ behavior: 'smooth', block: 'center' })`) pada sidebar, memastikan elemen menu bawah otomatis terangkat ke tengah viewport monitor standar sekolah (1366x768px).
-  - Melengkapi langkah panduan tur staf dengan 4 menu navigasi sidebar bagian bawah: **Cetak Otomatis**, **Scan QR Presensi**, **Rekap Presensi Harian & Bulanan**, serta **Portal Verifikasi Keabsahan Surat**.
-- **Perbaikan Kompatibilitas Ikon FontAwesome 6 Free (`index.html`, `verifikasi.html`, `assets/js/modul-vue.js`, `assets/js/modul-surat.js`):**
-  - Mengganti ikon `fa-shield-check` (fitur FontAwesome Pro yang tidak tampil pada lisensi gratis) menjadi ikon `fa-shield-halved` (FontAwesome 6 Free) pada tombol menu sidebar, badge keabsahan verifikasi, dan modul persuratan.
-- **Pembaruan Backend Google Apps Script (GAS) v3.2.0 (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):**
-  - Sinkronisasi versi backend GAS ke `v3.2.0` pada header skrip, endpoint status `doGet()`, dan skrip backup database `getSystemHealth()`.
-  - Memperbarui petunjuk penerapan versi baru di `Panduan_Deploy_GAS.md` dengan deskripsi rilis: `SEKOLAHTU Production API v3.2.0 (Multi-Source Attendance, Symmetrical Dashboard Grid & Onboarding Enhancements)`.
-- **Sinkronisasi Versi Seluruh Aplikasi Frontend (`index.html`, `permohonan.html`, `verifikasi.html`, `assets/js/app.js`):**
-  - Peningkatan versi resmi sistem ke **v3.2.0**.
+### Modularisasi Layout SPA, Pencegahan FOUC, Konsistensi Tabel Dark Mode, Filter Role Presensi Mandiri & Optimalisasi Grafik PIP
+- **Modularisasi Layout & Navigasi Dinamis (SPA Arsitektur):**
+  - Mengukuhkan struktur modular antarmuka menjadi komponen terpisah: **Sidebar** (`#main-sidebar`), **Header** (`#main-header`), **Footer** (`#app-footer`), dan **Center View** (`#main-center-view` / `.app-view`).
+  - Menjaga Sidebar, Header, dan Footer tetap persisten di layar tanpa reload saat pengguna berpindah menu navigasi; hanya area Center View yang berganti (*pure client-side SPA*).
+- **Perbaikan Kontrol Interaktif Driver.js & Tombol Selesai/Silang (`assets/js/app.js` & `assets/css/style.css`):**
+  - Mengatasi masalah tombol "Selesai" dan tombol silang (x) yang tidak bisa diklik dengan memprogram `onDestroyStarted`, `onDestroyed`, `onCloseClick`, dan `onPopoverRender` secara eksplisit memanggil `driverObj.destroy()`.
+  - Mengonfigurasi `z-index: 100002 !important;` dan `pointer-events: auto !important;` pada `.driver-popover` dan seluruh tombol navigasi popover agar tidak terhalang oleh lapisan overlay SVG.
+- **Sorotan Tur Dinamis Mengikuti Hak Akses Peran (`assets/js/app.js`):**
+  - Mengganti daftar statis 20 langkah tur menjadi penyaringan dinamis (`activeSteps = candidateSteps.filter(...)`) yang memverifikasi keberadaan dan visibilitas elemen di layar secara aktual.
+  - Akun dengan akses terbatas (seperti Penjaga Sekolah dan Tenaga Perpustakaan) hanya disorot pada menu dan tombol yang memang tersedia di layarnya, tanpa langkah mengambang kosong di tengah layar (*dummy element 50%/50%*).
+  - Menyesuaikan label langkah Presensi menjadi "Menu: Rekap Absensi Saya" untuk akun Penjaga dan Perpustakaan.
+- **Hidrasi Sinkron Instan Menu Sidebar & Tombol Aksi Cepat Tanpa Kedipan saat Refresh (`index.html`):**
+  - Menyisipkan skrip evaluasi sinkron langsung pada penutup `<nav id="vue-sidebar-nav">` dan kontainer `#vue-quick-actions` yang membaca `sessionStorage` sebelum browser merender frame pertama.
+  - Saat akun berhak akses terbatas (misalnya Penjaga Sekolah) me-refresh halaman, menu sidebar dan tombol aksi cepat langsung terfilter sesuai perannya sejak milidetik ke-0 (0ms), mengeliminasi kemunculan sementara menu-menu admin.
+- **Penyempurnaan Konsistensi & Presisi CSS Tabel pada Mode Gelap (`assets/js/modul-presensi.js` & `assets/css/style.css`):**
+  - Menyelaraskan kontras dan kerapian tabel Rekap Tendik & Siswa pada mode gelap setara dengan mode terang (merujuk gambar 1 & 2 vs 3 & 4).
+  - Memberikan warna latar belakang header tabel yang tegas (`#1e293b`) dengan teks tebal putih (`#f8fafc`) sehingga hirarki header dan baris data terpisah jelas.
+  - Memperbaiki styling kolom hari Minggu/libur (`.off`) pada mode gelap dengan shading slate elegan (`#1e293b`) dan teks teredam (`#64748b`) menggantikan warna abu-abu terang yang sebelumnya mencolok dan memudarkan kontras sel.
+  - Mempertegas border tabel `#334155` pada sel terluar dan bagian dalam tabel.
+- **Filter Log Presensi Mandiri Berdasarkan Peran Akun (`assets/js/modul-presensi.js`):**
+  - Menyaring log tabel *Kehadiran Hari Ini* pada halaman Scan Presensi Mandiri (`renderTodayLog`) agar hanya menampilkan data staf yang sedang login jika berperan sebagai **Penjaga Sekolah** (`role: "penjaga"`), **Tenaga Perpustakaan** (`role: "perpustakaan"`), atau **Guru** (`role: "guru"`).
+  - Akun Administrator, Kepala Sekolah, dan Tata Usaha tetap memiliki visibilitas lengkap untuk memantau seluruh guru dan tendik.
+- **Penyederhanaan Teks Label & Styling Grafik Desil PIP (`assets/js/modul-pip.js` & `index.html`):**
+  - Mengubah label sumbu-X grafik desil dari kalimat panjang menjadi ringkas dan padat: `["Desil 1-4", "Desil 5-7", "Desil 8-10"]`.
+  - Mengunci rotasi label (`maxRotation: 0, minRotation: 0`) dengan font tebal (`700`) agar teks tampil horizontal sempurna tanpa kemiringan.
+  - Memindahkan rincian deskripsi desil ke dalam interaktif tooltip box dan memperbarui styling card kontainer grafik dengan dukungan kelas tema gelap (`dark:bg-slate-800 dark:border-slate-700`).
 
 ---
 

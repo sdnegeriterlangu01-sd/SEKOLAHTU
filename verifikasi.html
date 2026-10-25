@@ -4,10 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Verifikasi Keabsahan Dokumen Resmi - SEKOLAHTU</title>
+    <!-- Instant Theme Detection Script (Anti-FOUC: 0ms white flash prevention) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('sekolahtu_theme');
+                if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     screens: {
@@ -25,7 +39,7 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800">
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800 dark:text-slate-100 transition-colors">
 
     <!-- Top Bar -->
     <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
@@ -41,9 +55,18 @@
                     <p class="text-[10px] sm:text-xs text-blue-200 truncate hidden xs:block">Sistem Validasi Keaslian Dokumen Digital</p>
                 </div>
             </div>
-            <a href="index.html" class="text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold flex-shrink-0">
-                <i class="fa-solid fa-arrow-left"></i> <span class="hidden xs:inline">Masuk</span> Aplikasi
-            </a>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Theme Toggle (Gelap/Terang) -->
+                <button id="theme-toggle-btn" type="button" onclick="toggleTheme()"
+                    class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs transition cursor-pointer flex-shrink-0"
+                    title="Alihkan Mode Gelap / Terang">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs"></i>
+                    <span id="theme-toggle-text">Gelap</span>
+                </button>
+                <a href="index.html" class="text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold flex-shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden xs:inline">Masuk</span> Aplikasi
+                </a>
+            </div>
         </div>
     </header>
 
@@ -51,28 +74,28 @@
     <main class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
 
         <!-- Card Scanner Kamera (Bisa ditoggle) -->
-        <div id="scanner-container" class="hidden bg-white rounded-2xl shadow-xl border border-slate-200 p-6 animate-fade-in space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div id="scanner-container" class="hidden bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 animate-fade-in space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold">
                         <i class="fa-solid fa-camera"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-sm text-slate-900">Pindai QR-Code Dokumen Fisik</h3>
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Pindai QR-Code Dokumen Fisik</h3>
                         <p class="text-[11px] text-slate-400">Arahkan kamera smartphone atau laptop ke QR Code pada lembar surat</p>
                     </div>
                 </div>
-                <button type="button" onclick="stopQrScanner()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+                <button type="button" onclick="stopQrScanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             
-            <div id="qr-reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-slate-50"></div>
-            <p class="text-center text-xs text-slate-500">Posisikan kode QR di dalam bingkai pemindai hingga terdeteksi otomatis.</p>
+            <div id="qr-reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-slate-50 dark:bg-slate-800/60"></div>
+            <p class="text-center text-xs text-slate-500 dark:text-slate-400">Posisikan kode QR di dalam bingkai pemindai hingga terdeteksi otomatis.</p>
         </div>
 
         <!-- Mode 1: Dokumen Terverifikasi -->
-        <div id="box-result-verified" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
+        <div id="box-result-verified" class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-fade-in">
             <!-- Verified Header Banner -->
             <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white text-center relative overflow-hidden">
                 <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner border border-white/30">
@@ -91,11 +114,11 @@
             <div class="p-6 md:p-8 space-y-6">
 
                 <!-- Meta ID Card -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nomor Registrasi Surat</span>
-                        <div id="val-nomor-surat" class="font-mono font-black text-blue-900 text-base md:text-lg tracking-tight">-</div>
-                        <span id="val-jenis-surat" class="text-xs font-semibold text-slate-600 mt-0.5 block">Surat Resmi Kedinasan</span>
+                        <div id="val-nomor-surat" class="font-mono font-black text-blue-900 dark:text-blue-300 text-base md:text-lg tracking-tight">-</div>
+                        <span id="val-jenis-surat" class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 block">Surat Resmi Kedinasan</span>
                     </div>
                     <div class="text-left sm:text-right">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status Keabsahan</span>
@@ -112,34 +135,34 @@
                 <!-- Detail Penerbit Satuan Pendidikan -->
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
-                        <i class="fa-solid fa-school text-blue-600"></i> Satuan Pendidikan Penerbit
+                        <i class="fa-solid fa-school text-blue-600 dark:text-blue-400"></i> Satuan Pendidikan Penerbit
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nama Satuan Pendidikan</span>
-                            <span id="val-nama-sekolah" class="font-bold text-slate-800 text-sm">SD NEGERI TERLANGU 01</span>
+                            <span id="val-nama-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">SD NEGERI TERLANGU 01</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nomor Pokok Sekolah Nasional (NPSN)</span>
-                            <span id="val-npsn-sekolah" class="font-mono font-bold text-slate-800 text-sm">20326713</span>
+                            <span id="val-npsn-sekolah" class="font-mono font-bold text-slate-800 dark:text-white text-sm">20326713</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Pejabat Penandatangan</span>
-                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 text-sm">Aisah Suciati, S.Pd.SD., M.Pd.</span>
+                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">Aisah Suciati, S.Pd.SD., M.Pd.</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nomor Induk Pegawai (NIP)</span>
-                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 text-sm">19690808 199201 2 002</span>
+                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 dark:text-white text-sm">19690808 199201 2 002</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Catatan Hukum & Integritas -->
-                <div class="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl text-xs text-blue-950 flex items-start gap-3">
-                    <i class="fa-solid fa-circle-info text-blue-600 mt-0.5 text-base flex-shrink-0"></i>
+                <div class="p-4 bg-blue-50/80 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 rounded-2xl text-xs text-blue-950 dark:text-blue-200 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-blue-600 dark:text-blue-400 mt-0.5 text-base flex-shrink-0"></i>
                     <div class="leading-relaxed">
-                        <strong class="font-bold">Ketentuan Integritas Dokumen Elektronik:</strong>
-                        <p class="mt-0.5 text-slate-600">
+                        <strong class="font-bold text-blue-950 dark:text-blue-200">Ketentuan Integritas Dokumen Elektronik:</strong>
+                        <p class="mt-0.5 text-slate-600 dark:text-slate-300">
                             Halaman verifikasi ini merupakan rujukan keabsahan resmi dokumen digital yang diterbitkan oleh satuan pendidikan. Apabila data yang tertera pada lembaran fisik berbeda dengan catatan di portal ini, maka dokumen fisik tersebut tidak sah.
                         </p>
                     </div>
@@ -148,16 +171,16 @@
             </div>
 
             <!-- Footer Action -->
-            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="bg-slate-50 dark:bg-slate-800/60 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <span class="text-xs text-slate-400" id="val-timestamp">Diverifikasi: Baru saja</span>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="resetToLanding()" class="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-arrow-left text-slate-500"></i> Cari Dokumen Lain
+                    <button type="button" onclick="resetToLanding()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
+                        <i class="fa-solid fa-arrow-left text-slate-500 dark:text-slate-400"></i> Cari Dokumen Lain
                     </button>
-                    <button type="button" onclick="startQrScanner()" class="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-qrcode text-blue-600"></i> Pindai dengan Kamera
+                    <button type="button" onclick="startQrScanner()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
+                        <i class="fa-solid fa-qrcode text-blue-600 dark:text-blue-400"></i> Pindai dengan Kamera
                     </button>
-                    <button type="button" onclick="window.print()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition">
+                    <button type="button" onclick="window.print()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
                         <i class="fa-solid fa-print"></i> Cetak Bukti Verifikasi
                     </button>
                 </div>
@@ -165,53 +188,54 @@
         </div>
 
         <!-- Mode 2: Pencarian / Halaman Awal Portal (Jika tanpa parameter atau ingin cek surat lain) -->
-        <div id="box-portal-landing" class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-8 space-y-6 animate-fade-in">
+        <div id="box-portal-landing" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-6 animate-fade-in">
             <div class="text-center max-w-lg mx-auto space-y-2">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-900 to-indigo-700 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-900/20">
                     <i class="fa-solid fa-qrcode text-3xl"></i>
                 </div>
-                <h2 class="text-lg font-black text-slate-900">Validasi Keabsahan Surat Keluar</h2>
-                <p class="text-xs text-slate-500 leading-relaxed">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white">Validasi Keabsahan Surat Keluar</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     Pindai kode QR barcode pada lembar fisik surat atau masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi secara langsung.
                 </p>
             </div>
 
             <!-- Tombol Aksi Cepat -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button type="button" onclick="startQrScanner()" class="p-5 rounded-2xl border-2 border-dashed border-blue-300 hover:border-blue-600 hover:bg-blue-50/50 transition flex flex-col items-center justify-center text-center group cursor-pointer">
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 group-hover:bg-blue-600 text-blue-700 group-hover:text-white flex items-center justify-center transition mb-2 shadow-xs">
+                <!-- Box Kamera dengan Efek Hover Berubah Warna Menarik -->
+                <button type="button" onclick="startQrScanner()" class="p-5 rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-white/60 dark:bg-slate-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-700 hover:border-transparent dark:hover:border-transparent shadow-xs hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] transform transition-all duration-300 flex flex-col items-center justify-center text-center group cursor-pointer">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-white group-hover:text-blue-700 group-hover:scale-110 flex items-center justify-center transition-all duration-300 mb-2 shadow-xs">
                         <i class="fa-solid fa-camera text-xl"></i>
                     </div>
-                    <span class="font-extrabold text-xs text-slate-900 group-hover:text-blue-900">Pindai dengan Kamera</span>
-                    <span class="text-[11px] text-slate-400 mt-0.5">Scan langsung QR Code pada lembar surat</span>
+                    <span class="font-extrabold text-xs text-slate-900 dark:text-white group-hover:text-white transition-colors duration-300">Pindai dengan Kamera</span>
+                    <span class="text-[11px] text-slate-400 dark:text-slate-400 group-hover:text-blue-100 transition-colors duration-300 mt-0.5">Scan langsung QR Code pada lembar surat</span>
                 </button>
 
-                <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2 flex flex-col justify-center">
-                    <label class="block text-xs font-bold text-slate-700">Cari Berdasarkan Nomor Surat Keluar</label>
+                <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 space-y-2 flex flex-col justify-center">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Cari Berdasarkan Nomor Surat Keluar</label>
                     <div class="flex gap-2">
-                        <input type="text" id="input-search-nomor" onkeydown="if(event.key==='Enter') searchByNomorManual()" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/004/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
-                        <button type="button" onclick="searchByNomorManual()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition">
+                        <input type="text" id="input-search-nomor" onkeydown="if(event.key==='Enter') searchByNomorManual()" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/004/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white dark:placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
+                        <button type="button" onclick="searchByNomorManual()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition cursor-pointer">
                             Cek
                         </button>
                     </div>
-                    <span class="text-[10px] text-slate-400">Masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi</span>
                 </div>
             </div>
 
             <!-- Informasi Panduan -->
-            <div class="border-t border-slate-100 pt-5">
-                <h4 class="text-xs font-bold text-slate-700 mb-2">Panduan Verifikasi Dokumen Resmi:</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600">
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <strong class="block font-bold text-slate-800 mb-1">1. Periksa QR Code</strong>
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-5">
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Panduan Verifikasi Dokumen Resmi:</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-300">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                        <strong class="block font-bold text-slate-800 dark:text-white mb-1">1. Periksa QR Code</strong>
                         Pastikan QR Code tercetak jelas di pojok kanan bawah surat dinas.
                     </div>
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <strong class="block font-bold text-slate-800 mb-1">2. Pindai Mandiri</strong>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                        <strong class="block font-bold text-slate-800 dark:text-white mb-1">2. Pindai Mandiri</strong>
                         Gunakan kamera HP atau aplikasi pemindai QR untuk membuka tautan resmi.
                     </div>
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <strong class="block font-bold text-slate-800 mb-1">3. Cek Kesesuaian</strong>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                        <strong class="block font-bold text-slate-800 dark:text-white mb-1">3. Cek Kesesuaian</strong>
                         Pastikan nomor surat, penerima, dan perihal persis sama dengan lembar fisik.
                     </div>
                 </div>
@@ -231,19 +255,19 @@
         </div>
 
         <!-- Mode 3: Dokumen Tidak Ditemukan / Tidak Valid -->
-        <div id="box-result-invalid" class="hidden bg-white rounded-3xl shadow-xl border border-rose-200 overflow-hidden animate-fade-in p-8 text-center space-y-4">
-            <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+        <div id="box-result-invalid" class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-rose-200 dark:border-rose-900/60 overflow-hidden animate-fade-in p-8 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
                 <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
             </div>
-            <h3 class="text-lg font-black text-rose-800">DOKUMEN TIDAK TERDAFTAR / TIDAK VALID</h3>
-            <p id="invalid-reason-text" class="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+            <h3 class="text-lg font-black text-rose-800 dark:text-rose-300">DOKUMEN TIDAK TERDAFTAR / TIDAK VALID</h3>
+            <p id="invalid-reason-text" class="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
                 Nomor surat keluar yang diperiksa tidak ditemukan pada Buku Register Surat Keluar SEKOLAHTU. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
             </p>
             <div class="pt-2 flex justify-center gap-3">
-                <button type="button" onclick="startQrScanner()" class="px-4 py-2 bg-blue-900 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
+                <button type="button" onclick="startQrScanner()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm cursor-pointer transition">
                     <i class="fa-solid fa-camera"></i> Coba Pindai Ulang
                 </button>
-                <button type="button" onclick="resetToLanding()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-2">
+                <button type="button" onclick="resetToLanding()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition">
                     Kembali ke Halaman Awal
                 </button>
             </div>
@@ -251,9 +275,53 @@
 
     </main>
 
+    <!-- Modal Pop-up Akses Kamera Dibatalkan / Ditolak (Sesuai Revisi Screenshot 2026-10-25 010443.png) -->
+    <div id="modal-camera-permission-error" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onclick="closeCameraErrorModal()">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 text-center relative" onclick="event.stopPropagation()">
+            <!-- Tombol Tutup Silang -->
+            <button type="button" onclick="closeCameraErrorModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition cursor-pointer" title="Tutup">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <!-- Icon Header -->
+            <div class="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-2xl shadow-inner">
+                <i class="fa-solid fa-video-slash"></i>
+            </div>
+
+            <div class="space-y-1.5">
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Izin Akses Kamera Dibatalkan / Ditolak</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                    Kamera laptop atau perangkat Anda tidak dapat dibuka karena izin akses dibatalkan atau ditutup saat peramban meminta konfirmasi.
+                </p>
+            </div>
+
+            <!-- Panduan Praktis di Browser Laptop -->
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-left space-y-2 text-xs">
+                <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-question text-blue-600 dark:text-blue-400"></i> Cara Mengizinkan Kembali di Laptop:
+                </div>
+                <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <li>Klik ikon <strong>Kamera</strong> atau <strong>Gembok</strong> <i class="fa-solid fa-lock text-[10px] text-slate-400"></i> di sebelah kiri URL pada bilah alamat browser.</li>
+                    <li>Ubah pengaturan Kamera dari <em>Blokir / Dismissed</em> menjadi <strong>"Izinkan" (Allow)</strong>.</li>
+                    <li>Klik tombol <strong>Coba Akses Lagi</strong> di bawah ini atau refresh halaman.</li>
+                </ol>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                <button type="button" onclick="retryCameraAccess()" class="flex-1 py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-camera-rotate"></i> Coba Akses Lagi
+                </button>
+                <button type="button" onclick="closeCameraErrorModal(true)" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition cursor-pointer">
+                    Gunakan Pencarian Nomor
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white">
-        &copy; 2026 SEKOLAHTU v3.2.0 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha
+    <footer class="text-center py-6 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        &copy; 2026 SEKOLAHTU v3.3.0 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha
     </footer>
 
     <!-- Logic Script -->
@@ -309,29 +377,29 @@
                 containerDetail.innerHTML = `
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
-                            <i class="fa-solid fa-user-graduate text-blue-600"></i> Identitas Siswa Terkait
+                            <i class="fa-solid fa-user-graduate text-blue-600 dark:text-blue-400"></i> Identitas Siswa Terkait
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Nama Lengkap Siswa</span>
-                                <span class="font-extrabold text-slate-800 text-sm">${nama}</span>
+                                <span class="font-extrabold text-slate-800 dark:text-white text-sm">${nama}</span>
                             </div>
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Nomor Induk Siswa Nasional (NISN)</span>
-                                <span class="font-mono font-bold text-slate-800 text-sm">${nisn}</span>
+                                <span class="font-mono font-bold text-slate-800 dark:text-white text-sm">${nisn}</span>
                             </div>
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Nomor Induk Kependudukan (NIK)</span>
-                                <span class="font-mono font-bold text-slate-800 text-sm">${nik}</span>
+                                <span class="font-mono font-bold text-slate-800 dark:text-white text-sm">${nik}</span>
                             </div>
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Tingkat / Rombel Kelas</span>
-                                <span class="font-bold text-blue-900 text-sm">${escapeHtml(kelas)}</span>
+                                <span class="font-bold text-blue-900 dark:text-blue-300 text-sm">${escapeHtml(kelas)}</span>
                             </div>
                             ${keperluan ? `
-                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5 mt-1">
+                            <div class="md:col-span-2 border-t border-slate-100 dark:border-slate-800 pt-2.5 mt-1">
                                 <span class="text-[11px] text-slate-400 block">Keperluan / Keterangan</span>
-                                <span class="text-xs font-semibold text-slate-700">${keperluan}</span>
+                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">${keperluan}</span>
                             </div>
                             ` : ''}
                         </div>
@@ -348,36 +416,36 @@
                 containerDetail.innerHTML = `
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
-                            <i class="fa-solid fa-envelope-open-text text-blue-600"></i> Informasi Penerima & Perihal Surat
+                            <i class="fa-solid fa-envelope-open-text text-blue-600 dark:text-blue-400"></i> Informasi Penerima & Perihal Surat
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
                             <div class="md:col-span-2">
                                 <span class="text-[11px] text-slate-400 block">Ditujukan Kepada / Penerima Surat</span>
-                                <div class="font-extrabold text-slate-900 text-base flex items-center gap-2 mt-0.5">
-                                    <i class="fa-solid fa-building-columns text-blue-600 text-sm"></i>
+                                <div class="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2 mt-0.5">
+                                    <i class="fa-solid fa-building-columns text-blue-600 dark:text-blue-400 text-sm"></i>
                                     <span>${tujuan}</span>
                                 </div>
                             </div>
-                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5">
+                            <div class="md:col-span-2 border-t border-slate-100 dark:border-slate-800 pt-2.5">
                                 <span class="text-[11px] text-slate-400 block">Perihal / Hal Surat</span>
-                                <span class="font-bold text-blue-950 text-sm leading-snug block mt-0.5">${perihal}</span>
+                                <span class="font-bold text-blue-950 dark:text-blue-300 text-sm leading-snug block mt-0.5">${perihal}</span>
                             </div>
                             ${klasifikasi ? `
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Kode Klasifikasi Arsip</span>
-                                <span class="font-mono font-bold text-slate-800 text-xs bg-slate-100 px-2.5 py-1 rounded-lg inline-block mt-0.5 border border-slate-200">${klasifikasi}</span>
+                                <span class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg inline-block mt-0.5 border border-slate-200 dark:border-slate-700">${klasifikasi}</span>
                             </div>
                             ` : ''}
                             ${pengonsep ? `
                             <div>
                                 <span class="text-[11px] text-slate-400 block">Pengonsep / Bagian</span>
-                                <span class="font-semibold text-slate-800 text-xs inline-block mt-0.5">${pengonsep}</span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs inline-block mt-0.5">${pengonsep}</span>
                             </div>
                             ` : ''}
                             ${keterangan ? `
-                            <div class="md:col-span-2 border-t border-slate-100 pt-2.5">
+                            <div class="md:col-span-2 border-t border-slate-100 dark:border-slate-800 pt-2.5">
                                 <span class="text-[11px] text-slate-400 block">Catatan / Ringkasan Arsip</span>
-                                <span class="text-xs text-slate-600 italic block mt-0.5">${keterangan}</span>
+                                <span class="text-xs text-slate-600 dark:text-slate-300 italic block mt-0.5">${keterangan}</span>
                             </div>
                             ` : ''}
                         </div>
@@ -850,10 +918,32 @@
                     }
                 );
             } catch (err) {
-                console.error("Kamera gagal diakses:", err);
-                alert("Gagal mengakses kamera perangkat: " + err);
+                console.warn("Kamera tidak dapat diakses atau izin dibatalkan:", err);
                 stopQrScanner();
+                showCameraErrorModal();
             }
+        }
+
+        function showCameraErrorModal() {
+            const modal = document.getElementById("modal-camera-permission-error");
+            if (modal) modal.classList.remove("hidden");
+        }
+
+        function closeCameraErrorModal(focusSearch = false) {
+            const modal = document.getElementById("modal-camera-permission-error");
+            if (modal) modal.classList.add("hidden");
+            if (focusSearch) {
+                const inp = document.getElementById("input-search-nomor");
+                if (inp) {
+                    inp.focus();
+                    inp.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }
+        }
+
+        function retryCameraAccess() {
+            closeCameraErrorModal(false);
+            startQrScanner();
         }
 
         function stopQrScanner() {
@@ -864,7 +954,44 @@
             }
         }
 
+        // ===================================================== TEMA TAMPILAN (DARK / LIGHT MODE)
+        function initTheme() {
+            const saved = localStorage.getItem("sekolahtu_theme");
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = saved === "dark" || (!saved && prefersDark);
+            applyTheme(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains("dark");
+            applyTheme(!isDark);
+        }
+
+        function applyTheme(isDark) {
+            const root = document.documentElement;
+            const icon = document.getElementById("theme-toggle-icon");
+            const text = document.getElementById("theme-toggle-text");
+            const btn = document.getElementById("theme-toggle-btn");
+
+            if (isDark) {
+                root.classList.add("dark");
+                localStorage.setItem("sekolahtu_theme", "dark");
+                if (icon) icon.className = "fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs";
+                if (text) text.textContent = "Gelap";
+                if (btn) btn.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-xs transition cursor-pointer flex-shrink-0";
+            } else {
+                root.classList.remove("dark");
+                localStorage.setItem("sekolahtu_theme", "light");
+                if (icon) icon.className = "fa-solid fa-sun text-amber-400 text-[10px] sm:text-xs";
+                if (text) text.textContent = "Terang";
+                if (btn) btn.className = "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs transition cursor-pointer flex-shrink-0";
+            }
+        }
+
+        initTheme();
+
         document.addEventListener("DOMContentLoaded", () => {
+            initTheme();
             processUrlParams();
         });
     </script>

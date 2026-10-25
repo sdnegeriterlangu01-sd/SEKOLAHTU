@@ -270,7 +270,7 @@ const ModulPIP = {
         this.chartDesilInstance = new Chart(ctx, {
             type: "bar",
             data: {
-                labels: ["Desil 1 - 4 (Sangat Miskin / Prioritas 1)", "Desil 5 - 7 (Rentan Miskin)", "Desil 8 - 10 (Menengah)"],
+                labels: ["Desil 1-4", "Desil 5-7", "Desil 8-10"],
                 datasets: [{
                     label: "Jumlah Siswa",
                     data: [d1, d2, d3],
@@ -299,7 +299,17 @@ const ModulPIP = {
                         bodyColor: "#f1f5f9",
                         borderColor: isDark ? "#334155" : "#475569",
                         borderWidth: 1,
+                        padding: 10,
                         callbacks: {
+                            title: (items) => {
+                                const idx = items[0]?.dataIndex;
+                                const desc = [
+                                    "Desil 1-4 (Sangat Miskin / Prioritas 1)",
+                                    "Desil 5-7 (Rentan Miskin)",
+                                    "Desil 8-10 (Menengah)"
+                                ];
+                                return desc[idx] || items[0]?.label || "";
+                            },
                             label: (context) => ` ${context.parsed.y} Siswa Terdata`
                         }
                     }
@@ -307,8 +317,10 @@ const ModulPIP = {
                 scales: {
                     x: {
                         ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
                             color: textColor,
-                            font: { size: 11, weight: "500" }
+                            font: { size: 12, weight: "700" }
                         },
                         grid: {
                             color: gridColor
@@ -320,7 +332,7 @@ const ModulPIP = {
                             stepSize: 1,
                             precision: 0,
                             color: textColor,
-                            font: { size: 11 }
+                            font: { size: 11, weight: "600" }
                         },
                         grid: {
                             color: gridColor
@@ -435,7 +447,7 @@ const ModulPIP = {
                 (this.filterDesil === "1-4" ? Number(p.desil) >= 1 && Number(p.desil) <= 4 :
                  this.filterDesil === "5-7" ? Number(p.desil) >= 5 && Number(p.desil) <= 7 :
                  this.filterDesil === "8-10" ? Number(p.desil) >= 8 && Number(p.desil) <= 10 :
-                 String(p.desil) === this.filterDesil);
+                 (String(p.desil) === String(this.filterDesil) || Number(p.desil) === Number(this.filterDesil)));
             let matchSK = true;
             if (this.filterStatusSK === "Sudah") matchSK = p.statusSK && p.statusSK.toLowerCase().includes("sudah");
             else if (this.filterStatusSK === "Belum") matchSK = !p.statusSK || !p.statusSK.toLowerCase().includes("sudah");

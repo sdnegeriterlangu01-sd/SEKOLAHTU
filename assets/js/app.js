@@ -227,7 +227,7 @@ const App = {
         }
     },
 
-    VERSION: "3.2.0",
+    VERSION: "3.3.0",
 
     formatJamMenit(w) {
         if (!w) return "";
@@ -574,102 +574,118 @@ const App = {
         // 1. Donut Chart
         const ctxDonut = document.getElementById("chart-presensi-donut");
         if (ctxDonut) {
+            try {
+                const existingDonut = Chart.getChart(ctxDonut);
+                if (existingDonut) existingDonut.destroy();
+            } catch (e) {}
             if (this._dashboardDonutChart) {
-                this._dashboardDonutChart.destroy();
+                try { this._dashboardDonutChart.destroy(); } catch (e) {}
                 this._dashboardDonutChart = null;
             }
             if (window.ModulAbsensi && ModulAbsensi.activeChartDonut) {
-                ModulAbsensi.activeChartDonut.destroy();
+                try { ModulAbsensi.activeChartDonut.destroy(); } catch (e) {}
                 ModulAbsensi.activeChartDonut = null;
             }
 
-            const isDataEmpty = (hadir + sakit + izin + alpa) === 0;
-            this._dashboardDonutChart = new Chart(ctxDonut, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Hadir', 'Sakit', 'Izin', 'Alpa'],
-                    datasets: [{
-                        data: isDataEmpty ? [1, 0, 0, 0] : [hadir, sakit, izin, alpa],
-                        backgroundColor: isDataEmpty ? (isDark ? ['#334155'] : ['#e2e8f0']) : ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
-                        borderWidth: 2,
-                        borderColor: isDark ? '#0f172a' : '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                color: textColor,
-                                font: { size: 11, family: 'Plus Jakarta Sans', weight: '600' }
-                            }
-                        }
+            try {
+                const isDataEmpty = (hadir + sakit + izin + alpa) === 0;
+                this._dashboardDonutChart = new Chart(ctxDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Hadir', 'Sakit', 'Izin', 'Alpa'],
+                        datasets: [{
+                            data: isDataEmpty ? [1, 0, 0, 0] : [hadir, sakit, izin, alpa],
+                            backgroundColor: isDataEmpty ? (isDark ? ['#334155'] : ['#e2e8f0']) : ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                            borderWidth: 2,
+                            borderColor: isDark ? '#0f172a' : '#ffffff'
+                        }]
                     },
-                    cutout: '72%'
-                }
-            });
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    color: textColor,
+                                    font: { size: 11, family: 'Plus Jakarta Sans', weight: '600' }
+                                }
+                            }
+                        },
+                        cutout: '72%'
+                    }
+                });
+            } catch (errDonut) {
+                console.warn("[Dashboard] Gagal memuat Donut Chart:", errDonut);
+            }
         }
 
         // 2. Line Tren Chart
         const ctxTren = document.getElementById("chart-presensi-tren");
         if (ctxTren) {
+            try {
+                const existingTren = Chart.getChart(ctxTren);
+                if (existingTren) existingTren.destroy();
+            } catch (e) {}
             if (this._dashboardTrenChart) {
-                this._dashboardTrenChart.destroy();
+                try { this._dashboardTrenChart.destroy(); } catch (e) {}
                 this._dashboardTrenChart = null;
             }
             if (window.ModulAbsensi && ModulAbsensi.activeChartTren) {
-                ModulAbsensi.activeChartTren.destroy();
+                try { ModulAbsensi.activeChartTren.destroy(); } catch (e) {}
                 ModulAbsensi.activeChartTren = null;
             }
 
-            this._dashboardTrenChart = new Chart(ctxTren, {
-                type: 'line',
-                data: {
-                    labels: trendLabels,
-                    datasets: [{
-                        label: '% Kehadiran Bulanan',
-                        data: trendValues,
-                        borderColor: '#2563eb',
-                        backgroundColor: isDark ? 'rgba(37, 99, 235, 0.18)' : 'rgba(37, 99, 235, 0.08)',
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#2563eb',
-                        pointBorderColor: isDark ? '#0f172a' : '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
+            try {
+                this._dashboardTrenChart = new Chart(ctxTren, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [{
+                            label: '% Kehadiran Bulanan',
+                            data: trendValues,
+                            borderColor: '#2563eb',
+                            backgroundColor: isDark ? 'rgba(37, 99, 235, 0.18)' : 'rgba(37, 99, 235, 0.08)',
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#2563eb',
+                            pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
                     },
-                    scales: {
-                        y: {
-                            min: 75,
-                            max: 100,
-                            ticks: {
-                                callback: val => `${val}%`,
-                                color: textColor,
-                                font: { size: 11, family: 'Plus Jakarta Sans' }
-                            },
-                            grid: { color: gridColor }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
                         },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: textColor,
-                                font: { size: 11, family: 'Plus Jakarta Sans' }
+                        scales: {
+                            y: {
+                                min: 75,
+                                max: 100,
+                                ticks: {
+                                    callback: val => `${val}%`,
+                                    color: textColor,
+                                    font: { size: 11, family: 'Plus Jakarta Sans' }
+                                },
+                                grid: { color: gridColor }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    color: textColor,
+                                    font: { size: 11, family: 'Plus Jakarta Sans' }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } catch (errTren) {
+                console.warn("[Dashboard] Gagal memuat Tren Chart:", errTren);
+            }
         }
     },
 
@@ -903,52 +919,112 @@ const App = {
         if (!canvas || typeof Chart === "undefined") return;
 
         const students = DataStore.getSiswa();
-        let lengkap = 0;
-        let hanyaKK = 0;
-        let hanyaAkta = 0;
-        let belumKeduanya = 0;
+        const total = students.length || 1;
+
+        let countKK = 0;
+        let countAkta = 0;
+        let countFoto = 0;
+        let countPIP = 0;
+        let countKTA = 0;
 
         students.forEach(s => {
-            const hasKK = !!s.berkas?.kk?.uploaded;
-            const hasAkta = !!s.berkas?.akta?.uploaded;
-
-            if (hasKK && hasAkta) lengkap++;
-            else if (hasKK && !hasAkta) hanyaKK++;
-            else if (!hasKK && hasAkta) hanyaAkta++;
-            else belumKeduanya++;
+            const berkas = s.berkas || {};
+            if (berkas.kk?.uploaded) countKK++;
+            if (berkas.akta?.uploaded) countAkta++;
+            if (berkas.foto?.uploaded) countFoto++;
+            if (berkas.kip?.uploaded) countPIP++;
+            if (berkas.kta?.uploaded || !!s.nta) countKTA++;
         });
 
+        const labels = ["KK", "Akta", "Foto", "Kartu PIP", "Kartu KTA"];
+        const uploadedData = [countKK, countAkta, countFoto, countPIP, countKTA];
+        const missingData = uploadedData.map(c => Math.max(0, students.length - c));
+
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? "#cbd5e1" : "#475569";
+        const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
+
+        try {
+            const existing = Chart.getChart(canvas);
+            if (existing) existing.destroy();
+        } catch (e) {}
         if (this._berkasChartInstance) {
-            this._berkasChartInstance.destroy();
+            try { this._berkasChartInstance.destroy(); } catch (e) {}
+            this._berkasChartInstance = null;
         }
 
-        const ctx = canvas.getContext("2d");
-        this._berkasChartInstance = new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                labels: ["Lengkap (KK + Akta)", "Hanya KK", "Hanya Akta", "Belum Keduanya"],
-                datasets: [{
-                    data: [lengkap, hanyaKK, hanyaAkta, belumKeduanya],
-                    backgroundColor: ["#10b981", "#3b82f6", "#f59e0b", "#f43f5e"],
-                    borderWidth: 2,
-                    borderColor: "#ffffff"
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom",
-                        labels: {
-                            boxWidth: 12,
-                            font: { size: 10, family: "sans-serif" }
+        try {
+            const ctx = canvas.getContext("2d");
+            this._berkasChartInstance = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Sudah Terunggah",
+                            data: uploadedData,
+                            backgroundColor: "#10b981",
+                            borderRadius: 4,
+                            barPercentage: 0.65
+                        },
+                        {
+                            label: "Belum Lengkap",
+                            data: missingData,
+                            backgroundColor: isDark ? "#334155" : "#e2e8f0",
+                            borderRadius: 4,
+                            barPercentage: 0.65
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            max: students.length,
+                            ticks: {
+                                font: { size: 9 },
+                                color: textColor,
+                                stepSize: Math.ceil(students.length / 4) || 1
+                            },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                font: { size: 10, weight: "bold" },
+                                color: textColor
+                            },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: {
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                font: { size: 10 },
+                                color: textColor
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    const pct = students.length > 0 ? Math.round((val / students.length) * 100) : 0;
+                                    return ` ${context.dataset.label}: ${val} Siswa (${pct}%)`;
+                                }
+                            }
                         }
                     }
-                },
-                cutout: "68%"
-            }
-        });
+                }
+            });
+        } catch (errBerkas) {
+            console.warn("[Dashboard] Gagal memuat Berkas Chart:", errBerkas);
+        }
     },
 
     renderAdminPIPStats() {
@@ -1091,6 +1167,8 @@ const App = {
         if (inputNama) {
             inputNama.value = config.namaSekolah;
             document.getElementById("cfg-npsn").value = config.npsn;
+            const inputNss = document.getElementById("cfg-nss");
+            if (inputNss) inputNss.value = config.nss || "101032916052";
             document.getElementById("cfg-akreditasi").value = config.akreditasi;
             document.getElementById("cfg-alamat").value = config.alamat;
             document.getElementById("cfg-kabupaten").value = config.kabupatenKota;
@@ -1193,6 +1271,8 @@ const App = {
 
         config.namaSekolah = document.getElementById("cfg-nama-sekolah").value.trim();
         config.npsn = document.getElementById("cfg-npsn").value.trim();
+        const inputNss = document.getElementById("cfg-nss");
+        if (inputNss) config.nss = inputNss.value.trim() || "101032916052";
         config.akreditasi = document.getElementById("cfg-akreditasi").value.trim();
         config.alamat = document.getElementById("cfg-alamat").value.trim();
         config.kabupatenKota = document.getElementById("cfg-kabupaten").value.trim();
@@ -1550,10 +1630,21 @@ const App = {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const dump = JSON.parse(e.target.result);
-                if (!confirm(`Pulihkan data dari cadangan tanggal ${dump._dibuat || "tidak diketahui"}? Data saat ini di browser akan digantikan.`)) {
+                const ok = await this.confirmDialog({
+                    title: "Pulihkan Data dari Cadangan?",
+                    message: "Data sistem saat ini di browser akan digantikan dengan data dari berkas cadangan ini.",
+                    itemHighlight: `Cadangan: ${dump._dibuat || "Arsip JSON"}`,
+                    badgeLabel: "Pemulihan Basis Data",
+                    note: "Seluruh data lokal saat ini akan ditimpa dengan berkas ini.",
+                    confirmText: "Ya, Pulihkan Data",
+                    cancelText: "Batal",
+                    icon: "fa-database",
+                    type: "warning"
+                });
+                if (!ok) {
                     event.target.value = "";
                     return;
                 }
@@ -1569,12 +1660,23 @@ const App = {
         reader.readAsText(file);
     },
 
-    resetAllData() {
-        if (confirm("Apakah Anda yakin ingin mereset seluruh database ke data bawaan awal (seed)? Tindakan ini tidak dapat dibatalkan.")) {
-            DataStore.resetToDefault();
-            this.init();
-            App.showToast("Database berhasil di-reset ke setelan awal!", "info");
-        }
+    async resetAllData() {
+        const ok = await this.confirmDialog({
+            title: "Reset Seluruh Database?",
+            message: "Apakah Anda yakin ingin mereset seluruh database lokal ke setelan bawaan awal (seed)? Tindakan ini tidak dapat dibatalkan.",
+            itemHighlight: "Database SEKOLAHTU (Reset Factory Data)",
+            badgeLabel: "Operasi Kritis",
+            note: "Seluruh perubahan dan data yang belum dicadangkan akan hilang.",
+            confirmText: "Ya, Reset Database",
+            cancelText: "Batal",
+            icon: "fa-triangle-exclamation",
+            type: "danger"
+        });
+        if (!ok) return;
+
+        DataStore.resetToDefault();
+        this.init();
+        App.showToast("Database berhasil di-reset ke setelan awal!", "info");
     },
 
     // ==================== TOAST NOTIFICATIONS ====================
@@ -1615,6 +1717,104 @@ const App = {
             toast.style.transform = "translateX(50px)";
             setTimeout(() => toast.remove(), 300);
         }, 4000);
+    },
+
+    // ==================== THEME ADAPTIVE CONFIRMATION MODAL ====================
+    confirmDialog({
+        title = "Konfirmasi Tindakan",
+        message = "Apakah Anda yakin ingin melanjutkan tindakan ini?",
+        itemHighlight = "",
+        badgeLabel = "Nomor Surat",
+        note = "Data yang dihapus tidak dapat dipulihkan.",
+        confirmText = "Ya, Hapus",
+        cancelText = "Batal",
+        icon = "fa-trash-can",
+        type = "danger"
+    } = {}) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById("modal-confirm-dialog");
+            if (!modal) {
+                const res = window.confirm(`${title}\n\n${message}${itemHighlight ? `\n(${itemHighlight})` : ""}`);
+                resolve(res);
+                return;
+            }
+
+            const titleEl = document.getElementById("confirm-dialog-title");
+            const msgEl = document.getElementById("confirm-dialog-message");
+            const itemEl = document.getElementById("confirm-dialog-item");
+            const badgeBox = document.getElementById("confirm-dialog-badge-box");
+            const badgeLabelEl = document.getElementById("confirm-dialog-badge-label");
+            const noteEl = document.getElementById("confirm-dialog-note");
+            const okBtn = document.getElementById("confirm-dialog-ok-btn");
+            const okText = document.getElementById("confirm-dialog-ok-text");
+            const cancelBtn = document.getElementById("confirm-dialog-cancel-btn");
+            const iconEl = document.getElementById("confirm-dialog-icon");
+            const iconBox = document.getElementById("confirm-dialog-icon-box");
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message;
+            if (noteEl) noteEl.textContent = note;
+            if (okText) okText.textContent = confirmText;
+            if (cancelBtn) cancelBtn.textContent = cancelText;
+            if (badgeLabelEl) badgeLabelEl.textContent = badgeLabel;
+
+            if (itemHighlight) {
+                if (itemEl) itemEl.textContent = itemHighlight;
+                if (badgeBox) badgeBox.classList.remove("hidden");
+            } else {
+                if (badgeBox) badgeBox.classList.add("hidden");
+            }
+
+            if (iconEl) iconEl.className = `fa-solid ${icon}`;
+
+            if (iconBox) {
+                if (type === "danger") {
+                    iconBox.className = "w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center text-rose-600 dark:text-rose-400 text-2xl shadow-lg shadow-rose-500/10";
+                } else if (type === "warning") {
+                    iconBox.className = "w-14 h-14 mx-auto rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-2xl shadow-lg shadow-amber-500/10";
+                } else {
+                    iconBox.className = "w-14 h-14 mx-auto rounded-2xl bg-blue-100 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl shadow-lg shadow-blue-500/10";
+                }
+            }
+
+            const cleanup = () => {
+                modal.classList.add("hidden");
+                okBtn.onclick = null;
+                cancelBtn.onclick = null;
+                modal.onclick = null;
+                document.removeEventListener("keydown", onKeyDown);
+            };
+
+            const onKeyDown = (e) => {
+                if (e.key === "Escape") {
+                    cleanup();
+                    resolve(false);
+                } else if (e.key === "Enter") {
+                    cleanup();
+                    resolve(true);
+                }
+            };
+
+            okBtn.onclick = () => {
+                cleanup();
+                resolve(true);
+            };
+
+            cancelBtn.onclick = () => {
+                cleanup();
+                resolve(false);
+            };
+
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    cleanup();
+                    resolve(false);
+                }
+            };
+
+            document.addEventListener("keydown", onKeyDown);
+            modal.classList.remove("hidden");
+        });
     },
 
     // ===================================================== TEMA TAMPILAN (DARK / LIGHT MODE)
@@ -1812,6 +2012,126 @@ const App = {
         }
     },
 
+    // Cetak Profil Pegawai dalam format Pocket Card (Kartu Saku 85mm)
+    async printProfileCard() {
+        const u = (typeof Auth !== "undefined" && Auth.user) ? Auth.user() : {};
+        let tendikList = [];
+        try { tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : []; } catch (e) {}
+
+        const uNipClean = (typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(u.nip || "") : (u.nip || "");
+        const t = tendikList.find(item => {
+            if (uNipClean && Util.cleanId(item.nip) === uNipClean) return true;
+            if (u.nama && item.nama && (u.nama.toLowerCase().includes(item.nama.toLowerCase()) || item.nama.toLowerCase().includes(u.nama.toLowerCase()))) return true;
+            return false;
+        }) || {};
+
+        const config = (typeof DataStore !== "undefined" && DataStore.getConfig) ? DataStore.getConfig() : {};
+        const namaSekolah = config.namaSekolah || "SD NEGERI TERLANGU 01";
+        const ta = this.selectedTA || config.tahunAjaran || "2026/2027";
+        const displayName = t.nama || u.nama || "Pengguna";
+        const nip = t.nip || u.nip || "-";
+        const nuptk = t.nuptk || "-";
+        const roleLabel = (typeof Auth !== "undefined" && Auth.roleLabel) ? Auth.roleLabel(u.role) : (u.role || "Staf").toUpperCase();
+        const jabatan = t.jabatan || roleLabel;
+        const statusPeg = t.statusKepegawaian || (u.role === "admin" ? "Pengelola Utama" : "PNS");
+        const gol = t.pangkatGolongan || t.golongan || t.golJabatan || "-";
+        const jk = t.jk || t.jenisKelamin || "-";
+        const agama = t.agama || "Islam";
+        const ttl = (t.tempatLahir ? t.tempatLahir + ", " : "") + (t.tanggalLahir || "-");
+        const alamat = t.alamat || "-";
+        const photo = t.foto || u.foto || "";
+
+        let qrUrl = "";
+        try {
+            if (window.ModulPresensi && ModulPresensi.qrDataUrl) {
+                qrUrl = await ModulPresensi.qrDataUrl(`SEKOLAHTU|T|${Util.cleanId(nip !== '-' ? nip : (u.username || 'USER'))}`, 180);
+            }
+        } catch (e) {}
+
+        const printWin = window.open("", "_blank");
+        if (!printWin) {
+            App.showToast("Gagal membuka jendela cetak. Pastikan pop-up diizinkan browser.", "warning");
+            return;
+        }
+
+        const photoHtml = photo 
+            ? `<img src="${photo}" alt="Foto" style="width:36px;height:44px;object-fit:cover;border-radius:4px;border:1px solid #cbd5e1;flex-shrink:0;">`
+            : `<div style="width:36px;height:44px;border-radius:4px;background:#1e3a8a;color:#fff;font-weight:bold;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${displayName.slice(0,2).toUpperCase()}</div>`;
+
+        const qrSectionHtml = qrUrl ? `
+            <div class="qr-row">
+                <div class="qr-text">
+                    <strong>QR Presensi Resmi</strong><br>
+                    Simpan kartu ini di dompet atau kartu saku identitas.
+                </div>
+                <img src="${qrUrl}" alt="QR Code" class="qr-img">
+            </div>
+        ` : '';
+
+        const cardHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kartu Profil Saku - ${displayName}</title>
+    <style>
+        @page { size: portrait; margin: 10mm; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 10px; background: #fff; color: #0f172a; }
+        .card { width: 85mm; border: 2px solid #1e3a8a; border-radius: 12px; padding: 10px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #ffffff; page-break-inside: avoid; }
+        .header { text-align: center; background: #1e3a8a; color: white; padding: 6px; border-radius: 8px; margin-bottom: 8px; }
+        .header h4 { margin: 0; font-size: 10.5pt; font-weight: 800; letter-spacing: 0.5px; }
+        .header p { margin: 2px 0 0; font-size: 7.5pt; opacity: 0.9; }
+        .profile-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1; }
+        .profile-info { flex: 1; min-width: 0; }
+        .profile-name { font-size: 9pt; font-weight: 800; color: #1e3a8a; line-height: 1.2; word-break: break-word; }
+        .profile-sub { font-size: 7.5pt; color: #475569; margin-top: 1px; font-weight: 600; }
+        .profile-nip { font-size: 7.2pt; font-family: monospace; color: #64748b; margin-top: 1px; }
+        .badge { display: inline-block; font-size: 6.5pt; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #e0e7ff; color: #3730a3; margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; font-size: 7.2pt; }
+        th, td { border: 1px solid #cbd5e1; padding: 2.5px 4px; text-align: left; vertical-align: top; }
+        th { background: #f8fafc; font-weight: bold; width: 34%; color: #334155; }
+        td { color: #0f172a; }
+        .qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; }
+        .qr-img { width: 42px; height: 42px; flex-shrink: 0; }
+        .qr-text { font-size: 6.5pt; color: #64748b; line-height: 1.3; }
+        .footer { text-align: center; font-size: 6.8pt; color: #64748b; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h4>KARTU IDENTITAS PEGAWAI</h4>
+            <p>${namaSekolah} • TA ${ta}</p>
+        </div>
+        <div class="profile-head">
+            ${photoHtml}
+            <div class="profile-info">
+                <div class="profile-name">${displayName}</div>
+                <div class="profile-sub">${jabatan}</div>
+                <div class="profile-nip">NIP: ${nip}</div>
+                <div><span class="badge">${statusPeg}${gol !== '-' ? ' • ' + gol : ''}</span></div>
+            </div>
+        </div>
+        <table>
+            <tbody>
+                <tr><th>NUPTK</th><td>${nuptk}</td></tr>
+                <tr><th>Jenis Kelamin</th><td>${jk}</td></tr>
+                <tr><th>Agama</th><td>${agama}</td></tr>
+                <tr><th>TTL</th><td>${ttl}</td></tr>
+                <tr><th>Alamat</th><td>${alamat}</td></tr>
+            </tbody>
+        </table>
+        ${qrSectionHtml}
+        <div class="footer">Simpan di dompet / meja kerja • Dicetak via SEKOLAHTU</div>
+    </div>
+    <script>window.onload = function() { window.print(); };</script>
+</body>
+</html>`;
+
+        printWin.document.write(cardHtml);
+        printWin.document.close();
+    },
+
     // ===================================================== INTERACTIVE ONBOARDING TOUR (DRIVER.JS)
     startOnboardingTour() {
         const driverLib = window.driver?.js?.driver || window.driver;
@@ -1823,205 +2143,272 @@ const App = {
         if (this.currentRoute !== "dashboard") {
             this.navigateTo("dashboard");
         }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const currentRole = (Auth.role && Auth.role()) || "admin";
+        const isPenjagaOrPerpus = currentRole === "penjaga" || currentRole === "perpustakaan";
+
+        // Daftar kandidat langkah tur
+        const candidateSteps = [
+            {
+                element: '#dashboard-hero-title',
+                popover: {
+                    title: 'Selamat Datang di SEKOLAHTU',
+                    description: 'Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha Sekolah Dasar secara terpadu, paperless, dan otomatis.',
+                    side: 'bottom',
+                    align: 'start'
+                }
+            },
+            {
+                element: '#btn-start-tour',
+                popover: {
+                    title: 'Panduan untuk Staf',
+                    description: 'Tombol ini dapat diklik kapan saja untuk mengulang panduan interaktif pengoperasian sistem ini.',
+                    side: 'bottom',
+                    align: 'start'
+                }
+            },
+            {
+                element: '#vue-quick-actions',
+                popover: {
+                    title: 'Aksi Cepat Dasbor',
+                    description: isPenjagaOrPerpus
+                        ? 'Akses instan sekali klik untuk tugas utama sesuai tugas dan wewenang akun Anda.'
+                        : 'Akses instan sekali klik untuk tugas utama: Data Guru, Tambah Siswa, Nomor Surat, Presensi, dan Scan QR.',
+                    side: 'bottom',
+                    align: 'start'
+                }
+            },
+            {
+                element: 'a[data-route="dashboard"]',
+                popover: {
+                    title: 'Menu: Beranda & Ringkasan',
+                    description: 'Menampilkan analitik metrik data, status kelengkapan, dan ringkasan kehadiran harian.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="tendik"]',
+                popover: {
+                    title: 'Menu: Data Guru & Tendik (GTK)',
+                    description: 'Manajemen basis data kepegawaian sekolah: GTK, NIP, status kepegawaian, riwayat pendidikan, dan biodata staf.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="jadwal"]',
+                popover: {
+                    title: 'Menu: Jadwal Pelajaran',
+                    description: 'Penyusunan jadwal mata pelajaran mingguan per rombel/kelas dan pembagian tugas jam mengajar guru.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="berkas"]',
+                popover: {
+                    title: 'Menu: Brankas Digital Siswa',
+                    description: 'Penyimpanan arsip digital dokumen siswa (KK, Akta Kelahiran, KIP/KKS) terhubung langsung ke Google Drive.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="pip"]',
+                popover: {
+                    title: 'Menu: Program PIP Siswa',
+                    description: 'Pemantauan alokasi Program Indonesia Pintar, riwayat pencairan, buku tabungan SimPel, dan upload berkas.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="surat"]',
+                popover: {
+                    title: 'Menu: Penomoran & Surat',
+                    description: 'Buku agenda surat masuk dan surat keluar berstandar kode klasifikasi arsip baku (SRIKANDI).',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="cetak"]',
+                popover: {
+                    title: 'Menu: Cetak Surat Otomatis',
+                    description: 'Generator penerbitan surat keterangan resmi (Aktif, Pindah, dll.) otomatis < 5 detik dengan barcode verifikasi.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="scan-absensi"]',
+                popover: {
+                    title: 'Menu: Scan Absensi QR',
+                    description: 'Pemindai kamera presensi mandiri datang/pulang staf dan siswa secara cepat, akurat, dan tanpa antrean.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="absensi"]',
+                popover: {
+                    title: isPenjagaOrPerpus ? 'Menu: Rekap Absensi Saya' : 'Menu: Presensi & Absensi',
+                    description: isPenjagaOrPerpus
+                        ? 'Pencatatan dan pemantauan riwayat kehadiran serta rekapitulasi presensi mandiri Anda.'
+                        : 'Pencatatan absensi harian per kelas (Hadir, Sakit, Izin, Alpa) dan rekapitulasi kehadiran bulanan otomatis.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[data-route="pengaturan"]',
+                popover: {
+                    title: 'Menu: Pengaturan & Backend GAS',
+                    description: 'Konfigurasi identitas kop surat sekolah, sinkronisasi Google Sheets / Drive REST API gratis, dan backup data.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[href="permohonan.html"]',
+                popover: {
+                    title: 'Portal Permohonan Ortu',
+                    description: 'Halaman formulir publik bagi orang tua murid untuk mengajukan permohonan surat keterangan secara mandiri dan online.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: 'a[href="verifikasi.html"]',
+                popover: {
+                    title: 'Portal Verifikasi QR',
+                    description: 'Sistem validasi keaslian dokumen dan scan QR Code surat resmi yang diterbitkan sekolah tanpa perlu login.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: '#vue-sidebar-profile',
+                popover: {
+                    title: 'Profil Pengguna di Sidebar',
+                    description: 'Menampilkan foto profil, nama lengkap, dan status peran Anda yang aktif pada sesi saat ini.',
+                    side: 'right',
+                    align: 'center'
+                }
+            },
+            {
+                element: '#ta-dropdown-btn',
+                popover: {
+                    title: 'Pilihan Tahun Ajaran',
+                    description: 'Ganti periode tahun ajaran aktif atau tambah tahun ajaran baru dengan formulir pop-up terintegrasi.',
+                    side: 'bottom',
+                    align: 'center'
+                }
+            },
+            {
+                element: '#theme-toggle-btn',
+                popover: {
+                    title: 'Mode Gelap & Terang',
+                    description: 'Pilih kenyamanan visual Anda saat bertugas dengan beralih antara Mode Gelap modern dan Mode Terang.',
+                    side: 'bottom',
+                    align: 'center'
+                }
+            },
+            {
+                element: '#cloud-status-badge',
+                popover: {
+                    title: 'Status Sinkronisasi Cloud',
+                    description: 'Memantau sinkronisasi otomatis ke Google Sheets, Google Drive, dan Supabase secara waktu nyata.',
+                    side: 'bottom',
+                    align: 'center'
+                }
+            },
+            {
+                element: '#header-user-profile',
+                popover: {
+                    title: 'Profil Staf & Data Tendik',
+                    description: 'Klik di sini untuk melihat rincian biodata kepegawaian Anda yang tersimpan di pangkalan data sekolah.',
+                    side: 'bottom',
+                    align: 'end'
+                }
+            }
+        ];
+
+        // Saring HANYA elemen yang ada di DOM dan terlihat di layar (menyesuaikan peran akun)
+        const activeSteps = candidateSteps.filter(step => {
+            const el = document.querySelector(step.element);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+            if (el.classList.contains('hidden')) return false;
+            return true;
+        });
 
         const driverObj = driverLib({
             showProgress: true,
             animate: true,
             allowClose: true,
-            stagePadding: 8,
-            stageRadius: 10,
+            stagePadding: 4,
+            stageRadius: 12,
             overlayColor: 'rgba(11, 15, 25, 0.85)',
             nextBtnText: 'Lanjutkan &rarr;',
             prevBtnText: '&larr; Sebelumnya',
             doneBtnText: 'Selesai',
             progressText: 'Langkah {{current}} dari {{total}}',
-            onHighlightStarted: (element) => {
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            onDestroyStarted: () => {
+                driverObj.destroy();
+                return true;
+            },
+            onDestroyed: () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            onCloseClick: () => {
+                driverObj.destroy();
+            },
+            onPopoverRender: (popover) => {
+                const closeBtn = document.querySelector('.driver-popover-close-btn');
+                if (closeBtn) {
+                    closeBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        driverObj.destroy();
+                    };
+                }
+                if (!driverObj.hasNextStep()) {
+                    const nextBtn = document.querySelector('.driver-popover-next-btn');
+                    if (nextBtn) {
+                        nextBtn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            driverObj.destroy();
+                        };
+                    }
                 }
             },
-            steps: [
-                {
-                    element: '#dashboard-hero-title',
-                    popover: {
-                        title: 'Selamat Datang di SEKOLAHTU',
-                        description: 'Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha Sekolah Dasar secara terpadu, paperless, dan otomatis.',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#btn-start-tour',
-                    popover: {
-                        title: 'Panduan untuk Staf',
-                        description: 'Tombol ini dapat diklik kapan saja untuk mengulang panduan interaktif pengoperasian sistem ini.',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#vue-quick-actions',
-                    popover: {
-                        title: 'Aksi Cepat Dasbor',
-                        description: 'Akses instan sekali klik untuk tugas utama: Data Guru, Tambah Siswa, Nomor Surat, Presensi, dan Scan QR.',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: 'a[data-route="dashboard"]',
-                    popover: {
-                        title: 'Menu: Beranda & Ringkasan',
-                        description: 'Menampilkan analitik metrik siswa, status kelengkapan berkas, nomor surat terbaru, dan ringkasan absensi harian.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="tendik"]',
-                    popover: {
-                        title: 'Menu: Data Guru & Tendik (GTK)',
-                        description: 'Manajemen basis data kepegawaian sekolah: GTK, NIP, status kepegawaian, riwayat pendidikan, dan biodata staf.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="jadwal"]',
-                    popover: {
-                        title: 'Menu: Jadwal Pelajaran',
-                        description: 'Penyusunan jadwal mata pelajaran mingguan per rombel/kelas dan pembagian tugas jam mengajar guru.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="berkas"]',
-                    popover: {
-                        title: 'Menu: Brankas Digital Siswa',
-                        description: 'Penyimpanan arsip digital dokumen siswa (KK, Akta Kelahiran, KIP/KKS) terhubung langsung ke Google Drive.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="pip"]',
-                    popover: {
-                        title: 'Menu: Program PIP Siswa',
-                        description: 'Pemantauan alokasi Program Indonesia Pintar, riwayat pencairan, buku tabungan SimPel, dan upload berkas.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="surat"]',
-                    popover: {
-                        title: 'Menu: Penomoran & Surat',
-                        description: 'Buku agenda surat masuk dan surat keluar berstandar kode klasifikasi arsip baku (SRIKANDI).',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="cetak"]',
-                    popover: {
-                        title: 'Menu: Cetak Surat Otomatis',
-                        description: 'Generator penerbitan surat keterangan resmi (Aktif, Pindah, dll.) otomatis < 5 detik dengan barcode verifikasi.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="scan-absensi"]',
-                    popover: {
-                        title: 'Menu: Scan Absensi QR',
-                        description: 'Pemindai kamera presensi mandiri datang/pulang siswa dan staf secara cepat, akurat, dan tanpa antrean.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="absensi"]',
-                    popover: {
-                        title: 'Menu: Presensi & Absensi',
-                        description: 'Pencatatan absensi harian per kelas (Hadir, Sakit, Izin, Alpa) dan rekapitulasi kehadiran bulanan otomatis.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[data-route="pengaturan"]',
-                    popover: {
-                        title: 'Menu: Pengaturan & Backend GAS',
-                        description: 'Konfigurasi identitas kop surat sekolah, sinkronisasi Google Sheets / Drive REST API gratis, dan backup data.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[href="permohonan.html"]',
-                    popover: {
-                        title: 'Portal Permohonan Ortu',
-                        description: 'Halaman formulir publik bagi orang tua murid untuk mengajukan permohonan surat keterangan secara mandiri dan online.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: 'a[href="verifikasi.html"]',
-                    popover: {
-                        title: 'Portal Verifikasi QR',
-                        description: 'Sistem validasi keaslian dokumen dan scan QR Code surat resmi yang diterbitkan sekolah tanpa perlu login.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: '#vue-sidebar-profile',
-                    popover: {
-                        title: 'Profil Pengguna di Sidebar',
-                        description: 'Menampilkan foto profil, nama lengkap, dan status peran Anda yang aktif pada sesi saat ini.',
-                        side: 'right',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: '#ta-dropdown-container',
-                    popover: {
-                        title: 'Pilihan Tahun Ajaran',
-                        description: 'Ganti periode tahun ajaran aktif atau tambah tahun ajaran baru dengan formulir pop-up terintegrasi.',
-                        side: 'bottom',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: '#theme-toggle-btn',
-                    popover: {
-                        title: 'Mode Gelap & Terang',
-                        description: 'Pilih kenyamanan visual Anda saat bertugas dengan beralih antara Mode Gelap modern dan Mode Terang.',
-                        side: 'bottom',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: '#cloud-status-badge',
-                    popover: {
-                        title: 'Status Sinkronisasi Cloud',
-                        description: 'Memantau sinkronisasi otomatis ke Google Sheets, Google Drive, dan Supabase secara waktu nyata.',
-                        side: 'bottom',
-                        align: 'center'
-                    }
-                },
-                {
-                    element: '#header-user-profile',
-                    popover: {
-                        title: 'Profil Staf & Data Tendik',
-                        description: 'Klik di sini untuk melihat rincian biodata kepegawaian Anda yang tersimpan di pangkalan data sekolah.',
-                        side: 'bottom',
-                        align: 'end'
-                    }
+            onHighlightStarted: (element) => {
+                if (!element) return;
+                // Jangan scroll window jika elemen berada di top header tetap
+                if (element.closest('#app-top-header')) {
+                    return;
                 }
-            ]
+                // Jika elemen di dalam nav sidebar, cukup scroll nav internalnya jika terpotong
+                if (element.closest('#main-sidebar')) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    return;
+                }
+                // Untuk elemen di konten utama (dashboard), cek apakah sudah terlihat di layar
+                const rect = element.getBoundingClientRect();
+                const isVisible = (
+                    rect.top >= 75 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 20
+                );
+                if (!isVisible) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            },
+            steps: activeSteps
         });
 
         driverObj.drive();

@@ -6,6 +6,7 @@
 const DEFAULT_SCHOOL_CONFIG = {
     namaSekolah: "SD NEGERI TERLANGU 01",
     npsn: "20326713",
+    nss: "101032916052",
     statusSekolah: "Negeri",
     akreditasi: "B",
     alamat: "Jl. Raya Terlangu, Desa Terlangu",

@@ -83,10 +83,6 @@ const ModulVue = {
                     :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
                     <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
                     <span>{{ getMenuLabel(item) }}</span>
-                    <span v-if="item.badge"
-                        :class="['ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full', item.badgeColor || 'bg-slate-100 text-slate-700']">
-                        {{ item.badge }}
-                    </span>
                 </a>
 
                 <!-- Integrasi & Pengaturan -->
@@ -116,14 +112,14 @@ const ModulVue = {
 
                 const allMenuItems = [
                     { id: "dashboard", route: "dashboard", label: "Beranda & Ringkasan", icon: "fa-gauge-high", section: "main" },
-                    { id: "tendik", route: "tendik", label: "Data Guru & Tendik", icon: "fa-chalkboard-user", badge: "GTK", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
-                    { id: "jadwal", route: "jadwal", label: "Jadwal Pelajaran", icon: "fa-calendar-days", badge: "Jadwal", badgeColor: "bg-emerald-100 text-emerald-800", section: "main" },
-                    { id: "berkas", route: "berkas", label: "Bangkas Digital Siswa", icon: "fa-folder-closed", badge: "M1", badgeColor: "bg-blue-100 text-blue-800", section: "main" },
-                    { id: "pip", route: "pip", label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", badge: "PIP", badgeColor: "bg-amber-100 text-amber-800", section: "main" },
-                    { id: "surat", route: "surat", label: "Penomoran & Surat", icon: "fa-envelopes-bulk", badge: "SRIKANDI", badgeColor: "bg-purple-100 text-purple-800", section: "main" },
-                    { id: "cetak", route: "cetak", label: "Cetak Surat Otomatis", icon: "fa-file-invoice", badge: "<5 Detik", badgeColor: "bg-teal-100 text-teal-800", section: "main" },
-                    { id: "scan-absensi", route: "scan-absensi", label: "Scan Absensi (Datang/Pulang)", icon: "fa-qrcode", iconColor: "text-indigo-600", badge: "Scan QR", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
-                    { id: "absensi", route: "absensi", label: "Presensi & Absensi", icon: "fa-clipboard-user", badge: "M4", badgeColor: "bg-indigo-100 text-indigo-800", section: "main" },
+                    { id: "tendik", route: "tendik", label: "Data Guru & Tendik", icon: "fa-chalkboard-user", section: "main" },
+                    { id: "jadwal", route: "jadwal", label: "Jadwal Pelajaran", icon: "fa-calendar-days", section: "main" },
+                    { id: "berkas", route: "berkas", label: "Bangkas Digital Siswa", icon: "fa-folder-closed", section: "main" },
+                    { id: "pip", route: "pip", label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", section: "main" },
+                    { id: "surat", route: "surat", label: "Penomoran & Surat", icon: "fa-envelopes-bulk", section: "main" },
+                    { id: "cetak", route: "cetak", label: "Cetak Surat Otomatis", icon: "fa-file-invoice", section: "main" },
+                    { id: "scan-absensi", route: "scan-absensi", label: "Scan Absensi (Datang/Pulang)", icon: "fa-qrcode", iconColor: "text-indigo-600", section: "main" },
+                    { id: "absensi", route: "absensi", label: "Presensi & Absensi", icon: "fa-clipboard-user", section: "main" },
                     { id: "pengaturan", route: "pengaturan", label: "Pengaturan & Backend GAS", icon: "fa-sliders", section: "settings" },
                     { id: "permohonan", url: "permohonan.html", label: "Portal Permohonan Ortu", icon: "fa-paper-plane", iconColor: "text-blue-600", isExternal: true, section: "settings" },
                     { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-halved", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
@@ -314,6 +310,18 @@ const ModulVue = {
         const store = this.store;
 
         const app = createApp({
+            template: `
+                <div class="flex flex-wrap gap-2 sm:gap-2.5 items-center">
+                    <button v-for="act in actions" :key="act.label" type="button" @click="run(act)"
+                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                        <span
+                            class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                            <i :class="['fa-solid', act.icon, act.color || 'text-amber-300']"></i>
+                        </span>
+                        <span>{{ act.label }}</span>
+                    </button>
+                </div>
+            `,
             setup() {
                 const role = computed(() => store.role);
 

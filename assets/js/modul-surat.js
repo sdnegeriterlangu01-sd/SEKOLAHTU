@@ -8,12 +8,16 @@ const ModulSurat = {
     searchQueryKeluar: "",
     searchQueryMasuk: "",
     filterKlasifikasi: "Semua",
+    filterTahun: "Semua",
+    filterTanggal: "",
+    _manualNoUrutBase: null,
 
     init() {
         this.renderSubTab();
         this.renderSuratKeluarTable();
         this.renderSuratMasukTable();
         this.populateKlasifikasiDropdowns();
+        this.populateTahunDropdown();
         this.bindEvents();
     },
 
@@ -30,6 +34,22 @@ const ModulSurat = {
         if (filterKlasifikasi) {
             filterKlasifikasi.addEventListener("change", (e) => {
                 this.filterKlasifikasi = e.target.value;
+                this.renderSuratKeluarTable();
+            });
+        }
+
+        const filterTahunEl = document.getElementById("filter-tahun-surat-keluar");
+        if (filterTahunEl) {
+            filterTahunEl.addEventListener("change", (e) => {
+                this.filterTahun = e.target.value;
+                this.renderSuratKeluarTable();
+            });
+        }
+
+        const filterTanggalEl = document.getElementById("filter-tanggal-surat-keluar");
+        if (filterTanggalEl) {
+            filterTanggalEl.addEventListener("change", (e) => {
+                this.filterTanggal = e.target.value;
                 this.renderSuratKeluarTable();
             });
         }
@@ -55,6 +75,108 @@ const ModulSurat = {
                 this.updateLiveNomorSuratPreview();
             });
         }
+
+        // Simpan nomor urut dari ketikan nomor surat manual secara realtime
+        const inputManual = document.getElementById("sk-nomor-manual");
+        if (inputManual) {
+            inputManual.addEventListener("input", (e) => {
+                const raw = e.target.value.trim();
+                if (raw) {
+                    const n = this.extractNoUrut(raw);
+                    if (n > 0) {
+                        this._manualNoUrutBase = n;
+                        this.updateLiveNomorSuratPreview();
+                    }
+                }
+            });
+        }
+    },
+
+    extractNoUrut(str) {
+        if (!str) return 0;
+        const s = String(str).trim();
+        if (!s) return 0;
+
+        // 1. Jika murni angka, misal "033" atau "33"
+        if (/^\d+$/.test(s)) return parseInt(s, 10) || 0;
+
+        // 2. Format berslash standar dinas: {kodeKlasifikasi}/{NoSurat}/{bulan romawi}/{year}
+        const parts = s.split("/").map(p => p.trim());
+        if (parts.length >= 2) {
+            // parts[0] adalah {kodeKlasifikasi} (misal "421", "421.2", "420", "800") -> JANGAN diambil
+            // Cari NoSurat di index >= 1 (prioritaskan murni digit nomor urut, bukan tahun dan bukan bulan romawi)
+            for (let i = 1; i < parts.length; i++) {
+                const p = parts[i];
+                if (/^(19|20)\d{2}$/.test(p)) continue;
+                if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                if (/^\d{1,4}$/.test(p)) {
+                    const n = parseInt(p, 10);
+                    if (!isNaN(n) && n > 0) return n;
+                }
+            }
+            // Jika ada kombinasi nomor di index >= 1 (misal "033-A" atau "No.033")
+            for (let i = 1; i < parts.length; i++) {
+                const p = parts[i];
+                if (/^(19|20)\d{2}$/.test(p)) continue;
+                if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/i.test(p)) continue;
+                const m = p.match(/\b0*(\d{1,4})\b/);
+                if (m) {
+                    const n = parseInt(m[1], 10);
+                    if (!isNaN(n) && n > 0) return n;
+                }
+            }
+        }
+
+        // 3. Fallback jika ada multiple angka di string
+        const matches = [...s.matchAll(/(?:^|\/|\s)0*(\d{1,4})(?:\/|\s|$)/g)];
+        if (matches.length >= 2) {
+            // Lewati match pertama karena sering kali merupakan kode klasifikasi (misal 421)
+            for (let i = 1; i < matches.length; i++) {
+                const val = matches[i][1];
+                if (!/^(19|20)\d{2}$/.test(val)) {
+                    const n = parseInt(val, 10);
+                    if (!isNaN(n) && n > 0) return n;
+                }
+            }
+        } else if (matches.length === 1) {
+            const val = matches[0][1];
+            if (!/^(19|20)\d{2}$/.test(val)) {
+                const n = parseInt(val, 10);
+                if (!isNaN(n) && n > 0) return n;
+            }
+        }
+        return 0;
+    },
+
+    resetTanggalFilter() {
+        this.filterTanggal = "";
+        const el = document.getElementById("filter-tanggal-surat-keluar");
+        if (el) el.value = "";
+        this.renderSuratKeluarTable();
+    },
+
+    populateTahunDropdown() {
+        const selTahun = document.getElementById("filter-tahun-surat-keluar");
+        if (!selTahun) return;
+
+        const list = DataStore.getSuratKeluar();
+        const curYear = new Date().getFullYear();
+        const yearsSet = new Set([curYear, curYear - 1, curYear - 2]);
+
+        list.forEach(s => {
+            let y = s.tahun;
+            if (!y && s.tanggalSurat) y = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
+            if (!y && s.nomorSurat) {
+                const mYear = String(s.nomorSurat).match(/\b(20\d{2})\b/);
+                if (mYear) y = parseInt(mYear[1], 10);
+            }
+            if (y && !isNaN(y)) yearsSet.add(y);
+        });
+
+        const sorted = Array.from(yearsSet).sort((a, b) => b - a);
+        selTahun.innerHTML = `<option value="Semua">Semua Tahun</option>` +
+            sorted.map(y => `<option value="${y}">${y}</option>`).join("");
+        selTahun.value = this.filterTahun || "Semua";
     },
 
     populateKlasifikasiDropdowns() {
@@ -136,7 +258,17 @@ const ModulSurat = {
                 s.tujuan.toLowerCase().includes(this.searchQueryKeluar);
 
             const matchKlas = this.filterKlasifikasi === "Semua" || s.kodeKlasifikasi === this.filterKlasifikasi;
-            return matchSearch && matchKlas;
+
+            let sTahun = s.tahun;
+            if (!sTahun && s.tanggalSurat) sTahun = parseInt(String(s.tanggalSurat).substring(0, 4), 10);
+            if (!sTahun && s.nomorSurat) {
+                const mYear = String(s.nomorSurat).match(/\b(20\d{2})\b/);
+                if (mYear) sTahun = parseInt(mYear[1], 10);
+            }
+            const matchTahun = this.filterTahun === "Semua" || String(sTahun) === String(this.filterTahun);
+            const matchTanggal = !this.filterTanggal || s.tanggalSurat === this.filterTanggal;
+
+            return matchSearch && matchKlas && matchTahun && matchTanggal;
         });
 
         const countEl = document.getElementById("total-surat-keluar-count");
@@ -219,6 +351,14 @@ const ModulSurat = {
                 manualInput.value = document.getElementById("sk-preview-nomor")?.textContent.trim() || "";
             }
             manualInput.focus();
+        } else if (!isManual && manualInput) {
+            // Ketika pengguna uncheck manual (pilih nomor otomatis), ambil nomor dari input manual
+            const raw = manualInput.value.trim();
+            if (raw) {
+                const n = this.extractNoUrut(raw);
+                if (n > 0) this._manualNoUrutBase = n;
+            }
+            this.updateLiveNomorSuratPreview();
         }
     },
 
@@ -228,7 +368,12 @@ const ModulSurat = {
         if (!kodeEl || !previewEl) return;
 
         const tanggal = document.getElementById("sk-tanggal")?.value || Util.today();
-        const res = await ApiClient.request("getNextNomorSuratKeluar", { kodeKlasifikasi: kodeEl.value, tanggalSurat: tanggal });
+        const baseNo = this._manualNoUrutBase || undefined;
+        const res = await ApiClient.request("getNextNomorSuratKeluar", { 
+            kodeKlasifikasi: kodeEl.value, 
+            tanggalSurat: tanggal,
+            baseNoUrut: baseNo
+        });
         previewEl.textContent = res.success ? res.data.nomorSurat : "(gagal memuat nomor)";
     },
 
@@ -249,7 +394,21 @@ const ModulSurat = {
         const fileContainer = document.getElementById("sk-current-file-container");
         if (fileContainer) fileContainer.classList.add("hidden");
 
-        document.getElementById("sk-tanggal").value = Util.today();
+        // Set tanggal default sesuai filter yang sedang aktif jika ada
+        let defaultDate = Util.today();
+        if (this.filterTanggal) {
+            defaultDate = this.filterTanggal;
+        } else if (this.filterTahun && this.filterTahun !== "Semua") {
+            const curY = new Date().getFullYear();
+            if (parseInt(this.filterTahun, 10) === curY) {
+                defaultDate = Util.today();
+            } else {
+                defaultDate = `${this.filterTahun}-01-01`;
+            }
+        }
+        document.getElementById("sk-tanggal").value = defaultDate;
+        this._manualNoUrutBase = null;
+
         document.getElementById("sk-tujuan").value = "";
         document.getElementById("sk-perihal").value = "";
         document.getElementById("sk-keterangan").value = "";
@@ -398,6 +557,7 @@ const ModulSurat = {
                 App.showToast(res.message, "success");
                 this.closeModalSuratKeluar();
                 this.switchSubTab("keluar");
+                this.populateTahunDropdown();
                 this.renderSuratKeluarTable();
                 App.updateDashboardStats();
             } else {
@@ -415,11 +575,23 @@ const ModulSurat = {
     },
 
     async hapusSuratKeluar(id, nomor) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus nomor surat keluar "${nomor}"?\nNomor ini akan dihapus dari buku register arsip.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Hapus Nomor Surat Keluar?",
+            message: "Nomor registrasi surat ini akan dihapus permanen dari buku register arsip SRIKANDI.",
+            itemHighlight: nomor,
+            badgeLabel: "Nomor Registrasi Surat",
+            note: "Data yang dihapus tidak dapat dipulihkan kembali.",
+            confirmText: "Ya, Hapus Nomor",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
         try {
             const res = await ApiClient.request("deleteSuratKeluar", { id, nomorSurat: nomor });
             if (res && res.success) {
                 App.showToast(res.message || `Nomor surat ${nomor} berhasil dihapus!`, "success");
+                this.populateTahunDropdown();
                 this.renderSuratKeluarTable();
                 App.updateDashboardStats();
             } else {
@@ -503,7 +675,18 @@ const ModulSurat = {
     },
 
     async hapusSuratMasuk(id, agenda) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus surat masuk agenda "${agenda}"?\nData agenda ini akan dihapus dari buku arsip surat masuk.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Hapus Agenda Surat Masuk?",
+            message: "Data agenda surat masuk ini akan dihapus permanen dari buku register arsip surat masuk.",
+            itemHighlight: agenda,
+            badgeLabel: "Nomor Agenda Surat Masuk",
+            note: "Data yang dihapus tidak dapat dipulihkan kembali.",
+            confirmText: "Ya, Hapus Agenda",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
         try {
             const res = await ApiClient.request("deleteSuratMasuk", { id, noAgenda: agenda });
             if (res && res.success) {
@@ -766,9 +949,18 @@ const ModulSurat = {
         const list = DataStore.getPermohonanSurat();
         const item = list.find(p => p.id === id);
         const label = item ? `${item.id} (${item.nama})` : id;
-        if (!confirm(`Apakah Anda yakin ingin menghapus permohonan surat ${label}? Data yang dihapus tidak dapat dipulihkan.`)) {
-            return;
-        }
+        const ok = await App.confirmDialog({
+            title: "Hapus Permohonan Surat?",
+            message: "Data permohonan surat ini akan dihapus permanen dari sistem.",
+            itemHighlight: label,
+            badgeLabel: "Pemohon & Jenis Surat",
+            note: "Data yang dihapus tidak dapat dipulihkan kembali.",
+            confirmText: "Ya, Hapus Permohonan",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
 
         try {
             const filtered = list.filter(p => p.id !== id);

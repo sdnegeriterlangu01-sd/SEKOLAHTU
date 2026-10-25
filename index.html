@@ -8,6 +8,20 @@
     <meta name="description"
         content="SEKOLAHTU: Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha Sekolah Dasar. Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan.">
 
+    <!-- Instant Theme Detection Script (Anti-FOUC: 0ms white flash prevention) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('sekolahtu_theme');
+                if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -48,6 +62,14 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         [v-cloak] { display: none !important; }
+        html.dark {
+            color-scheme: dark;
+            background-color: #0f172a;
+        }
+        html.dark body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
     </style>
 </head>
 
@@ -76,15 +98,15 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.2.0</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.0</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
                 </div>
             </div>
 
-            <!-- Navigation Links with Modular Vue 3 -->
-            <nav id="vue-sidebar-nav" v-cloak class="flex-1 min-h-0 overflow-y-auto p-4 space-y-1.5 font-medium text-xs">
+            <!-- Navigation Links with Modular Vue 3 (No v-cloak on wrapper to prevent blank sidebar on refresh) -->
+            <nav id="vue-sidebar-nav" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-1.5 font-medium text-xs">
                 <!-- Menu Utama -->
                 <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
 
@@ -97,49 +119,41 @@
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-chalkboard-user text-sm w-5 text-center"></i>
                     <span>Data Guru & Tendik</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">GTK</span>
                 </a>
                 <a href="#jadwal" data-route="jadwal" onclick="App.navigateTo('jadwal')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-calendar-days text-sm w-5 text-center"></i>
                     <span>Jadwal Pelajaran</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Jadwal</span>
                 </a>
                 <a href="#berkas" data-route="berkas" onclick="App.navigateTo('berkas')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-folder-closed text-sm w-5 text-center"></i>
                     <span>Bangkas Digital Siswa</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">M1</span>
                 </a>
                 <a href="#pip" data-route="pip" onclick="App.navigateTo('pip')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-hand-holding-dollar text-sm w-5 text-center"></i>
                     <span>Program PIP Siswa</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">PIP</span>
                 </a>
                 <a href="#surat" data-route="surat" onclick="App.navigateTo('surat')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-envelopes-bulk text-sm w-5 text-center"></i>
                     <span>Penomoran & Surat</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">SRIKANDI</span>
                 </a>
                 <a href="#cetak" data-route="cetak" onclick="App.navigateTo('cetak')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-file-invoice text-sm w-5 text-center"></i>
                     <span>Cetak Surat Otomatis</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">&lt;5 Detik</span>
                 </a>
                 <a href="#scan-absensi" data-route="scan-absensi" onclick="App.navigateTo('scan-absensi')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-qrcode text-indigo-600 text-sm w-5 text-center"></i>
                     <span>Scan Absensi (Datang/Pulang)</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Scan QR</span>
                 </a>
                 <a href="#absensi" data-route="absensi" onclick="App.navigateTo('absensi')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                     <i class="fa-solid fa-clipboard-user text-sm w-5 text-center"></i>
                     <span>Presensi & Absensi</span>
-                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">M4</span>
                 </a>
 
                 <!-- Integrasi & Pengaturan -->
@@ -161,6 +175,47 @@
                     <span>Portal Verifikasi QR</span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
                 </a>
+                <script>
+                    (function() {
+                        try {
+                            var rawSession = sessionStorage.getItem("sim_tas_session");
+                            if (!rawSession) return;
+                            var sess = JSON.parse(rawSession);
+                            var u = sess && (sess.user || sess);
+                            if (!u || !u.role) return;
+                            var r = (u.role || "").toLowerCase();
+                            if (r === "tu" || r === "operator") r = "admin";
+                            if (r.indexOf("guru") === 0) r = "guru";
+
+                            var allowedRoutes = {
+                                admin: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
+                                kepsek: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
+                                guru: ["dashboard", "tendik", "jadwal", "berkas", "pip", "scan-absensi", "absensi"],
+                                perpustakaan: ["dashboard", "berkas", "pip", "scan-absensi", "absensi"],
+                                penjaga: ["dashboard", "scan-absensi", "absensi"]
+                            }[r] || ["dashboard", "scan-absensi", "absensi"];
+
+                            var nav = document.getElementById("vue-sidebar-nav");
+                            if (nav) {
+                                var links = nav.querySelectorAll("a[data-route]");
+                                for (var i = 0; i < links.length; i++) {
+                                    var route = links[i].getAttribute("data-route");
+                                    if (allowedRoutes.indexOf(route) === -1) {
+                                        links[i].style.display = "none";
+                                    }
+                                }
+                                if (r === "penjaga" || r === "perpustakaan") {
+                                    var absLink = nav.querySelector('a[data-route="absensi"] span');
+                                    if (absLink) absLink.textContent = "Rekap Absensi Saya";
+                                }
+                                if (allowedRoutes.indexOf("pengaturan") === -1) {
+                                    var pengLink = nav.querySelector('a[data-route="pengaturan"]');
+                                    if (pengLink) pengLink.style.display = "none";
+                                }
+                            }
+                        } catch(e) {}
+                    })();
+                </script>
             </nav>
 
             <!-- Sidebar Bottom Profile & School Info with Modular Vue 3 -->
@@ -362,6 +417,52 @@
                         if (sAdminBtn && r === "admin") {
                             sAdminBtn.classList.remove("hidden");
                         }
+
+                        // Filter sidebar navigation according to role immediately
+                        var allowedRoutes = {
+                            admin: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
+                            kepsek: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
+                            guru: ["dashboard", "tendik", "jadwal", "berkas", "pip", "scan-absensi", "absensi"],
+                            perpustakaan: ["dashboard", "berkas", "pip", "scan-absensi", "absensi"],
+                            penjaga: ["dashboard", "scan-absensi", "absensi"]
+                        }[r] || ["dashboard", "scan-absensi", "absensi"];
+
+                        var nav = document.getElementById("vue-sidebar-nav");
+                        if (nav) {
+                            var links = nav.querySelectorAll("a[data-route]");
+                            for (var i = 0; i < links.length; i++) {
+                                var route = links[i].getAttribute("data-route");
+                                if (allowedRoutes.indexOf(route) === -1) {
+                                    links[i].style.display = "none";
+                                }
+                            }
+                            if (r === "penjaga" || r === "perpustakaan") {
+                                var absLink = nav.querySelector('a[data-route="absensi"] span');
+                                if (absLink) absLink.textContent = "Rekap Absensi Saya";
+                            }
+                            if (allowedRoutes.indexOf("pengaturan") === -1) {
+                                var pengLink = nav.querySelector('a[data-route="pengaturan"]');
+                                if (pengLink) pengLink.style.display = "none";
+                            }
+                        }
+
+                        // Instant Dashboard Metrics Hydration from Local Storage
+                        var rawS = localStorage.getItem("sekolahtu_siswa");
+                        if (rawS) {
+                            var sList = JSON.parse(rawS) || [];
+                            var elTot = document.getElementById("stat-total-siswa");
+                            if (elTot && sList.length) elTot.textContent = sList.length;
+                        }
+                        var rawSk = localStorage.getItem("sekolahtu_surat_keluar");
+                        var rawSm = localStorage.getItem("sekolahtu_surat_masuk");
+                        if (rawSk && rawSm) {
+                            var skList = JSON.parse(rawSk) || [];
+                            var smList = JSON.parse(rawSm) || [];
+                            var elSk = document.getElementById("stat-surat-keluar");
+                            var elSm = document.getElementById("stat-surat-masuk");
+                            if (elSk) elSk.textContent = skList.length;
+                            if (elSm) elSm.textContent = smList.length;
+                        }
                     } catch (err) {}
                 })();
             </script>
@@ -398,15 +499,134 @@
                                     <span>Panduan untuk Staf</span>
                                 </button>
                                 <div class="flex flex-wrap gap-2 sm:gap-2.5 items-center" id="vue-quick-actions">
-                                    <button v-for="act in actions" :key="act.label" type="button" @click="run(act)"
+                                    <button type="button" onclick="App.navigateTo('tendik')"
                                         class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
-                                        <span
-                                            class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
-                                            <i :class="['fa-solid', act.icon, act.color || 'text-amber-300']"></i>
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-chalkboard-user text-purple-300"></i>
                                         </span>
-                                        <span>{{ act.label }}</span>
+                                        <span>Data Guru & Tendik</span>
+                                    </button>
+                                    <button type="button" onclick="App.navigateTo('berkas'); if (window.ModulBerkas) ModulBerkas.openAddModal();"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-user-plus text-sky-300"></i>
+                                        </span>
+                                        <span>Tambah Siswa Baru</span>
+                                    </button>
+                                    <button type="button" onclick="App.navigateTo('surat'); if (window.ModulSurat) ModulSurat.openModalSuratKeluar();"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-paper-plane text-emerald-300"></i>
+                                        </span>
+                                        <span>Terbitkan Nomor Surat</span>
+                                    </button>
+                                    <button type="button" onclick="App.navigateTo('cetak')"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-file-invoice text-teal-300"></i>
+                                        </span>
+                                        <span>Cetak Surat Keterangan</span>
+                                    </button>
+                                    <button type="button" onclick="App.navigateTo('absensi')"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-clipboard-check text-amber-300"></i>
+                                        </span>
+                                        <span>Input Presensi Harian</span>
+                                    </button>
+                                    <button type="button" onclick="App.navigateTo('scan-absensi')"
+                                        class="group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer">
+                                        <span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <i class="fa-solid fa-qrcode text-indigo-300"></i>
+                                        </span>
+                                        <span>Scan Absensi Datang/Pulang</span>
                                     </button>
                                 </div>
+                                <script>
+                                    (function() {
+                                        try {
+                                            var rawSession = sessionStorage.getItem("sim_tas_session");
+                                            if (!rawSession) return;
+                                            var sess = JSON.parse(rawSession);
+                                            var u = sess && (sess.user || sess);
+                                            if (!u || !u.role) return;
+                                            var r = (u.role || "").toLowerCase();
+                                            if (r === "tu" || r === "operator") r = "admin";
+                                            if (r.indexOf("guru") === 0) r = "guru";
+
+                                            var qa = document.getElementById("vue-quick-actions");
+                                            if (!qa) return;
+
+                                            var btnClass = "group inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-sm hover:shadow-md hover:border-white/40 transition duration-150 cursor-pointer";
+
+                                            if (r === "penjaga") {
+                                                qa.innerHTML = '<button type="button" onclick="App.navigateTo(\'scan-absensi\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>' +
+                                                    '<span>Scan Absensi Datang/Pulang</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'tendik\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>' +
+                                                    '<span>Rekap Absensi Saya</span>' +
+                                                '</button>';
+                                            } else if (r === "perpustakaan") {
+                                                qa.innerHTML = '<button type="button" onclick="App.navigateTo(\'berkas\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-folder-closed text-amber-300"></i></span>' +
+                                                    '<span>Bangkas Digital Siswa</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'pip\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-hand-holding-dollar text-sky-300"></i></span>' +
+                                                    '<span>Program PIP Siswa</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'scan-absensi\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>' +
+                                                    '<span>Scan Absensi Datang/Pulang</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'tendik\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>' +
+                                                    '<span>Rekap Absensi Saya</span>' +
+                                                '</button>';
+                                            } else if (r === "guru") {
+                                                qa.innerHTML = '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'harian\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-check text-amber-300"></i></span>' +
+                                                    '<span>Input Presensi Hari Ini</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'siswa\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-table-cells text-sky-300"></i></span>' +
+                                                    '<span>Rekap Absensi Bulanan</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'scan-absensi\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-qrcode text-emerald-300"></i></span>' +
+                                                    '<span>Presensi Datang / Pulang Saya</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'berkas\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-folder-closed text-amber-300"></i></span>' +
+                                                    '<span>Berkas Siswa</span>' +
+                                                '</button>';
+                                            } else if (r === "kepsek") {
+                                                qa.innerHTML = '<button type="button" onclick="App.navigateTo(\'tendik\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-chalkboard-user text-sky-300"></i></span>' +
+                                                    '<span>Data Guru & Tendik</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'tendik\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-clipboard-user text-indigo-300"></i></span>' +
+                                                    '<span>Rekap Presensi Guru & Tendik</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'absensi\'); if (window.ModulPresensi) ModulPresensi.switchTab(\'siswa\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-table-cells text-sky-300"></i></span>' +
+                                                    '<span>Rekap Absensi Siswa</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'surat\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-envelopes-bulk text-amber-300"></i></span>' +
+                                                    '<span>Buku Register Surat SRIKANDI</span>' +
+                                                '</button>' +
+                                                '<button type="button" onclick="App.navigateTo(\'cetak\');" class="' + btnClass + '">' +
+                                                    '<span class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs group-hover:scale-110 transition-transform flex-shrink-0"><i class="fa-solid fa-print text-teal-300"></i></span>' +
+                                                    '<span>Cetak Surat Keterangan</span>' +
+                                                '</button>';
+                                            }
+                                        } catch(e) {}
+                                    })();
+                                </script>
                             </div>
                         </div>
                         <div class="absolute right-6 -bottom-6 opacity-10 hidden md:block pointer-events-none">
@@ -704,7 +924,7 @@
                     </div>
 
                     <!-- ROLE-AWARE SECTION B: KHUSUS ADMIN, TU, KEPSEK (Doughnut Chart Berkas & Analitik PIP) -->
-                    <div id="dashboard-admin-section" class="hidden space-y-6">
+                    <div id="dashboard-admin-section" class="space-y-6">
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <!-- Left: Berkas Doughnut Chart -->
                             <div
@@ -713,11 +933,9 @@
                                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                                         <div>
                                             <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
-                                                <i class="fa-solid fa-chart-pie text-blue-600"></i> Analisis Kelengkapan
-                                                Berkas
+                                                <i class="fa-solid fa-chart-simple text-blue-600"></i> Analisis Kelengkapan Berkas
                                             </h3>
-                                            <p class="text-xs text-slate-400 mt-0.5">Proporsi kepemilikan KK & Akta
-                                                seluruh sekolah</p>
+                                            <p class="text-xs text-slate-400 mt-0.5">Proporsi kelengkapan berkas (KK, Akta, Foto, PIP, & KTA) siswa</p>
                                         </div>
                                     </div>
                                     <div class="relative h-48 w-full flex items-center justify-center">
@@ -1015,9 +1233,9 @@
 
                     <!-- ================= SUB VIEW: SURAT KELUAR ================= -->
                     <div id="view-surat-keluar" class="space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 flex-grow max-w-xl">
-                                <div class="relative flex-grow">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 flex-grow flex-wrap">
+                                <div class="relative flex-grow min-w-[200px]">
                                     <i
                                         class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                                     <input type="text" id="search-surat-keluar"
@@ -1028,9 +1246,23 @@
                                     class="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
                                     <!-- Populated by JS -->
                                 </select>
+                                <select id="filter-tahun-surat-keluar"
+                                    class="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700">
+                                    <option value="Semua">Semua Tahun</option>
+                                </select>
+                                <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2 py-0.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase mr-1 hidden sm:inline">Tgl:</label>
+                                    <input type="date" id="filter-tanggal-surat-keluar"
+                                        title="Filter Tanggal Tertentu"
+                                        class="py-1 text-xs border-0 focus:ring-0 focus:outline-none text-slate-700">
+                                    <button type="button" onclick="ModulSurat.resetTanggalFilter()" title="Hapus Filter Tanggal"
+                                        class="p-1 text-slate-400 hover:text-slate-600 rounded transition cursor-pointer">
+                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                    </button>
+                                </div>
                             </div>
                             <button onclick="ModulSurat.openModalSuratKeluar()"
-                                class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm whitespace-nowrap">
+                                class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm whitespace-nowrap cursor-pointer">
                                 <i class="fa-solid fa-plus"></i> Terbitkan Nomor Surat Baru
                             </button>
                         </div>
@@ -1694,8 +1926,8 @@
                                 Penandatangan
                             </h3>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-2">
                                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Satuan
                                         Pendidikan</label>
                                     <input type="text" id="cfg-nama-sekolah" required
@@ -1705,6 +1937,11 @@
                                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NPSN</label>
                                     <input type="text" id="cfg-npsn" required
                                         class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">NSS Sekolah</label>
+                                    <input type="text" id="cfg-nss" placeholder="101032916052" maxlength="15"
+                                        class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Akreditasi</label>
@@ -2027,10 +2264,10 @@
 
                         <!-- Chart Desil & Distribusi -->
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                            <div class="lg:col-span-6 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
                                 <h3
-                                    class="font-bold text-xs uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-2">
-                                    <i class="fa-solid fa-chart-column text-amber-600"></i> Distribusi Desil Kemiskinan
+                                    class="font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column text-amber-500"></i> Distribusi Desil Kemiskinan
                                     Siswa
                                 </h3>
                                 <div class="relative h-60 w-full flex items-center justify-center">
@@ -2038,24 +2275,24 @@
                                 </div>
                             </div>
                             <div
-                                class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+                                class="lg:col-span-6 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 flex flex-col justify-between">
                                 <div>
                                     <h3
-                                        class="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-2">
-                                        <i class="fa-solid fa-circle-info text-blue-600"></i> Kriteria Kelayakan & Alur
+                                        class="font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-info text-blue-500"></i> Kriteria Kelayakan & Alur
                                         Bank
                                     </h3>
-                                    <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+                                    <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
                                         <li class="flex items-start gap-2">
                                             <span
-                                                class="w-5 h-5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                                                class="w-5 h-5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
                                             <span><strong>Desil 1 - 4:</strong> Prioritas utama penerima bansos (Sangat
                                                 Miskin / Miskin). Wajib diusulkan dan diverifikasi berkas KK &
                                                 KIP.</span>
                                         </li>
                                         <li class="flex items-start gap-2">
                                             <span
-                                                class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                                                class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
                                             <span><strong>Desil 5 - 7:</strong> Kategori Miskin & Rentan Miskin.
                                                 Diusulkan jika kuota sekolah masih tersedia.</span>
                                         </li>
@@ -2095,9 +2332,21 @@
                                 <select id="pip-filter-desil"
                                     class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
                                     <option value="Semua">Semua Kategori Desil</option>
-                                    <option value="1-4">Desil 1 - 4 (Sangat Miskin)</option>
-                                    <option value="5-7">Desil 5 - 7 (Miskin)</option>
-                                    <option value="8-10">Desil 8 - 10 (Rentan Miskin)</option>
+                                    <option value="1">Desil 1</option>
+                                    <option value="2">Desil 2</option>
+                                    <option value="3">Desil 3</option>
+                                    <option value="4">Desil 4</option>
+                                    <option value="5">Desil 5</option>
+                                    <option value="6">Desil 6</option>
+                                    <option value="7">Desil 7</option>
+                                    <option value="8">Desil 8</option>
+                                    <option value="9">Desil 9</option>
+                                    <option value="10">Desil 10</option>
+                                    <optgroup label="Kelompok Gabungan">
+                                        <option value="1-4">Desil 1 - 4 (Sangat Miskin)</option>
+                                        <option value="5-7">Desil 5 - 7 (Miskin)</option>
+                                        <option value="8-10">Desil 8 - 10 (Rentan Miskin)</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="md:col-span-3">
@@ -2295,7 +2544,7 @@
                                     <i class="fa-solid fa-arrow-left"></i>
                                     <span>Dasbor</span>
                                 </button>
-                                <button type="button" onclick="window.print()"
+                                <button type="button" onclick="App.printProfileCard()"
                                     class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-blue-950 transition flex items-center gap-2 cursor-pointer shadow-sm">
                                     <i class="fa-solid fa-print"></i>
                                     <span>Cetak Profil</span>
@@ -2413,11 +2662,11 @@
 
             <!-- Bottom Application Footer -->
             <footer id="app-footer"
-                class="no-print mt-auto border-t border-slate-200 bg-white px-6 py-4 text-center text-xs text-slate-500">
+                class="no-print mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">v3.2.0</span></span>
-                    <span class="text-[11px] text-slate-400">Arsitektur Bebas Biaya (Google Apps Script & GitHub
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.0</span></span>
+                    <span class="text-[11px] text-slate-400 dark:text-slate-500">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>
             </footer>
@@ -2548,9 +2797,9 @@
 
     <!-- MODAL 1: Upload Berkas Siswa (Bangkas Digital) -->
     <div id="modal-upload-berkas"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+            class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto my-auto">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="font-bold text-sm text-slate-900">Unggah Berkas Digital Siswa</h3>
@@ -2798,122 +3047,127 @@
 
     <!-- MODAL 5: Tambah Surat Keluar SRIKANDI -->
     <div id="modal-tambah-surat-keluar"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
+            <!-- Header Modal (Sticky/Fixed) -->
+            <div class="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white">
                 <div>
                     <h3 id="sk-modal-title" class="font-bold text-sm text-slate-900">Pendaftaran Nomor Surat Keluar
                         (SRIKANDI)</h3>
                     <p id="sk-modal-subtitle" class="text-xs text-slate-400 mt-0.5">Penomoran terpusat otomatis tanpa
                         risiko nomor ganda.</p>
                 </div>
-                <button onclick="ModulSurat.closeModalSuratKeluar()" class="text-slate-400 hover:text-slate-600">
+                <button type="button" onclick="ModulSurat.closeModalSuratKeluar()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <form onsubmit="ModulSurat.submitSuratKeluar(event)" class="space-y-3.5">
-                <input type="hidden" id="sk-edit-id" value="">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Klasifikasi Arsip Baku</label>
-                    <select id="sk-kode-klasifikasi"
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
-
-                <!-- Opsi Mode Nomor Manual vs Otomatis -->
-                <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
-                    <label for="sk-is-manual"
-                        class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
-                        <input type="checkbox" id="sk-is-manual" onchange="ModulSurat.toggleManualNomor(this.checked)"
-                            class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                        <span>Input Nomor Surat Manual</span>
-                    </label>
-                    <span class="text-[10px] text-slate-400">Centang jika ada nomor baku sendiri</span>
-                </div>
-
-                <!-- Input Nomor Manual (Hidden secara default) -->
-                <div id="sk-manual-container" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ketik Nomor Surat Resmi <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" id="sk-nomor-manual"
-                        placeholder="Contoh: 421.2/001/VII/2026 atau nomor dinas khusus"
-                        class="w-full px-3 py-2 text-xs border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/40">
-                </div>
-
-                <!-- Preview Nomor yang Diterbitkan Otomatis -->
-                <div id="sk-preview-container"
-                    class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
-                    <span class="text-xs text-slate-600">Nomor Surat Otomatis SRIKANDI:</span>
-                    <span id="sk-preview-nomor"
-                        class="font-mono font-bold text-blue-900 text-xs px-2.5 py-1 bg-white rounded border border-blue-200">
-                        421.2/001/VII/2026
-                    </span>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Form & Scrollable Body -->
+            <form onsubmit="ModulSurat.submitSuratKeluar(event)" class="flex flex-col flex-1 overflow-hidden min-h-0 m-0">
+                <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
+                    <input type="hidden" id="sk-edit-id" value="">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat</label>
-                        <input type="date" id="sk-tanggal" required
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Klasifikasi Arsip Baku</label>
+                        <select id="sk-kode-klasifikasi"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <!-- Opsi Mode Nomor Manual vs Otomatis -->
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <label for="sk-is-manual"
+                            class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                            <input type="checkbox" id="sk-is-manual" onchange="ModulSurat.toggleManualNomor(this.checked)"
+                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            <span>Input Nomor Surat Manual</span>
+                        </label>
+                        <span class="text-[10px] text-slate-400">Centang jika ada nomor baku sendiri</span>
+                    </div>
+
+                    <!-- Input Nomor Manual (Hidden secara default) -->
+                    <div id="sk-manual-container" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketik Nomor Surat Resmi <span
+                                class="text-red-500">*</span></label>
+                        <input type="text" id="sk-nomor-manual"
+                            placeholder="Contoh: 421.2/001/VII/2026 atau nomor dinas khusus"
+                            class="w-full px-3 py-2 text-xs border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono font-bold text-blue-900 bg-blue-50/40">
+                    </div>
+
+                    <!-- Preview Nomor yang Diterbitkan Otomatis -->
+                    <div id="sk-preview-container"
+                        class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between">
+                        <span class="text-xs text-slate-600">Nomor Surat Otomatis SRIKANDI:</span>
+                        <span id="sk-preview-nomor"
+                            class="font-mono font-bold text-blue-900 text-xs px-2.5 py-1 bg-white rounded border border-blue-200">
+                            421.2/001/VII/2026
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat</label>
+                            <input type="date" id="sk-tanggal" required
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Pengonsep Surat</label>
+                            <input type="text" id="sk-pengonsep" value="Staf TU"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tujuan / Penerima Surat <span
+                                class="text-red-500">*</span></label>
+                        <input type="text" id="sk-tujuan" required placeholder="Contoh: Korwilcam Bidang Pendidikan..."
                             class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pengonsep Surat</label>
-                        <input type="text" id="sk-pengonsep" value="Staf TU"
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal / Isi Ringkas Surat <span
+                                class="text-red-500">*</span></label>
+                        <textarea id="sk-perihal" required rows="2"
+                            placeholder="Contoh: Pengajuan usulan sarana prasarana sekolah..."
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Penandatangan Surat</label>
+                        <input type="text" id="sk-penandatangan"
                             class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
-                </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tujuan / Penerima Surat <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" id="sk-tujuan" required placeholder="Contoh: Korwilcam Bidang Pendidikan..."
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan Tambahan</label>
+                        <input type="text" id="sk-keterangan" placeholder="Contoh: Lampiran 1 berkas fisik"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal / Isi Ringkas Surat <span
-                            class="text-red-500">*</span></label>
-                    <textarea id="sk-perihal" required rows="2"
-                        placeholder="Contoh: Pengajuan usulan sarana prasarana sekolah..."
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Penandatangan Surat</label>
-                    <input type="text" id="sk-penandatangan"
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan Tambahan</label>
-                    <input type="text" id="sk-keterangan" placeholder="Contoh: Lampiran 1 berkas fisik"
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <!-- Unggah Berkas Surat Keluar -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Berkas / Scan Surat
-                        Keluar</label>
-                    <input type="file" id="sk-file" accept=".pdf,image/*"
-                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1">
-                    <p class="text-[10px] text-slate-400 mt-1">Opsional: Lampirkan softcopy berkas surat keluar
-                        (PDF/Foto, maks 8 MB) untuk diarsipkan ke Google Drive.</p>
-                    <div id="sk-current-file-container"
-                        class="mt-2 hidden text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
-                        <span class="text-slate-600 flex items-center gap-1.5"><i
-                                class="fa-solid fa-file-pdf text-red-500"></i> Berkas tersimpan saat ini:</span>
-                        <a id="sk-current-file-link" href="#" target="_blank" rel="noopener noreferrer"
-                            class="font-bold text-blue-700 hover:underline">Buka Berkas <i
-                                class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                    <!-- Unggah Berkas Surat Keluar -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Berkas / Scan Surat
+                            Keluar</label>
+                        <input type="file" id="sk-file" accept=".pdf,image/*"
+                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg p-1">
+                        <p class="text-[10px] text-slate-400 mt-1">Opsional: Lampirkan softcopy berkas surat keluar
+                            (PDF/Foto, maks 8 MB) untuk diarsipkan ke Google Drive.</p>
+                        <div id="sk-current-file-container"
+                            class="mt-2 hidden text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
+                            <span class="text-slate-600 flex items-center gap-1.5"><i
+                                    class="fa-solid fa-file-pdf text-red-500"></i> Berkas tersimpan saat ini:</span>
+                            <a id="sk-current-file-link" href="#" target="_blank" rel="noopener noreferrer"
+                                class="font-bold text-blue-700 hover:underline">Buka Berkas <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <!-- Footer Modal (Sticky/Fixed di Bawah) -->
+                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/90 rounded-b-2xl flex-shrink-0">
                     <button type="button" onclick="ModulSurat.closeModalSuratKeluar()"
-                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50">
+                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-white transition">
                         Batal
                     </button>
                     <button type="submit" id="btn-submit-sk"
@@ -2927,90 +3181,95 @@
 
     <!-- MODAL 6: Tambah Surat Masuk -->
     <div id="modal-tambah-surat-masuk"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 animate-fade-in flex flex-col max-h-[90vh] overflow-hidden my-auto">
+            <!-- Header Modal (Sticky/Fixed) -->
+            <div class="flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 pb-3.5 flex-shrink-0 bg-white">
                 <div>
                     <h3 class="font-bold text-sm text-slate-900">Catat Agenda Surat Masuk & Scan</h3>
                     <p class="text-xs text-slate-400 mt-0.5">Pendaftaran buku agenda surat masuk & pengarsipan scan
                         fisik.</p>
                 </div>
-                <button onclick="ModulSurat.closeModalSuratMasuk()" class="text-slate-400 hover:text-slate-600">
+                <button type="button" onclick="ModulSurat.closeModalSuratMasuk()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <form id="form-tambah-surat-masuk" onsubmit="ModulSurat.submitSuratMasuk(event)" class="space-y-3.5">
-                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-                    <span class="text-xs text-slate-700">Nomor Agenda Otomatis:</span>
-                    <span id="sm-preview-agenda"
-                        class="font-mono font-bold text-amber-900 text-xs px-2.5 py-1 bg-white rounded border border-amber-200">
-                        SM/2026/001
-                    </span>
-                </div>
+            <!-- Form & Scrollable Body -->
+            <form id="form-tambah-surat-masuk" onsubmit="ModulSurat.submitSuratMasuk(event)" class="flex flex-col flex-1 overflow-hidden min-h-0 m-0">
+                <div class="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1">
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                        <span class="text-xs text-slate-700">Nomor Agenda Otomatis:</span>
+                        <span id="sm-preview-agenda"
+                            class="font-mono font-bold text-amber-900 text-xs px-2.5 py-1 bg-white rounded border border-amber-200">
+                            SM/2026/001
+                        </span>
+                    </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Surat Asli Pengirim <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="sm-no-asli" required placeholder="Contoh: 420/124/DISDIK/2026"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Asal Pengirim Surat <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="sm-pengirim" required placeholder="Contoh: Dinas Pendidikan Kota..."
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat Asli</label>
+                            <input type="date" id="sm-tgl-surat" required
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Diterima Sekolah</label>
+                            <input type="date" id="sm-tgl-terima" required
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Surat Asli Pengirim <span
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal Surat <span
                                 class="text-red-500">*</span></label>
-                        <input type="text" id="sm-no-asli" required placeholder="Contoh: 420/124/DISDIK/2026"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
+                        <textarea id="sm-perihal" required rows="2" placeholder="Isi ringkas perihal surat..."
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Disposisi Kepala Sekolah
+                                Ke</label>
+                            <input type="text" id="sm-disposisi-ke" placeholder="Guru Kelas / Kurikulum / UKS"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Instruksi Disposisi</label>
+                            <input type="text" id="sm-instruksi" placeholder="Tindak lanjuti & arsipkan"
+                                class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Asal Pengirim Surat <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" id="sm-pengirim" required placeholder="Contoh: Dinas Pendidikan Kota..."
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Scan Fisik Surat
+                            (PDF/Gambar)</label>
+                        <input type="file" id="sm-scan-file" accept=".pdf,.jpg,.jpeg,.png"
+                            class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <p class="text-[10px] text-slate-400 mt-1">Disimpan langsung ke Google Drive /SEKOLAHTU/Surat_Masuk/
+                        </p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Surat Asli</label>
-                        <input type="date" id="sm-tgl-surat" required
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Diterima Sekolah</label>
-                        <input type="date" id="sm-tgl-terima" required
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Perihal Surat <span
-                            class="text-red-500">*</span></label>
-                    <textarea id="sm-perihal" required rows="2" placeholder="Isi ringkas perihal surat..."
-                        class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Disposisi Kepala Sekolah
-                            Ke</label>
-                        <input type="text" id="sm-disposisi-ke" placeholder="Guru Kelas / Kurikulum / UKS"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Instruksi Disposisi</label>
-                        <input type="text" id="sm-instruksi" placeholder="Tindak lanjuti & arsipkan"
-                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Unggah Scan Fisik Surat
-                        (PDF/Gambar)</label>
-                    <input type="file" id="sm-scan-file" accept=".pdf,.jpg,.jpeg,.png"
-                        class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    <p class="text-[10px] text-slate-400 mt-1">Disimpan langsung ke Google Drive /SEKOLAHTU/Surat_Masuk/
-                    </p>
-                </div>
-
-                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <!-- Footer Modal (Sticky/Fixed di Bawah) -->
+                <div class="flex items-center justify-end gap-2.5 p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/90 rounded-b-2xl flex-shrink-0">
                     <button type="button" onclick="ModulSurat.closeModalSuratMasuk()"
-                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50">
+                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-white transition">
                         Batal
                     </button>
                     <button type="submit" id="btn-submit-sm"
@@ -3024,9 +3283,9 @@
 
     <!-- MODAL 7: Manajemen Pengguna & Tambah Akun (Admin) -->
     <div id="modal-manage-users"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+            class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto my-auto">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2.5">
                     <div
@@ -3291,9 +3550,9 @@
 
     <!-- MODAL 8: Impor Data Guru & Tendik (Excel / CSV) -->
     <div id="modal-import-tendik"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden overflow-y-auto">
         <div
-            class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4">
+            class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-fade-in space-y-4 max-h-[90vh] overflow-y-auto my-auto">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2.5">
                     <div
@@ -3363,6 +3622,56 @@
                     onclick="ModulPresensi.processImportTendik()"
                     class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2">
                     <i class="fa-solid fa-file-import"></i> Impor Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMATION DIALOG (Theme Adaptive: Light & Dark Mode) -->
+    <div id="modal-confirm-dialog"
+        class="fixed inset-0 z-[120] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-200">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-scale-in text-center space-y-4 my-auto">
+            <!-- Icon Alert -->
+            <div id="confirm-dialog-icon-box"
+                class="w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center text-rose-600 dark:text-rose-400 text-2xl shadow-lg shadow-rose-500/10">
+                <i id="confirm-dialog-icon" class="fa-solid fa-trash-can"></i>
+            </div>
+
+            <!-- Title & Description -->
+            <div class="space-y-1.5">
+                <h3 id="confirm-dialog-title" class="text-base font-bold text-slate-900 dark:text-white">
+                    Hapus Nomor Surat?
+                </h3>
+                <p id="confirm-dialog-message" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Nomor surat ini akan dihapus permanen dari register arsip.
+                </p>
+            </div>
+
+            <!-- Item Highlight Badge -->
+            <div id="confirm-dialog-badge-box" class="p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-center">
+                <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 block mb-0.5" id="confirm-dialog-badge-label">Nomor Registrasi Surat</span>
+                <span id="confirm-dialog-item" class="font-mono font-bold text-xs text-rose-700 dark:text-rose-300 break-all select-all">
+                    421.2/001/VII/2026
+                </span>
+            </div>
+
+            <!-- Caution Note -->
+            <p class="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                <span id="confirm-dialog-note">Data yang dihapus tidak dapat dipulihkan.</span>
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button type="button" id="confirm-dialog-cancel-btn"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="confirm-dialog-ok-btn"
+                    class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-bold shadow-md shadow-rose-600/25 transition cursor-pointer inline-flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                    <span id="confirm-dialog-ok-text">Ya, Hapus</span>
                 </button>
             </div>
         </div>

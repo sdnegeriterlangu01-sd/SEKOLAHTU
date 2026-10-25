@@ -449,7 +449,18 @@ const ModulJadwal = {
         const hari = (document.getElementById("jadwal-form-hari") || document.getElementById("form-jadwal-hari"))?.value || (this.editModalData?.hari || "Senin");
         const jamKe = Number((document.getElementById("jadwal-form-jam") || document.getElementById("form-jadwal-jamke"))?.value || (this.editModalData?.jamKe || 1));
 
-        if (!confirm(`Kosongkan mata pelajaran untuk ${hari} Jam Ke-${jamKe} Kelas ${kelas}?`)) return;
+        const ok = await App.confirmDialog({
+            title: "Kosongkan Slot Jadwal?",
+            message: `Mata pelajaran pada slot ini akan dihapus dari jadwal kelas.`,
+            itemHighlight: `${hari}, Jam Ke-${jamKe} (${kelas})`,
+            badgeLabel: "Slot Jadwal Pelajaran",
+            note: "Slot jadwal ini akan dikosongkan.",
+            confirmText: "Ya, Kosongkan",
+            cancelText: "Batal",
+            icon: "fa-eraser",
+            type: "warning"
+        });
+        if (!ok) return;
 
         const slotId = `JDW-${String(kelas).replace(/\s+/g, '_')}-${hari.substring(0, 3).toUpperCase()}-${jamKe}`;
 
@@ -479,9 +490,18 @@ const ModulJadwal = {
         }
         const kelas = this.selectedKelas;
         const displayName = String(kelas).toLowerCase().startsWith("kelas") ? kelas : `Kelas ${kelas}`;
-        if (!confirm(`Apakah Anda yakin ingin MENGHAPUS SEMUA jadwal pelajaran untuk ${displayName}?\n\nPerhatian: Seluruh mata pelajaran Senin s/d Sabtu pada rombel ${displayName} akan dikosongkan.`)) {
-            return;
-        }
+        const ok = await App.confirmDialog({
+            title: "Hapus Semua Jadwal Kelas?",
+            message: `Seluruh mata pelajaran Senin s/d Sabtu pada rombel ${displayName} akan dikosongkan secara permanen.`,
+            itemHighlight: displayName,
+            badgeLabel: "Rombongan Belajar",
+            note: "Tindakan ini akan mengosongkan seluruh slot jadwal.",
+            confirmText: "Ya, Hapus Semua",
+            cancelText: "Batal",
+            icon: "fa-trash-can",
+            type: "danger"
+        });
+        if (!ok) return;
 
         const currentList = DataStore.getJadwalAll().filter(j => !this.matchesClass(j.kelas || j.rombel, kelas));
         DataStore.saveJadwalAll(currentList);
@@ -507,7 +527,18 @@ const ModulJadwal = {
         }
 
         const kelas = this.selectedKelas;
-        if (!confirm(`Terapkan Preset Kurikulum Merdeka untuk Kelas ${kelas}?\nJadwal mingguan akan diisi dengan pola mata pelajaran standar Kurikulum Merdeka.`)) return;
+        const ok = await App.confirmDialog({
+            title: "Terapkan Preset Kurikulum Merdeka?",
+            message: `Jadwal mingguan akan diisi secara otomatis dengan pola mata pelajaran standar Kurikulum Merdeka.`,
+            itemHighlight: `Kelas ${kelas}`,
+            badgeLabel: "Preset Kurikulum",
+            note: "Jadwal yang sudah ada pada kelas ini akan digantikan dengan preset.",
+            confirmText: "Terapkan Preset",
+            cancelText: "Batal",
+            icon: "fa-wand-magic-sparkles",
+            type: "warning"
+        });
+        if (!ok) return;
 
         const wali = this.getWaliKelas(kelas);
         const tendiks = DataStore.getTendik();

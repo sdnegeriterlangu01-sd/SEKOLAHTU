@@ -1828,3 +1828,83 @@ html.dark .driver-popover-close-btn {
 html.dark .driver-popover-close-btn:hover {
   color: #f8fafc !important;
 }
+
+/* Dark Mode Driver Popover Arrow */
+html.dark .driver-popover {
+  --driver-popover-bg: #111a2e !important;
+}
+
+html.dark .driver-popover-arrow-side-top {
+  border-bottom-color: #111a2e !important;
+}
+
+html.dark .driver-popover-arrow-side-bottom {
+  border-top-color: #111a2e !important;
+}
+
+html.dark .driver-popover-arrow-side-left {
+  border-right-color: #111a2e !important;
+}
+
+html.dark .driver-popover-arrow-side-right {
+  border-left-color: #111a2e !important;
+}
+
+/* Responsivitas Driver Popover di Layar HP / Mobile */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: calc(100vw - 24px) !important;
+    padding: 1rem 1.15rem !important;
+    margin: 0 12px !important;
+  }
+  .driver-popover-title {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.35rem !important;
+    line-height: 1.35 !important;
+  }
+  .driver-popover-description {
+    font-size: 0.785rem !important;
+    line-height: 1.5 !important;
+  }
+  .driver-popover-footer {
+    margin-top: 0.85rem !important;
+    gap: 0.5rem !important;
+  }
+  .driver-popover-next-btn,
+  .driver-popover-prev-btn {
+    padding: 0.45rem 0.8rem !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* Responsivitas Header di Layar HP / Mobile */
+@media (max-width: 639px) {
+  #app-top-header {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+    gap: 0.35rem !important;
+  }
+  #theme-toggle-text {
+    display: none !important;
+  }
+  #cloud-status-text {
+    display: none !important;
+  }
+  #theme-toggle-btn {
+    padding: 0.3rem 0.45rem !important;
+  }
+  #cloud-status-badge {
+    padding: 0.3rem 0.45rem !important;
+  }
+  #ta-dropdown-btn {
+    padding: 0.25rem 0.45rem !important;
+    font-size: 10px !important;
+  }
+  #ta-selected-label {
+    max-width: 82px !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+  }
+}

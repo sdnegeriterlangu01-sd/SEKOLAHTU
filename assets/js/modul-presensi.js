@@ -613,8 +613,11 @@ const ModulPresensi = {
                 });
             }
         }
-        document.getElementById("rt-bulan").value = this.bulanTendik;
-        document.getElementById("rt-hint").textContent = canEdit ? "Klik sel tanggal untuk koreksi manual (lupa scan, sakit, izin, alpa)." : "Mode lihat saja.";
+        const role = Auth.role();
+        const isPersonalStaff = role === "guru" || role === "penjaga" || role === "perpustakaan";
+        document.getElementById("rt-hint").textContent = canEdit 
+            ? (isPersonalStaff ? "Klik sel tanggal pada baris presensi Anda untuk isi absen / koreksi manual (lupa scan, sakit, izin, alpa)." : "Klik sel tanggal untuk koreksi manual (lupa scan, sakit, izin, alpa).")
+            : "Mode lihat saja.";
 
         const grid = document.getElementById("rt-grid");
         grid.innerHTML = `<div class="p-6 text-center text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin"></i> Memuat rekap…</div>`;
@@ -698,8 +701,16 @@ const ModulPresensi = {
 
             const cells = (kind) => hari.map(h => {
                 const r = getRecord(h.tgl);
-                const attrs = interactive && !h.off ? ` class="cell${h.off ? " off" : ""}" data-nip="${Sec.esc(nip)}" data-tgl="${h.tgl}"` : (h.off ? ` class="off"` : "");
-                let inner = "", extra = "";
+                const sched = this.getGuruMapelSchedule(t, h.tgl);
+                const isNoTeachMapel = sched.isGuruMapel && !sched.canAbsen;
+
+                let cellTitle = "";
+                if (isNoTeachMapel) {
+                    cellTitle = ` title="Bukan hari jam mengajar Guru Mapel (${sched.hari}) - Presensi dibatasi"`;
+                }
+
+                const attrs = interactive && !h.off ? ` class="cell${h.off ? " off" : ""}${isNoTeachMapel ? " no-teach" : ""}" data-nip="${Sec.esc(nip)}" data-tgl="${h.tgl}"${cellTitle}` : (h.off ? ` class="off"` : "");
+                let inner = "", extra = isNoTeachMapel ? " text-slate-300 dark:text-slate-600 cursor-not-allowed" : "";
                 if (r && r.status && r.status !== "Hadir") {
                     const L = r.status === "Sakit" ? "S" : r.status === "Izin" ? "I" : "A";
                     if (kind === "dp") inner = L;
@@ -771,11 +782,142 @@ const ModulPresensi = {
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     },
 
+    // ---- validasi jadwal mengajar guru mapel ----
+    getGuruMapelSchedule(tendik, tgl) {
+        if (!tendik) return { isGuruMapel: false, canAbsen: true };
+        const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr|s\.pd\.jas)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
+
+        // 1. Cek apakah tendik adalah Guru Mapel
+        const jab = String(tendik.jabatan || "").toLowerCase();
+        let isMapel = jab.includes("mapel") || jab.includes("pjok") || jab.includes("penjas") || 
+                      jab.includes("pai") || jab.includes("agama") || jab.includes("inggris") || 
+                      jab.includes("seni") || jab.includes("olahraga");
+        
+        // Cek jika akun yang aktif adalah guru mapel
+        if (typeof Auth !== "undefined") {
+            const u = Auth.user();
+            const uRole = Auth.role();
+            if (uRole === "guru") {
+                const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+                const uNip = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
+                const tNip = Util.cleanId(tendik.nip);
+                if ((uNip && tNip && uNip === tNip) || (gInfo && gInfo.isGuruMapel)) {
+                    if (gInfo && gInfo.isGuruMapel) isMapel = true;
+                }
+            }
+        }
+
+        if (!isMapel) {
+            return { isGuruMapel: false, canAbsen: true };
+        }
+
+        // 2. Dapatkan nama hari dari tanggal (YYYY-MM-DD)
+        const dParts = String(tgl || "").split("-").map(Number);
+        if (dParts.length < 3 || isNaN(dParts[0])) return { isGuruMapel: true, canAbsen: true, hari: "" };
+        const dateObj = new Date(dParts[0], dParts[1] - 1, dParts[2]);
+        const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const hariTarget = dayNames[dateObj.getDay()];
+
+        // Hari Minggu sekolah libur
+        if (hariTarget === "Minggu") {
+            return { isGuruMapel: true, canAbsen: false, hari: hariTarget, reason: "Hari Minggu adalah hari libur sekolah.", slots: [] };
+        }
+
+        // 3. Cari jadwal mengajar di DataStore
+        const allJadwal = (typeof DataStore !== "undefined" && DataStore.getJadwalAll) ? DataStore.getJadwalAll() : [];
+        const tNipClean = Util.cleanId(tendik.nip);
+        const tNameClean = cleanName(tendik.nama);
+
+        // Filter jadwal yang cocok dengan hari dan identitas guru mapel
+        const matchedSlots = allJadwal.filter(j => {
+            if (j.hari !== hariTarget) return false;
+
+            // Cocokkan NIP
+            if (j.nip && tNipClean && Util.cleanId(j.nip) === tNipClean) return true;
+
+            // Cocokkan Nama Guru
+            const jGuruClean = cleanName(j.guru || j.namaGuru);
+            if (tNameClean && jGuruClean && (tNameClean.includes(jGuruClean) || jGuruClean.includes(tNameClean))) return true;
+
+            // Cocokkan Mapel jika jabatan spesifik
+            const jMapel = String(j.mapel || "").toLowerCase();
+            if (jab.includes("pjok") && (jMapel.includes("pjok") || jMapel.includes("penjas") || jMapel.includes("olahraga"))) return true;
+            if (jab.includes("pai") && (jMapel.includes("pai") || jMapel.includes("agama"))) return true;
+            if (jab.includes("inggris") && jMapel.includes("inggris")) return true;
+            if (jab.includes("seni") && jMapel.includes("seni")) return true;
+
+            return false;
+        });
+
+        matchedSlots.sort((a, b) => (Number(a.jamKe) || 0) - (Number(b.jamKe) || 0));
+
+        if (matchedSlots.length === 0) {
+            return {
+                isGuruMapel: true,
+                canAbsen: false,
+                hari: hariTarget,
+                reason: `Tidak ada jadwal jam mengajar pada hari ${hariTarget} untuk guru mapel ${tendik.nama}.`,
+                slots: []
+            };
+        }
+
+        // Dapatkan rentang jam mengajar
+        const earliestMulai = matchedSlots[0].waktuMulai || "07:00";
+        const latestSelesai = matchedSlots[matchedSlots.length - 1].waktuSelesai || "12:00";
+        const summary = matchedSlots.map(s => `Kelas ${s.kelas || s.rombel} (Jam ke-${s.jamKe}: ${s.waktuMulai}-${s.waktuSelesai})`).join(", ");
+
+        return {
+            isGuruMapel: true,
+            canAbsen: true,
+            hari: hariTarget,
+            slots: matchedSlots,
+            earliestMulai,
+            latestSelesai,
+            slotsSummary: summary
+        };
+    },
+
     // ---- koreksi manual tendik ----
     openKoreksi(nip, tgl) {
-        const t = DataStore.getTendik().find(x => Util.cleanId(x.nip) === nip);
+        let t = DataStore.getTendik().find(x => Util.cleanId(x.nip) === nip);
+        if (!t) {
+            const u = Auth.user();
+            const uNipClean = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
+            if (u && (uNipClean === nip || nip === "STAFF")) {
+                t = { nip: u.nip || nip, nama: u.nama || u.email || "Guru / Tendik" };
+            } else if (this.tendikRows) {
+                const foundRow = this.tendikRows.find(x => Util.cleanId(x.nip) === nip);
+                if (foundRow) {
+                    t = { nip: foundRow.nip, nama: foundRow.nama || "Guru / Tendik" };
+                }
+            }
+        }
         if (!t) return;
-        const r = this.tendikRows.find(x => x.nip === nip && x.tanggal === tgl) || {};
+
+        const role = Auth.role();
+        const isAdminOrKepsek = role === "admin" || role === "kepsek";
+        if (!isAdminOrKepsek) {
+            // Verifikasi bahwa NIP yang diklik adalah milik akun staf yang sedang login jika bukan admin/kepsek
+            const u = Auth.user();
+            const uNipClean = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
+            const uNameClean = Auth.cleanPersonName ? Auth.cleanPersonName(u?.nama) : String(u?.nama || "").toLowerCase();
+            const targetNameClean = Auth.cleanPersonName ? Auth.cleanPersonName(t.nama) : String(t.nama || "").toLowerCase();
+
+            const isSelf = (uNipClean && uNipClean === nip) || 
+                           (uNameClean && targetNameClean && (uNameClean.includes(targetNameClean) || targetNameClean.includes(uNameClean)));
+            if (!isSelf) {
+                App.showToast("Anda hanya dapat mengisi atau mengoreksi presensi untuk akun Anda sendiri.", "warning");
+                return;
+            }
+        }
+
+        const sched = this.getGuruMapelSchedule(t, tgl);
+        if (sched.isGuruMapel && !sched.canAbsen) {
+            App.showToast(`Presensi Dibatasi: Guru Mapel hanya dapat mengisi presensi pada hari di mana terdapat jadwal jam mengajar. Pada hari ${sched.hari}, Anda tidak memiliki jadwal mengajar di data Jadwal Pelajaran.`, "warning");
+            return;
+        }
+
+        const r = this.tendikRows.find(x => (Util.cleanId(x.nip) === nip || x.nip === nip) && x.tanggal === tgl) || {};
         let m = document.getElementById("modal-koreksi-tendik");
         if (!m) {
             m = document.createElement("div");
@@ -783,29 +925,45 @@ const ModulPresensi = {
             m.className = "fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden";
             document.body.appendChild(m);
         }
-        m.innerHTML = `
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-                <div class="flex items-start justify-between border-b border-slate-100 pb-3">
-                    <div><h3 class="font-bold text-sm text-slate-900">Koreksi Presensi</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">${Sec.esc(t.nama)} • <span class="font-mono">${tgl}</span></p></div>
-                    <button type="button" onclick="document.getElementById('modal-koreksi-tendik').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+        const mapelBadge = sched.isGuruMapel ? `
+            <div class="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                <i class="fa-solid fa-clock-rotate-left mt-0.5 text-blue-600 dark:text-blue-400"></i>
+                <div>
+                    <span class="font-bold">Jadwal Mengajar Hari ${sched.hari}:</span>
+                    <div class="text-[10.5px] text-blue-700 dark:text-blue-400 mt-0.5">${Sec.esc(sched.slotsSummary)}</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Rentang Mengajar: <b class="font-mono">${sched.earliestMulai} - ${sched.latestSelesai}</b></div>
                 </div>
+            </div>
+        ` : '';
+
+        const defaultDatang = (r.jamDatang || "").substring(0, 5) || (sched.isGuruMapel && sched.earliestMulai ? sched.earliestMulai : "");
+        const defaultPulang = (r.jamPulang || "").substring(0, 5) || (sched.isGuruMapel && sched.latestSelesai ? sched.latestSelesai : "");
+
+        m.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-slate-800 dark:text-slate-100">
+                <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div><h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">Koreksi Presensi Tendik</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${Sec.esc(t.nama)} • <span class="font-mono">${tgl}</span></p></div>
+                    <button type="button" onclick="document.getElementById('modal-koreksi-tendik').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                ${mapelBadge}
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2"><label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-                        <select id="kor-status" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg">
+                    <div class="col-span-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Kehadiran</label>
+                        <select id="kor-status" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg">
                             ${["Hadir", "Sakit", "Izin", "Alpa"].map(s => `<option ${((r.status || "Hadir") === s) ? "selected" : ""}>${s}</option>`).join("")}
                             <option value="Hapus">Hapus data hari ini</option>
                         </select></div>
-                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jam Datang</label>
-                        <input type="time" id="kor-datang" value="${Sec.esc((r.jamDatang || "").substring(0, 5))}" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
-                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Jam Pulang</label>
-                        <input type="time" id="kor-pulang" value="${Sec.esc((r.jamPulang || "").substring(0, 5))}" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
-                    <div class="col-span-2"><label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan</label>
-                        <input type="text" id="kor-ket" maxlength="120" value="${Sec.esc(r.keterangan || "")}" placeholder="mis. lupa scan / surat dokter" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"></div>
+                    <div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jam Datang</label>
+                        <input type="time" id="kor-datang" value="${Sec.esc(defaultDatang)}" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg"></div>
+                    <div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jam Pulang</label>
+                        <input type="time" id="kor-pulang" value="${Sec.esc(defaultPulang)}" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg"></div>
+                    <div class="col-span-2"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Keterangan / Alasan</label>
+                        <input type="text" id="kor-ket" maxlength="120" value="${Sec.esc(r.keterangan || "")}" placeholder="mis. lupa scan / surat izin / tugas dinas" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg"></div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="document.getElementById('modal-koreksi-tendik').classList.add('hidden')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold">Batal</button>
-                    <button type="button" onclick="ModulPresensi.saveKoreksi('${Sec.esc(nip)}','${tgl}')" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold">Simpan</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="document.getElementById('modal-koreksi-tendik').classList.add('hidden')" class="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">Batal</button>
+                    <button type="button" onclick="ModulPresensi.saveKoreksi('${Sec.esc(nip)}','${tgl}')" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer">Simpan</button>
                 </div>
             </div>`;
         m.classList.remove("hidden");
@@ -1018,15 +1176,32 @@ const ModulPresensi = {
                 }) || opts[0] || `Kelas ${cleanK}`;
                 this.kelasSiswa = matched;
                 opts = [matched];
-            } else if (gInfo.isGuruMapel && gInfo.kelas && gInfo.kelas !== "Semua") {
-                const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
-                const matched = opts.find(o => {
-                    const d1 = String(o).replace(/\D/g, "");
-                    const d2 = cleanK.replace(/\D/g, "");
-                    return (d1 && d2 && d1 === d2) || String(o).toLowerCase().includes(cleanK.toLowerCase());
-                }) || opts[0] || `Kelas ${cleanK}`;
-                this.kelasSiswa = matched;
-                opts = [matched];
+            } else if (gInfo.isGuruMapel) {
+                // Ambil daftar kelas yang diajar oleh guru mapel ini dari Jadwal Pelajaran
+                const allJadwal = (typeof DataStore !== "undefined" && DataStore.getJadwalAll) ? DataStore.getJadwalAll() : [];
+                const u = Auth.user();
+                const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr|s\.pd\.jas)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
+                const uName = cleanName(u?.nama);
+                const uNip = Util.cleanId(u?.nip || "");
+                const myMapel = (gInfo.namaMapel || "").toLowerCase();
+
+                const myClasses = [];
+                allJadwal.forEach(j => {
+                    const jGuru = cleanName(j.guru || j.namaGuru);
+                    const jNip = Util.cleanId(j.nip || "");
+                    const jMapel = String(j.mapel || "").toLowerCase();
+                    const matchGuru = (uNip && jNip && uNip === jNip) || (uName && jGuru && (uName.includes(jGuru) || jGuru.includes(uName)));
+                    const matchMapel = myMapel && jMapel && (jMapel.includes(myMapel) || (myMapel === "pjok" && (jMapel.includes("penjas") || jMapel.includes("olahraga"))));
+                    if (matchGuru || matchMapel) {
+                        const k = String(j.kelas || j.rombel || "").trim();
+                        if (k && !myClasses.includes(k)) myClasses.push(k);
+                    }
+                });
+
+                if (myClasses.length > 0) {
+                    opts = myClasses.map(k => opts.find(o => String(o).replace(/\D/g, "") === k.replace(/\D/g, "")) || `Kelas ${k}`);
+                    if (!opts.includes(this.kelasSiswa)) this.kelasSiswa = opts[0];
+                }
             }
         }
         if (!opts.includes(this.kelasSiswa)) this.kelasSiswa = opts[0] || "";
@@ -1112,6 +1287,36 @@ const ModulPresensi = {
         const hari = this.hariBulan(this.bulanSiswa);
         const siswa = this.siswaKelas();
         const canEdit = Auth.canDo("saveAbsensiSiswaBulan");
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        const u = Auth.user();
+        const isGuruMapel = role === "guru" && gInfo && gInfo.isGuruMapel;
+        const cleanK = String(this.kelasSiswa || "").replace(/\D/g, "");
+
+        // Periksa hari apa saja guru mapel mengajar kelas yang sedang dibuka
+        const allJadwal = (typeof DataStore !== "undefined" && DataStore.getJadwalAll) ? DataStore.getJadwalAll() : [];
+        const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr|s\.pd\.jas)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
+        const uName = cleanName(u?.nama);
+        const uNip = Util.cleanId(u?.nip || "");
+        const myMapel = (gInfo?.namaMapel || "").toLowerCase();
+
+        const mapelTeachingDays = new Set();
+        if (isGuruMapel) {
+            allJadwal.forEach(j => {
+                const jK = String(j.kelas || j.rombel || "").replace(/\D/g, "");
+                if (cleanK && jK && cleanK !== jK) return;
+
+                const jGuru = cleanName(j.guru || j.namaGuru);
+                const jNip = Util.cleanId(j.nip || "");
+                const jMapel = String(j.mapel || "").toLowerCase();
+                const matchGuru = (uNip && jNip && uNip === jNip) || (uName && jGuru && (uName.includes(jGuru) || jGuru.includes(uName)));
+                const matchMapel = myMapel && jMapel && (jMapel.includes(myMapel) || (myMapel === "pjok" && (jMapel.includes("penjas") || jMapel.includes("olahraga"))));
+                if (matchGuru || matchMapel) {
+                    if (j.hari) mapelTeachingDays.add(j.hari);
+                }
+            });
+        }
+
         let html = `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
             <tr><th rowspan="2" class="sticky-col sticky-no">NO</th><th rowspan="2" class="sticky-col sticky-nama" style="min-width:180px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
             <tr>${hari.map(h => `<th class="${h.off ? "off" : ""}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
@@ -1125,9 +1330,23 @@ const ModulPresensi = {
                 const mk = h.off ? "" : (marks[h.dd] || "");
                 if (mk === "S") S++; else if (mk === "I") I++; else if (mk === "A") A++;
                 if (h.off) return `<td class="off"></td>`;
+
+                // Cek apakah tanggal ini adalah hari mengajar bagi guru mapel
+                let isNoTeach = false;
+                if (isGuruMapel) {
+                    const dayName = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][new Date(h.tgl).getDay()];
+                    if (!mapelTeachingDays.has(dayName)) {
+                        isNoTeach = true;
+                    }
+                }
+
                 const display = mk === "H" ? "✓" : mk;
                 const cls = mk === "H" ? "mk-H" : (mk ? "mk-" + mk : "");
-                return `<td class="${canEdit ? "cell" : ""} ${cls}" data-nisn="${s.nisn}" data-d="${h.dd}">${display}</td>`;
+                const cellCls = isNoTeach 
+                    ? `class="text-slate-300 dark:text-slate-600 cursor-not-allowed bg-slate-50/50 dark:bg-slate-800/20" title="Bukan jadwal mengajar Guru Mapel"`
+                    : `class="${canEdit ? "cell" : ""} ${cls}"`;
+
+                return `<td ${cellCls} data-nisn="${s.nisn}" data-d="${h.dd}" data-tgl="${h.tgl}">${display}</td>`;
             }).join("");
 
             // Jika hadir semua (S=0, I=0, A=0), kolom S/I/A dan Jumlah diisi garis "-"
@@ -1143,7 +1362,25 @@ const ModulPresensi = {
     },
 
     cycleMark(td) {
-        const nisn = td.dataset.nisn, d = td.dataset.d;
+        const nisn = td.dataset.nisn, d = td.dataset.d, tgl = td.dataset.tgl;
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        const u = Auth.user();
+
+        // Validasi ketat jika akun adalah guru mapel
+        if (role === "guru" && gInfo && gInfo.isGuruMapel && tgl) {
+            const sched = (typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule)
+                ? ModulPresensi.getGuruMapelSchedule({ nama: u?.nama, nip: u?.nip, jabatan: gInfo.namaMapel ? `Guru Mapel ${gInfo.namaMapel}` : "Guru Mapel" }, tgl)
+                : { isGuruMapel: true, canAbsen: true };
+
+            const cleanK = String(this.kelasSiswa || "").replace(/\D/g, "");
+            const hasClassToday = sched.slots && sched.slots.some(s => String(s.kelas || s.rombel || "").replace(/\D/g, "") === cleanK);
+
+            if (!sched.canAbsen || !hasClassToday) {
+                App.showToast(`Presensi Dibatasi: Guru Mapel hanya dapat mengisi presensi siswa pada hari dan kelas di mana terdapat jadwal jam mengajar Anda.`, "warning");
+                return;
+            }
+        }
         const order = ["", "H", "S", "I", "A"];
         const cur = (this.siswaMarks[nisn] || {})[d] || "";
         const next = order[(order.indexOf(cur) + 1) % order.length];

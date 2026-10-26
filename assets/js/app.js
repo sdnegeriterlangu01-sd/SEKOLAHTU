@@ -227,7 +227,7 @@ const App = {
         }
     },
 
-    VERSION: "3.3.0",
+    VERSION: "3.3.3",
 
     formatJamMenit(w) {
         if (!w) return "";
@@ -2145,6 +2145,14 @@ const App = {
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
+        // Di perangkat mobile, pastikan drawer sidebar tertutup saat tur dimulai agar tidak menutupi dasbor
+        const mobileSidebar = document.getElementById("main-sidebar");
+        const mobileOverlay = document.getElementById("sidebar-overlay");
+        if (mobileSidebar && window.innerWidth < 1024) {
+            mobileSidebar.classList.add("-translate-x-full");
+            if (mobileOverlay) mobileOverlay.classList.add("hidden");
+        }
+
         const currentRole = (Auth.role && Auth.role()) || "admin";
         const isPenjagaOrPerpus = currentRole === "penjaga" || currentRole === "perpustakaan";
 
@@ -2175,6 +2183,15 @@ const App = {
                     description: isPenjagaOrPerpus
                         ? 'Akses instan sekali klik untuk tugas utama sesuai tugas dan wewenang akun Anda.'
                         : 'Akses instan sekali klik untuk tugas utama: Data Guru, Tambah Siswa, Nomor Surat, Presensi, dan Scan QR.',
+                    side: 'bottom',
+                    align: 'start'
+                }
+            },
+            {
+                element: '#btn-mobile-menu',
+                popover: {
+                    title: 'Menu Navigasi Mobile',
+                    description: 'Ketuk tombol tiga garis (hamburger) ini di layar ponsel untuk membuka seluruh modul SEKOLAHTU (Data GTK, Jadwal, Berkas Siswa, PIP, Surat, Scan QR, dan Pengaturan).',
                     side: 'bottom',
                     align: 'start'
                 }
@@ -2336,13 +2353,28 @@ const App = {
             }
         ];
 
-        // Saring HANYA elemen yang ada di DOM dan terlihat di layar (menyesuaikan peran akun)
+        const isMobileScreen = window.innerWidth < 1024;
+
+        // Saring HANYA elemen yang ada di DOM dan terlihat di layar (menyesuaikan peran akun & mode HP/Desktop)
         const activeSteps = candidateSteps.filter(step => {
             const el = document.querySelector(step.element);
             if (!el) return false;
             const style = window.getComputedStyle(el);
             if (style.display === 'none' || style.visibility === 'hidden') return false;
             if (el.classList.contains('hidden')) return false;
+
+            // Di layar ponsel/tablet (<1024px), sidebar tersembunyi sebagai off-canvas drawer (-translate-x-full).
+            // Lewati item menu sidebar individual di HP agar tur tidak menyorot elemen di luar layar.
+            if (isMobileScreen && el.closest('#main-sidebar')) {
+                return false;
+            }
+
+            // Validasi koordinat fisik elemen di dalam viewport layar
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) return false;
+            if (rect.right <= 0 || rect.bottom <= 0) return false;
+            if (rect.left >= (window.innerWidth || document.documentElement.clientWidth)) return false;
+
             return true;
         });
 
@@ -2362,6 +2394,12 @@ const App = {
                 return true;
             },
             onDestroyed: () => {
+                const sidebarEl = document.getElementById("main-sidebar");
+                const overlayEl = document.getElementById("sidebar-overlay");
+                if (sidebarEl && window.innerWidth < 1024) {
+                    sidebarEl.classList.add("-translate-x-full");
+                    if (overlayEl) overlayEl.classList.add("hidden");
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
             onCloseClick: () => {
@@ -2391,6 +2429,9 @@ const App = {
                 if (!element) return;
                 // Jangan scroll window jika elemen berada di top header tetap
                 if (element.closest('#app-top-header')) {
+                    if (window.scrollY > 10) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                     return;
                 }
                 // Jika elemen di dalam nav sidebar, cukup scroll nav internalnya jika terpotong

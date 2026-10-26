@@ -1,6 +1,29 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.3] - 2026-10-26
+
+### Validasi Presensi Guru Mapel & Siswa Berbasis Jadwal Pelajaran, Pembersihan Header Mobile, Sinkronisasi Akun Riil Demo, dan Pembaruan REST API GAS
+- **Pembatasan Presensi Guru Mapel Sesuai Jadwal Jam Mengajar (`assets/js/modul-presensi.js`, `assets/js/api.js`, & `backend/Code.gs`):**
+  - Mengimplementasikan helper validasi jadwal mengajar `ModulPresensi.getGuruMapelSchedule()`: mendeteksi status Guru Mapel (PJOK, PAI, dll.) dan memvalidasi tanggal terhadap jadwal matriks pelajaran mingguan (`DataStore.getJadwalAll()`).
+  - Pembatasan koreksi manual dan scan QR kehadiran: Jika Guru Mapel mencoba mengisi absensi pada hari di mana ia tidak memiliki jadwal mengajar, sistem langsung memblokir dengan pesan edukatif. Pada hari mengajar yang valid, modal koreksi otomatis memunculkan badge rincian jadwal dan prefill jam mengajar.
+  - Penambahan penanda visual pada tabel rekap absensi guru/tendik dengan status non-jadwal mengajar dan tooltip informatif.
+- **Validasi Presensi Siswa Khusus Hari Mengajar Guru Mapel (`assets/js/modul-absensi.js` & `assets/js/modul-presensi.js`):**
+  - Pada formulir Presensi Harian Siswa, pilihan kelas bagi akun Guru Mapel secara otomatis disaring hanya pada kelas-kelas yang diajar pada tanggal terpilih.
+  - Menampilkan banner edukatif jadwal mengajar mapel aktif atau kartu peringatan saat tanggal yang dipilih bukan hari mengajar Guru Mapel tersebut.
+  - Memblokir aksi penyimpanan massal (`savePresensiBatch`) jika Guru Mapel mencoba menyimpan kehadiran siswa di hari tanpa jadwal.
+  - Pada tab *Rekap Siswa Bulanan*, kolom tanggal di luar hari mengajar bagi kelas tersebut otomatis dikunci (`cursor-not-allowed`) untuk mencegah pengisian keliru.
+- **Pembersihan Header Layar Mobile / Handphone (`index.html` & `assets/css/style.css`):**
+  - Menghapus label redundan `SEKOLAHTU` dan akronim panjangnya dari header bilah atas pada layar mobile karena identitas aplikasi sudah tampil di kotak banner dashboard.
+  - Memberikan ruang horizontal penuh dan bersih untuk nama sekolah **`SD NEGERI TERLANGU 01`** sehingga nama sekolah tidak lagi tertutup atau terpotong saat dibuka di smartphone.
+- **Pembaruan Daftar Akun Uji Coba Demo Satuan Pendidikan (`assets/js/auth.js`):**
+  - Menyelaraskan seluruh data pengguna demo dengan identitas riil pendidik & tendik SDN Terlangu 01 (Hendra Wijaya, S.Kom., Aisah Suciati, M.Pd., Dewi Kurniasih, S.Pd., Agus Triyono, S.Pd.Jas, Siti Fatimah, S.Pd.I, Rina Marlina, S.I.Pust., Slamet Riyadi).
+  - Merapikan antarmuka tombol cepat pengisian akun demo ke dalam dua kelompok kategori: *Manajemen & Tendik* serta *Akun Guru (Kelas & Mapel)* dengan instruksi password yang jelas.
+- **Pembaruan Backend Google Apps Script (GAS v3.3.3) (`backend/Code.gs`):**
+  - Penyelarasan versi API GAS ke `v3.3.3` pada handler `doGet` health check, backup dump metadata, dan komentar header.
+
+---
+
 ## [v3.3.2] - 2026-10-25
 
 ### Standardisasi Nomenklatur Kearsipan Dinamis SRIKANDI/ANRI, Penegasan Alur Tanda Tangan & Stempel Basah, Pembaruan Regex Nomor Agenda, dan Sinkronisasi Berkas Lomba Inovasi

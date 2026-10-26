@@ -20,16 +20,17 @@ const Auth = {
 
     // Akun contoh (Bisa dipakai baik di Mode Demo maupun pengujian cepat)
     DEMO_USERS: {
-        admin: { pw: "admin123", nama: "Administrator (Demo)", role: "admin" },
-        tu: { pw: "tu123", nama: "Tata Usaha (Demo)", role: "admin" },
-        operator: { pw: "operator123", nama: "Operator Sekolah (Demo)", role: "admin" },
-        kepsek: { pw: "kepsek123", nama: "Kepala Sekolah (Demo)", role: "kepsek" },
-        perpustakaan: { pw: "perpus123", nama: "Tenaga Perpustakaan (Demo)", role: "perpustakaan" },
-        penjaga: { pw: "penjaga123", nama: "Penjaga Sekolah (Demo)", role: "penjaga" },
-        guru: { pw: "guru123", nama: "Guru Kelas 1 (Demo)", role: "guru", tipeGuru: "kelas", kelasGuru: "1" },
-        guru_mapel: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
-        guru_pjok: { pw: "guru123", nama: "Guru Mapel PJOK (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua" },
-        guru_pai: { pw: "guru123", nama: "Guru Mapel PAI (Demo)", role: "guru", tipeGuru: "mapel", namaMapel: "PAI", kelasGuru: "Semua" }
+        admin: { pw: "admin123", nama: "Hendra Wijaya, S.Kom.", role: "admin", nip: "19930811 202012 1 002" },
+        operator: { pw: "operator123", nama: "Hendra Wijaya, S.Kom.", role: "admin", nip: "19930811 202012 1 002" },
+        tu: { pw: "tu123", nama: "Hendra Wijaya, S.Kom.", role: "admin", nip: "19930811 202012 1 002" },
+        kepsek: { pw: "kepsek123", nama: "Aisah Suciati, S.Pd.SD., M.Pd.", role: "kepsek", nip: "19690808 199201 2 002" },
+        guru: { pw: "guru123", nama: "Dewi Kurniasih, S.Pd.", role: "guru", tipeGuru: "kelas", kelasGuru: "1", nip: "19960719 202301 2 009" },
+        guru_kelas: { pw: "guru123", nama: "Dewi Kurniasih, S.Pd.", role: "guru", tipeGuru: "kelas", kelasGuru: "1", nip: "19960719 202301 2 009" },
+        guru_mapel: { pw: "guru123", nama: "Agus Triyono, S.Pd.Jas", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua", nip: "19850904 201001 1 015" },
+        guru_pjok: { pw: "guru123", nama: "Agus Triyono, S.Pd.Jas", role: "guru", tipeGuru: "mapel", namaMapel: "PJOK", kelasGuru: "Semua", nip: "19850904 201001 1 015" },
+        guru_pai: { pw: "guru123", nama: "Siti Fatimah, S.Pd.I", role: "guru", tipeGuru: "mapel", namaMapel: "PAI", kelasGuru: "Semua", nip: "19910214 201708 2 004" },
+        perpustakaan: { pw: "perpus123", nama: "Rina Marlina, S.I.Pust.", role: "perpustakaan", nip: "19950510 202104 2 007" },
+        penjaga: { pw: "penjaga123", nama: "Slamet Riyadi", role: "penjaga", nip: "19800412 201406 1 003" }
     },
 
     cfg() {
@@ -263,8 +264,11 @@ const Auth = {
                     email: identifier,
                     nama: demoU.nama,
                     role: demoU.role,
+                    rawRole: cleanId,
+                    nip: demoU.nip || "",
                     tipeGuru: demoU.tipeGuru || (demoU.role === "guru" ? "kelas" : ""),
-                    kelasGuru: demoU.kelasGuru || (demoU.role === "guru" ? "1" : "")
+                    kelasGuru: demoU.kelasGuru || (demoU.role === "guru" ? "1" : ""),
+                    namaMapel: demoU.namaMapel || ""
                 }
             };
             this.resetFail();
@@ -488,22 +492,32 @@ const Auth = {
             note.className = "text-[11px] p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 mt-2 text-left leading-relaxed";
             const fileBadge = isFileProtocol ? `<span class="inline-block px-1.5 py-0.2 rounded bg-amber-200/90 dark:bg-amber-800 text-amber-950 dark:text-amber-100 font-bold text-[10px] mr-1">Protokol file://</span> ` : ``;
             note.innerHTML = `
-                <div class="font-bold flex items-center gap-1.5 mb-1 text-xs text-amber-800 dark:text-amber-300">
-                    <i class="fa-solid fa-flask text-amber-500"></i> ${fileBadge}Mode Offline (Demo / Lokal)
+                <div class="font-bold flex items-center justify-between mb-1.5 text-xs text-amber-800 dark:text-amber-300">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-flask text-amber-500"></i> ${fileBadge}Mode Offline (Demo / Lokal)</span>
+                    <span class="text-[10px] text-slate-500 font-normal">Klik untuk isi otomatis</span>
                 </div>
-                <div class="text-[11px] text-slate-600 dark:text-slate-300 mb-1.5">
-                    Klik tombol akun uji coba di bawah untuk mengisi otomatis:
-                </div>
-                <div class="flex flex-wrap gap-1.5 pt-0.5">
-                    <button type="button" onclick="Auth.fillDemo('admin', 'admin123')" class="px-2 py-0.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200 font-bold text-[10px] transition cursor-pointer">Admin (admin123)</button>
-                    <button type="button" onclick="Auth.fillDemo('guru', 'guru123')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-200 font-bold text-[10px] transition cursor-pointer">Guru (guru123)</button>
-                    <button type="button" onclick="Auth.fillDemo('kepsek', 'kepsek123')" class="px-2 py-0.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-200 font-bold text-[10px] transition cursor-pointer">Kepsek (kepsek123)</button>
-                    <button type="button" onclick="Auth.fillDemo('penjaga', 'penjaga123')" class="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-bold text-[10px] transition cursor-pointer">Penjaga</button>
-                    <button type="button" onclick="Auth.fillDemo('perpustakaan', 'perpus123')" class="px-2 py-0.5 rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 dark:bg-teal-900/60 dark:text-teal-200 font-bold text-[10px] transition cursor-pointer">Perpus</button>
+                <div class="space-y-1.5 pt-0.5">
+                    <div>
+                        <div class="text-[9.5px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1">Manajemen & Tendik:</div>
+                        <div class="flex flex-wrap gap-1">
+                            <button type="button" onclick="Auth.fillDemo('admin', 'admin123')" class="px-2 py-0.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200 font-bold text-[10px] transition cursor-pointer" title="Admin / TU: Hendra Wijaya, S.Kom.">Admin (admin123)</button>
+                            <button type="button" onclick="Auth.fillDemo('kepsek', 'kepsek123')" class="px-2 py-0.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-900 dark:bg-purple-900/60 dark:text-purple-200 font-bold text-[10px] transition cursor-pointer" title="Kepala Sekolah: Aisah Suciati, M.Pd.">Kepsek (kepsek123)</button>
+                            <button type="button" onclick="Auth.fillDemo('perpustakaan', 'perpus123')" class="px-2 py-0.5 rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 dark:bg-teal-900/60 dark:text-teal-200 font-bold text-[10px] transition cursor-pointer" title="Perpustakaan: Rina Marlina, S.I.Pust.">Perpus (perpus123)</button>
+                            <button type="button" onclick="Auth.fillDemo('penjaga', 'penjaga123')" class="px-2 py-0.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-bold text-[10px] transition cursor-pointer" title="Penjaga: Slamet Riyadi">Penjaga (penjaga123)</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-[9.5px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1">Akun Guru (Kelas & Mapel):</div>
+                        <div class="flex flex-wrap gap-1">
+                            <button type="button" onclick="Auth.fillDemo('guru', 'guru123')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-200 font-bold text-[10px] transition cursor-pointer" title="Guru Kelas 1: Dewi Kurniasih, S.Pd.">Guru Kelas 1 (guru123)</button>
+                            <button type="button" onclick="Auth.fillDemo('guru_pjok', 'guru123')" class="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 font-bold text-[10px] transition cursor-pointer" title="Guru Mapel PJOK: Agus Triyono, S.Pd.Jas">Guru PJOK (guru123)</button>
+                            <button type="button" onclick="Auth.fillDemo('guru_pai', 'guru123')" class="px-2 py-0.5 rounded-lg bg-lime-100 hover:bg-lime-200 text-lime-900 dark:bg-lime-900/60 dark:text-lime-200 font-bold text-[10px] transition cursor-pointer" title="Guru Mapel PAI: Siti Fatimah, S.Pd.I">Guru PAI (guru123)</button>
+                        </div>
+                    </div>
                 </div>
             `;
             emailInput.type = "text";
-            emailInput.placeholder = "nama pengguna (contoh: admin, guru, kepsek)";
+            emailInput.placeholder = "nama pengguna (contoh: admin, guru, guru_pjok, kepsek)";
         }
     },
 

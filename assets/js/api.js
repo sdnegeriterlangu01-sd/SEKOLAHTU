@@ -659,6 +659,17 @@ const ApiClient = {
                 if (!tendik) return { success: false, message: `Data guru/tendik dengan NIP/ID '${nip}' tidak ditemukan atau nonaktif.` };
 
                 const tanggal = Util.today();
+                // Validasi jadwal mengajar jika Guru Mapel
+                if (typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule) {
+                    const sched = ModulPresensi.getGuruMapelSchedule(tendik, tanggal);
+                    if (sched.isGuruMapel && !sched.canAbsen) {
+                        return {
+                            success: false,
+                            message: `Presensi Ditolak: ${tendik.nama} adalah Guru Mapel dan tidak memiliki jadwal mengajar pada hari ${sched.hari} sesuai Jadwal Pelajaran.`
+                        };
+                    }
+                }
+
                 const jam = Util.nowTime();
                 const list = DataStore.getAbsensiTendik();
                 let rec = list.find(r => r.tanggal === tanggal && Util.cleanId(r.nip) === cleanNip);
@@ -686,15 +697,34 @@ const ApiClient = {
             case "saveAbsensiTendikManual": {
                 const { tanggal, nip, status } = payload;
                 if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggal || "")) return { success: false, message: "Tanggal tidak valid." };
-                const tendik = DataStore.getTendik().find(t => Util.cleanId(t.nip) === Util.cleanId(nip));
-                if (!tendik) return { success: false, message: "Guru/tendik tidak ditemukan." };
                 const key = Util.cleanId(nip);
+                let tendik = DataStore.getTendik().find(t => Util.cleanId(t.nip) === key);
+                if (!tendik && typeof Auth !== "undefined") {
+                    const u = Auth.user();
+                    const uNipClean = Util.cleanId(u?.nip || u?.email?.split("@")[0]);
+                    if (u && (uNipClean === key || key === "STAFF")) {
+                        tendik = { nip: u.nip || nip, nama: u.nama || u.email || "Guru / Tendik" };
+                    }
+                }
+                if (!tendik) return { success: false, message: "Guru/tendik tidak ditemukan." };
+
+                // Validasi jadwal mengajar jika Guru Mapel hadir di hari yang tidak ada jadwal mengajar
+                if ((!status || status === "Hadir") && typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule) {
+                    const sched = ModulPresensi.getGuruMapelSchedule(tendik, tanggal);
+                    if (sched.isGuruMapel && !sched.canAbsen) {
+                        return {
+                            success: false,
+                            message: `Presensi Ditolak: ${tendik.nama} adalah Guru Mapel dan tidak memiliki jadwal jam mengajar pada hari ${sched.hari} di data Jadwal Pelajaran.`
+                        };
+                    }
+                }
+
                 let list = DataStore.getAbsensiTendik();
 
                 if (status === "Hapus") {
-                    list = list.filter(r => !(r.tanggal === tanggal && r.nip === key));
+                    list = list.filter(r => !(r.tanggal === tanggal && Util.cleanId(r.nip) === key));
                 } else {
-                    let rec = list.find(r => r.tanggal === tanggal && r.nip === key);
+                    let rec = list.find(r => r.tanggal === tanggal && Util.cleanId(r.nip) === key);
                     if (!rec) { rec = { key: `${tanggal}|${key}`, tanggal, nip: key, nama: tendik.nama }; list.push(rec); }
                     rec.status = status || "Hadir";
                     rec.jamDatang = payload.jamDatang || "";

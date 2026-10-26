@@ -37,16 +37,39 @@ const ModulAbsensi = {
             sel.disabled = true;
             this.selectedKelas = matchedRombel;
             return;
-        } else if (role === "guru" && gInfo && gInfo.isGuruMapel && gInfo.kelas && gInfo.kelas !== "Semua") {
-            const cleanK = String(gInfo.kelas).replace(/kelas\s*/i, "").trim();
-            const matchedRombel = rombels.find(r => r.toLowerCase() === cleanK.toLowerCase()) || cleanK;
-            const label = matchedRombel.toLowerCase().startsWith("kelas") ? matchedRombel : `Kelas ${matchedRombel}`;
+        } else if (role === "guru" && gInfo && gInfo.isGuruMapel) {
+            // Untuk Guru Mapel, sesuaikan pilihan kelas dengan jadwal mengajar pada tanggal yang dipilih
+            const u = Auth.user();
+            const sched = (typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule)
+                ? ModulPresensi.getGuruMapelSchedule({ nama: u?.nama, nip: u?.nip, jabatan: gInfo.namaMapel ? `Guru Mapel ${gInfo.namaMapel}` : "Guru Mapel" }, this.selectedDate)
+                : { isGuruMapel: true, canAbsen: true, slots: [] };
 
-            sel.innerHTML = `<option value="${Sec.esc(matchedRombel)}" selected>${Sec.esc(label)}</option>`;
-            sel.value = matchedRombel;
-            sel.disabled = true;
-            this.selectedKelas = matchedRombel;
-            return;
+            let mapelClasses = [];
+            if (sched.slots && sched.slots.length > 0) {
+                sched.slots.forEach(s => {
+                    const k = String(s.kelas || s.rombel || "").trim();
+                    if (k && !mapelClasses.includes(k)) mapelClasses.push(k);
+                });
+            }
+
+            if (mapelClasses.length > 0) {
+                sel.disabled = false;
+                sel.innerHTML = mapelClasses.map(k => {
+                    const label = k.toLowerCase().startsWith("kelas") ? k : `Kelas ${k}`;
+                    return `<option value="${Sec.esc(k)}">${Sec.esc(label)} (Jadwal Hari Ini)</option>`;
+                }).join("");
+                if (!mapelClasses.includes(this.selectedKelas)) {
+                    this.selectedKelas = mapelClasses[0];
+                }
+                sel.value = this.selectedKelas;
+                return;
+            } else {
+                // Hari tanpa jadwal mengajar
+                sel.disabled = true;
+                sel.innerHTML = `<option value="">(Tidak Ada Jadwal Mengajar Hari Ini)</option>`;
+                this.selectedKelas = "";
+                return;
+            }
         }
 
         sel.disabled = false;
@@ -71,6 +94,11 @@ const ModulAbsensi = {
         if (inputTgl) {
             inputTgl.addEventListener("change", (e) => {
                 this.selectedDate = e.target.value;
+                const role = Auth.role();
+                const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+                if (role === "guru" && gInfo && gInfo.isGuruMapel) {
+                    this.populateKelasOptions();
+                }
                 this.renderPresensiInputTable();
             });
         }
@@ -186,6 +214,48 @@ const ModulAbsensi = {
         );
         const holidayInfo = this.getHolidayInfo(this.selectedDate);
 
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        const u = Auth.user();
+        let mapelNoticeRow = "";
+
+        if (role === "guru" && gInfo && gInfo.isGuruMapel && this.selectedKategori === "Siswa") {
+            const sched = (typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule)
+                ? ModulPresensi.getGuruMapelSchedule({ nama: u?.nama, nip: u?.nip, jabatan: gInfo.namaMapel ? `Guru Mapel ${gInfo.namaMapel}` : "Guru Mapel" }, this.selectedDate)
+                : { isGuruMapel: true, canAbsen: true };
+
+            if (!sched.canAbsen) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-8 text-center bg-amber-50/60 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200">
+                            <i class="fa-solid fa-calendar-xmark text-3xl mb-2 text-amber-500"></i>
+                            <h4 class="font-bold text-sm">Tidak Ada Jadwal Mengajar</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto">
+                                Sebagai Guru Mapel <b>${Sec.esc(gInfo.namaMapel || 'Mapel')}</b>, Anda hanya dapat mengabsen siswa pada hari dan kelas di mana terdapat jadwal jam mengajar Anda. Pada hari <b>${sched.hari}</b> (${this.selectedDate}), Anda tidak memiliki jadwal mengajar.
+                            </p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            } else {
+                mapelNoticeRow = `
+                    <tr class="bg-blue-50/80 dark:bg-blue-950/40 border-b-2 border-blue-200 dark:border-blue-900/60 transition-colors">
+                        <td colspan="5" class="p-3">
+                            <div class="flex items-center justify-between text-xs text-blue-900 dark:text-blue-200">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-chalkboard-user text-blue-600 dark:text-blue-400 text-sm"></i>
+                                    <span>Jadwal Mengajar Mapel <strong class="text-blue-950 dark:text-blue-100 font-bold">${Sec.esc(gInfo.namaMapel || 'Mapel')}</strong> Hari <strong class="text-blue-950 dark:text-blue-100 font-bold">${sched.hari}</strong>: ${Sec.esc(sched.slotsSummary || '')} (${sched.earliestMulai} - ${sched.latestSelesai})</span>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 dark:bg-blue-900/80 text-blue-800 dark:text-blue-100 border border-blue-300 dark:border-blue-700/60 uppercase tracking-wider">
+                                    Hari Mengajar
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
         if (targets.length === 0) {
             container.innerHTML = `
                 <tr>
@@ -256,7 +326,7 @@ const ModulAbsensi = {
             `;
         }).join("");
 
-        container.innerHTML = holidayRow + rowsHtml;
+        container.innerHTML = mapelNoticeRow + holidayRow + rowsHtml;
     },
 
     updateRadioStyle(radioInput) {
@@ -293,6 +363,22 @@ const ModulAbsensi = {
     },
 
     async savePresensiBatch() {
+        const role = Auth.role();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        const u = Auth.user();
+
+        // Validasi ketat jadwal mengajar untuk Guru Mapel
+        if (role === "guru" && gInfo && gInfo.isGuruMapel && this.selectedKategori === "Siswa") {
+            const sched = (typeof ModulPresensi !== "undefined" && ModulPresensi.getGuruMapelSchedule)
+                ? ModulPresensi.getGuruMapelSchedule({ nama: u?.nama, nip: u?.nip, jabatan: gInfo.namaMapel ? `Guru Mapel ${gInfo.namaMapel}` : "Guru Mapel" }, this.selectedDate)
+                : { isGuruMapel: true, canAbsen: true };
+
+            if (!sched.canAbsen) {
+                App.showToast(`Penyimpanan Ditolak: Anda tidak memiliki jadwal jam mengajar pada hari ${sched.hari} (${this.selectedDate}). Presensi siswa hanya dapat disimpan pada hari mengajar.`, "warning");
+                return;
+            }
+        }
+
         const targets = this.getListTarget();
         if (targets.length === 0) {
             App.showToast("Tidak ada data presensi yang ditampilkan.", "warning");

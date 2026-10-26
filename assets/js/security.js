@@ -139,7 +139,7 @@ const ACL = {
         saveQrFiles: ["admin"],
         scanTendik: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         getAbsensiTendikBulan: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
-        saveAbsensiTendikManual: ["admin"],
+        saveAbsensiTendikManual: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         // Absensi siswa bulanan
         getAbsensiSiswaBulan: ["admin", "kepsek", "guru"],
         saveAbsensiSiswaBulan: ["admin", "guru"],

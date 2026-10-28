@@ -327,8 +327,8 @@ const ModulJadwal = {
             kelas: this.selectedKelas,
             hari,
             jamKe,
-            waktuMulai: item.waktuMulai || slot.mulai,
-            waktuSelesai: item.waktuSelesai || slot.selesai,
+            waktuMulai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(item.waktuMulai) || slot.mulai) : (item.waktuMulai || slot.mulai),
+            waktuSelesai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(item.waktuSelesai) || slot.selesai) : (item.waktuSelesai || slot.selesai),
             mapel: item.mapel || "",
             guru: item.guru || this.getWaliKelas(this.selectedKelas),
             nip: item.nip || "",
@@ -390,8 +390,10 @@ const ModulJadwal = {
         const hari = (document.getElementById("jadwal-form-hari") || document.getElementById("form-jadwal-hari"))?.value || "Senin";
         const jamKe = Number((document.getElementById("jadwal-form-jam") || document.getElementById("form-jadwal-jamke"))?.value || 1);
         const mapel = (document.getElementById("jadwal-form-mapel") || document.getElementById("form-jadwal-mapel"))?.value?.trim() || "";
-        const mulai = (document.getElementById("jadwal-form-mulai") || document.getElementById("form-jadwal-mulai"))?.value || "07:00";
-        const selesai = (document.getElementById("jadwal-form-selesai") || document.getElementById("form-jadwal-selesai"))?.value || "07:35";
+        const rawMulai = (document.getElementById("jadwal-form-mulai") || document.getElementById("form-jadwal-mulai"))?.value || "07:00";
+        const rawSelesai = (document.getElementById("jadwal-form-selesai") || document.getElementById("form-jadwal-selesai"))?.value || "07:35";
+        const mulai = (typeof Util !== "undefined" && Util.formatTime) ? Util.formatTime(rawMulai) : rawMulai;
+        const selesai = (typeof Util !== "undefined" && Util.formatTime) ? Util.formatTime(rawSelesai) : rawSelesai;
         const selGuru = document.getElementById("jadwal-form-guru") || document.getElementById("form-jadwal-guru");
         const guru = selGuru?.value || "";
         const nip = selGuru?.selectedOptions[0]?.getAttribute("data-nip") || "";

@@ -1043,12 +1043,44 @@ const DataStore = {
     },
 
     // ================= MODUL JADWAL PELAJARAN =================
+    getDefaultSlotTime(jamKe) {
+        const slots = {
+            1: { mulai: "07:00", selesai: "07:35" },
+            2: { mulai: "07:35", selesai: "08:10" },
+            3: { mulai: "08:10", selesai: "08:45" },
+            4: { mulai: "09:05", selesai: "09:40" },
+            5: { mulai: "09:40", selesai: "10:15" },
+            6: { mulai: "10:15", selesai: "10:50" },
+            7: { mulai: "10:50", selesai: "11:25" },
+            8: { mulai: "11:25", selesai: "12:00" }
+        };
+        return slots[Number(jamKe)] || { mulai: "07:00", selesai: "07:35" };
+    },
+
     getJadwalAll() {
-        try { return JSON.parse(localStorage.getItem(this.KEYS.JADWAL)) || []; } catch (e) { return []; }
+        try {
+            const list = JSON.parse(localStorage.getItem(this.KEYS.JADWAL)) || [];
+            return list.map(j => {
+                const def = this.getDefaultSlotTime(j.jamKe);
+                return {
+                    ...j,
+                    waktuMulai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuMulai) || def.mulai) : (j.waktuMulai || def.mulai),
+                    waktuSelesai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuSelesai) || def.selesai) : (j.waktuSelesai || def.selesai)
+                };
+            });
+        } catch (e) { return []; }
     },
 
     saveJadwalAll(list) {
-        localStorage.setItem(this.KEYS.JADWAL, JSON.stringify(list));
+        const cleaned = (list || []).map(j => {
+            const def = this.getDefaultSlotTime(j.jamKe);
+            return {
+                ...j,
+                waktuMulai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuMulai) || def.mulai) : (j.waktuMulai || def.mulai),
+                waktuSelesai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuSelesai) || def.selesai) : (j.waktuSelesai || def.selesai)
+            };
+        });
+        localStorage.setItem(this.KEYS.JADWAL, JSON.stringify(cleaned));
     },
 
     getJadwal(kelas, ta) {
@@ -1056,14 +1088,19 @@ const DataStore = {
         const normK = k => String(k || "").toLowerCase().replace(/kelas\s*/i, "").trim();
         const targetK = normK(kelas);
 
-        return list.map(j => ({
-            ...j,
-            kelas: j.kelas || j.rombel || "1",
-            rombel: j.rombel || j.kelas || "1",
-            guru: j.guru || j.namaGuru || "",
-            namaGuru: j.namaGuru || j.guru || "",
-            jamKe: Number(j.jamKe) || 1
-        })).filter(j => {
+        return list.map(j => {
+            const def = this.getDefaultSlotTime(j.jamKe);
+            return {
+                ...j,
+                kelas: j.kelas || j.rombel || "1",
+                rombel: j.rombel || j.kelas || "1",
+                guru: j.guru || j.namaGuru || "",
+                namaGuru: j.namaGuru || j.guru || "",
+                jamKe: Number(j.jamKe) || 1,
+                waktuMulai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuMulai) || def.mulai) : (j.waktuMulai || def.mulai),
+                waktuSelesai: (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(j.waktuSelesai) || def.selesai) : (j.waktuSelesai || def.selesai)
+            };
+        }).filter(j => {
             if (kelas && kelas !== "Semua") {
                 const kItem = normK(j.kelas || j.rombel);
                 if (kItem !== targetK && String(j.kelas || j.rombel).trim() !== String(kelas).trim()) {

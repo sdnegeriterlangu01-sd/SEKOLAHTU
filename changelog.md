@@ -1,6 +1,29 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.4] - 2026-10-28
+
+### Normalisasi Format Waktu Jadwal Pelajaran Google Sheets, Widget Monitoring Jadwal Dashboard, Penyelarasan Tema Sidebar, dan Harmonisasi Mode Gelap Komprehensif
+- **Normalisasi Format Jam Jadwal Pelajaran Google Sheets (`assets/js/security.js`, `assets/js/data.js`, `assets/js/modul-jadwal.js`, `assets/js/modul-presensi.js`, & `backend/Code.gs`):**
+  - Mengatasi format waktu korup Google Sheets (string tanggal epoch `Sat Dec 30 1899 ...` atau objek waktu JS) dengan memperkuat helper `Util.formatTime()` dan alias `formatJam()` untuk mengekstrak format standar `HH:mm`.
+  - Menambahkan normalisasi jam di layer `DataStore.getJadwalAll()`, `saveJadwalAll()`, modal edit jadwal, serta helper `formatTimeValGas()` di sisi backend Google Apps Script.
+  - Memperbaiki waktu mulai/selesai pada modal koreksi dan rekap presensi guru mapel.
+- **Widget Monitoring Jadwal Pelajaran di Dashboard (`index.html` & `assets/js/app.js`):**
+  - Menghadirkan widget *Monitoring Jadwal Pelajaran* harian untuk Admin/Kepsek dengan filter hari interaktif (Senin–Sabtu) dan filter rombel (Semua / Kelas 1–6).
+  - Mengoptimalkan widget jadwal harian Guru (`renderGuruScheduleToday`): penyaringan cerdas nama guru (menghilangkan gelar akademik, pengecekan NIP, pencocokan kata kunci mapel), indikator JP harian, dan saran pintas hari mengajar aktif jika hari ini libur/tidak ada jadwal.
+- **Penyelarasan Warna Sidebar dengan Navbar Header (`index.html`, `assets/js/modul-vue.js`, & `assets/css/style.css`):**
+  - Mengubah latar belakang sidebar dari slate monokrom menjadi gradien biru-indigo navy (`#1e3a8a` ke `#1e1b4b` ke `#0f172a`) senada dengan navbar header atas.
+  - Memperbarui kartu profil pengguna dan menu navigasi aktif dengan aksen gradien biru modern.
+- **Harmonisasi Mode Gelap (*Dark Mode*) pada Dashboard & Widget (`index.html`, `assets/js/app.js`, & `assets/css/style.css`):**
+  - Memperbaiki kartu *Berkas Siswa Belum Lengkap*: mengganti border terang menjadi `dark:border-rose-900/40`, background baris transparan lembut, dan badge `Belum KK` / `Belum Akta` bertema gelap.
+  - Memperbaiki kartu *Penerima PIP di Kelas Anda*: border `dark:border-amber-900/40`, status badge `Belum Cair` / `Sudah Cair` bertema gelap, dan kontras link modul.
+  - Memperbaiki box dan pill badge jadwal pelajaran: pill rombel `Kelas X` biru navy (`dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800/70`), pill jam pelajaran, serta pill hari pemilih.
+  - Menambahkan aturan CSS global `html.dark` untuk palet warna **Rose**, **Amber**, **Emerald**, dan **Blue**.
+- **Pembaruan Backend Google Apps Script (GAS v3.3.4) (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):**
+  - Penyelarasan versi API GAS ke `v3.3.4` pada handler `doGet` health check dan panduan deployment versi baru.
+
+---
+
 ## [v3.3.3] - 2026-10-26
 
 ### Validasi Presensi Guru Mapel & Siswa Berbasis Jadwal Pelajaran, Pembersihan Header Mobile, Sinkronisasi Akun Riil Demo, dan Pembaruan REST API GAS

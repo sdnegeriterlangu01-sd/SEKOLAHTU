@@ -56,6 +56,9 @@ const Util = {
     // Format waktu 24 jam "HH:mm" yang aman dari Date objek / string tanggal Sheets (misal "Sat Dec 30 1899 07:15:00")
     formatTime(v) {
         if (!v) return "";
+        if (v instanceof Date) {
+            return `${this.pad(v.getHours())}:${this.pad(v.getMinutes())}`;
+        }
         const s = String(v).trim();
         const m = s.match(/(\d{1,2}):(\d{2})/);
         if (m) {
@@ -63,6 +66,7 @@ const Util = {
         }
         return s.substring(0, 5);
     },
+    formatJam(v) { return this.formatTime(v); },
 
     // Konversi Google Drive file viewer URL (/file/d/ID/view) ke direct thumbnail image link
     formatDriveImageUrl(url) {

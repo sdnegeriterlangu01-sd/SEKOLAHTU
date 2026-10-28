@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.3
+ * Backend REST API - Google Apps Script (GAS) v3.3.4
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.3",
+    version: "3.3.4",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.3 berjalan normal. Portal mandiri & validasi jadwal mengajar aktif."
+    message: "Google Apps Script Backend v3.3.4 berjalan normal. Portal mandiri, normalisasi jam jadwal, & monitoring aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1898,6 +1898,25 @@ function handleGetJadwal(ss, payload) {
       if (!match) continue;
     }
 
+    var formatTimeValGas = function(val) {
+      if (!val) return "";
+      if (val instanceof Date) {
+        try {
+          return Utilities.formatDate(val, Session.getScriptTimeZone() || "Asia/Jakarta", "HH:mm");
+        } catch(e) {
+          var h = String(val.getHours()).padStart ? String(val.getHours()).padStart(2, "0") : (val.getHours() < 10 ? "0" + val.getHours() : val.getHours());
+          var m = String(val.getMinutes()).padStart ? String(val.getMinutes()).padStart(2, "0") : (val.getMinutes() < 10 ? "0" + val.getMinutes() : val.getMinutes());
+          return h + ":" + m;
+        }
+      }
+      var s = String(val).trim();
+      var m = s.match(/(\d{1,2}):(\d{2})/);
+      if (m) {
+        return (m[1].length === 1 ? "0" + m[1] : m[1]) + ":" + m[2];
+      }
+      return s.substring(0, 5);
+    };
+
     list.push({
       id: String(row[0] || ""),
       rombel: rombel,
@@ -1907,8 +1926,8 @@ function handleGetJadwal(ss, payload) {
       mapel: String(row[4] || ""),
       namaGuru: String(row[5] || ""),
       guru: String(row[5] || ""),
-      waktuMulai: String(row[6] || ""),
-      waktuSelesai: String(row[7] || ""),
+      waktuMulai: formatTimeValGas(row[6]),
+      waktuSelesai: formatTimeValGas(row[7]),
       ruang: String(row[8] || ""),
       updatedAt: String(row[9] || "")
     });

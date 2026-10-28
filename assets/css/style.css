@@ -1070,11 +1070,35 @@ html.dark body {
   color: #f8fafc !important;
 }
 
+/* Sidebar Theme: Mengikuti Nuansa Header Navbar (Gradient Navy/Indigo/Slate) */
+#main-sidebar {
+  background: linear-gradient(180deg, #1e3a8a 0%, #1e1b4b 35%, #0f172a 100%) !important;
+  border-right: 1px solid rgba(59, 130, 246, 0.25) !important;
+  color: #ffffff !important;
+}
+
+#main-sidebar .nav-link {
+  color: rgba(224, 231, 255, 0.85) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#main-sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+#main-sidebar .nav-link.active {
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45) !important;
+}
+
 html.dark #main-sidebar,
 html.dark #app-sidebar {
-  background-color: #0d1527 !important;
+  background: linear-gradient(180deg, #172554 0%, #0f172a 40%, #020617 100%) !important;
   border-color: rgba(255, 255, 255, 0.07) !important;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45) !important;
 }
 
 html.dark #app-top-header {
@@ -1126,6 +1150,118 @@ html.dark .border-slate-100,
 html.dark .border-slate-200\/80,
 html.dark .border-slate-200\/60 {
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dark mode overrides for Rose (Berkas Belum Lengkap, Alerts, Errors) */
+html.dark .border-rose-200,
+html.dark .border-rose-200\/80,
+html.dark .border-rose-200\/60,
+html.dark .border-rose-100 {
+  border-color: rgba(244, 63, 94, 0.25) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/40,
+html.dark .bg-rose-50\/50,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/80 {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+}
+
+html.dark .bg-rose-100,
+html.dark .bg-rose-100\/70 {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+html.dark .text-rose-950,
+html.dark .text-rose-900,
+html.dark .text-rose-800 {
+  color: #fda4af !important;
+}
+
+html.dark .text-rose-700,
+html.dark .text-rose-600 {
+  color: #fb7185 !important;
+}
+
+/* Dark mode overrides for Amber (PIP, Warning, Status Belum) */
+html.dark .border-amber-200,
+html.dark .border-amber-200\/80,
+html.dark .border-amber-200\/60,
+html.dark .border-amber-100 {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/80 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+html.dark .bg-amber-100,
+html.dark .bg-amber-100\/70 {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+html.dark .text-amber-950,
+html.dark .text-amber-900,
+html.dark .text-amber-800 {
+  color: #fcd34d !important;
+}
+
+html.dark .text-amber-700,
+html.dark .text-amber-600 {
+  color: #fbbf24 !important;
+}
+
+/* Dark mode overrides for Emerald (Sudah Cair, Sukses) */
+html.dark .border-emerald-200,
+html.dark .border-emerald-100 {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+html.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+html.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+html.dark .text-emerald-900,
+html.dark .text-emerald-800 {
+  color: #6ee7b7 !important;
+}
+
+html.dark .text-emerald-700,
+html.dark .text-emerald-600 {
+  color: #34d399 !important;
+}
+
+/* Dark mode overrides for Blue (Jadwal pills, links, badges, rombel) */
+html.dark .border-blue-200,
+html.dark .border-blue-100 {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+}
+
+html.dark .bg-blue-100 {
+  background-color: rgba(30, 58, 138, 0.5) !important;
+}
+
+html.dark .text-blue-900,
+html.dark .text-blue-800 {
+  color: #93c5fd !important;
+}
+
+html.dark .text-blue-700,
+html.dark .text-blue-600 {
+  color: #60a5fa !important;
 }
 
 html.dark .glass-card {

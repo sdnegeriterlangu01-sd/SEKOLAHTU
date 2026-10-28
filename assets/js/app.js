@@ -231,9 +231,12 @@ const App = {
 
     formatJamMenit(w) {
         if (!w) return "";
+        if (typeof Util !== "undefined" && Util.formatTime) {
+            return Util.formatTime(w);
+        }
         const str = String(w);
-        const m = str.match(/(\d{1,2}:\d{2})/);
-        return m ? m[1].padStart(5, '0') : str;
+        const m = str.match(/(\d{1,2}):(\d{2})/);
+        return m ? `${m[1].padStart(2, '0')}:${m[2]}` : str;
     },
 
     updateDashboardStats() {
@@ -691,6 +694,26 @@ const App = {
 
     _berkasChartInstance: null,
 
+    dashboardScheduleDay: "",
+    adminDashboardScheduleRombel: "Semua",
+
+    setDashboardScheduleDay(hari) {
+        this.dashboardScheduleDay = hari;
+        const role = Auth.role();
+        const user = Auth.user();
+        const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
+        if (role === "guru") {
+            this.renderGuruScheduleToday(user, gInfo);
+        } else {
+            this.renderAdminScheduleToday();
+        }
+    },
+
+    setAdminDashboardScheduleRombel(rombel) {
+        this.adminDashboardScheduleRombel = rombel || "Semua";
+        this.renderAdminScheduleToday();
+    },
+
     renderRoleDashboardWidgets(role, user, gInfo, targetStudents) {
         const guruSection = document.getElementById("dashboard-guru-section");
         const adminSection = document.getElementById("dashboard-admin-section");
@@ -711,6 +734,7 @@ const App = {
 
             this.renderAdminBerkasChart();
             this.renderAdminPIPStats();
+            this.renderAdminScheduleToday();
         } else {
             if (guruSection) guruSection.classList.add("hidden");
             if (adminSection) adminSection.classList.remove("hidden");
@@ -718,20 +742,28 @@ const App = {
             this.renderAdminBerkasChart();
             this.renderAdminPIPStats();
             this.renderPendingPermohonanAlert();
+            this.renderAdminScheduleToday();
         }
     },
 
     renderGuruScheduleToday(user, gInfo) {
         const container = document.getElementById("guru-jadwal-hari-ini-body");
         const dayBadge = document.getElementById("guru-jadwal-hari-label");
+        const pillsContainer = document.getElementById("guru-jadwal-day-pills");
         if (!container) return;
 
-        let todayHari = Util.getHariIndonesia();
-        if (todayHari === "Minggu") todayHari = "Senin"; // Pratinjau hari kerja
-        if (dayBadge) dayBadge.textContent = todayHari;
+        const cleanName = (str) => {
+            return String(str || "")
+                .toLowerCase()
+                .replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr|s\.pd\.jas)\b/gi, "")
+                .replace(/[^a-z0-9]/gi, "")
+                .trim();
+        };
 
-        const allJadwal = DataStore.getJadwalAll();
-        let slots = [];
+        const u = user || Auth.user() || {};
+        const uName = cleanName(u?.nama || gInfo?.nama);
+        const uNip = Util.cleanId(u?.nip || gInfo?.nip || "");
+        const myMapel = String(gInfo?.namaMapel || "").toLowerCase();
 
         const matchRombel = (itemRombel, targetRombel) => {
             if (!itemRombel || !targetRombel) return false;
@@ -743,32 +775,114 @@ const App = {
             return !!(d1 && d2 && d1 === d2);
         };
 
-        if (gInfo && gInfo.isGuruKelas) {
-            const rombel = String(gInfo.kelas || "1");
-            slots = allJadwal.filter(j => (matchRombel(j.rombel, rombel) || matchRombel(j.kelas, rombel)) && j.hari === todayHari);
-        } else if (gInfo && gInfo.isGuruMapel) {
-            const myName = (user?.nama || "").toLowerCase();
-            const myMapel = (gInfo.namaMapel || "").toLowerCase();
-            const targetKelas = gInfo.kelas && gInfo.kelas !== "Semua" ? gInfo.kelas : "";
-            slots = allJadwal.filter(j => {
-                const matchHari = j.hari === todayHari;
-                const matchGuru = myName && ((j.namaGuru && j.namaGuru.toLowerCase().includes(myName)) || (j.guru && j.guru.toLowerCase().includes(myName)));
-                const matchMapel = myMapel && j.mapel && j.mapel.toLowerCase().includes(myMapel);
-                const matchK = targetKelas ? (matchRombel(j.rombel, targetKelas) || matchRombel(j.kelas, targetKelas)) : true;
-                return matchHari && (matchGuru || matchMapel) && matchK;
-            });
-        } else {
-            slots = allJadwal.filter(j => j.hari === todayHari && (matchRombel(j.rombel, "1") || matchRombel(j.kelas, "1")));
+        const matchGuruSlot = (j) => {
+            // 1. Cocokkan NIP jika ada
+            const jNip = Util.cleanId(j.nip || "");
+            if (uNip && jNip && uNip === jNip) return true;
+
+            // 2. Cocokkan Nama Bersih (dua arah)
+            const jGuru = cleanName(j.guru || j.namaGuru);
+            if (uName && jGuru && (uName.includes(jGuru) || jGuru.includes(uName))) return true;
+
+            // 3. Cocokkan Mapel jika Guru Mapel
+            if (gInfo && gInfo.isGuruMapel) {
+                const jMapel = String(j.mapel || "").toLowerCase();
+                if (myMapel) {
+                    if (jMapel.includes(myMapel) || myMapel.includes(jMapel)) return true;
+                    if ((myMapel === "pai" || myMapel.includes("agama") || myMapel.includes("islam")) &&
+                        (jMapel.includes("pai") || jMapel.includes("agama") || jMapel.includes("islam") || jMapel.includes("budi pekerti"))) {
+                        return true;
+                    }
+                    if ((myMapel === "pjok" || myMapel.includes("penjas") || myMapel.includes("olahraga")) &&
+                        (jMapel.includes("pjok") || jMapel.includes("penjas") || jMapel.includes("olahraga") || jMapel.includes("jasmani"))) {
+                        return true;
+                    }
+                    if (myMapel.includes("inggris") && (jMapel.includes("inggris") || jMapel.includes("english"))) {
+                        return true;
+                    }
+                    if (myMapel.includes("seni") && (jMapel.includes("seni") || jMapel.includes("budaya") || jMapel.includes("sbk") || jMapel.includes("musik") || jMapel.includes("rupa"))) {
+                        return true;
+                    }
+                }
+            }
+
+            // 4. Cocokkan Rombel jika Guru Kelas
+            if (gInfo && gInfo.isGuruKelas) {
+                const rombel = String(gInfo.kelas || "1");
+                if (matchRombel(j.rombel, rombel) || matchRombel(j.kelas, rombel)) return true;
+            }
+
+            return false;
+        };
+
+        const allJadwal = DataStore.getJadwalAll();
+        const allMySlots = allJadwal.filter(j => matchGuruSlot(j));
+        const myTeachingDays = Array.from(new Set(allMySlots.map(s => s.hari)));
+
+        let realToday = Util.getHariIndonesia();
+        if (realToday === "Minggu") realToday = "Senin";
+
+        // Tentukan hari aktif: preferensi hari yang dipilih user, atau hari ini jika ada jadwal, atau hari pertama mengajar
+        let activeHari = this.dashboardScheduleDay;
+        if (!activeHari) {
+            if (myTeachingDays.includes(realToday) || myTeachingDays.length === 0) {
+                activeHari = realToday;
+            } else {
+                activeHari = myTeachingDays[0] || realToday;
+            }
         }
 
+        if (dayBadge) {
+            dayBadge.textContent = activeHari + (activeHari === realToday ? " • Hari Ini" : "");
+        }
+
+        // Render Day Pills
+        const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        if (pillsContainer) {
+            pillsContainer.innerHTML = hariList.map(h => {
+                const countH = allMySlots.filter(s => s.hari === h).length;
+                const isSelected = h === activeHari;
+                const isRealToday = h === realToday;
+                let btnStyle = "";
+                if (isSelected) {
+                    btnStyle = "bg-emerald-600 text-white shadow-xs font-bold ring-2 ring-emerald-500/30";
+                } else if (countH > 0) {
+                    btnStyle = "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-800/60 font-semibold";
+                } else {
+                    btnStyle = "bg-slate-100 hover:bg-slate-200 text-slate-500 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 font-medium";
+                }
+                return `
+                    <button type="button" onclick="App.setDashboardScheduleDay('${h}')"
+                        class="px-2.5 py-1 rounded-lg text-xs transition inline-flex items-center gap-1 ${btnStyle} cursor-pointer">
+                        <span>${h}</span>
+                        ${isRealToday && !isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>' : ''}
+                        ${countH > 0 ? `<span class="px-1.5 py-0.2 rounded-md text-[10px] ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-800/80 dark:text-emerald-100'} font-black">${countH} JP</span>` : ''}
+                    </button>
+                `;
+            }).join("");
+        }
+
+        let slots = allMySlots.filter(j => j.hari === activeHari);
         slots.sort((a, b) => Number(a.jamKe) - Number(b.jamKe));
 
         if (slots.length === 0) {
             container.innerHTML = `
-                <div class="py-6 text-center text-slate-400">
-                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300"></i>
-                    <p class="text-xs font-semibold text-slate-600">Tidak ada jadwal mengajar pada hari ${todayHari}</p>
-                    <a href="#jadwal" onclick="App.navigateTo('jadwal')" class="text-[11px] text-blue-600 underline mt-1 inline-block">Lihat Seluruh Matriks Jadwal</a>
+                <div class="py-6 px-4 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700/60">
+                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 dark:text-slate-600"></i>
+                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Tidak ada jadwal jam mengajar pada hari ${activeHari}</p>
+                    ${myTeachingDays.length > 0 ? `
+                        <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            Jadwal mengajar Anda aktif pada hari:
+                            <div class="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
+                                ${myTeachingDays.map(dh => {
+                                    const c = allMySlots.filter(s => s.hari === dh).length;
+                                    return `<button type="button" onclick="App.setDashboardScheduleDay('${dh}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-800/80 rounded-lg font-bold text-xs transition cursor-pointer"><i class="fa-solid fa-calendar-check text-emerald-600 dark:text-emerald-400 mr-1"></i>${dh} (${c} JP)</button>`;
+                                }).join("")}
+                            </div>
+                        </div>
+                    ` : `
+                        <a href="#jadwal" onclick="App.navigateTo('jadwal')" class="text-[11px] text-blue-600 dark:text-blue-400 underline mt-2 inline-block">Lihat Seluruh Matriks Jadwal</a>
+                    `}
                 </div>
             `;
             return;
@@ -782,12 +896,12 @@ const App = {
 
             if (isBreak) {
                 return `
-                    <div class="flex items-center gap-3 p-2 bg-amber-50/70 border border-amber-200 rounded-xl text-xs">
-                        <span class="w-14 font-mono font-bold text-amber-800 text-center text-[11px]">Jam ${s.jamKe}</span>
-                        <div class="flex-grow font-semibold text-amber-900 flex items-center gap-2">
-                            <i class="fa-solid fa-mug-hot text-amber-600"></i> ${s.mapel}
+                    <div class="flex items-center gap-3 p-2 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-xs">
+                        <span class="w-14 font-mono font-bold text-amber-800 dark:text-amber-300 text-center text-[11px]">Jam ${s.jamKe}</span>
+                        <div class="flex-grow font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                            <i class="fa-solid fa-mug-hot text-amber-600 dark:text-amber-400"></i> ${Sec.esc(s.mapel)}
                         </div>
-                        <span class="text-[10px] text-amber-700 font-mono">${displayWaktu}</span>
+                        <span class="text-[10px] text-amber-700 dark:text-amber-400 font-mono">${displayWaktu}</span>
                     </div>
                 `;
             }
@@ -795,22 +909,115 @@ const App = {
             const rombelLabel = String(s.rombel || s.kelas || "1").toLowerCase().startsWith("kelas") ? (s.rombel || s.kelas) : `Kelas ${s.rombel || s.kelas || "1"}`;
 
             return `
-                <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 hover:border-blue-400 rounded-xl text-xs transition shadow-xs">
+                <div class="flex items-center justify-between p-2.5 bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-500/50 rounded-xl text-xs transition shadow-xs">
                     <div class="flex items-center gap-3 min-w-0">
-                        <span class="w-12 py-1 px-1.5 bg-blue-50 text-blue-800 font-black rounded-lg text-center font-mono text-[11px] border border-blue-200 flex-shrink-0">
+                        <span class="w-12 py-1 px-1.5 bg-emerald-50 text-emerald-800 font-black rounded-lg text-center font-mono text-[11px] border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800/80 flex-shrink-0">
                             Jam ${s.jamKe}
                         </span>
                         <div class="min-w-0">
-                            <div class="font-bold text-slate-800 truncate">${s.mapel || "Mata Pelajaran"}</div>
-                            <div class="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                                <span><i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i>${rombelLabel}</span>
+                            <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${Sec.esc(s.mapel || "Mata Pelajaran")}</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5">
+                                <span class="font-semibold text-emerald-700 dark:text-emerald-400"><i class="fa-solid fa-chalkboard-user text-emerald-500 mr-1"></i>${Sec.esc(rombelLabel)}</span>
                                 <span>•</span>
-                                <span class="truncate">${s.namaGuru || s.guru || "Guru"}</span>
+                                <span class="truncate">${Sec.esc(s.namaGuru || s.guru || "Guru")}</span>
                             </div>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 pl-2">
-                        <span class="font-mono text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${displayWaktu}</span>
+                        <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700/60">${displayWaktu}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    },
+
+    renderAdminScheduleToday() {
+        const container = document.getElementById("admin-jadwal-hari-ini-body");
+        const dayBadge = document.getElementById("admin-jadwal-hari-label");
+        const pillsContainer = document.getElementById("admin-jadwal-day-pills");
+        if (!container) return;
+
+        let realToday = Util.getHariIndonesia();
+        if (realToday === "Minggu") realToday = "Senin";
+
+        let activeHari = this.dashboardScheduleDay || realToday;
+        if (dayBadge) {
+            dayBadge.textContent = activeHari + (activeHari === realToday ? " • Hari Ini" : "");
+        }
+
+        const hariList = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        if (pillsContainer) {
+            pillsContainer.innerHTML = hariList.map(h => {
+                const isSelected = h === activeHari;
+                const isRealToday = h === realToday;
+                let btnStyle = isSelected
+                    ? "bg-blue-600 text-white shadow-xs font-bold ring-2 ring-blue-500/30"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 font-medium";
+                return `
+                    <button type="button" onclick="App.setDashboardScheduleDay('${h}')"
+                        class="px-2.5 py-1 rounded-lg text-xs transition inline-flex items-center gap-1 ${btnStyle} cursor-pointer">
+                        <span>${h}</span>
+                        ${isRealToday && !isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>' : ''}
+                    </button>
+                `;
+            }).join("");
+        }
+
+        const allJadwal = DataStore.getJadwalAll();
+        const selectedRombel = this.adminDashboardScheduleRombel || "Semua";
+
+        const matchRombel = (itemRombel, targetRombel) => {
+            if (!targetRombel || targetRombel === "Semua") return true;
+            if (!itemRombel) return false;
+            const r1 = String(itemRombel).trim();
+            const r2 = String(targetRombel).trim();
+            if (r1.toLowerCase() === r2.toLowerCase()) return true;
+            const d1 = r1.replace(/\D/g, "");
+            const d2 = r2.replace(/\D/g, "");
+            return !!(d1 && d2 && d1 === d2);
+        };
+
+        let slots = allJadwal.filter(j => j.hari === activeHari && (matchRombel(j.rombel, selectedRombel) || matchRombel(j.kelas, selectedRombel)));
+        slots.sort((a, b) => {
+            const rA = Number(String(a.rombel || a.kelas || "1").replace(/\D/g, "")) || 0;
+            const rB = Number(String(b.rombel || b.kelas || "1").replace(/\D/g, "")) || 0;
+            if (rA !== rB) return rA - rB;
+            return (Number(a.jamKe) || 0) - (Number(b.jamKe) || 0);
+        });
+
+        if (slots.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full py-6 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700/60">
+                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 dark:text-slate-600"></i>
+                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Tidak ada jadwal jam pelajaran pada hari ${activeHari} (${selectedRombel === 'Semua' ? 'Semua Rombel' : 'Kelas ' + selectedRombel})</p>
+                    <a href="#jadwal" onclick="App.navigateTo('jadwal')" class="text-[11px] text-blue-600 dark:text-blue-400 underline mt-1 inline-block">Atur Jadwal di Modul Jadwal Pelajaran</a>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = slots.map(s => {
+            const jamMulai = this.formatJamMenit(s.waktuMulai) || "07:00";
+            const jamSelesai = this.formatJamMenit(s.waktuSelesai) || "07:35";
+            const displayWaktu = `${jamMulai} - ${jamSelesai}`;
+            const rombelLabel = String(s.rombel || s.kelas || "1").toLowerCase().startsWith("kelas") ? (s.rombel || s.kelas) : `Kelas ${s.rombel || s.kelas || "1"}`;
+
+            return `
+                <div class="p-3 bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500/50 rounded-xl text-xs transition shadow-xs flex flex-col justify-between space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-900 border border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800/70 font-extrabold rounded-md text-[10px]">
+                            ${Sec.esc(rombelLabel)}
+                        </span>
+                        <span class="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-transparent dark:border-slate-700/50">
+                            Jam ${s.jamKe} (${displayWaktu})
+                        </span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900 dark:text-slate-100 truncate">${Sec.esc(s.mapel || "Mata Pelajaran")}</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                            <i class="fa-solid fa-user-tie text-[10px] text-slate-400 dark:text-slate-500"></i>
+                            <span class="truncate">${Sec.esc(s.namaGuru || s.guru || "Guru Pengampu")}</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -841,13 +1048,13 @@ const App = {
             const waLink = ModulBerkas.getWhatsAppReminderLink(s);
 
             return `
-                <div class="flex items-center justify-between p-2.5 bg-rose-50/40 border border-rose-100 hover:border-rose-300 rounded-xl text-xs transition">
+                <div class="flex items-center justify-between p-2.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl text-xs transition">
                     <div class="min-w-0 flex-grow pr-2">
-                        <div class="font-bold text-slate-800 truncate">${s.nama}</div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${s.nama}</div>
                         <div class="flex items-center gap-1 mt-1 flex-wrap">
-                            ${missingKK ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">Belum KK</span>' : ''}
-                            ${missingAkta ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Belum Akta</span>' : ''}
-                            <span class="text-[10px] text-slate-400 font-mono">NISN: ${s.nisn}</span>
+                            ${missingKK ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800/80">Belum KK</span>' : ''}
+                            ${missingAkta ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800/80">Belum Akta</span>' : ''}
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">NISN: ${s.nisn}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
@@ -860,7 +1067,7 @@ const App = {
                         ` : `
                             <button onclick="ModulBerkas.openEditKontakModal('${s.nisn}')"
                                 title="Lengkapi No HP Orang Tua"
-                                class="p-1.5 px-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 transition">
+                                class="p-1.5 px-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 transition">
                                 <i class="fa-solid fa-phone-plus"></i> Isi No HP
                             </button>
                         `}
@@ -880,7 +1087,7 @@ const App = {
 
         if (myPenerima.length === 0) {
             container.innerHTML = `
-                <div class="py-4 text-center text-slate-400 text-xs">
+                <div class="py-4 text-center text-slate-400 dark:text-slate-500 text-xs">
                     <p>Tidak ada siswa penerima PIP SK di rombel ini</p>
                 </div>
             `;
@@ -892,24 +1099,24 @@ const App = {
 
         container.innerHTML = `
             <div class="flex items-center justify-between mb-3 text-xs">
-                <span class="font-bold text-slate-700">${myPenerima.length} Siswa Penerima PIP</span>
-                <span class="text-[11px] text-slate-500">${countCair} Cair • ${countBelum} Belum</span>
+                <span class="font-bold text-slate-700 dark:text-slate-200">${myPenerima.length} Siswa Penerima PIP</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">${countCair} Cair • ${countBelum} Belum</span>
             </div>
             <div class="space-y-1.5">
                 ${myPenerima.slice(0, 3).map(p => `
-                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-xs">
                         <div class="truncate pr-2">
-                            <span class="font-bold text-slate-800">${p.nama}</span>
-                            <span class="text-[10px] text-slate-400 ml-1">Rp ${(p.nominal || 450000).toLocaleString('id-ID')}</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-100">${p.nama}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-400 ml-1">Rp ${(p.nominal || 450000).toLocaleString('id-ID')}</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.statusPencairan === 'Sudah Cair' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.statusPencairan === 'Sudah Cair' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800/80' : 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800/80'}">
                             ${p.statusPencairan || 'Belum Cair'}
                         </span>
                     </div>
                 `).join("")}
             </div>
-            <div class="mt-3 pt-2 border-t border-slate-100 text-right">
-                <a href="#pip" onclick="App.navigateTo('pip')" class="text-xs text-blue-600 font-bold hover:underline">Buka Modul PIP Lengkap &rarr;</a>
+            <div class="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-right">
+                <a href="#pip" onclick="App.navigateTo('pip')" class="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline">Buka Modul PIP Lengkap &rarr;</a>
             </div>
         `;
     },

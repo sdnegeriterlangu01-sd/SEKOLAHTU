@@ -87,10 +87,10 @@
              SIDEBAR NAVIGATION
              ========================================================================== -->
         <aside id="main-sidebar"
-            class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-xl lg:shadow-none">
+            class="fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-[#1e3a8a] via-[#1e1b4b] to-[#0f172a] text-white border-r border-blue-900/40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-2xl lg:shadow-none">
             <!-- Brand & Logo -->
             <div
-                class="flex-shrink-0 p-6 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
+                class="flex-shrink-0 p-6 border-b border-blue-800/50 flex items-center gap-3.5 bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
                 <img src="assets/img/logo-brebes.svg"
                     onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
                     alt="Logo Kabupaten Brebes" class="w-10 h-10 object-contain drop-shadow-md">
@@ -98,7 +98,7 @@
                     <div class="font-extrabold text-base tracking-wider flex items-center gap-1.5">
                         SEKOLAHTU
                         <span
-                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.3</span>
+                            class="text-[10px] bg-amber-400 text-blue-950 px-1.5 py-0.2 rounded font-black tracking-normal">v3.3.4</span>
                     </div>
                     <div class="text-[11px] text-blue-200 school-name-text truncate max-w-[160px]">SD Negeri
                         Terlangu 01</div>
@@ -108,72 +108,72 @@
             <!-- Navigation Links with Modular Vue 3 (No v-cloak on wrapper to prevent blank sidebar on refresh) -->
             <nav id="vue-sidebar-nav" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-1.5 font-medium text-xs">
                 <!-- Menu Utama -->
-                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
+                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">Menu Utama</div>
 
                 <a href="#dashboard" data-route="dashboard" onclick="App.navigateTo('dashboard')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer active bg-blue-900 text-white shadow-sm">
-                    <i class="fa-solid fa-gauge-high text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer active bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 font-bold">
+                    <i class="fa-solid fa-gauge-high text-sm w-5 text-center text-blue-300"></i>
                     <span>Beranda & Ringkasan</span>
                 </a>
                 <a href="#tendik" data-route="tendik" onclick="App.navigateTo('tendik')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-chalkboard-user text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-chalkboard-user text-sm w-5 text-center text-blue-300"></i>
                     <span>Data Guru & Tendik</span>
                 </a>
                 <a href="#jadwal" data-route="jadwal" onclick="App.navigateTo('jadwal')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-calendar-days text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-calendar-days text-sm w-5 text-center text-blue-300"></i>
                     <span>Jadwal Pelajaran</span>
                 </a>
                 <a href="#berkas" data-route="berkas" onclick="App.navigateTo('berkas')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-folder-closed text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-folder-closed text-sm w-5 text-center text-blue-300"></i>
                     <span>Bangkas Digital Siswa</span>
                 </a>
                 <a href="#pip" data-route="pip" onclick="App.navigateTo('pip')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-hand-holding-dollar text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-hand-holding-dollar text-sm w-5 text-center text-blue-300"></i>
                     <span>Program PIP Siswa</span>
                 </a>
                 <a href="#surat" data-route="surat" onclick="App.navigateTo('surat')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-envelopes-bulk text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-envelopes-bulk text-sm w-5 text-center text-blue-300"></i>
                     <span>Penomoran & Surat</span>
                 </a>
                 <a href="#cetak" data-route="cetak" onclick="App.navigateTo('cetak')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-file-invoice text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-file-invoice text-sm w-5 text-center text-blue-300"></i>
                     <span>Cetak Surat Otomatis</span>
                 </a>
                 <a href="#scan-absensi" data-route="scan-absensi" onclick="App.navigateTo('scan-absensi')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-qrcode text-indigo-600 text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-qrcode text-indigo-400 text-sm w-5 text-center"></i>
                     <span>Scan Absensi (Datang/Pulang)</span>
                 </a>
                 <a href="#absensi" data-route="absensi" onclick="App.navigateTo('absensi')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-clipboard-user text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-clipboard-user text-sm w-5 text-center text-blue-300"></i>
                     <span>Presensi & Absensi</span>
                 </a>
 
                 <!-- Integrasi & Pengaturan -->
-                <div class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Integrasi & Pengaturan</div>
+                <div class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">Integrasi & Pengaturan</div>
                 <a href="#pengaturan" data-route="pengaturan" onclick="App.navigateTo('pengaturan')"
-                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <i class="fa-solid fa-sliders text-sm w-5 text-center"></i>
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-sliders text-sm w-5 text-center text-blue-300"></i>
                     <span>Pengaturan & Backend GAS</span>
                 </a>
                 <a href="permohonan.html" target="_blank"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition">
-                    <i class="fa-solid fa-paper-plane text-blue-600 text-sm w-5 text-center"></i>
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-blue-200/80 hover:bg-white/10 hover:text-white transition">
+                    <i class="fa-solid fa-paper-plane text-blue-400 text-sm w-5 text-center"></i>
                     <span>Portal Permohonan Ortu</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-blue-300/60"></i>
                 </a>
                 <a href="verifikasi.html" target="_blank"
-                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition">
-                    <i class="fa-solid fa-shield-halved text-emerald-600 text-sm w-5 text-center"></i>
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-blue-200/80 hover:bg-white/10 hover:text-white transition">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 text-sm w-5 text-center"></i>
                     <span>Portal Verifikasi QR</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-blue-300/60"></i>
                 </a>
                 <script>
                     (function() {
@@ -219,26 +219,26 @@
             </nav>
 
             <!-- Sidebar Bottom Profile & School Info with Modular Vue 3 -->
-            <div id="vue-sidebar-profile" class="flex-shrink-0 p-4 border-t border-slate-100 bg-slate-50/70 dark:bg-slate-900/80 dark:border-slate-800">
+            <div id="vue-sidebar-profile" class="flex-shrink-0 p-4 border-t border-blue-900/50 bg-blue-950/80 text-white">
                 <div class="flex items-center gap-3">
                     <div id="sidebar-user-avatar-wrap"
-                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-1 ring-blue-500/30">
+                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-2 ring-blue-400/40">
                         <span id="sidebar-user-initials">--</span>
                         <img id="sidebar-user-photo" src="" alt="Foto Profil" class="w-full h-full object-cover hidden">
                     </div>
                     <div class="flex-grow min-w-0">
-                        <div id="sidebar-user-name" class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">Pengguna</div>
-                        <div id="sidebar-user-role" class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">-</div>
+                        <div id="sidebar-user-name" class="font-bold text-xs text-white truncate">Pengguna</div>
+                        <div id="sidebar-user-role" class="text-[10px] text-blue-300 font-semibold truncate">-</div>
                     </div>
                     <button type="button" onclick="Auth.logout()" title="Keluar dari sistem"
-                        class="text-slate-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex-shrink-0">
+                        class="text-blue-300 hover:text-rose-400 transition p-1.5 rounded-lg hover:bg-rose-950/50 flex-shrink-0">
                         <i class="fa-solid fa-right-from-bracket text-xs"></i>
                     </button>
                 </div>
                 <!-- Admin User Management Button -->
-                <div id="sidebar-admin-btn-wrap" class="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800 hidden">
+                <div id="sidebar-admin-btn-wrap" class="mt-2.5 pt-2 border-t border-blue-900/60 hidden">
                     <button type="button" onclick="Auth.openUserModal()"
-                        class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-900 to-indigo-800 hover:from-blue-800 hover:to-indigo-700 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
+                        class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
                         <i class="fa-solid fa-user-plus text-amber-300"></i> Kelola / Tambah Akun
                     </button>
                 </div>
@@ -877,6 +877,14 @@
                                         <i class="fa-solid fa-calendar-days"></i> Matriks Lengkap
                                     </button>
                                 </div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1 border-b border-slate-100">
+                                    <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-filter text-emerald-600"></i> Pilih Hari:
+                                    </div>
+                                    <div id="guru-jadwal-day-pills" class="flex items-center gap-1.5 flex-wrap">
+                                        <!-- Dynamic day pills populated by App -->
+                                    </div>
+                                </div>
                                 <div id="guru-jadwal-hari-ini-body" class="space-y-2">
                                     <!-- Populated by App.renderGuruScheduleToday -->
                                 </div>
@@ -885,18 +893,18 @@
                             <!-- Right: Peringatan Dokumen Belum Lengkap & PIP Kelas -->
                             <div class="lg:col-span-5 space-y-6">
                                 <!-- Incomplete Docs Card -->
-                                <div class="bg-white rounded-2xl border border-rose-200/80 p-5 shadow-xs space-y-3">
-                                    <div class="flex items-center justify-between border-b border-rose-100 pb-2.5">
+                                <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-rose-200/80 dark:border-rose-900/40 p-5 shadow-xs space-y-3">
+                                    <div class="flex items-center justify-between border-b border-rose-100 dark:border-rose-900/40 pb-2.5">
                                         <h3
-                                            class="font-bold text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
-                                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Berkas Siswa
+                                            class="font-bold text-xs uppercase tracking-wider text-rose-800 dark:text-rose-400 flex items-center gap-2">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i> Berkas Siswa
                                             Belum Lengkap
                                         </h3>
                                         <span id="guru-incomplete-docs-count"
-                                            class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">0
+                                            class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 dark:border dark:border-rose-800/60">0
                                             Siswa</span>
                                     </div>
-                                    <p class="text-[11px] text-slate-500">Klik tombol WA untuk mengirim pesan sopan
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Klik tombol WA untuk mengirim pesan sopan
                                         pengingat berkas langsung ke nomor orang tua.</p>
                                     <div id="guru-incomplete-docs-body" class="space-y-2">
                                         <!-- Populated by App.renderGuruIncompleteDocs -->
@@ -904,15 +912,15 @@
                                 </div>
 
                                 <!-- Class PIP Summary Card -->
-                                <div class="bg-white rounded-2xl border border-amber-200/80 p-5 shadow-xs space-y-3">
-                                    <div class="flex items-center justify-between border-b border-amber-100 pb-2.5">
+                                <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 p-5 shadow-xs space-y-3">
+                                    <div class="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/40 pb-2.5">
                                         <h3
-                                            class="font-bold text-xs uppercase tracking-wider text-amber-900 flex items-center gap-2">
-                                            <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i> Penerima PIP
+                                            class="font-bold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-400 flex items-center gap-2">
+                                            <i class="fa-solid fa-hand-holding-dollar text-amber-600 dark:text-amber-400"></i> Penerima PIP
                                             di Kelas Anda
                                         </h3>
                                         <span
-                                            class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">Kemendikbud</span>
+                                            class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 dark:border dark:border-amber-800/60">Kemendikbud</span>
                                     </div>
                                     <div id="guru-pip-summary-body">
                                         <!-- Populated by App.renderGuruPIPStatus -->
@@ -969,6 +977,46 @@
                                 <div id="dashboard-admin-pip-summary">
                                     <!-- Populated by App.renderAdminPIPStats -->
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Jadwal Pelajaran Monitoring Widget -->
+                        <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                        <i class="fa-solid fa-calendar-day text-blue-600 dark:text-blue-400"></i> Monitoring Jadwal Pelajaran
+                                        (<span id="admin-jadwal-hari-label">Hari</span>)
+                                    </h3>
+                                    <p class="text-xs text-slate-400 mt-0.5">Pemantauan jam mengajar guru harian per rombel binaan</p>
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <select id="admin-jadwal-select-rombel" onchange="App.setAdminDashboardScheduleRombel(this.value)"
+                                        class="text-xs border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                                        <option value="Semua">Semua Rombel (1 - 6)</option>
+                                        <option value="1">Kelas 1</option>
+                                        <option value="2">Kelas 2</option>
+                                        <option value="3">Kelas 3</option>
+                                        <option value="4">Kelas 4</option>
+                                        <option value="5">Kelas 5</option>
+                                        <option value="6">Kelas 6</option>
+                                    </select>
+                                    <button onclick="App.navigateTo('jadwal')"
+                                        class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 dark:border-blue-800/80 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fa-solid fa-table-cells"></i> Matriks Jadwal
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1 border-b border-slate-100 dark:border-slate-800">
+                                <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-filter text-blue-600 dark:text-blue-400"></i> Pilih Hari:
+                                </div>
+                                <div id="admin-jadwal-day-pills" class="flex items-center gap-1.5 flex-wrap">
+                                    <!-- Dynamic admin day pills -->
+                                </div>
+                            </div>
+                            <div id="admin-jadwal-hari-ini-body" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Populated by App.renderAdminScheduleToday -->
                             </div>
                         </div>
                     </div>
@@ -2664,7 +2712,7 @@
                 class="no-print mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span class="font-medium">&copy; 2026 SEKOLAHTU • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha <span
-                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.3</span></span>
+                            class="ml-1 text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">v3.3.4</span></span>
                     <span class="text-[11px] text-slate-400 dark:text-slate-500">Arsitektur Bebas Biaya (Google Apps Script & GitHub
                         Pages)</span>
                 </div>

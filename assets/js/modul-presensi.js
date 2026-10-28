@@ -862,9 +862,13 @@ const ModulPresensi = {
         }
 
         // Dapatkan rentang jam mengajar
-        const earliestMulai = matchedSlots[0].waktuMulai || "07:00";
-        const latestSelesai = matchedSlots[matchedSlots.length - 1].waktuSelesai || "12:00";
-        const summary = matchedSlots.map(s => `Kelas ${s.kelas || s.rombel} (Jam ke-${s.jamKe}: ${s.waktuMulai}-${s.waktuSelesai})`).join(", ");
+        const earliestMulai = (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(matchedSlots[0].waktuMulai) || "07:00") : (matchedSlots[0].waktuMulai || "07:00");
+        const latestSelesai = (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(matchedSlots[matchedSlots.length - 1].waktuSelesai) || "12:00") : (matchedSlots[matchedSlots.length - 1].waktuSelesai || "12:00");
+        const summary = matchedSlots.map(s => {
+            const sm = (typeof Util !== "undefined" && Util.formatTime) ? Util.formatTime(s.waktuMulai) : s.waktuMulai;
+            const ss = (typeof Util !== "undefined" && Util.formatTime) ? Util.formatTime(s.waktuSelesai) : s.waktuSelesai;
+            return `Kelas ${s.kelas || s.rombel} (Jam ke-${s.jamKe}: ${sm}-${ss})`;
+        }).join(", ");
 
         return {
             isGuruMapel: true,
@@ -937,8 +941,8 @@ const ModulPresensi = {
             </div>
         ` : '';
 
-        const defaultDatang = (r.jamDatang || "").substring(0, 5) || (sched.isGuruMapel && sched.earliestMulai ? sched.earliestMulai : "");
-        const defaultPulang = (r.jamPulang || "").substring(0, 5) || (sched.isGuruMapel && sched.latestSelesai ? sched.latestSelesai : "");
+        const defaultDatang = (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(r.jamDatang) || (sched.isGuruMapel && sched.earliestMulai ? sched.earliestMulai : "")) : ((r.jamDatang || "").substring(0, 5) || (sched.isGuruMapel && sched.earliestMulai ? sched.earliestMulai : ""));
+        const defaultPulang = (typeof Util !== "undefined" && Util.formatTime) ? (Util.formatTime(r.jamPulang) || (sched.isGuruMapel && sched.latestSelesai ? sched.latestSelesai : "")) : ((r.jamPulang || "").substring(0, 5) || (sched.isGuruMapel && sched.latestSelesai ? sched.latestSelesai : ""));
 
         m.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-slate-800 dark:text-slate-100">

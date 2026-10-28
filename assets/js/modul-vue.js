@@ -76,31 +76,31 @@ const ModulVue = {
         const app = createApp({
             template: `
                 <!-- Menu Utama -->
-                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</div>
+                <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">Menu Utama</div>
 
                 <a v-for="item in mainMenuItems" :key="item.id" :href="'#' + item.route" :data-route="item.route"
                     @click.prevent="navigate(item.route)"
-                    :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
-                    <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                    :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 font-bold' : 'text-blue-100/85 hover:bg-white/10 hover:text-white']">
+                    <i :class="['fa-solid', item.icon, item.iconColor || 'text-blue-300', 'text-sm w-5 text-center']"></i>
                     <span>{{ getMenuLabel(item) }}</span>
                 </a>
 
                 <!-- Integrasi & Pengaturan -->
                 <div v-if="settingsMenuItems.length > 0"
-                    class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">
                     Integrasi & Pengaturan
                 </div>
 
                 <template v-for="item in settingsMenuItems" :key="item.id">
                     <a v-if="item.isExternal" :href="item.url" target="_blank"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition">
-                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-blue-200/80 hover:bg-white/10 hover:text-white transition">
+                        <i :class="['fa-solid', item.icon, item.iconColor || 'text-blue-300', 'text-sm w-5 text-center']"></i>
                         <span>{{ item.label }}</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-slate-400"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto text-blue-300/60"></i>
                     </a>
                     <a v-else :href="'#' + item.route" :data-route="item.route" @click.prevent="navigate(item.route)"
-                        :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-blue-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100']">
-                        <i :class="['fa-solid', item.icon, item.iconColor || '', 'text-sm w-5 text-center']"></i>
+                        :class="['nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer', currentRoute === item.route ? 'active bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 font-bold' : 'text-blue-100/85 hover:bg-white/10 hover:text-white']">
+                        <i :class="['fa-solid', item.icon, item.iconColor || 'text-blue-300', 'text-sm w-5 text-center']"></i>
                         <span>{{ item.label }}</span>
                     </a>
                 </template>
@@ -200,23 +200,23 @@ const ModulVue = {
             template: `
                 <div class="flex items-center gap-3">
                     <div id="sidebar-user-avatar-wrap"
-                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-1 ring-blue-500/30">
+                        class="w-9 h-9 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 ring-2 ring-blue-400/40">
                         <img v-if="userPhoto" :src="userPhoto" alt="Foto Profil" class="w-full h-full object-cover">
                         <span v-else>{{ userInitials }}</span>
                     </div>
                     <div class="flex-grow min-w-0">
-                        <div class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">{{ userName }}</div>
-                        <div class="text-[10px] text-blue-700 dark:text-blue-400 font-semibold truncate">{{ userRoleLabel }}</div>
+                        <div class="font-bold text-xs text-white truncate">{{ userName }}</div>
+                        <div class="text-[10px] text-blue-300 font-semibold truncate">{{ userRoleLabel }}</div>
                     </div>
                     <button type="button" @click="logout" title="Keluar dari sistem"
-                        class="text-slate-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 flex-shrink-0">
+                        class="text-blue-300 hover:text-rose-400 transition p-1.5 rounded-lg hover:bg-rose-950/50 flex-shrink-0">
                         <i class="fa-solid fa-right-from-bracket text-xs"></i>
                     </button>
                 </div>
                 <!-- Admin User Management Button -->
-                <div v-if="role === 'admin'" class="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                <div v-if="role === 'admin'" class="mt-2.5 pt-2 border-t border-blue-900/60">
                     <button type="button" @click="openUserModal"
-                        class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-900 to-indigo-800 hover:from-blue-800 hover:to-indigo-700 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
+                        class="w-full py-1.5 px-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-bold rounded-xl transition inline-flex items-center justify-center gap-1.5 shadow-xs">
                         <i class="fa-solid fa-user-plus text-amber-300"></i> Kelola / Tambah Akun
                     </button>
                 </div>

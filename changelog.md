@@ -1,6 +1,26 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.5] - 2026-11-01
+
+### Integrasi Navigasi Silang Portal Permohonan & Verifikasi Surat Digital serta Standardisasi Identitas Visual Logo Resmi SEKOLAHTU
+- **Integrasi Navigasi Silang Permohonan & Verifikasi Surat Online (`permohonan.html` & `verifikasi.html`):**
+  - Penambahan tombol aksi cepat responsif *"Verifikasi Keabsahan Surat"* pada navbar header portal publik `permohonan.html` dengan ikon perisai verifikasi untuk memudahkan masyarakat memeriksa validitas surat secara langsung.
+  - Penambahan tombol aksi cepat responsif *"Permohonan Surat"* pada navbar header portal `verifikasi.html` dengan ikon permohonan agar pengunjung dapat langsung beralih ke form pengajuan surat online.
+  - Penyesuaian tata letak responsif tombol aksi di header agar tetap proporsional dan ramah tampilan mobile (*mobile-friendly*).
+- **Standardisasi Identitas Visual & Logo Resmi SEKOLAHTU (`assets/img/`):**
+  - Penambahan paket lengkap aset grafis logo resmi SEKOLAHTU beresolusi tinggi dalam aneka rasio dan format (`SVG`, `PNG`, `JPG`), mencakup:
+    - Logo standar (`logo-sekolahtu.svg`, `.png`, `.jpg`)
+    - Logo rasio 1:1 / profil persegi (`logo-sekolahtu-1x1.svg`, `.png`, `.jpg`)
+    - Logo ikon app 1:1 (`logo-sekolahtu-icon-1x1.svg`, `.png`, `.jpg`)
+    - Banner horizontal (`logo-sekolahtu-banner.svg`, `.png`, `.jpg`)
+- **Pembaruan Versi Antarmuka & Backend Google Apps Script (v3.3.5) (`index.html`, `permohonan.html`, `verifikasi.html`, `backend/Code.gs`, & `backend/Panduan_Deploy_GAS.md`):**
+  - Pembaruan badge dan label versi sistem ke `v3.3.5` pada sidebar header dan footer `index.html`.
+  - Sinkronisasi label versi footer pada portal publik `permohonan.html` dan `verifikasi.html`.
+  - Penyelarasan versi API GAS ke `v3.3.5` pada handler `doGet` health check dan panduan deployment backend.
+
+---
+
 ## [v3.3.4] - 2026-10-28
 
 ### Normalisasi Format Waktu Jadwal Pelajaran Google Sheets, Widget Monitoring Jadwal Dashboard, Penyelarasan Tema Sidebar, dan Harmonisasi Mode Gelap Komprehensif

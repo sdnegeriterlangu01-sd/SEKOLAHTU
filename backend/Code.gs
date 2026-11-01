@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.4
+ * Backend REST API - Google Apps Script (GAS) v3.3.5
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.4",
+    version: "3.3.5",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.4 berjalan normal. Portal mandiri, normalisasi jam jadwal, & monitoring aktif."
+    message: "Google Apps Script Backend v3.3.5 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);

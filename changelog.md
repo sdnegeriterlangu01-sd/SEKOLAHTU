@@ -1,6 +1,27 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.6] - 2026-11-02
+
+### Normalisasi Standar 10-Digit NISN (Anti-Leading Zero Truncation), Pencegahan Duplikasi Impor Ulang Siswa, dan Penguatan Integritas Data Google Sheets
+- **Normalisasi Standar 10-Digit NISN & Deteksi Lintas Tahun Ajaran (`assets/js/modul-import.js`):**
+  - Menambahkan fungsi helper `normNisn()` untuk memastikan NISN selalu dinormalisasi ke 10 digit standar Kemdikbud (`padStart(10, '0')`), mencegah NISN berawalan angka `0` (kelahiran 2010–2019) yang terpotong menjadi 9 digit di Excel/Google Sheets dianggap keliru sebagai "Siswa Baru".
+  - Memperkuat algoritma pencocokan data eksisting pada pratinjau impor menggunakan NISN ternormalisasi dan pencocokan cadangan melalui 16 digit NIK (`s.nik` dan `r.nik`).
+  - Menghadirkan deteksi cerdas lintas Tahun Ajaran (`adaDiTaLain`) beserta badge notifikasi informatif di modal pratinjau impor jika siswa sudah tercatat di sistem pada TA lain.
+- **Pencegahan Duplikasi & Pembaruan Data Siswa Lokal (`assets/js/api.js`):**
+  - Memperbarui handler `importStudents` pada mode simulasi/klien agar mencocokkan siswa lama melalui NISN ternormalisasi dan NIK, sehingga impor ulang data 183 siswa memicu operasi pembaruan (*update*) dan menstandarkan NISN 10 digit, bukan menambah baris ganda (*insert* baru).
+- **Migrasi Otomatis Data Siswa Lokal Browser (`assets/js/data.js`):**
+  - Menambahkan proses perapian dan pemadatan angka nol di depan (`padStart(10, '0')`) secara otomatis pada `DataStore.migratePeriodik()` untuk semua data siswa tersimpan di LocalStorage yang sebelumnya tersimpan 9 digit.
+- **Penyempurnaan Backend Google Apps Script (GAS v3.3.6) (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):**
+  - `handleGetStudents`: Menormalisasi NISN dari sel spreadsheet menjadi 10 digit utuh sebelum dikirimkan ke antarmuka aplikasi web.
+  - `handleImportStudents`: Memetakan baris eksisting (`nisnRowMap`) dengan NISN 10 digit dan menyimpan nilai NISN ke Google Sheets dengan awalan tanda petik satu (`'${nisn}`) agar Google Sheets menyimpannya sebagai teks permanen dan tidak menghapus angka nol di awal.
+  - Penyelarasan versi API GAS ke `v3.3.6` pada handler `doGet` health check dan panduan deployment backend.
+- **Pembaruan Label Versi Antarmuka (`index.html`, `permohonan.html`, & `verifikasi.html`):**
+  - Pembaruan badge versi sistem ke `v3.3.6` pada sidebar header dan footer `index.html`.
+  - Penyelarasan label versi footer pada portal layanan mandiri `permohonan.html` dan verifikasi publik `verifikasi.html`.
+
+---
+
 ## [v3.3.5] - 2026-11-01
 
 ### Integrasi Navigasi Silang Portal Permohonan & Verifikasi Surat Digital serta Standardisasi Identitas Visual Logo Resmi SEKOLAHTU

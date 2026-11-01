@@ -467,13 +467,55 @@ const ModulImport = {
     },
 
     // ===================================================== PRATINJAU
+    normNisn(v) {
+        const s = String(v == null ? "" : v).replace(/\D/g, "");
+        return (s && s.length < 10) ? s.padStart(10, "0") : s;
+    },
+
     renderPreview() {
         const p = this.parsed;
         const el = document.getElementById("imp-preview");
         const ta = document.getElementById("imp-ta").value;
-        const existing = new Set(DataStore.getSiswa(ta).map(s => s.nisn));
-        const baru = p.rows.filter(r => !existing.has(r.nisn)).length;
-        const ada = p.rows.length - baru;
+        const norm = v => this.normNisn(v);
+
+        const currentStudents = DataStore.getSiswa(ta);
+        const allStudents = DataStore.getSiswaAll();
+
+        const existingSet = new Set();
+        const existingNikSet = new Set();
+        currentStudents.forEach(s => {
+            const n = norm(s.nisn);
+            if (n) existingSet.add(n);
+            const nik = String(s.nik || "").replace(/\D/g, "");
+            if (nik && nik.length === 16) existingNikSet.add(nik);
+        });
+
+        const allSet = new Set();
+        const allNikSet = new Set();
+        allStudents.forEach(s => {
+            const n = norm(s.nisn);
+            if (n) allSet.add(n);
+            const nik = String(s.nik || "").replace(/\D/g, "");
+            if (nik && nik.length === 16) allNikSet.add(nik);
+        });
+
+        let baru = 0;
+        let ada = 0;
+        let adaDiTaLain = 0;
+
+        p.rows.forEach(r => {
+            const rNisn = norm(r.nisn);
+            const rNik = String(r.nik || "").replace(/\D/g, "");
+            const matchInTa = existingSet.has(rNisn) || (rNik && rNik.length === 16 && existingNikSet.has(rNik));
+            if (matchInTa) {
+                ada++;
+            } else {
+                baru++;
+                if (allSet.has(rNisn) || (rNik && rNik.length === 16 && allNikSet.has(rNik))) {
+                    adaDiTaLain++;
+                }
+            }
+        });
 
         const chip = (label, val, cls) => `<div class="p-3 rounded-xl border ${cls}"><div class="text-[10px] font-bold uppercase opacity-70">${label}</div><div class="text-xl font-black">${val}</div></div>`;
         const colInfo = Object.keys(p.colMap).length;
@@ -485,6 +527,7 @@ const ModulImport = {
                 ${chip("Sudah ada", ada, "bg-amber-50 border-amber-200 text-amber-800")}
                 ${chip("Bermasalah", p.errors.length, p.errors.length ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-slate-50 border-slate-200 text-slate-500")}
             </div>
+            ${adaDiTaLain > 0 ? `<div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-800 flex items-start gap-2"><i class="fa-solid fa-circle-info mt-0.5 text-blue-600 flex-shrink-0"></i><div><span class="font-bold">${adaDiTaLain} siswa</span> sudah terdaftar di sistem pada Tahun Ajaran lain dan akan ditambahkan ke TA ${Sec.esc(ta)}.</div></div>` : ""}
             <p class="text-[11px] text-slate-500"><i class="fa-solid fa-table-columns mr-1"></i> ${colInfo} kolom dikenali otomatis. Baris bermasalah tidak diimpor.</p>
 
             <div class="overflow-x-auto border border-slate-200 rounded-xl">

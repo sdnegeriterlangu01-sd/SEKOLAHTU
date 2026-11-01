@@ -934,7 +934,7 @@ const DataStore = {
         this.saveConfig(cfg);
     },
 
-    // Record lama (tanpa tahunAjaran/rombel) dimigrasikan ke TA aktif
+    // Record lama (tanpa tahunAjaran/rombel) dimigrasikan ke TA aktif dan normalisasi NISN 10 digit
     migratePeriodik() {
         const all = this.getSiswaAll();
         let changed = false;
@@ -942,6 +942,13 @@ const DataStore = {
         all.forEach(s => {
             if (!s.tahunAjaran) { s.tahunAjaran = ta; changed = true; }
             if (!s.rombel && s.kelas) { s.rombel = String(s.kelas); changed = true; }
+            if (s.nisn) {
+                const norm = String(s.nisn).replace(/\D/g, "");
+                if (norm && norm.length < 10) {
+                    s.nisn = norm.padStart(10, "0");
+                    changed = true;
+                }
+            }
         });
         if (changed) this.saveSiswaAll(all);
     },

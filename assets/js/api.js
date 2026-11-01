@@ -227,11 +227,22 @@ const ApiClient = {
                 const ta = payload.tahunAjaran || DataStore.getActiveTA();
                 const mode = payload.mode === "skip" ? "skip" : "update";
                 const list = DataStore.getSiswa(ta);
+                const normNisn = v => {
+                    const s = String(v == null ? "" : v).replace(/\D/g, "");
+                    return (s && s.length < 10) ? s.padStart(10, "0") : s;
+                };
                 let added = 0, updated = 0, skipped = 0;
 
                 (payload.rows || []).forEach(row => {
-                    if (!row.nisn) return;
-                    const idx = list.findIndex(s => s.nisn === row.nisn);
+                    const rowNisn = normNisn(row.nisn);
+                    if (!rowNisn) return;
+                    const rowNik = String(row.nik || "").replace(/\D/g, "");
+                    const idx = list.findIndex(s => {
+                        const sNisn = normNisn(s.nisn);
+                        if (sNisn && sNisn === rowNisn) return true;
+                        if (rowNik && rowNik.length === 16 && String(s.nik || "").replace(/\D/g, "") === rowNik) return true;
+                        return false;
+                    });
                     if (idx >= 0) {
                         if (mode === "skip") { skipped++; return; }
                         const old = list[idx];
@@ -240,11 +251,12 @@ const ApiClient = {
                             if (k === "berkas") return;
                             if (row[k] !== "" && row[k] != null) merged[k] = row[k];
                         });
+                        merged.nisn = rowNisn;
                         merged.berkas = row.berkas || old.berkas || this.defaultBerkas();
                         list[idx] = merged;
                         updated++;
                     } else {
-                        list.push({ ...row, berkas: row.berkas || this.defaultBerkas() });
+                        list.push({ ...row, nisn: rowNisn, berkas: row.berkas || this.defaultBerkas() });
                         added++;
                     }
                 });

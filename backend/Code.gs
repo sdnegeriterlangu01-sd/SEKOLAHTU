@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.5
+ * Backend REST API - Google Apps Script (GAS) v3.3.6
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.5",
+    version: "3.3.6",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.5 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
+    message: "Google Apps Script Backend v3.3.6 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -680,8 +680,11 @@ function handleGetStudents(ss, payload) {
     let meta = {};
     try { meta = row[22] ? JSON.parse(row[22]) : {}; } catch (e) { meta = {}; }
 
+    var rawNisn = String(row[0] || "").replace(/\D/g, "");
+    if (rawNisn && rawNisn.length < 10) rawNisn = ("0000000000" + rawNisn).slice(-10);
+
     return {
-      nisn: String(row[0]),
+      nisn: rawNisn,
       nis: String(row[1]),
       nama: String(row[2]),
       nik: String(row[3]),
@@ -758,13 +761,16 @@ function handleImportStudents(ss, payload) {
   const existingData = sheet.getDataRange().getValues();
   const nisnRowMap = {};
   for (let i = 1; i < existingData.length; i++) {
-    nisnRowMap[String(existingData[i][0])] = i + 1;
+    var raw = String(existingData[i][0] || "").replace(/\D/g, "");
+    if (raw && raw.length < 10) raw = ("0000000000" + raw).slice(-10);
+    if (raw) nisnRowMap[raw] = i + 1;
   }
 
   let imported = 0, updated = 0, skipped = 0;
 
   rows.forEach(s => {
-    const nisn = String(s.nisn);
+    var nisn = String(s.nisn || "").replace(/\D/g, "");
+    if (nisn && nisn.length < 10) nisn = ("0000000000" + nisn).slice(-10);
     const rowIdx = nisnRowMap[nisn];
     const metaJson = JSON.stringify(s.meta || {});
 
@@ -772,6 +778,7 @@ function handleImportStudents(ss, payload) {
       if (mode === "skip") {
         skipped++;
       } else {
+        sheet.getRange(rowIdx, 1).setValue("'" + nisn);
         sheet.getRange(rowIdx, 2, 1, 11).setValues([[
           s.nipd || s.nis || "", s.nama || "", s.nik || "",
           s.tempatLahir || "", s.tanggalLahir || "", s.jk || "",
@@ -785,7 +792,7 @@ function handleImportStudents(ss, payload) {
       }
     } else {
       sheet.appendRow([
-        nisn, s.nipd || s.nis || "", s.nama || "", s.nik || "",
+        "'" + nisn, s.nipd || s.nis || "", s.nama || "", s.nik || "",
         s.tempatLahir || "", s.tanggalLahir || "", s.jk || "",
         s.rombel || s.kelas || "", s.ayahNama || s.namaOrtu || "", s.ayahPekerjaan || s.pekerjaanOrtu || "",
         s.noHp || "", s.alamat || "",

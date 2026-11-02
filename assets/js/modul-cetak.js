@@ -1122,6 +1122,7 @@ const ModulCetak = {
         const config = DataStore.getConfig();
         const student = this.selectedStudent;
         const judulSurat = document.getElementById("cetak-jenis-surat")?.selectedOptions[0]?.text || "Surat Keterangan";
+        const keperluan = document.getElementById("cetak-keperluan")?.value || "";
 
         if (this.nomorMode !== "terbit") {
             await ApiClient.request("saveSuratKeluar", {
@@ -1133,10 +1134,29 @@ const ModulCetak = {
                 perihal: `${judulSurat} an. ${student.nama} (NISN: ${student.nisn})`,
                 pengonsep: "Staf TU (Sistem Mandiri)",
                 penandatangan: config.namaKepalaSekolah,
-                keterangan: `Diterbitkan instan via Modul Cetak Mandiri (${this.nomorMode === 'manual' ? 'Nomor Manual' : 'Nomor Baru'})`
+                keterangan: `Diterbitkan instan via Modul Cetak Mandiri (${this.nomorMode === 'manual' ? 'Nomor Manual' : 'Nomor Baru'})`,
+                isSiswa: true,
+                namaSiswa: student.nama,
+                nisn: student.nisn,
+                nik: student.nik || "",
+                kelas: student.kelas || "",
+                keperluan: keperluan
             });
             App.showToast(`Surat ${this.generatedNomorSurat} siap dicetak & nomor terarsip di agenda keluar!`, "success");
         } else {
+            try {
+                const skList = DataStore.getSuratKeluar();
+                const targetSK = skList.find(s => s.nomorSurat === this.generatedNomorSurat);
+                if (targetSK && (!targetSK.namaSiswa || !targetSK.nisn || !targetSK.nik || !targetSK.kelas)) {
+                    targetSK.isSiswa = true;
+                    targetSK.namaSiswa = student.nama;
+                    targetSK.nisn = student.nisn;
+                    targetSK.nik = student.nik || "";
+                    targetSK.kelas = student.kelas || "";
+                    targetSK.keperluan = keperluan;
+                    DataStore.saveSuratKeluar(skList);
+                }
+            } catch (e) {}
             App.showToast(`Mencetak surat dengan Nomor Terbit: ${this.generatedNomorSurat}`, "success");
         }
 

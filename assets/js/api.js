@@ -471,7 +471,13 @@ const ApiClient = {
                         penandatangan: payload.penandatangan || existing.penandatangan,
                         keterangan: payload.keterangan || existing.keterangan,
                         fileDriveUrl: payload.fileDriveUrl || payload.fileBase64 || existing.fileDriveUrl,
-                        isManual: !!payload.nomorSuratManual
+                        isManual: !!payload.nomorSuratManual,
+                        isSiswa: payload.isSiswa !== undefined ? payload.isSiswa : existing.isSiswa,
+                        namaSiswa: payload.namaSiswa || existing.namaSiswa,
+                        nisn: payload.nisn || existing.nisn,
+                        nik: payload.nik || existing.nik,
+                        kelas: payload.kelas || existing.kelas,
+                        keperluan: payload.keperluan || existing.keperluan
                     };
                     list[existingIdx] = updated;
                     DataStore.saveSuratKeluar(list);
@@ -492,6 +498,12 @@ const ApiClient = {
                     keterangan: payload.keterangan || "-",
                     fileDriveUrl: payload.fileDriveUrl || payload.fileBase64 || `https://drive.google.com/file/d/sk-${tahun}-${noUrut}/view`,
                     isManual: !!payload.nomorSuratManual,
+                    isSiswa: payload.isSiswa !== undefined ? payload.isSiswa : undefined,
+                    namaSiswa: payload.namaSiswa || undefined,
+                    nisn: payload.nisn || undefined,
+                    nik: payload.nik || undefined,
+                    kelas: payload.kelas || undefined,
+                    keperluan: payload.keperluan || undefined,
                     createdAt: new Date().toISOString()
                 };
 

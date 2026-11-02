@@ -896,9 +896,9 @@ const ModulSurat = {
                                         const cleanNisn = p.nisn || "";
                                         const matchedSK = skList.find(s => {
                                             const perihal = (s.perihal || "").toLowerCase();
-                                            const目的 = (s.tujuan || "").toLowerCase();
-                                            return (cleanNisn && (perihal.includes(cleanNisn) || 目的.includes(cleanNisn))) ||
-                                                   (cleanNama && (perihal.includes(cleanNama) || 目的.includes(cleanNama)));
+                                            const tujuanStr = (s.tujuan || "").toLowerCase();
+                                            return (cleanNisn && (perihal.includes(cleanNisn) || tujuanStr.includes(cleanNisn))) ||
+                                                   (cleanNama && (perihal.includes(cleanNama) || tujuanStr.includes(cleanNama)));
                                         });
                                         if (matchedSK && matchedSK.nomorSurat) noSuratTampil = matchedSK.nomorSurat;
                                     } catch (e) {}
@@ -1022,7 +1022,12 @@ const ModulSurat = {
                             perihal: `${item.jenisSurat || "Surat Keterangan"} an. ${item.nama} (NISN: ${item.nisn})`,
                             pengonsep: "Staf TU (Layanan Permohonan Mandiri)",
                             penandatangan: (DataStore.getConfig() && DataStore.getConfig().namaKepalaSekolah) || "Kepala Sekolah",
-                            keterangan: `Diterbitkan otomatis via Permohonan Online (Tiket: ${item.id})`
+                            keterangan: `Diterbitkan otomatis via Permohonan Online (Tiket: ${item.id})`,
+                            isSiswa: true,
+                            namaSiswa: item.nama,
+                            nisn: item.nisn,
+                            nik: item.nik || "",
+                            kelas: item.kelas || ""
                         });
                     }
                 }

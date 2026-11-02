@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Verifikasi Keabsahan Dokumen Resmi - SEKOLAHTU</title>
     <!-- Instant Theme Detection Script (Anti-FOUC: 0ms white flash prevention) -->
     <script>
-        (function() {
+        (function () {
             try {
                 var theme = localStorage.getItem('sekolahtu_theme');
                 if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -14,7 +15,7 @@
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
     <!-- Tailwind CSS CDN -->
@@ -34,30 +35,38 @@
     <!-- FontAwesome 6 CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
     <!-- HTML5 QR Code Scanner CDN -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800 dark:text-slate-100 transition-colors">
+
+<body
+    class="bg-slate-100 dark:bg-slate-950 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800 dark:text-slate-100 transition-colors">
 
     <!-- Top Bar -->
     <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
         <div class="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                <img src="assets/img/logo-brebes.svg" 
+                <img src="assets/img/logo-brebes.svg"
                     onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
                     alt="Logo Kabupaten Brebes" class="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow flex-shrink-0">
                 <div class="min-w-0">
-                    <h1 class="text-xs sm:text-sm font-extrabold tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
-                        SEKOLAHTU <span class="bg-emerald-500 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold flex-shrink-0">VERIFIKASI</span>
+                    <h1
+                        class="text-xs sm:text-sm font-extrabold tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
+                        SEKOLAHTU <span
+                            class="bg-emerald-500 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold flex-shrink-0">VERIFIKASI</span>
                     </h1>
-                    <p class="text-[10px] sm:text-xs text-blue-200 truncate hidden xs:block">Sistem Validasi Keaslian Dokumen Digital</p>
+                    <p class="text-[10px] sm:text-xs text-blue-200 truncate hidden xs:block">Sistem Validasi Keaslian
+                        Dokumen Digital</p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <!-- Tombol Permohonan Surat Online -->
-                <a href="permohonan.html" class="text-[11px] sm:text-xs bg-blue-600/90 hover:bg-blue-600 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-blue-400/40 font-semibold shadow-xs flex-shrink-0" title="Permohonan Surat Keterangan Online">
+                <a href="permohonan.html"
+                    class="text-[11px] sm:text-xs bg-blue-600/90 hover:bg-blue-600 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-blue-400/40 font-semibold shadow-xs flex-shrink-0"
+                    title="Permohonan Surat Keterangan Online">
                     <i class="fa-solid fa-paper-plane text-amber-300"></i>
                     <span class="hidden sm:inline">Permohonan</span> Surat
                 </a>
@@ -68,7 +77,8 @@
                     <i id="theme-toggle-icon" class="fa-solid fa-moon text-amber-300 text-[10px] sm:text-xs"></i>
                     <span id="theme-toggle-text">Gelap</span>
                 </button>
-                <a href="index.html" class="text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold flex-shrink-0">
+                <a href="index.html"
+                    class="text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 sm:px-3 py-1.5 rounded-xl transition inline-flex items-center gap-1.5 border border-white/20 font-semibold flex-shrink-0">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden xs:inline">Masuk</span> Aplikasi
                 </a>
             </div>
@@ -79,38 +89,50 @@
     <main class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
 
         <!-- Card Scanner Kamera (Bisa ditoggle) -->
-        <div id="scanner-container" class="hidden bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 animate-fade-in space-y-4">
+        <div id="scanner-container"
+            class="hidden bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 animate-fade-in space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold">
                         <i class="fa-solid fa-camera"></i>
                     </div>
                     <div>
                         <h3 class="font-bold text-sm text-slate-900 dark:text-white">Pindai QR-Code Dokumen Fisik</h3>
-                        <p class="text-[11px] text-slate-400">Arahkan kamera smartphone atau laptop ke QR Code pada lembar surat</p>
+                        <p class="text-[11px] text-slate-400">Arahkan kamera smartphone atau laptop ke QR Code pada
+                            lembar surat</p>
                     </div>
                 </div>
-                <button type="button" onclick="stopQrScanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition">
+                <button type="button" onclick="stopQrScanner()"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            
-            <div id="qr-reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-slate-50 dark:bg-slate-800/60"></div>
-            <p class="text-center text-xs text-slate-500 dark:text-slate-400">Posisikan kode QR di dalam bingkai pemindai hingga terdeteksi otomatis.</p>
+
+            <div id="qr-reader"
+                class="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-slate-50 dark:bg-slate-800/60">
+            </div>
+            <p class="text-center text-xs text-slate-500 dark:text-slate-400">Posisikan kode QR di dalam bingkai
+                pemindai hingga terdeteksi otomatis.</p>
         </div>
 
         <!-- Mode 1: Dokumen Terverifikasi -->
-        <div id="box-result-verified" class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-fade-in">
+        <div id="box-result-verified"
+            class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-fade-in">
             <!-- Verified Header Banner -->
-            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white text-center relative overflow-hidden">
-                <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner border border-white/30">
+            <div
+                class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white text-center relative overflow-hidden">
+                <div
+                    class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner border border-white/30">
                     <i class="fa-solid fa-shield-halved text-3xl text-white"></i>
                 </div>
                 <h2 class="text-xl font-black tracking-wide">DOKUMEN RESMI TERVERIFIKASI SAH</h2>
                 <p id="val-banner-subtitle" class="text-xs text-emerald-100 mt-1 max-w-lg mx-auto leading-relaxed">
-                    Surat resmi ini diterbitkan secara sah dan tercatat pada Pangkalan Data SEKOLAHTU UPT Satuan Pendidikan Kabupaten Brebes.
+                    Surat resmi ini diterbitkan secara sah dan tercatat pada Pangkalan Data SEKOLAHTU UPT Satuan
+                    Pendidikan Kabupaten Brebes.
                 </p>
-                <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white text-emerald-800 shadow-sm">
+                <div
+                    class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white text-emerald-800 shadow-sm">
                     <i class="fa-solid fa-circle-check text-emerald-600"></i> Terautentikasi oleh Sistem Terpadu
                 </div>
             </div>
@@ -119,15 +141,23 @@
             <div class="p-6 md:p-8 space-y-6">
 
                 <!-- Meta ID Card -->
-                <div class="bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div
+                    class="bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nomor Registrasi Surat</span>
-                        <div id="val-nomor-surat" class="font-mono font-black text-blue-900 dark:text-blue-300 text-base md:text-lg tracking-tight">-</div>
-                        <span id="val-jenis-surat" class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 block">Surat Resmi Kedinasan</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nomor
+                            Registrasi Surat</span>
+                        <div id="val-nomor-surat"
+                            class="font-mono font-black text-blue-900 dark:text-blue-300 text-base md:text-lg tracking-tight">
+                            -</div>
+                        <span id="val-jenis-surat"
+                            class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 block">Surat Resmi
+                            Kedinasan</span>
                     </div>
                     <div class="text-left sm:text-right">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status Keabsahan</span>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status
+                            Keabsahan</span>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <i class="fa-solid fa-circle-check text-emerald-600"></i> ASLI & SAH
                         </span>
                         <span id="val-tgl-terbit" class="text-[11px] text-slate-400 block mt-1">Diterbitkan: -</span>
@@ -139,36 +169,48 @@
 
                 <!-- Detail Penerbit Satuan Pendidikan -->
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
+                    <h3
+                        class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-2">
                         <i class="fa-solid fa-school text-blue-600 dark:text-blue-400"></i> Satuan Pendidikan Penerbit
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nama Satuan Pendidikan</span>
-                            <span id="val-nama-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">SD NEGERI TERLANGU 01</span>
+                            <span id="val-nama-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">SD
+                                NEGERI TERLANGU 01</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nomor Pokok Sekolah Nasional (NPSN)</span>
-                            <span id="val-npsn-sekolah" class="font-mono font-bold text-slate-800 dark:text-white text-sm">20326713</span>
+                            <span id="val-npsn-sekolah"
+                                class="font-mono font-bold text-slate-800 dark:text-white text-sm">20326713</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Pejabat Penandatangan</span>
-                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">Aisah Suciati, S.Pd.SD., M.Pd.</span>
+                            <span id="val-kepsek-sekolah" class="font-bold text-slate-800 dark:text-white text-sm">Aisah
+                                Suciati, S.Pd.SD., M.Pd.</span>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-400 block">Nomor Induk Pegawai (NIP)</span>
-                            <span id="val-nip-sekolah" class="font-mono font-bold text-slate-800 dark:text-white text-sm">19690808 199201 2 002</span>
+                            <span id="val-nip-sekolah"
+                                class="font-mono font-bold text-slate-800 dark:text-white text-sm">19690808 199201 2
+                                002</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Catatan Hukum & Integritas -->
-                <div class="p-4 bg-blue-50/80 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 rounded-2xl text-xs text-blue-950 dark:text-blue-200 flex items-start gap-3">
-                    <i class="fa-solid fa-circle-info text-blue-600 dark:text-blue-400 mt-0.5 text-base flex-shrink-0"></i>
+                <div
+                    class="p-4 bg-blue-50/80 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 rounded-2xl text-xs text-blue-950 dark:text-blue-200 flex items-start gap-3">
+                    <i
+                        class="fa-solid fa-circle-info text-blue-600 dark:text-blue-400 mt-0.5 text-base flex-shrink-0"></i>
                     <div class="leading-relaxed">
-                        <strong class="font-bold text-blue-950 dark:text-blue-200">Ketentuan Integritas Dokumen Elektronik:</strong>
+                        <strong class="font-bold text-blue-950 dark:text-blue-200">Ketentuan Integritas Dokumen
+                            Elektronik:</strong>
                         <p class="mt-0.5 text-slate-600 dark:text-slate-300">
-                            Halaman verifikasi ini merupakan rujukan keabsahan resmi dokumen digital yang diterbitkan oleh satuan pendidikan. Apabila data yang tertera pada lembaran fisik berbeda dengan catatan di portal ini, maka dokumen fisik tersebut tidak sah.
+                            Halaman verifikasi ini merupakan rujukan keabsahan resmi dokumen digital yang diterbitkan
+                            oleh satuan pendidikan. Apabila data yang tertera pada lembaran fisik berbeda dengan catatan
+                            di portal ini, maka dokumen fisik tersebut tidak sah.
                         </p>
                     </div>
                 </div>
@@ -176,16 +218,20 @@
             </div>
 
             <!-- Footer Action -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div
+                class="bg-slate-50 dark:bg-slate-800/60 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <span class="text-xs text-slate-400" id="val-timestamp">Diverifikasi: Baru saja</span>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="resetToLanding()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
+                    <button type="button" onclick="resetToLanding()"
+                        class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
                         <i class="fa-solid fa-arrow-left text-slate-500 dark:text-slate-400"></i> Cari Dokumen Lain
                     </button>
-                    <button type="button" onclick="startQrScanner()" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
+                    <button type="button" onclick="startQrScanner()"
+                        class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
                         <i class="fa-solid fa-qrcode text-blue-600 dark:text-blue-400"></i> Pindai dengan Kamera
                     </button>
-                    <button type="button" onclick="window.print()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+                    <button type="button" onclick="window.print()"
+                        class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
                         <i class="fa-solid fa-print"></i> Cetak Bukti Verifikasi
                     </button>
                 </div>
@@ -193,53 +239,73 @@
         </div>
 
         <!-- Mode 2: Pencarian / Halaman Awal Portal (Jika tanpa parameter atau ingin cek surat lain) -->
-        <div id="box-portal-landing" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-6 animate-fade-in">
+        <div id="box-portal-landing"
+            class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-6 animate-fade-in">
             <div class="text-center max-w-lg mx-auto space-y-2">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-900 to-indigo-700 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-900/20">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-900 to-indigo-700 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-900/20">
                     <i class="fa-solid fa-qrcode text-3xl"></i>
                 </div>
                 <h2 class="text-lg font-black text-slate-900 dark:text-white">Validasi Keabsahan Surat Keluar</h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Pindai kode QR barcode pada lembar fisik surat atau masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi secara langsung.
+                    Pindai kode QR barcode pada lembar fisik surat atau masukkan Nomor Registrasi Surat Keluar untuk
+                    memeriksa keabsahan arsip resmi secara langsung.
                 </p>
             </div>
 
             <!-- Tombol Aksi Cepat -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Box Kamera dengan Efek Hover Berubah Warna Menarik -->
-                <button type="button" onclick="startQrScanner()" class="p-5 rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-white/60 dark:bg-slate-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-700 hover:border-transparent dark:hover:border-transparent shadow-xs hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] transform transition-all duration-300 flex flex-col items-center justify-center text-center group cursor-pointer">
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-white group-hover:text-blue-700 group-hover:scale-110 flex items-center justify-center transition-all duration-300 mb-2 shadow-xs">
+                <button type="button" onclick="startQrScanner()"
+                    class="p-5 rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-500/50 bg-white/60 dark:bg-slate-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-700 hover:border-transparent dark:hover:border-transparent shadow-xs hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] transform transition-all duration-300 flex flex-col items-center justify-center text-center group cursor-pointer">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-white group-hover:text-blue-700 group-hover:scale-110 flex items-center justify-center transition-all duration-300 mb-2 shadow-xs">
                         <i class="fa-solid fa-camera text-xl"></i>
                     </div>
-                    <span class="font-extrabold text-xs text-slate-900 dark:text-white group-hover:text-white transition-colors duration-300">Pindai dengan Kamera</span>
-                    <span class="text-[11px] text-slate-400 dark:text-slate-400 group-hover:text-blue-100 transition-colors duration-300 mt-0.5">Scan langsung QR Code pada lembar surat</span>
+                    <span
+                        class="font-extrabold text-xs text-slate-900 dark:text-white group-hover:text-white transition-colors duration-300">Pindai
+                        dengan Kamera</span>
+                    <span
+                        class="text-[11px] text-slate-400 dark:text-slate-400 group-hover:text-blue-100 transition-colors duration-300 mt-0.5">Scan
+                        langsung QR Code pada lembar surat</span>
                 </button>
 
-                <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 space-y-2 flex flex-col justify-center">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Cari Berdasarkan Nomor Surat Keluar</label>
+                <div
+                    class="p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 space-y-2 flex flex-col justify-center">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Cari Berdasarkan Nomor
+                        Surat Keluar</label>
                     <div class="flex gap-2">
-                        <input type="text" id="input-search-nomor" onkeydown="if(event.key==='Enter') searchByNomorManual()" placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/004/X/2026" class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white dark:placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
-                        <button type="button" onclick="searchByNomorManual()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition cursor-pointer">
+                        <input type="text" id="input-search-nomor"
+                            onkeydown="if(event.key==='Enter') searchByNomorManual()"
+                            placeholder="Contoh: 421.2/004/SD/2026 atau 421.2/004/X/2026"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white dark:placeholder-slate-500 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
+                        <button type="button" onclick="searchByNomorManual()"
+                            class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-xs transition cursor-pointer">
                             Cek
                         </button>
                     </div>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Masukkan Nomor Registrasi Surat Keluar untuk memeriksa keabsahan arsip resmi</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Masukkan Nomor Registrasi Surat Keluar
+                        untuk memeriksa keabsahan arsip resmi</span>
                 </div>
             </div>
 
             <!-- Informasi Panduan -->
             <div class="border-t border-slate-100 dark:border-slate-800 pt-5">
-                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Panduan Verifikasi Dokumen Resmi:</h4>
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Panduan Verifikasi Dokumen Resmi:
+                </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-300">
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                    <div
+                        class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
                         <strong class="block font-bold text-slate-800 dark:text-white mb-1">1. Periksa QR Code</strong>
                         Pastikan QR Code tercetak jelas di pojok kanan bawah surat dinas.
                     </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                    <div
+                        class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
                         <strong class="block font-bold text-slate-800 dark:text-white mb-1">2. Pindai Mandiri</strong>
                         Gunakan kamera HP atau aplikasi pemindai QR untuk membuka tautan resmi.
                     </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
+                    <div
+                        class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/70">
                         <strong class="block font-bold text-slate-800 dark:text-white mb-1">3. Cek Kesesuaian</strong>
                         Pastikan nomor surat, penerima, dan perihal persis sama dengan lembar fisik.
                     </div>
@@ -248,31 +314,42 @@
         </div>
 
         <!-- Mode Loading: Sedang Memeriksa Cloud Database -->
-        <div id="box-verifikasi-loading" class="hidden bg-white rounded-3xl shadow-xl border border-blue-100 p-8 text-center animate-fade-in space-y-4">
-            <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-blue-600 text-2xl shadow-inner">
+        <div id="box-verifikasi-loading"
+            class="hidden bg-white rounded-3xl shadow-xl border border-blue-100 p-8 text-center animate-fade-in space-y-4">
+            <div
+                class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-blue-600 text-2xl shadow-inner">
                 <i class="fa-solid fa-spinner fa-spin"></i>
             </div>
             <div class="space-y-1">
                 <h3 class="font-bold text-slate-800 text-base">Memeriksa Keabsahan Dokumen...</h3>
-                <p class="text-xs text-slate-500 max-w-sm mx-auto">Menghubungkan ke Pangkalan Data Buku Register SEKOLAHTU UPT Satuan Pendidikan...</p>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Menghubungkan ke Pangkalan Data Buku Register
+                    SEKOLAHTU UPT Satuan Pendidikan...</p>
             </div>
-            <div id="loading-nomor-badge" class="font-mono text-xs text-blue-800 bg-blue-50 px-3 py-1 rounded-full inline-block font-semibold"></div>
+            <div id="loading-nomor-badge"
+                class="font-mono text-xs text-blue-800 bg-blue-50 px-3 py-1 rounded-full inline-block font-semibold">
+            </div>
         </div>
 
         <!-- Mode 3: Dokumen Tidak Ditemukan / Tidak Valid -->
-        <div id="box-result-invalid" class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-rose-200 dark:border-rose-900/60 overflow-hidden animate-fade-in p-8 text-center space-y-4">
-            <div class="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+        <div id="box-result-invalid"
+            class="hidden bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-rose-200 dark:border-rose-900/60 overflow-hidden animate-fade-in p-8 text-center space-y-4">
+            <div
+                class="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
                 <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
             </div>
             <h3 class="text-lg font-black text-rose-800 dark:text-rose-300">DOKUMEN TIDAK TERDAFTAR / TIDAK VALID</h3>
-            <p id="invalid-reason-text" class="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-                Nomor surat keluar yang diperiksa tidak ditemukan pada Buku Register Surat Keluar SEKOLAHTU. Mohon pastikan keaslian dokumen fisik ke pihak sekolah.
+            <p id="invalid-reason-text"
+                class="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+                Nomor surat keluar yang diperiksa tidak ditemukan pada Buku Register Surat Keluar SEKOLAHTU. Mohon
+                pastikan keaslian dokumen fisik ke pihak sekolah.
             </p>
             <div class="pt-2 flex justify-center gap-3">
-                <button type="button" onclick="startQrScanner()" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm cursor-pointer transition">
+                <button type="button" onclick="startQrScanner()"
+                    class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm cursor-pointer transition">
                     <i class="fa-solid fa-camera"></i> Coba Pindai Ulang
                 </button>
-                <button type="button" onclick="resetToLanding()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition">
+                <button type="button" onclick="resetToLanding()"
+                    class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition">
                     Kembali ke Halaman Awal
                 </button>
             </div>
@@ -281,43 +358,59 @@
     </main>
 
     <!-- Modal Pop-up Akses Kamera Dibatalkan / Ditolak (Sesuai Revisi Screenshot 2026-10-25 010443.png) -->
-    <div id="modal-camera-permission-error" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onclick="closeCameraErrorModal()">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 text-center relative" onclick="event.stopPropagation()">
+    <div id="modal-camera-permission-error"
+        class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+        onclick="closeCameraErrorModal()">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 text-center relative"
+            onclick="event.stopPropagation()">
             <!-- Tombol Tutup Silang -->
-            <button type="button" onclick="closeCameraErrorModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition cursor-pointer" title="Tutup">
+            <button type="button" onclick="closeCameraErrorModal()"
+                class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition cursor-pointer"
+                title="Tutup">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
 
             <!-- Icon Header -->
-            <div class="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-2xl shadow-inner">
+            <div
+                class="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-2xl shadow-inner">
                 <i class="fa-solid fa-video-slash"></i>
             </div>
 
             <div class="space-y-1.5">
-                <h3 class="text-base font-black text-slate-900 dark:text-white">Izin Akses Kamera Dibatalkan / Ditolak</h3>
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Izin Akses Kamera Dibatalkan / Ditolak
+                </h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
-                    Kamera laptop atau perangkat Anda tidak dapat dibuka karena izin akses dibatalkan atau ditutup saat peramban meminta konfirmasi.
+                    Kamera laptop atau perangkat Anda tidak dapat dibuka karena izin akses dibatalkan atau ditutup saat
+                    peramban meminta konfirmasi.
                 </p>
             </div>
 
             <!-- Panduan Praktis di Browser Laptop -->
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-left space-y-2 text-xs">
+            <div
+                class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-left space-y-2 text-xs">
                 <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-question text-blue-600 dark:text-blue-400"></i> Cara Mengizinkan Kembali di Laptop:
+                    <i class="fa-solid fa-circle-question text-blue-600 dark:text-blue-400"></i> Cara Mengizinkan
+                    Kembali di Laptop:
                 </div>
-                <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <li>Klik ikon <strong>Kamera</strong> atau <strong>Gembok</strong> <i class="fa-solid fa-lock text-[10px] text-slate-400"></i> di sebelah kiri URL pada bilah alamat browser.</li>
-                    <li>Ubah pengaturan Kamera dari <em>Blokir / Dismissed</em> menjadi <strong>"Izinkan" (Allow)</strong>.</li>
+                <ol
+                    class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <li>Klik ikon <strong>Kamera</strong> atau <strong>Gembok</strong> <i
+                            class="fa-solid fa-lock text-[10px] text-slate-400"></i> di sebelah kiri URL pada bilah
+                        alamat browser.</li>
+                    <li>Ubah pengaturan Kamera dari <em>Blokir / Dismissed</em> menjadi <strong>"Izinkan"
+                            (Allow)</strong>.</li>
                     <li>Klik tombol <strong>Coba Akses Lagi</strong> di bawah ini atau refresh halaman.</li>
                 </ol>
             </div>
 
             <!-- Tombol Aksi -->
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
-                <button type="button" onclick="retryCameraAccess()" class="flex-1 py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                <button type="button" onclick="retryCameraAccess()"
+                    class="flex-1 py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                     <i class="fa-solid fa-camera-rotate"></i> Coba Akses Lagi
                 </button>
-                <button type="button" onclick="closeCameraErrorModal(true)" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition cursor-pointer">
+                <button type="button" onclick="closeCameraErrorModal(true)"
+                    class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition cursor-pointer">
                     Gunakan Pencarian Nomor
                 </button>
             </div>
@@ -325,8 +418,10 @@
     </div>
 
     <!-- Footer -->
-    <footer class="text-center py-6 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        &copy; 2026 SEKOLAHTU v3.3.6 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha
+    <footer
+        class="text-center py-6 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        &copy; 2026 SEKOLAHTU v3.3.7 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi &
+        Harmonisasi Tata Usaha
     </footer>
 
     <!-- Logic Script -->
@@ -345,6 +440,117 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function resolveStudentInfo(raw) {
+            if (!raw) return null;
+            const perihal = String(raw.perihal || raw.jenis || "");
+            const tujuan = String(raw.tujuan || "");
+            const keterangan = String(raw.keterangan || "");
+            const combined = `${perihal} ${tujuan} ${keterangan}`;
+
+            const isSiswa = (raw.isSiswa === true) ||
+                (raw.nisn && raw.nisn !== "-" && String(raw.nisn).trim() !== "") ||
+                /keterangan|aktif|belajar|pip|mutasi|pindah|kelakuan|rekomendasi|ijazah|prestasi|siswa/i.test(perihal) ||
+                /siswa|wali|orang\s*tua/i.test(tujuan);
+
+            if (!isSiswa) return null;
+
+            // 1. Ekstrak NISN
+            let nisn = (raw.nisn && raw.nisn !== "-") ? String(raw.nisn).trim() : "";
+            if (!nisn) {
+                const mNisn = combined.match(/(?:NISN[:\s]*|nisn[:\s]*)([0-9]{8,12})/i);
+                if (mNisn) nisn = mNisn[1].trim();
+            }
+
+            // 2. Ekstrak Nama Siswa Murni (Bersihkan jika memuat teks Orang Tua / Wali)
+            let nama = (raw.namaSiswa && raw.namaSiswa !== "-") ? String(raw.namaSiswa).trim() : "";
+            if (!nama && raw.nama && !raw.nama.toLowerCase().includes("orang tua") && !raw.nama.toLowerCase().includes("wali")) {
+                nama = String(raw.nama).trim();
+            }
+            if (!nama) {
+                // Pola: "Surat Keterangan Aktif Belajar (Umum) an. Abina Aufareza Asmania (NISN: 3155364303)"
+                const mAn = perihal.match(/an\.\s*([^(\n\r]+?)(?:\s*\((?:NISN:?)?[^)]*\)|\s*$)/i);
+                if (mAn && mAn[1]) {
+                    nama = mAn[1].trim();
+                }
+            }
+            if (!nama) {
+                // Pola: "Orang Tua / Wali Siswa (Abina Aufareza Asmania)"
+                const mOrtu = tujuan.match(/\(([^)]+)\)/);
+                if (mOrtu && mOrtu[1]) {
+                    nama = mOrtu[1].trim();
+                }
+            }
+
+            // 3. Lookup ke Pangkalan Data Pokok Siswa SEKOLAHTU (DataStore Siswa & Permohonan)
+            let foundStudent = null;
+            try {
+                if (typeof DataStore !== "undefined") {
+                    DataStore.init();
+                    const allStudents = (typeof DataStore.getSiswaAll === "function")
+                        ? (DataStore.getSiswaAll() || [])
+                        : ((DataStore.getSiswa ? DataStore.getSiswa() : []) || []);
+
+                    if (nisn) {
+                        foundStudent = allStudents.find(s => s && String(s.nisn).trim() === nisn);
+                    }
+                    if (!foundStudent && nama) {
+                        const normNama = nama.toLowerCase().replace(/[^a-z0-9]/g, "");
+                        foundStudent = allStudents.find(s => {
+                            if (!s || !s.nama) return false;
+                            const sn = s.nama.toLowerCase().replace(/[^a-z0-9]/g, "");
+                            return sn === normNama || (normNama.length >= 5 && (sn.includes(normNama) || normNama.includes(sn)));
+                        });
+                    }
+
+                    // Fallback cek ke data permohonan surat jika di data pokok belum sinkron
+                    if (!foundStudent && typeof DataStore.getPermohonanSurat === "function") {
+                        const pList = DataStore.getPermohonanSurat() || [];
+                        const foundPermohonan = pList.find(p =>
+                            (nisn && p.nisn === nisn) ||
+                            (raw.no && (p.nomorSuratTerbit === raw.no || p.id === raw.id)) ||
+                            (nama && p.nama && p.nama.toLowerCase().includes(nama.toLowerCase()))
+                        );
+                        if (foundPermohonan) {
+                            foundStudent = {
+                                nama: foundPermohonan.nama,
+                                nisn: foundPermohonan.nisn,
+                                nik: foundPermohonan.nik,
+                                kelas: foundPermohonan.kelas
+                            };
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("[Verifikasi] Lookup DataStore Siswa gagal:", e);
+            }
+
+            let nik = (raw.nik && raw.nik !== "-") ? String(raw.nik).trim() : "";
+            let kelas = (raw.kelas && raw.kelas !== "-") ? String(raw.kelas).trim() : "";
+            let keperluan = (raw.keperluan && raw.keperluan !== "-") ? String(raw.keperluan).trim() : "";
+
+            if (foundStudent) {
+                if (!nama || nama === "-") nama = foundStudent.nama;
+                if (!nisn || nisn === "-") nisn = foundStudent.nisn;
+                if (!nik || nik === "-") nik = foundStudent.nik || "-";
+                if (!kelas || kelas === "-") kelas = foundStudent.kelas || "-";
+            }
+
+            // Ekstraksi kelas dari teks jika masih belum ditemukan
+            if (!kelas || kelas === "-") {
+                const mKelas = combined.match(/(?:Kelas|Rombel)\s*([0-9IVXABCD]+)/i);
+                if (mKelas) kelas = mKelas[1];
+            }
+
+            return {
+                isSiswa: true,
+                nama: nama || raw.nama || "-",
+                nisn: nisn || "-",
+                nik: nik || "-",
+                kelas: kelas || "-",
+                keperluan: keperluan
+            };
+        }
+
         function renderVerifiedData(data) {
             document.getElementById("box-portal-landing").classList.add("hidden");
             document.getElementById("box-result-invalid").classList.add("hidden");
@@ -358,7 +564,8 @@
             document.getElementById("val-tgl-terbit").textContent = `Diterbitkan: ${data.tgl || "Bulan Berjalan"}`;
 
             const bannerSub = document.getElementById("val-banner-subtitle");
-            const isSiswa = (data.isSiswa === true) || (data.nisn && data.nisn !== "-" && String(data.nisn).trim() !== "" && !data.tujuan);
+            const sInfo = resolveStudentInfo(data);
+            const isSiswa = (data.isSiswa === true) || !!sInfo;
 
             if (bannerSub) {
                 if (isSiswa) {
@@ -372,12 +579,16 @@
 
             if (isSiswa) {
                 // Tampilan untuk Surat Keterangan Siswa
-                const nama = escapeHtml(data.nama || "-");
-                const nisn = escapeHtml(data.nisn || "-");
-                const nik = escapeHtml(data.nik || "-");
-                const rawKelas = data.kelas || "Aktif";
-                const kelas = rawKelas.toLowerCase().includes("kelas") ? rawKelas : `Kelas ${rawKelas}`;
-                const keperluan = data.keperluan && data.keperluan !== "-" ? escapeHtml(data.keperluan) : "";
+                const nama = escapeHtml(sInfo ? sInfo.nama : (data.nama || "-"));
+                const nisn = escapeHtml(sInfo ? sInfo.nisn : (data.nisn || "-"));
+                const nik = escapeHtml(sInfo ? sInfo.nik : (data.nik || "-"));
+                const rawKelas = (sInfo && sInfo.kelas && sInfo.kelas !== "-") ? sInfo.kelas : ((data.kelas && data.kelas !== "-") ? data.kelas : "");
+                let kelas = "-";
+                if (rawKelas) {
+                    kelas = rawKelas.toLowerCase().includes("kelas") ? rawKelas : (rawKelas === "Aktif" ? "Aktif" : `Kelas ${rawKelas}`);
+                }
+                const rawKep = (sInfo && sInfo.keperluan) ? sInfo.keperluan : data.keperluan;
+                const keperluan = rawKep && rawKep !== "-" ? escapeHtml(rawKep) : "";
 
                 containerDetail.innerHTML = `
                     <div>
@@ -567,7 +778,7 @@
             str = str.replace(/^[#/]+/, "").replace(/[#/]+$/, "").trim();
 
             // 7. Decode sekali lagi untuk memastikan tidak ada simbol encoding tertinggal
-            try { str = decodeURIComponent(str); } catch (e) {}
+            try { str = decodeURIComponent(str); } catch (e) { }
 
             return str.trim();
         }
@@ -652,8 +863,8 @@
         }
 
         async function searchByNomorManual(explicitNomor, optionalPayload) {
-            let val = (typeof explicitNomor === "string" && explicitNomor.trim()) 
-                ? explicitNomor.trim() 
+            let val = (typeof explicitNomor === "string" && explicitNomor.trim())
+                ? explicitNomor.trim()
                 : (document.getElementById("input-search-nomor")?.value || "").trim();
 
             val = extractCleanNomorSurat(val);
@@ -708,16 +919,29 @@
                     if (foundTendik && foundTendik.nip) nipSigner = foundTendik.nip;
                 }
 
-                const isSiswa = !!sk.isSiswa || (sk.nisn && sk.nisn !== "-") ||
-                    (sk.perihal && (sk.perihal.toLowerCase().includes("keterangan") || sk.perihal.toLowerCase().includes("aktif") || sk.perihal.toLowerCase().includes("pip")));
+                const sInfo = resolveStudentInfo(sk);
+                const isSiswa = !!sInfo || !!sk.isSiswa;
+
+                if (sInfo && (!sk.namaSiswa || !sk.nisn || !sk.nik || !sk.kelas || sk.nisn === "-" || sk.nik === "-")) {
+                    if (sInfo.nama && sInfo.nama !== "-") sk.namaSiswa = sInfo.nama;
+                    if (sInfo.nisn && sInfo.nisn !== "-") sk.nisn = sInfo.nisn;
+                    if (sInfo.nik && sInfo.nik !== "-") sk.nik = sInfo.nik;
+                    if (sInfo.kelas && sInfo.kelas !== "-") sk.kelas = sInfo.kelas;
+                    sk.isSiswa = true;
+                    try {
+                        DataStore.saveSuratKeluar(suratKeluar);
+                    } catch (e) { }
+                }
 
                 renderVerifiedData({
                     isSiswa: isSiswa,
                     no: sk.nomorSurat || sk.nomorSuratManual || val,
-                    nama: isSiswa ? (sk.namaSiswa || sk.tujuan) : undefined,
-                    nisn: sk.nisn || "-",
-                    nik: sk.nik || "-",
-                    kelas: sk.kelas || "-",
+                    nama: sInfo ? sInfo.nama : (sk.namaSiswa || sk.tujuan),
+                    namaSiswa: sInfo ? sInfo.nama : sk.namaSiswa,
+                    nisn: sInfo ? sInfo.nisn : (sk.nisn || "-"),
+                    nik: sInfo ? sInfo.nik : (sk.nik || "-"),
+                    kelas: sInfo ? sInfo.kelas : (sk.kelas || "-"),
+                    keperluan: sInfo ? sInfo.keperluan : (sk.keperluan || ""),
                     tujuan: sk.tujuan || "-",
                     perihal: sk.perihal || "Surat Keluar Kedinasan",
                     kodeKlasifikasi: sk.kodeKlasifikasi || "",
@@ -739,13 +963,15 @@
             if (optionalPayload) {
                 const pNo = (optionalPayload.no || optionalPayload.nomorSurat || "").toLowerCase().trim();
                 if (!pNo || pNo === cleanVal || (targetNorm && norm(pNo) === targetNorm)) {
+                    const sInfo = resolveStudentInfo(optionalPayload);
                     renderVerifiedData({
-                        isSiswa: !!optionalPayload.nama,
+                        isSiswa: !!sInfo || !!optionalPayload.nama,
                         no: optionalPayload.no || val,
-                        nama: optionalPayload.nama,
-                        nisn: optionalPayload.nisn || "-",
-                        nik: optionalPayload.nik || "-",
-                        kelas: optionalPayload.kelas || "-",
+                        nama: sInfo ? sInfo.nama : (optionalPayload.nama || optionalPayload.namaSiswa),
+                        nisn: sInfo ? sInfo.nisn : (optionalPayload.nisn || "-"),
+                        nik: sInfo ? sInfo.nik : (optionalPayload.nik || "-"),
+                        kelas: sInfo ? sInfo.kelas : (optionalPayload.kelas || "-"),
+                        keperluan: sInfo ? sInfo.keperluan : (optionalPayload.keperluan || ""),
                         tujuan: optionalPayload.tujuan || `Orang Tua / Siswa (${optionalPayload.nama || "-"})`,
                         perihal: optionalPayload.perihal || optionalPayload.jenis || "Surat Keterangan Siswa",
                         kodeKlasifikasi: optionalPayload.kodeKlasifikasi || "421.2",
@@ -791,7 +1017,7 @@
                             payload: { nomorSurat: val }
                         })
                     });
-                    
+
                     if (res.ok) {
                         const json = await res.json();
                         if (json && json.success && json.verified && json.data) {
@@ -807,18 +1033,27 @@
                                         DataStore.saveSuratKeluar(currList);
                                     }
                                 }
-                            } catch (e) {}
+                            } catch (e) { }
 
-                            const isSiswa = !!cloudSk.isSiswa || (cloudSk.nisn && cloudSk.nisn !== "-") ||
-                                (cloudSk.perihal && (cloudSk.perihal.toLowerCase().includes("keterangan") || cloudSk.perihal.toLowerCase().includes("aktif") || cloudSk.perihal.toLowerCase().includes("pip")));
+                            const sInfo = resolveStudentInfo(cloudSk);
+                            const isSiswa = !!sInfo || !!cloudSk.isSiswa;
+
+                            if (sInfo) {
+                                if (sInfo.nama && sInfo.nama !== "-") cloudSk.namaSiswa = sInfo.nama;
+                                if (sInfo.nisn && sInfo.nisn !== "-") cloudSk.nisn = sInfo.nisn;
+                                if (sInfo.nik && sInfo.nik !== "-") cloudSk.nik = sInfo.nik;
+                                if (sInfo.kelas && sInfo.kelas !== "-") cloudSk.kelas = sInfo.kelas;
+                                cloudSk.isSiswa = true;
+                            }
 
                             renderVerifiedData({
                                 isSiswa: isSiswa,
                                 no: cloudSk.nomorSurat || cloudSk.nomorSuratManual || val,
-                                nama: isSiswa ? (cloudSk.namaSiswa || cloudSk.tujuan) : undefined,
-                                nisn: cloudSk.nisn || "-",
-                                nik: cloudSk.nik || "-",
-                                kelas: cloudSk.kelas || "-",
+                                nama: sInfo ? sInfo.nama : (cloudSk.namaSiswa || cloudSk.tujuan),
+                                nisn: sInfo ? sInfo.nisn : (cloudSk.nisn || "-"),
+                                nik: sInfo ? sInfo.nik : (cloudSk.nik || "-"),
+                                kelas: sInfo ? sInfo.kelas : (cloudSk.kelas || "-"),
+                                keperluan: sInfo ? sInfo.keperluan : (cloudSk.keperluan || ""),
                                 tujuan: cloudSk.tujuan || "-",
                                 perihal: cloudSk.perihal || "Surat Keluar Kedinasan",
                                 kodeKlasifikasi: cloudSk.kodeKlasifikasi || "",
@@ -849,9 +1084,16 @@
                                         return sNo === cleanVal || (targetNorm && norm(sNo) === targetNorm);
                                     });
                                     if (match) {
+                                        const sInfo = resolveStudentInfo(match);
+                                        const isSiswa = !!sInfo || !!match.isSiswa;
                                         renderVerifiedData({
-                                            isSiswa: !!match.isSiswa || (match.perihal && match.perihal.toLowerCase().includes("keterangan")),
+                                            isSiswa: isSiswa,
                                             no: match.nomorSurat || val,
+                                            nama: sInfo ? sInfo.nama : (match.namaSiswa || match.tujuan),
+                                            nisn: sInfo ? sInfo.nisn : (match.nisn || "-"),
+                                            nik: sInfo ? sInfo.nik : (match.nik || "-"),
+                                            kelas: sInfo ? sInfo.kelas : (match.kelas || "-"),
+                                            keperluan: sInfo ? sInfo.keperluan : (match.keperluan || ""),
                                             tujuan: match.tujuan || "-",
                                             perihal: match.perihal || "Surat Keluar Kedinasan",
                                             penandatangan: match.penandatangan || config.namaKepalaSekolah,
@@ -896,7 +1138,7 @@
                         stopQrScanner();
                         // Ambil dan bersihkan nomor surat dari hasil scan QR Code
                         const cleanNo = extractCleanNomorSurat(decodedText);
-                        
+
                         // Ekstrak payload mandiri jika tersemat di QR
                         let scanPayload = null;
                         if (decodedText && (decodedText.includes("?d=") || decodedText.includes("&d="))) {
@@ -905,7 +1147,7 @@
                                 if (m && m[1]) {
                                     scanPayload = JSON.parse(decodeURIComponent(m[1]));
                                 }
-                            } catch (e) {}
+                            } catch (e) { }
                         }
 
                         // Masukkan nomor surat bersih ke input box pencarian
@@ -1001,4 +1243,5 @@
         });
     </script>
 </body>
+
 </html>

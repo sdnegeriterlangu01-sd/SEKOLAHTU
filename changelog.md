@@ -1,6 +1,30 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.7] - 2026-11-02
+
+### Penyempurnaan Validasi Keabsahan Surat Kesiswaan (Resolusi Cerdas Data NISN, NIK, dan Kelas Siswa) serta Penguatan Register Surat Keluar
+- **Resolusi Cerdas & Ekstraksi Metadata Siswa pada Portal Verifikasi Keabsahan Surat (`verifikasi.html`):**
+  - Menghadirkan fungsi `resolveStudentInfo()` untuk mengekstrak identitas siswa murni (Nama Siswa, NISN) dari teks perihal/keterangan surat serta menyingkirkan prefiks *"Orang Tua / Wali Siswa"*.
+  - Menambahkan *cross-lookup* otomatis ke Pangkalan Data Pokok Siswa (`DataStore.getSiswaAll()`) dan database permohonan surat guna melengkapi NIK dan Kelas secara akurat.
+  - Memperbaiki penanganan tampilan rombel kelas agar tidak lagi memunculkan label keliru `"Kelas -"`.
+  - Mengimplementasikan *auto-backfill* ke cache agenda surat keluar di LocalStorage browser sehingga data surat kesiswaan yang sebelumnya terbit tanpa metadata siswa otomatis diperbaiki dan tersimpan lengkap.
+- **Injeksi Metadata Siswa Lengkap pada Modul Cetak Mandiri (`assets/js/modul-cetak.js`):**
+  - Mengirimkan metadata lengkap siswa (`isSiswa`, `namaSiswa`, `nisn`, `nik`, `kelas`, `keperluan`) saat menerbitkan nomor agenda keluar baru pada surat keterangan kesiswaan.
+  - Memperbarui data surat lama (*mode terbit*) jika ditemukan ada metadata siswa yang masih kosong.
+- **Dukungan Penyimpanan Metadata Kesiswaan pada API Surat Keluar (`assets/js/api.js`):**
+  - Memperbarui handler `saveSuratKeluar` untuk menyimpan dan memperbarui atribut kesiswaan (`isSiswa`, `namaSiswa`, `nisn`, `nik`, `kelas`, `keperluan`).
+- **Penyelarasan Persetujuan Permohonan Surat Online (`assets/js/modul-surat.js`):**
+  - Menyertakan data `namaSiswa`, `nisn`, `nik`, dan `kelas` saat menyetujui dan menerbitkan surat keluar dari tiket permohonan online ortu.
+  - Memperbaiki identifier variabel pada pencocokan surat keluar permohonan.
+- **Pengayaan Data Siswa pada Backend Google Apps Script (`backend/Code.gs` & `backend/Panduan_Deploy_GAS.md`):**
+  - Menyempurnakan endpoint publik `handleVerifySuratKeluar` agar mencocokkan siswa di sheet `DB_Siswa` dan mengembalikan data identitas siswa lengkap (`namaSiswa`, `nisn`, `nik`, `kelas`).
+  - Penyelarasan versi API GAS ke `v3.3.7` pada handler `doGet` health check dan panduan deployment backend.
+- **Pembaruan Label Versi Sistem (`index.html`, `permohonan.html`, & `verifikasi.html`):**
+  - Pembaruan label dan badge versi sistem ke `v3.3.7` pada seluruh portal aplikasi SEKOLAHTU.
+
+---
+
 ## [v3.3.6] - 2026-11-02
 
 ### Normalisasi Standar 10-Digit NISN (Anti-Leading Zero Truncation), Pencegahan Duplikasi Impor Ulang Siswa, dan Penguatan Integritas Data Google Sheets

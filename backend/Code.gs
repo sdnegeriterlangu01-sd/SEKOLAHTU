@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.6
+ * Backend REST API - Google Apps Script (GAS) v3.3.7
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.6",
+    version: "3.3.7",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.6 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
+    message: "Google Apps Script Backend v3.3.7 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1081,6 +1081,45 @@ function handleVerifySuratKeluar(ss, payload) {
   }
 
   // Profil sekolah resmi untuk stempel validasi
+  // Enrich data kesiswaan jika surat kesiswaan (NISN, NIK, Kelas, Nama Siswa)
+  const perihalSK = String(found.perihal || "");
+  const tujuanSK = String(found.tujuan || "");
+  const ketSK = String(found.keterangan || "");
+  const isSiswaLetter = /keterangan|aktif|belajar|pip|mutasi|pindah|kelakuan|rekomendasi|ijazah|siswa/i.test(perihalSK) || /siswa|wali|orang\s*tua/i.test(tujuanSK);
+
+  if (isSiswaLetter) {
+    found.isSiswa = true;
+    let mNisn = (perihalSK + " " + ketSK).match(/(?:NISN[:\s]*|nisn[:\s]*)([0-9]{8,12})/i);
+    let nisn = mNisn ? mNisn[1].trim() : (found.nisn || "");
+
+    let mNama = perihalSK.match(/an\.\s*([^(\n\r]+?)(?:\s*\((?:NISN:?)?[^)]*\)|\s*$)/i) || tujuanSK.match(/\(([^)]+)\)/);
+    let nama = mNama ? mNama[1].trim() : (found.namaSiswa || "");
+
+    found.namaSiswa = nama;
+    found.nisn = nisn || "-";
+    found.nik = found.nik || "-";
+    found.kelas = found.kelas || "-";
+
+    try {
+      const sheetSiswa = ss.getSheetByName(TAB_SISWA);
+      if (sheetSiswa && sheetSiswa.getLastRow() > 1) {
+        const sVals = sheetSiswa.getRange(2, 1, sheetSiswa.getLastRow() - 1, Math.min(sheetSiswa.getLastColumn(), 10)).getValues();
+        for (let j = 0; j < sVals.length; j++) {
+          const sRow = sVals[j];
+          const rNisn = String(sRow[0] || "").replace(/\D/g, "");
+          const rNama = String(sRow[2] || "").trim().toLowerCase();
+          if ((nisn && rNisn === nisn) || (nama && rNama === nama.toLowerCase())) {
+            found.namaSiswa = String(sRow[2] || nama);
+            found.nisn = String(sRow[0] || nisn);
+            found.nik = String(sRow[3] || "-");
+            found.kelas = String(sRow[7] || "-");
+            break;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
   let configSekolah = {
     namaSekolah: "SD NEGERI TERLANGU 01",
     npsn: "20326713",

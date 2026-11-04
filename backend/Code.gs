@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.7
+ * Backend REST API - Google Apps Script (GAS) v3.3.8
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.7",
+    version: "3.3.8",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.7 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
+    message: "Google Apps Script Backend v3.3.8 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -228,6 +228,10 @@ function doPost(e) {
 
       case "saveSuratMasuk":
         responseData = handleSaveSuratMasuk(ss, payload);
+        break;
+
+      case "updateStatusSuratMasuk":
+        responseData = handleUpdateStatusSuratMasuk(ss, payload);
         break;
 
       case "deleteSuratMasuk":
@@ -423,10 +427,33 @@ function verifySupabaseToken(token) {
  * INITIALIZER: SETUP DATABASE & GOOGLE DRIVE FOLDERS
  * ==========================================================================
  */
+/**
+ * Helper Optimisasi Grid Google Sheets (Zero-10M-Limit Architecture)
+ * Memangkas kolom kosong di sebelah kanan header (default A-Z 26 kolom -> tepat sesuai jumlah kolom)
+ * dan memangkas baris kosong berlebih agar alokasi sel di bawah batas 10.000.000 sel Google Sheets.
+ */
+function optimizeSheetGrid(sheet, targetCols) {
+  if (!sheet || !targetCols) return;
+  try {
+    const maxCols = sheet.getMaxColumns();
+    if (maxCols > targetCols) {
+      sheet.deleteColumns(targetCols + 1, maxCols - targetCols);
+    }
+    const lastRow = Math.max(sheet.getLastRow(), 1);
+    const maxRows = sheet.getMaxRows();
+    const keepRows = lastRow + 20;
+    if (maxRows > keepRows) {
+      sheet.deleteRows(keepRows + 1, maxRows - keepRows);
+    }
+  } catch (e) {
+    Logger.log("Gagal optimisasi grid sheet " + sheet.getName() + ": " + e.toString());
+  }
+}
+
 function setupDatabaseAndFolders() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // 1. Tab DB_Siswa
+  // 1. Tab DB_Siswa (23 Kolom)
   let sheetSiswa = ss.getSheetByName(TAB_SISWA);
   if (!sheetSiswa) sheetSiswa = ss.insertSheet(TAB_SISWA);
   if (sheetSiswa.getLastRow() === 0) {
@@ -438,25 +465,27 @@ function setupDatabaseAndFolders() {
     ]);
     sheetSiswa.getRange(1, 1, 1, 23).setFontWeight("bold").setBackground("#d9ead3");
   }
+  optimizeSheetGrid(sheetSiswa, 23);
 
-  // 2. Tab DB_Tendik (Guru & Staf)
+  // 2. Tab DB_Tendik (Guru & Staf - 15 Kolom)
   let sheetTendik = ss.getSheetByName(TAB_TENDIK);
   if (!sheetTendik) sheetTendik = ss.insertSheet(TAB_TENDIK);
   const headersTendik = [
-    "NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN"
+    "NIP", "NAMA", "JABATAN", "GOLONGAN", "STATUS_KEPEGAWAIAN", "JK", "NO_HP", "KODE_QR", "URL_QR", "AKTIF", "FOTO", "TUGAS_TAMBAHAN", "IJAZAH", "JURUSAN", "NUPTK"
   ];
   if (sheetTendik.getLastRow() === 0) {
     sheetTendik.appendRow(headersTendik);
     sheetTendik.getRange(1, 1, 1, headersTendik.length).setFontWeight("bold").setBackground("#d0e0e3");
   } else {
     const curH = sheetTendik.getRange(1, 1, 1, Math.max(sheetTendik.getLastColumn(), 1)).getValues()[0].map(h => String(h).toUpperCase());
-    if (!curH.includes("STATUS_KEPEGAWAIAN")) {
+    if (!curH.includes("STATUS_KEPEGAWAIAN") || !curH.includes("NUPTK") || sheetTendik.getLastColumn() < headersTendik.length) {
       sheetTendik.getRange(1, 1, 1, headersTendik.length).setValues([headersTendik]);
       sheetTendik.getRange(1, 1, 1, headersTendik.length).setFontWeight("bold").setBackground("#d0e0e3");
     }
   }
+  optimizeSheetGrid(sheetTendik, headersTendik.length);
 
-  // 3. Tab DB_SuratKeluar
+  // 3. Tab DB_SuratKeluar (13 Kolom)
   let sheetSK = ss.getSheetByName(TAB_SURAT_KELUAR);
   if (!sheetSK) sheetSK = ss.insertSheet(TAB_SURAT_KELUAR);
   if (sheetSK.getLastRow() === 0) {
@@ -467,8 +496,9 @@ function setupDatabaseAndFolders() {
     ]);
     sheetSK.getRange(1, 1, 1, 13).setFontWeight("bold").setBackground("#cfe2f3");
   }
+  optimizeSheetGrid(sheetSK, 13);
 
-  // 4. Tab DB_SuratMasuk
+  // 4. Tab DB_SuratMasuk (12 Kolom)
   let sheetSM = ss.getSheetByName(TAB_SURAT_MASUK);
   if (!sheetSM) sheetSM = ss.insertSheet(TAB_SURAT_MASUK);
   if (sheetSM.getLastRow() === 0) {
@@ -479,8 +509,9 @@ function setupDatabaseAndFolders() {
     ]);
     sheetSM.getRange(1, 1, 1, 12).setFontWeight("bold").setBackground("#fff2cc");
   }
+  optimizeSheetGrid(sheetSM, 12);
 
-  // 5. Tab DB_Absensi (Harian konvensional)
+  // 5. Tab DB_Absensi (Log Eksepsi & Catatan Presensi Harian - 9 Kolom)
   let sheetAbsen = ss.getSheetByName(TAB_ABSENSI);
   if (!sheetAbsen) sheetAbsen = ss.insertSheet(TAB_ABSENSI);
   if (sheetAbsen.getLastRow() === 0) {
@@ -489,8 +520,9 @@ function setupDatabaseAndFolders() {
     ]);
     sheetAbsen.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#ead1dc");
   }
+  optimizeSheetGrid(sheetAbsen, 9);
 
-  // 6. Tab DB_AbsensiTendik (Scan QR Datang / Pulang)
+  // 6. Tab DB_AbsensiTendik (Scan QR Datang / Pulang - 9 Kolom)
   let sheetAbsenTendik = ss.getSheetByName(TAB_ABSENSI_TENDIK);
   if (!sheetAbsenTendik) sheetAbsenTendik = ss.insertSheet(TAB_ABSENSI_TENDIK);
   if (sheetAbsenTendik.getLastRow() === 0) {
@@ -499,8 +531,9 @@ function setupDatabaseAndFolders() {
     ]);
     sheetAbsenTendik.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#d9d2e9");
   }
+  optimizeSheetGrid(sheetAbsenTendik, 9);
 
-  // 7. Tab DB_AbsensiSiswaBulan (Rekap Bulanan Siswa)
+  // 7. Tab DB_AbsensiSiswaBulan (Rekap Bulanan Siswa Terkompresi MARKS_JSON - 8 Kolom)
   let sheetAbsenSiswa = ss.getSheetByName(TAB_ABSENSI_SISWA_BULAN);
   if (!sheetAbsenSiswa) sheetAbsenSiswa = ss.insertSheet(TAB_ABSENSI_SISWA_BULAN);
   if (sheetAbsenSiswa.getLastRow() === 0) {
@@ -509,8 +542,9 @@ function setupDatabaseAndFolders() {
     ]);
     sheetAbsenSiswa.getRange(1, 1, 1, 8).setFontWeight("bold").setBackground("#fce5cd");
   }
+  optimizeSheetGrid(sheetAbsenSiswa, 8);
 
-  // 8. Tab Config & ScriptProperties Initialization
+  // 8. Tab Config & ScriptProperties Initialization (2 Kolom)
   let sheetCfg = ss.getSheetByName(TAB_CONFIG);
   if (!sheetCfg) sheetCfg = ss.insertSheet(TAB_CONFIG);
   if (sheetCfg.getLastRow() === 0) {
@@ -526,6 +560,7 @@ function setupDatabaseAndFolders() {
     sheetCfg.appendRow(["IS_CLOUD_MODE", "true"]);
     sheetCfg.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#f3f3f3");
   }
+  optimizeSheetGrid(sheetCfg, 2);
 
   // Setup Script Properties bawaan jika belum terisi
   const scriptProps = PropertiesService.getScriptProperties();
@@ -534,7 +569,7 @@ function setupDatabaseAndFolders() {
   if (!scriptProps.getProperty("GAS_API_URL")) scriptProps.setProperty("GAS_API_URL", DEFAULT_GAS_API_URL);
   if (!scriptProps.getProperty("IS_CLOUD_MODE")) scriptProps.setProperty("IS_CLOUD_MODE", "true");
 
-  // 9. Tab DB_JadwalPelajaran
+  // 9. Tab DB_JadwalPelajaran (10 Kolom)
   let sheetJadwal = ss.getSheetByName(TAB_JADWAL);
   if (!sheetJadwal) sheetJadwal = ss.insertSheet(TAB_JADWAL);
   if (sheetJadwal.getLastRow() === 0) {
@@ -543,6 +578,7 @@ function setupDatabaseAndFolders() {
     ]);
     sheetJadwal.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#d9ead3");
   }
+  optimizeSheetGrid(sheetJadwal, 10);
 
   // 10. Tab DB_PIP_Pengusulan (29 Kolom Sesuai Format Impor Puslapdik + UPDATED_AT)
   let sheetPIPU = ss.getSheetByName(TAB_PIP_PENGUSULAN);
@@ -559,6 +595,7 @@ function setupDatabaseAndFolders() {
       sheetPIPU.getRange(1, 1, 1, HEADERS_PIP_PENGUSULAN.length).setFontWeight("bold").setBackground("#fff2cc");
     }
   }
+  optimizeSheetGrid(sheetPIPU, HEADERS_PIP_PENGUSULAN.length);
 
   // 11. Tab DB_PIP_Penerima (23 Kolom Sesuai Format Impor Puslapdik + UPDATED_AT)
   let sheetPIPP = ss.getSheetByName(TAB_PIP_PENERIMA);
@@ -575,16 +612,22 @@ function setupDatabaseAndFolders() {
       sheetPIPP.getRange(1, 1, 1, HEADERS_PIP_PENERIMA.length).setFontWeight("bold").setBackground("#cfe2f3");
     }
   }
+  optimizeSheetGrid(sheetPIPP, HEADERS_PIP_PENERIMA.length);
 
-  // 12. Tab DB_PermohonanSurat
+  // 12. Tab DB_PermohonanSurat (13 Kolom termasuk NOMOR_SURAT_TERBIT)
   let sheetPermohonan = ss.getSheetByName(TAB_PERMOHONAN_SURAT);
   if (!sheetPermohonan) sheetPermohonan = ss.insertSheet(TAB_PERMOHONAN_SURAT);
+  const headersPermohonan = [
+    "ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT", "NOMOR_SURAT_TERBIT"
+  ];
   if (sheetPermohonan.getLastRow() === 0) {
-    sheetPermohonan.appendRow([
-      "ID", "CREATED_AT", "NISN", "NAMA", "KELAS", "NAMA_ORTU", "HP_ORTU", "JENIS_SURAT", "KEPERLUAN", "STATUS", "KETERANGAN", "UPDATED_AT"
-    ]);
-    sheetPermohonan.getRange(1, 1, 1, 12).setFontWeight("bold").setBackground("#fce5cd");
+    sheetPermohonan.appendRow(headersPermohonan);
+    sheetPermohonan.getRange(1, 1, 1, headersPermohonan.length).setFontWeight("bold").setBackground("#fce5cd");
+  } else if (sheetPermohonan.getLastColumn() < headersPermohonan.length) {
+    sheetPermohonan.getRange(1, 1, 1, headersPermohonan.length).setValues([headersPermohonan]);
+    sheetPermohonan.getRange(1, 1, 1, headersPermohonan.length).setFontWeight("bold").setBackground("#fce5cd");
   }
+  optimizeSheetGrid(sheetPermohonan, headersPermohonan.length);
 
   // 13. Struktur Folder di Google Drive
   const rootFolder = getOrCreateSubFolder(DriveApp.getRootFolder(), ROOT_FOLDER_NAME);
@@ -597,7 +640,7 @@ function setupDatabaseAndFolders() {
 
   return {
     success: true,
-    message: "Inisialisasi Database Google Sheets (12 Tab) & Folder Google Drive (/SEKOLAHTU/) berhasil diselesaikan!",
+    message: "Inisialisasi & Optimisasi Grid Database Google Sheets (12 Tab, 166 Kolom Aktif) & Folder Google Drive (/SEKOLAHTU/) berhasil diselesaikan!",
     rootFolderId: rootFolder.getId()
   };
 }
@@ -628,7 +671,7 @@ function handleBackupDatabase(ss) {
 
   const dump = {
     _app: "SEKOLAHTU",
-    _version: "3.3.3",
+    _version: "3.3.8",
     _created: now.toISOString(),
     spreadsheetId: ss.getId(),
     tables: {}
@@ -1370,6 +1413,19 @@ function handleDeleteSuratMasuk(ss, payload) {
   return { success: false, message: "Surat masuk tidak ditemukan." };
 }
 
+function handleUpdateStatusSuratMasuk(ss, payload) {
+  const sheet = ss.getSheetByName(TAB_SURAT_MASUK);
+  if (!sheet || sheet.getLastRow() <= 1) return { success: false, message: "Tidak ada data surat masuk." };
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(payload.id) || String(data[i][1]) === String(payload.noAgenda)) {
+      sheet.getRange(i + 1, 11).setValue(payload.status);
+      return { success: true, message: `Status surat masuk berhasil diubah menjadi "${payload.status}".` };
+    }
+  }
+  return { success: false, message: "Surat masuk tidak ditemukan." };
+}
+
 function handleGetSuratMasuk(ss) {
   const sheet = ss.getSheetByName(TAB_SURAT_MASUK);
   if (!sheet || sheet.getLastRow() <= 1) return { success: true, data: [] };
@@ -1522,22 +1578,105 @@ function handleGenerateSuratPDF(ss, payload) {
  * ==========================================================================
  */
 function handleGetAbsensi(ss, payload) {
+  const mergedMap = {};
+  const tz = Session.getScriptTimeZone();
+
+  // 1. Rekonstruksi presensi harian Siswa dari DB_AbsensiSiswaBulan (MARKS_JSON)
+  const sheetSiswaBulan = ss.getSheetByName(TAB_ABSENSI_SISWA_BULAN);
+  if (sheetSiswaBulan && sheetSiswaBulan.getLastRow() > 1) {
+    const sbVals = sheetSiswaBulan.getRange(2, 1, sheetSiswaBulan.getLastRow() - 1, 8).getValues();
+    sbVals.forEach(row => {
+      const bulan = row[2] instanceof Date ? Utilities.formatDate(row[2], tz, "yyyy-MM") : String(row[2] || "").substring(0, 7);
+      if (!bulan || (payload.tanggal && !String(payload.tanggal).startsWith(bulan))) return;
+      const kelas = String(row[3] || "-");
+      const nisn = String(row[4] || "");
+      const nama = String(row[5] || "");
+      const updatedAt = row[7] instanceof Date ? Utilities.formatDate(row[7], tz, "yyyy-MM-dd HH:mm:ss") : String(row[7] || "");
+      let marks = {};
+      try { marks = row[6] ? JSON.parse(row[6]) : {}; } catch (e) { marks = {}; }
+
+      Object.keys(marks).forEach(dd => {
+        const dayPadded = String(dd).padStart(2, "0");
+        const tgl = `${bulan}-${dayPadded}`;
+        if (payload.tanggal && tgl !== payload.tanggal) return;
+        const code = String(marks[dd] || "").toUpperCase();
+        let status = "Hadir";
+        if (code === "S") status = "Sakit";
+        else if (code === "I") status = "Izin";
+        else if (code === "A") status = "Alpa";
+        else if (code !== "H") return;
+
+        const cleanNisn = nisn.replace(/\s+/g, "");
+        const id = `ABS-${tgl}-Siswa-${cleanNisn}`;
+        mergedMap[id] = {
+          id: id,
+          tanggal: tgl,
+          kategori: "Siswa",
+          kelas: kelas,
+          nisnNip: nisn,
+          nama: nama,
+          status: status,
+          keterangan: "",
+          timestamp: updatedAt
+        };
+      });
+    });
+  }
+
+  // 2. Rekonstruksi presensi harian Tendik dari DB_AbsensiTendik
+  const sheetTendik = ss.getSheetByName(TAB_ABSENSI_TENDIK);
+  if (sheetTendik && sheetTendik.getLastRow() > 1) {
+    const tdVals = sheetTendik.getRange(2, 1, sheetTendik.getLastRow() - 1, 9).getValues();
+    tdVals.forEach(row => {
+      const tgl = row[1] instanceof Date ? Utilities.formatDate(row[1], tz, "yyyy-MM-dd") : String(row[1] || "");
+      if (!tgl || (payload.tanggal && tgl !== payload.tanggal)) return;
+      const nip = String(row[2] || "");
+      const nama = String(row[3] || "");
+      const status = String(row[4] || "Hadir");
+      const ket = String(row[7] || "");
+      const updatedAt = row[8] instanceof Date ? Utilities.formatDate(row[8], tz, "yyyy-MM-dd HH:mm:ss") : String(row[8] || "");
+      const cleanNip = nip.replace(/\s+/g, "");
+      const id = `ABS-${tgl}-Tendik-${cleanNip}`;
+      mergedMap[id] = {
+        id: id,
+        tanggal: tgl,
+        kategori: "Tendik",
+        kelas: "-",
+        nisnNip: nip,
+        nama: nama,
+        status: status,
+        keterangan: ket,
+        timestamp: updatedAt
+      };
+    });
+  }
+
+  // 3. Timpa/lengkapi dengan catatan keterangan atau eksepsi dari DB_Absensi (dan data historis lama)
   const sheet = ss.getSheetByName(TAB_ABSENSI);
-  if (!sheet || sheet.getLastRow() <= 1) return { success: true, data: [] };
+  if (sheet && sheet.getLastRow() > 1) {
+    const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.min(sheet.getLastColumn(), 9)).getValues();
+    values.forEach(row => {
+      const tgl = row[1] instanceof Date ? Utilities.formatDate(row[1], tz, "yyyy-MM-dd") : String(row[1] || "");
+      if (!tgl || (payload.tanggal && tgl !== payload.tanggal)) return;
+      const kategori = String(row[2] || "Siswa");
+      const nisnNip = String(row[4] || "");
+      const cleanKey = nisnNip.replace(/\s+/g, "");
+      const id = String(row[0] || `ABS-${tgl}-${kategori}-${cleanKey}`);
+      mergedMap[id] = {
+        id: id,
+        tanggal: tgl,
+        kategori: kategori,
+        kelas: String(row[3] || "-"),
+        nisnNip: nisnNip,
+        nama: String(row[5] || ""),
+        status: String(row[6] || "Hadir"),
+        keterangan: String(row[7] || ""),
+        timestamp: row[8] instanceof Date ? Utilities.formatDate(row[8], tz, "yyyy-MM-dd HH:mm:ss") : String(row[8] || "")
+      };
+    });
+  }
 
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-  let list = values.map(row => ({
-    id: String(row[0]),
-    tanggal: row[1] instanceof Date ? Utilities.formatDate(row[1], Session.getScriptTimeZone(), "yyyy-MM-dd") : String(row[1]),
-    kategori: String(row[2]),
-    kelas: String(row[3]),
-    nisnNip: String(row[4]),
-    nama: String(row[5]),
-    status: String(row[6]),
-    keterangan: String(row[7]),
-    timestamp: String(row[8])
-  }));
-
+  let list = Object.values(mergedMap);
   if (payload.tanggal) list = list.filter(a => a.tanggal === payload.tanggal);
   if (payload.kategori && payload.kategori !== "Semua") list = list.filter(a => a.kategori === payload.kategori);
   if (payload.kelas && payload.kelas !== "Semua") list = list.filter(a => a.kelas === payload.kelas);
@@ -1548,18 +1687,12 @@ function handleGetAbsensi(ss, payload) {
 function handleSaveAbsensiBatch(ss, payload) {
   const sheet = ss.getSheetByName(TAB_ABSENSI);
   const sheetSiswaBulan = ss.getSheetByName(TAB_ABSENSI_SISWA_BULAN);
+  const sheetAbsenTendik = ss.getSheetByName(TAB_ABSENSI_TENDIK);
   const records = payload.records || [];
-  const nowStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  const tz = Session.getScriptTimeZone();
+  const nowStr = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
 
-  records.forEach(rec => {
-    const id = `ABS-${rec.tanggal}-${rec.kategori}-${String(rec.nisnNip).replace(/\s+/g, '')}`;
-    sheet.appendRow([
-      id, rec.tanggal, rec.kategori, rec.kelas || "-",
-      String(rec.nisnNip), rec.nama, rec.status, rec.keterangan || "", nowStr
-    ]);
-  });
-
-  // Sinkronisasi otomatis ke TAB_ABSENSI_SISWA_BULAN untuk records siswa
+  // 1. Upsert Siswa ke TAB_ABSENSI_SISWA_BULAN (MARKS_JSON: 1 baris per siswa per bulan)
   if (sheetSiswaBulan) {
     try {
       const existing = sheetSiswaBulan.getDataRange().getValues();
@@ -1590,7 +1723,7 @@ function handleSaveAbsensiBatch(ss, payload) {
             sheetSiswaBulan.getRange(rowIdx, 4, 1, 5).setValues([[r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr]]);
           } else {
             sheetSiswaBulan.appendRow([
-              key, ta, bulan, r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr
+              key, ta, r.tanggal ? String(r.tanggal).substring(0, 7) : bulan, r.kelas || "-", r.nisnNip, r.nama || "", marksJson, nowStr
             ]);
             keyRowMap[key] = sheetSiswaBulan.getLastRow();
           }
@@ -1601,9 +1734,85 @@ function handleSaveAbsensiBatch(ss, payload) {
     }
   }
 
+  // 2. Upsert Tendik ke TAB_ABSENSI_TENDIK (1 baris per guru per tanggal)
+  if (sheetAbsenTendik) {
+    try {
+      const existingTd = sheetAbsenTendik.getDataRange().getValues();
+      const tdRowMap = {};
+      for (let i = 1; i < existingTd.length; i++) {
+        tdRowMap[String(existingTd[i][0])] = { rowIdx: i + 1, rowData: existingTd[i] };
+      }
+
+      records.forEach(r => {
+        if (r.kategori === "Tendik") {
+          const key = `${r.tanggal}|${r.nisnNip}`;
+          const existingEntry = tdRowMap[key];
+          if (existingEntry) {
+            const jamDatang = existingEntry.rowData[5] || "";
+            const jamPulang = existingEntry.rowData[6] || "";
+            sheetAbsenTendik.getRange(existingEntry.rowIdx, 4, 1, 6).setValues([[
+              r.nama || "", r.status || "Hadir", jamDatang, jamPulang, r.keterangan || "", nowStr
+            ]]);
+          } else {
+            sheetAbsenTendik.appendRow([
+              key, r.tanggal, String(r.nisnNip), r.nama || "", r.status || "Hadir", "", "", r.keterangan || "", nowStr
+            ]);
+            tdRowMap[key] = { rowIdx: sheetAbsenTendik.getLastRow(), rowData: [key, r.tanggal, String(r.nisnNip), r.nama || "", r.status || "Hadir", "", "", r.keterangan || "", nowStr] };
+          }
+        }
+      });
+    } catch (eTd) {
+      Logger.log("Gagal sync ke absensi tendik: " + eTd.toString());
+    }
+  }
+
+  // 3. Optimisasi DB_Absensi: Hanya simpan/upsert baris eksepsi (Sakit/Izin/Alpa) atau yang memiliki catatan KETERANGAN
+  // Mencegah pembengkakan 40.700 baris/tahun untuk status "Hadir" tanpa catatan & mencegah duplikasi saat simpan ulang
+  if (sheet) {
+    try {
+      const existingAbs = sheet.getDataRange().getValues();
+      const absRowMap = {};
+      for (let i = 1; i < existingAbs.length; i++) {
+        absRowMap[String(existingAbs[i][0])] = i + 1;
+      }
+
+      const rowsToDelete = [];
+      records.forEach(rec => {
+        const cleanIdKey = String(rec.nisnNip).replace(/\s+/g, '');
+        const id = `ABS-${rec.tanggal}-${rec.kategori}-${cleanIdKey}`;
+        const ket = String(rec.keterangan || "").trim();
+        const isException = (rec.status && rec.status !== "Hadir") || ket !== "";
+        const existingRowIdx = absRowMap[id];
+
+        if (isException) {
+          const rowPayload = [
+            id, rec.tanggal, rec.kategori, rec.kelas || "-",
+            String(rec.nisnNip), rec.nama, rec.status, ket, nowStr
+          ];
+          if (existingRowIdx) {
+            sheet.getRange(existingRowIdx, 1, 1, 9).setValues([rowPayload]);
+          } else {
+            sheet.appendRow(rowPayload);
+            absRowMap[id] = sheet.getLastRow();
+          }
+        } else if (existingRowIdx) {
+          // Jika sebelumnya Sakit/Izin/Alpa lalu dikoreksi menjadi Hadir tanpa keterangan, hapus dari log eksepsi
+          rowsToDelete.push(existingRowIdx);
+        }
+      });
+
+      // Hapus dari indeks baris terbesar ke terkecil agar tidak menggeser indeks baris lainnya
+      rowsToDelete.sort((a, b) => b - a).forEach(rIdx => {
+        sheet.deleteRow(rIdx);
+      });
+    } catch (eAbs) {
+      Logger.log("Gagal upsert ke DB_Absensi: " + eAbs.toString());
+    }
+  }
+
   return {
     success: true,
-    message: `Berhasil mencatat presensi ${records.length} data ke database DB_Absensi!`,
+    message: `Berhasil mencatat & menyinkronkan presensi ${records.length} data secara efisien!`,
     count: records.length
   };
 }

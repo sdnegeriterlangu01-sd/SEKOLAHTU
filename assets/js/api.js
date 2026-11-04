@@ -526,6 +526,17 @@ const ApiClient = {
                 return { success: true, message: "Surat masuk berhasil dihapus!" };
             }
 
+            case "updateStatusSuratMasuk": {
+                let list = DataStore.getSuratMasuk();
+                const idx = list.findIndex(s => String(s.id) === String(payload.id) || String(s.noAgenda) === String(payload.noAgenda));
+                if (idx !== -1) {
+                    list[idx].status = payload.status;
+                    DataStore.saveSuratMasuk(list);
+                    return { success: true, message: `Status surat masuk berhasil diubah menjadi "${payload.status}"!`, data: list[idx] };
+                }
+                return { success: false, message: "Data surat masuk tidak ditemukan." };
+            }
+
             case "getSuratMasuk":
                 return { success: true, data: DataStore.getSuratMasuk() };
 

@@ -4,9 +4,10 @@
    ========================================================================== */
 
 const ModulSurat = {
-    activeSubTab: "keluar", // "keluar" atau "masuk"
+    activeSubTab: "keluar", // "keluar", "masuk", atau "permohonan"
     searchQueryKeluar: "",
     searchQueryMasuk: "",
+    filterStatusMasuk: "Semua",
     filterKlasifikasi: "Semua",
     filterTahun: "Semua",
     filterTanggal: "",
@@ -62,6 +63,14 @@ const ModulSurat = {
             });
         }
 
+        const filterStatusMasuk = document.getElementById("filter-status-surat-masuk");
+        if (filterStatusMasuk) {
+            filterStatusMasuk.addEventListener("change", (e) => {
+                this.filterStatusMasuk = e.target.value;
+                this.renderSuratMasukTable();
+            });
+        }
+
         // Live nomor preview when selecting classification / date in modal
         const selectKode = document.getElementById("sk-kode-klasifikasi");
         if (selectKode) {
@@ -90,6 +99,24 @@ const ModulSurat = {
                 }
             });
         }
+
+        // Auto OCR saat berkas fisik surat dipilih (Surat Masuk & Surat Keluar)
+        const smFileInput = document.getElementById("sm-scan-file");
+        if (smFileInput) {
+            smFileInput.addEventListener("change", () => {
+                if (smFileInput.files && smFileInput.files.length > 0) {
+                    this.handleScanSuratMasukOCR();
+                }
+            });
+        }
+        const skFileInput = document.getElementById("sk-file");
+        if (skFileInput) {
+            skFileInput.addEventListener("change", () => {
+                if (skFileInput.files && skFileInput.files.length > 0) {
+                    this.handleScanSuratKeluarOCR();
+                }
+            });
+        }
     },
 
     extractNoUrut(str) {
@@ -104,7 +131,6 @@ const ModulSurat = {
         const parts = s.split("/").map(p => p.trim());
         if (parts.length >= 2) {
             // parts[0] adalah {kodeKlasifikasi} (misal "421", "421.2", "420", "800") -> JANGAN diambil
-            // Cari NoSurat di index >= 1 (prioritaskan murni digit nomor urut, bukan tahun dan bukan bulan romawi)
             for (let i = 1; i < parts.length; i++) {
                 const p = parts[i];
                 if (/^(19|20)\d{2}$/.test(p)) continue;
@@ -130,7 +156,6 @@ const ModulSurat = {
         // 3. Fallback jika ada multiple angka di string
         const matches = [...s.matchAll(/(?:^|\/|\s)0*(\d{1,4})(?:\/|\s|$)/g)];
         if (matches.length >= 2) {
-            // Lewati match pertama karena sering kali merupakan kode klasifikasi (misal 421)
             for (let i = 1; i < matches.length; i++) {
                 const val = matches[i][1];
                 if (!/^(19|20)\d{2}$/.test(val)) {
@@ -352,7 +377,6 @@ const ModulSurat = {
             }
             manualInput.focus();
         } else if (!isManual && manualInput) {
-            // Ketika pengguna uncheck manual (pilih nomor otomatis), ambil nomor dari input manual
             const raw = manualInput.value.trim();
             if (raw) {
                 const n = this.extractNoUrut(raw);
@@ -369,8 +393,8 @@ const ModulSurat = {
 
         const tanggal = document.getElementById("sk-tanggal")?.value || Util.today();
         const baseNo = this._manualNoUrutBase || undefined;
-        const res = await ApiClient.request("getNextNomorSuratKeluar", { 
-            kodeKlasifikasi: kodeEl.value, 
+        const res = await ApiClient.request("getNextNomorSuratKeluar", {
+            kodeKlasifikasi: kodeEl.value,
             tanggalSurat: tanggal,
             baseNoUrut: baseNo
         });
@@ -394,7 +418,6 @@ const ModulSurat = {
         const fileContainer = document.getElementById("sk-current-file-container");
         if (fileContainer) fileContainer.classList.add("hidden");
 
-        // Set tanggal default sesuai filter yang sedang aktif jika ada
         let defaultDate = Util.today();
         if (this.filterTanggal) {
             defaultDate = this.filterTanggal;
@@ -421,6 +444,10 @@ const ModulSurat = {
 
         const fileInput = document.getElementById("sk-file");
         if (fileInput) fileInput.value = "";
+        const skBadge = document.getElementById("sk-ocr-status-badge");
+        if (skBadge) skBadge.classList.add("hidden");
+        const skProgBox = document.getElementById("sk-ocr-progress-box");
+        if (skProgBox) skProgBox.classList.add("hidden");
 
         const config = DataStore.getConfig();
         document.getElementById("sk-penandatangan").value = config.namaKepalaSekolah;
@@ -467,6 +494,10 @@ const ModulSurat = {
 
         const fileInput = document.getElementById("sk-file");
         if (fileInput) fileInput.value = "";
+        const skBadge = document.getElementById("sk-ocr-status-badge");
+        if (skBadge) skBadge.classList.add("hidden");
+        const skProgBox = document.getElementById("sk-ocr-progress-box");
+        if (skProgBox) skProgBox.classList.add("hidden");
         const fileContainer = document.getElementById("sk-current-file-container");
         const fileLink = document.getElementById("sk-current-file-link");
         if (fileContainer && fileLink) {
@@ -486,9 +517,111 @@ const ModulSurat = {
         if (modal) modal.classList.add("hidden");
     },
 
+    async handleScanSuratKeluarOCR() {
+        const fileInput = document.getElementById("sk-file");
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            App.showToast("Silakan pilih berkas surat keluar (PDF / Gambar) terlebih dahulu!", "warning");
+            fileInput?.focus();
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const btn = document.getElementById("btn-sk-ocr");
+        const progBox = document.getElementById("sk-ocr-progress-box");
+        const progBar = document.getElementById("sk-ocr-progress-bar");
+        const progText = document.getElementById("sk-ocr-progress-text");
+        const progPct = document.getElementById("sk-ocr-progress-pct");
+        const badge = document.getElementById("sk-ocr-status-badge");
+
+        if (progBox) progBox.classList.remove("hidden");
+        if (badge) badge.classList.add("hidden");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memindai Dokumen...`;
+        }
+
+        try {
+            const result = await ModulOCR.scanSuratKeluarFile(file, ({ status, percent }) => {
+                if (progText) progText.textContent = status;
+                if (progPct) progPct.textContent = `${percent}%`;
+                if (progBar) progBar.style.width = `${percent}%`;
+            });
+
+            const p = (result && result.parsed) || {};
+            let filledCount = 0;
+
+            if (p.kodeKlasifikasi) {
+                const kodeEl = document.getElementById("sk-kode-klasifikasi");
+                if (kodeEl) {
+                    const hasOpt = Array.from(kodeEl.options).some(opt => opt.value === p.kodeKlasifikasi);
+                    if (hasOpt) {
+                        kodeEl.value = p.kodeKlasifikasi;
+                        this._highlightField(kodeEl);
+                        filledCount++;
+                    }
+                }
+            }
+
+            if (p.nomorSurat) {
+                const chkManual = document.getElementById("sk-is-manual");
+                const manualInput = document.getElementById("sk-nomor-manual");
+                if (chkManual && manualInput) {
+                    chkManual.checked = true;
+                    this.toggleManualNomor(true);
+                    manualInput.value = p.nomorSurat;
+                    const n = this.extractNoUrut(p.nomorSurat);
+                    if (n > 0) this._manualNoUrutBase = n;
+                    this._highlightField(manualInput);
+                    filledCount++;
+                }
+            }
+
+            if (p.tanggalSurat) {
+                const el = document.getElementById("sk-tanggal");
+                if (el) { el.value = p.tanggalSurat; this._highlightField(el); filledCount++; }
+            }
+            if (p.tujuan) {
+                const el = document.getElementById("sk-tujuan");
+                if (el) { el.value = p.tujuan; this._highlightField(el); filledCount++; }
+            }
+            if (p.perihal) {
+                const el = document.getElementById("sk-perihal");
+                if (el) { el.value = p.perihal; this._highlightField(el); filledCount++; }
+            }
+            if (p.penandatangan) {
+                const el = document.getElementById("sk-penandatangan");
+                if (el) { el.value = p.penandatangan; this._highlightField(el); filledCount++; }
+            }
+            if (p.keterangan) {
+                const el = document.getElementById("sk-keterangan");
+                if (el) { el.value = p.keterangan; this._highlightField(el); filledCount++; }
+            }
+
+            this.updateLiveNomorSuratPreview();
+
+            if (badge) {
+                badge.classList.remove("hidden");
+                badge.classList.add("inline-flex");
+                badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${filledCount} Field Terisi Otomatis (${p.jenisSurat || 'Surat Keluar'})`;
+            }
+
+            App.showToast(`OCR Berhasil: ${filledCount} field surat keluar terisi otomatis! Silakan periksa kembali formulir.`, "success");
+
+        } catch (err) {
+            console.error("Surat Keluar OCR Error:", err);
+            App.showToast(`OCR Gagal: ${err.message}`, "error");
+            if (progText) progText.textContent = `Gagal: ${err.message}`;
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-bolt-lightning text-yellow-300"></i> Pindai Dokumen (OCR & Auto-Fill)`;
+            }
+        }
+    },
+
     async submitSuratKeluar(e) {
         if (e && e.preventDefault) e.preventDefault();
-        if (this._submittingSK) return; // cegah klik ganda -> nomor ganda
+        if (this._submittingSK) return;
 
         const kode = document.getElementById("sk-kode-klasifikasi").value;
         const tanggal = document.getElementById("sk-tanggal").value || Util.today();
@@ -609,11 +742,13 @@ const ModulSurat = {
 
         const list = DataStore.getSuratMasuk();
         const filtered = list.filter(s => {
-            return !this.searchQueryMasuk ||
-                s.noAgenda.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.noSuratAsli.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.pengirim.toLowerCase().includes(this.searchQueryMasuk) ||
-                s.perihal.toLowerCase().includes(this.searchQueryMasuk);
+            const matchSearch = !this.searchQueryMasuk ||
+                (s.noAgenda && s.noAgenda.toLowerCase().includes(this.searchQueryMasuk)) ||
+                (s.noSuratAsli && s.noSuratAsli.toLowerCase().includes(this.searchQueryMasuk)) ||
+                (s.pengirim && s.pengirim.toLowerCase().includes(this.searchQueryMasuk)) ||
+                (s.perihal && s.perihal.toLowerCase().includes(this.searchQueryMasuk));
+            const matchStatus = this.filterStatusMasuk === "Semua" || s.status === this.filterStatusMasuk;
+            return matchSearch && matchStatus;
         });
 
         const countEl = document.getElementById("total-surat-masuk-count");
@@ -656,10 +791,22 @@ const ModulSurat = {
                         <div class="font-medium text-blue-700"><i class="fa-solid fa-user-tag mr-1 text-[10px]"></i> ${s.disposisiKe}</div>
                         <div class="text-[11px] text-slate-500 italic mt-0.5">${s.instruksiDisposisi}</div>
                     </td>
-                    <td class="px-4 py-3.5 text-center">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${s.status === 'Selesai Disposisi' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
-                            <i class="fa-solid ${s.status === 'Selesai Disposisi' ? 'fa-circle-check' : 'fa-clock'}"></i> ${s.status}
-                        </span>
+                    <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                        <select onchange="ModulSurat.updateStatusSuratMasuk('${s.id}', this.value)"
+                            title="Klik untuk mengubah status surat masuk"
+                            class="cursor-pointer font-bold text-[11px] px-2.5 py-1 rounded-full border transition shadow-xs focus:ring-2 focus:ring-amber-500 focus:outline-none ${s.status === 'Selesai Disposisi'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                    : (s.status === 'Dalam Proses' || s.status === 'Menunggu Pelaksanaan')
+                        ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800'
+                        : s.status === 'Menunggu Disposisi'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800'
+                            : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
+                }">
+                            <option value="Baru Masuk" ${(!s.status || s.status === 'Baru Masuk') ? 'selected' : ''}>⏳ Baru Masuk</option>
+                            <option value="Menunggu Disposisi" ${s.status === 'Menunggu Disposisi' ? 'selected' : ''}>📋 Menunggu Disposisi</option>
+                            <option value="Dalam Proses" ${(s.status === 'Dalam Proses' || s.status === 'Menunggu Pelaksanaan') ? 'selected' : ''}>🔄 Dalam Proses</option>
+                            <option value="Selesai Disposisi" ${s.status === 'Selesai Disposisi' ? 'selected' : ''}>✅ Selesai Disposisi</option>
+                        </select>
                     </td>
                     <td class="px-4 py-3.5 text-right whitespace-nowrap">
                         <a href="${Sec.safeUrl(s.fileScanUrl)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg inline-flex items-center gap-1.5 transition">
@@ -672,6 +819,21 @@ const ModulSurat = {
                 </tr>
             `;
         }).join("");
+    },
+
+    async updateStatusSuratMasuk(id, newStatus) {
+        try {
+            const res = await ApiClient.request("updateStatusSuratMasuk", { id, status: newStatus });
+            if (res && res.success) {
+                App.showToast(res.message || `Status surat masuk berhasil diubah menjadi "${newStatus}"!`, "success");
+                this.renderSuratMasukTable();
+                App.updateDashboardStats();
+            } else {
+                App.showToast((res && res.message) || "Gagal memperbarui status surat masuk.", "error");
+            }
+        } catch (err) {
+            App.showToast(`Error: ${err.message}`, "error");
+        }
     },
 
     async hapusSuratMasuk(id, agenda) {
@@ -710,6 +872,11 @@ const ModulSurat = {
         document.getElementById("sm-tgl-terima").value = today;
         document.getElementById("sm-tgl-surat").value = today;
 
+        const badge = document.getElementById("sm-ocr-status-badge");
+        if (badge) badge.classList.add("hidden");
+        const progBox = document.getElementById("sm-ocr-progress-box");
+        if (progBox) progBox.classList.add("hidden");
+
         const count = DataStore.getSuratMasuk().length + 1;
         const autoAgenda = `SM/${new Date().getFullYear()}/${String(count).padStart(3, '0')}`;
         document.getElementById("sm-preview-agenda").textContent = autoAgenda;
@@ -720,6 +887,92 @@ const ModulSurat = {
     closeModalSuratMasuk() {
         const modal = document.getElementById("modal-tambah-surat-masuk");
         if (modal) modal.classList.add("hidden");
+    },
+
+    async handleScanSuratMasukOCR() {
+        const fileInput = document.getElementById("sm-scan-file");
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            App.showToast("Silakan pilih berkas scan fisik surat (PDF / Gambar) terlebih dahulu!", "warning");
+            fileInput?.focus();
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const btn = document.getElementById("btn-sm-ocr");
+        const progBox = document.getElementById("sm-ocr-progress-box");
+        const progBar = document.getElementById("sm-ocr-progress-bar");
+        const progText = document.getElementById("sm-ocr-progress-text");
+        const progPct = document.getElementById("sm-ocr-progress-pct");
+        const badge = document.getElementById("sm-ocr-status-badge");
+
+        if (progBox) progBox.classList.remove("hidden");
+        if (badge) badge.classList.add("hidden");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memindai Dokumen...`;
+        }
+
+        try {
+            const result = await ModulOCR.scanSuratMasukFile(file, ({ status, percent }) => {
+                if (progText) progText.textContent = status;
+                if (progPct) progPct.textContent = `${percent}%`;
+                if (progBar) progBar.style.width = `${percent}%`;
+            });
+
+            const p = (result && result.parsed) || {};
+            let filledCount = 0;
+
+            if (p.noSuratAsli) {
+                const el = document.getElementById("sm-no-asli");
+                if (el) { el.value = p.noSuratAsli; this._highlightField(el); filledCount++; }
+            }
+            if (p.pengirim) {
+                const el = document.getElementById("sm-pengirim");
+                if (el) { el.value = p.pengirim; this._highlightField(el); filledCount++; }
+            }
+            if (p.tglSurat) {
+                const el = document.getElementById("sm-tgl-surat");
+                if (el) { el.value = p.tglSurat; this._highlightField(el); filledCount++; }
+            }
+            if (p.perihal) {
+                const el = document.getElementById("sm-perihal");
+                if (el) { el.value = p.perihal; this._highlightField(el); filledCount++; }
+            }
+            if (p.disposisiKe) {
+                const el = document.getElementById("sm-disposisi-ke");
+                if (el) { el.value = p.disposisiKe; this._highlightField(el); filledCount++; }
+            }
+            if (p.instruksiDisposisi) {
+                const el = document.getElementById("sm-instruksi");
+                if (el) { el.value = p.instruksiDisposisi; this._highlightField(el); filledCount++; }
+            }
+
+            if (badge) {
+                badge.classList.remove("hidden");
+                badge.classList.add("inline-flex");
+                badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${filledCount} Field Terisi Otomatis (${p.jenisSurat || 'Surat Masuk'})`;
+            }
+
+            App.showToast(`OCR Berhasil: ${filledCount} field surat masuk terisi otomatis! Silakan periksa kembali formulir.`, "success");
+
+        } catch (err) {
+            console.error("Surat Masuk OCR Error:", err);
+            App.showToast(`OCR Gagal: ${err.message}`, "error");
+            if (progText) progText.textContent = `Gagal: ${err.message}`;
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-bolt-lightning text-yellow-300"></i> Pindai Dokumen (OCR & Auto-Fill)`;
+            }
+        }
+    },
+
+    _highlightField(el) {
+        if (!el) return;
+        el.classList.add("ring-2", "ring-emerald-500", "bg-emerald-50/50");
+        setTimeout(() => {
+            el.classList.remove("ring-2", "ring-emerald-500", "bg-emerald-50/50");
+        }, 3000);
     },
 
     async submitSuratMasuk(e) {
@@ -879,37 +1132,37 @@ const ModulSurat = {
                             <i class="fa-solid ${statusIcon}"></i> ${p.status}
                         </span>
                         ${(() => {
-                            let noSuratTampil = p.nomorSuratTerbit || "";
-                            if (!noSuratTampil || noSuratTampil === "421" || noSuratTampil === "421.") {
-                                const rawKet = p.keteranganTindak || p.keterangan || "";
-                                const mSrikandi = rawKet.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
-                                if (mSrikandi) {
-                                    noSuratTampil = mSrikandi[1].trim().replace(/\.+$/, "");
-                                } else {
-                                    const m421 = rawKet.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
-                                    if (m421) noSuratTampil = m421[0].trim().replace(/\.+$/, "");
-                                }
-                                if ((!noSuratTampil || noSuratTampil === "421") && window.DataStore) {
-                                    try {
-                                        const skList = DataStore.getSuratKeluar() || [];
-                                        const cleanNama = (p.nama || "").toLowerCase();
-                                        const cleanNisn = p.nisn || "";
-                                        const matchedSK = skList.find(s => {
-                                            const perihal = (s.perihal || "").toLowerCase();
-                                            const tujuanStr = (s.tujuan || "").toLowerCase();
-                                            return (cleanNisn && (perihal.includes(cleanNisn) || tujuanStr.includes(cleanNisn))) ||
-                                                   (cleanNama && (perihal.includes(cleanNama) || tujuanStr.includes(cleanNama)));
-                                        });
-                                        if (matchedSK && matchedSK.nomorSurat) noSuratTampil = matchedSK.nomorSurat;
-                                    } catch (e) {}
-                                }
-                            }
-                            return noSuratTampil ? `
+                    let noSuratTampil = p.nomorSuratTerbit || "";
+                    if (!noSuratTampil || noSuratTampil === "421" || noSuratTampil === "421.") {
+                        const rawKet = p.keteranganTindak || p.keterangan || "";
+                        const mSrikandi = rawKet.match(/(?:SRIKANDI|Agenda Dinas|Surat Keluar|Surat Resmi):\s*([^<>\r\n]+?)(?:\.?(?:\s+Silakan|\s*$|\.\s))/i);
+                        if (mSrikandi) {
+                            noSuratTampil = mSrikandi[1].trim().replace(/\.+$/, "");
+                        } else {
+                            const m421 = rawKet.match(/(?:421|041)[0-9a-zA-Z\.\/\-\s]+/i);
+                            if (m421) noSuratTampil = m421[0].trim().replace(/\.+$/, "");
+                        }
+                        if ((!noSuratTampil || noSuratTampil === "421") && window.DataStore) {
+                            try {
+                                const skList = DataStore.getSuratKeluar() || [];
+                                const cleanNama = (p.nama || "").toLowerCase();
+                                const cleanNisn = p.nisn || "";
+                                const matchedSK = skList.find(s => {
+                                    const perihal = (s.perihal || "").toLowerCase();
+                                    const tujuanStr = (s.tujuan || "").toLowerCase();
+                                    return (cleanNisn && (perihal.includes(cleanNisn) || tujuanStr.includes(cleanNisn))) ||
+                                        (cleanNama && (perihal.includes(cleanNama) || tujuanStr.includes(cleanNama)));
+                                });
+                                if (matchedSK && matchedSK.nomorSurat) noSuratTampil = matchedSK.nomorSurat;
+                            } catch (e) { }
+                        }
+                    }
+                    return noSuratTampil ? `
                                 <div class="text-[10px] font-mono font-bold text-blue-900 dark:text-blue-300 mt-1 bg-blue-50/80 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/80">
                                     <i class="fa-solid fa-file-signature text-blue-700 dark:text-blue-400 mr-1"></i>${noSuratTampil}
                                 </div>
                             ` : '';
-                        })()}
+                })()}
                     </td>
                     <td class="px-4 py-3 text-center">
                         <select onchange="ModulSurat.updateStatusPermohonan('${p.id}', this.value)"
@@ -988,7 +1241,6 @@ const ModulSurat = {
             if (noSurat === "421" || noSurat === "421.") noSurat = "";
             let ketTindak = item ? (item.keteranganTindak || item.keterangan || "") : "";
 
-            // Alur Penomoran Resmi: Saat status diubah menjadi Siap Diambil, ambil langsung dari data nomor surat keluar
             if (newStatus === "Siap Diambil") {
                 if (!noSurat && item) {
                     const suratKeluarList = DataStore.getSuratKeluar();
@@ -1004,7 +1256,6 @@ const ModulSurat = {
                     if (foundSK && foundSK.nomorSurat) {
                         noSurat = foundSK.nomorSurat;
                     } else {
-                        // Ambil nomor surat resmi berikutnya langsung dari generator penomoran surat dinas
                         const resNext = await ApiClient.request("getNextNomorSuratKeluar", { kodeKlasifikasi: "421.2" });
                         if (resNext && resNext.success && resNext.data && resNext.data.nomorSurat) {
                             noSurat = resNext.data.nomorSurat;
@@ -1013,7 +1264,6 @@ const ModulSurat = {
                             noSurat = `421.2/${String(skCount).padStart(3, "0")}/SD/${new Date().getFullYear()}`;
                         }
 
-                        // Catat nomor surat resmi ini ke buku register Agenda Surat Keluar (DB_SuratKeluar)
                         await ApiClient.request("saveSuratKeluar", {
                             nomorSurat: noSurat,
                             kodeKlasifikasi: "421.2",
@@ -1071,18 +1321,15 @@ const ModulSurat = {
         const item = DataStore.getPermohonanSurat().find(p => p.id === id);
         if (!item) return;
 
-        // 1. Ubah status permohonan menjadi "Disetujui TU" jika belum
         if (item.status === "Menunggu Verifikasi TU" || (item.status || "").toLowerCase().includes("menunggu")) {
             await this.updateStatusPermohonan(id, "Disetujui TU");
         }
 
-        // 2. Kaitkan ID permohonan aktif ke ModulCetak
         if (window.ModulCetak) {
             ModulCetak.activePermohonanId = id;
             ModulCetak.activePermohonan = item;
         }
 
-        // 3. Pindah ke modul Cetak & siapkan template
         App.navigateTo("cetak");
         const selectSiswa = document.getElementById("cetak-select-siswa");
 

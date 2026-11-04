@@ -1,6 +1,31 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.8] - 2026-11-04
+
+### Optimisasi Arsitektur Grid & Penyimpanan Google Sheets (Zero-10M-Limit Architecture) (`backend/Code.gs`)
+- **Pemangkasan Otomatis Kolom & Baris Kosong (`optimizeSheetGrid`):**
+  - Menambahkan fungsi `optimizeSheetGrid(sheet, targetCols)` pada `setupDatabaseAndFolders()` untuk memotong kolom kosong bawaan `insertSheet()` (default A–Z 26 kolom per tab) menjadi tepat sesuai jumlah kolom aktif di 12 tab (**166 kolom total** dari sebelumnya 315 kolom), serta memangkas baris kosong berlebih di bawah data terakhir (`lastRow + 20`).
+  - Menyelaraskan inisialisasi header `DB_Tendik` menjadi **15 kolom lengkap** (`NIP` s.d. `NUPTK`) dan `DB_PermohonanSurat` menjadi **13 kolom lengkap** (termasuk `NOMOR_SURAT_TERBIT`) sebelum pemangkasan kolom dilakukan.
+- **Eliminasi Duplikasi & Pembengkakan 40.700 Baris/Tahun pada `DB_Absensi` (`handleSaveAbsensiBatch` & `handleGetAbsensi`):**
+  - Mengubah `handleSaveAbsensiBatch` agar menyinkronkan presensi harian Siswa secara *upsert* ke `DB_AbsensiSiswaBulan` (`MARKS_JSON`, 1 baris per siswa per bulan = ~2.040 baris/tahun) dan presensi Tendik secara *upsert* ke `DB_AbsensiTendik` (1 baris per tendik per hari = ~3.300 baris/tahun).
+  - Mengoptimalkan `DB_Absensi` menjadi tabel **Log Eksepsi & Catatan Presensi** (hanya menyimpan/meng-*upsert* baris dengan status `Sakit`/`Izin`/`Alpa` atau yang memiliki `keterangan`, serta menghapus baris eksepsi lama bila status dikoreksi kembali menjadi `Hadir` tanpa catatan), memangkas pertumbuhan sel tahunan sebesar **>87%** (dari ~430.500 sel/tahun menjadi ~69.800 sel/tahun, cukup untuk **>140 tahun** operasional tanpa menyentuh batas 10 juta sel Google Sheets).
+  - Memperbarui `handleGetAbsensi` agar merekonstruksi daftar presensi harian secara transparan dari `DB_AbsensiSiswaBulan`, `DB_AbsensiTendik`, dan `DB_Absensi` sehingga 100% kompatibel dengan modul frontend `ModulAbsensi`.
+
+### Interaktivitas Status Surat Masuk & Fitur Light OCR Auto-Fill Formulir Surat Masuk & Surat Keluar (Client-Side JS Tanpa AI)
+- **Perbaikan Interaktivitas & Filter Status Surat Masuk (`assets/js/modul-surat.js`, `assets/js/api.js`, `backend/Code.gs`, `index.html`):**
+  - Mengubah elemen status pada tabel agenda Surat Masuk menjadi dropdown interaktif (`Baru Masuk`, `Menunggu Disposisi`, `Dalam Proses`, `Selesai Disposisi`) disertai filter status (`#filter-status-surat-masuk`) dan sinkronisasi langsung ke Google Sheets `DB_SuratMasuk` melalui `updateStatusSuratMasuk`.
+- **Fitur OCR Dokumen Cerdas & Auto-Fill Formulir Surat Masuk & Surat Keluar (`assets/js/modul-ocr.js`, `assets/js/modul-surat.js`, `index.html`):**
+  - Mengintegrasikan pemindaian berkas surat (PDF teks, PDF hasil scan, serta gambar JPG/PNG/WEBP) secara mandiri di sisi client menggunakan `pdf.js` dan `tesseract.js` (model Bahasa Indonesia) yang otomatis berjalan saat berkas dipilih.
+  - **Auto-Fill Surat Masuk (`parseSuratMasukText`):** Mengekstrak otomatis **Nomor Surat Asli**, **Tanggal Surat** (`YYYY-MM-DD`), **Asal Pengirim / Instansi**, **Perihal**, serta memberikan rekomendasi **Tujuan & Instruksi Disposisi** berdasarkan topik surat.
+  - **Auto-Fill Surat Keluar (`parseSuratKeluarText`):** Mengekstrak otomatis **Kode Klasifikasi**, **Nomor Surat**, **Tanggal Surat**, **Tujuan / Penerima**, **Perihal**, **Penandatangan**, dan **Keterangan** pada modal tambah Surat Keluar.
+- **Peningkatan Presisi Mesin Ekstraksi OCR Tanpa AI (`assets/js/modul-ocr.js`):**
+  - **Rekonstruksi Baris Geometris PDF & Pembersihan Artefak (`extractStructuredTextFromPdfPage`, `cleanOcrArtifacts`):** Mengurutkan struktur baris berdasarkan koordinat vertikal/horizontal PDF, menyatukan teks renggang (*letter-spacing*), serta menghapus garis bingkai tabel/kotak hitam (*Box Border Removal*) pada dokumen pindaian sebelum diproses OCR.
+  - **Ekstraksi Kop, Nomor, dan Perihal Multi-Instansi:** Mengenali format surat dari berbagai instansi (Kementerian, Dinas, Kecamatan, Puskesmas, Kwarran/Pramuka, Kemenag, cetakan mutasi Dapodik, hingga satuan pendidikan lintas jenjang) lengkap dengan filter pemisah alamat jalan, stopper tanggal/kota, dan pengayaan otomatis untuk perihal singkat.
+  - **Self-Test Suite Terintegrasi (`ModulOCR.runSelfTestSuite`):** Menyediakan fungsi pengujian mandiri untuk memvalidasi akurasi ekstraksi parser Surat Masuk dan Surat Keluar terhadap berbagai variasi format surat kedinasan.
+
+---
+
 ## [v3.3.7] - 2026-11-02
 
 ### Penyempurnaan Validasi Keabsahan Surat Kesiswaan (Resolusi Cerdas Data NISN, NIK, dan Kelas Siswa) serta Penguatan Register Surat Keluar

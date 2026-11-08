@@ -27,6 +27,9 @@ alter table public.profiles alter column role set default 'admin';
 -- Migrasi aman (menambahkan kolom jika tabel sudah terlanjur dibuat di Supabase)
 alter table public.profiles add column if not exists tipe_guru text default 'kelas';
 alter table public.profiles add column if not exists kelas_guru text default '1';
+alter table public.profiles add column if not exists nip text default '';
+alter table public.profiles add column if not exists sk_tugas_tambahan jsonb default '[]'::jsonb;
+alter table public.profiles add column if not exists consent_uupdp_at timestamptz;
 
 -- Komentar tabel
 comment on table public.profiles is 'Profil pengguna dan hak akses peran SIM-TAS-SD';

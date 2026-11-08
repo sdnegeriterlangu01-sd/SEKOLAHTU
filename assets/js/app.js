@@ -109,6 +109,9 @@ const App = {
         ModulPresensi.init();
         if (window.ModulJadwal) ModulJadwal.init();
         if (window.ModulPIP) ModulPIP.init();
+        if (window.SuratPermendagriModule && typeof window.SuratPermendagriModule.init === "function") {
+            window.SuratPermendagriModule.init();
+        }
     },
 
     renderTASelector() {
@@ -180,7 +183,9 @@ const App = {
         }
 
         // View specific refresh
-        if (route === "dashboard") {
+        if (route === "launchpad") {
+            if (window.AppSwitcherEngine) window.AppSwitcherEngine.renderLaunchpad("launchpad-module-container");
+        } else if (route === "dashboard") {
             this.updateDashboardStats();
         } else if (route === "scan-absensi") {
             ModulPresensi.renderScanView();
@@ -199,9 +204,23 @@ const App = {
             }
         } else if (route === "surat") {
             ModulSurat.renderSubTab();
+            if (window.SuratPermendagriModule && typeof window.SuratPermendagriModule.injectControls === "function") {
+                window.SuratPermendagriModule.injectControls();
+            }
         } else if (route === "cetak") {
             ModulCetak.populateStudentSelect();
             ModulCetak.generatePreview();
+            if (window.SuratPermendagriModule && typeof window.SuratPermendagriModule.injectControls === "function") {
+                window.SuratPermendagriModule.injectControls();
+            }
+        } else if (route === "keuangan") {
+            if (window.BkuKeuanganModule) window.BkuKeuanganModule.render("keuangan-module-container");
+        } else if (route === "lapbul") {
+            if (window.LapbulGeneratorModule) window.LapbulGeneratorModule.render("lapbul-module-container");
+        } else if (route === "ekinerja-vault") {
+            if (window.EKinerjaVaultModule) window.EKinerjaVaultModule.render("ekinerja-vault-container");
+        } else if (route === "tindak-lanjut") {
+            if (window.TindakLanjutModule) window.TindakLanjutModule.render("tindak-lanjut-module-container");
         } else if (route === "absensi") {
             ModulAbsensi.populateKelasOptions();
             ModulPresensi.onShow();

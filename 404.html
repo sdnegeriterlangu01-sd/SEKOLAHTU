@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>SEKOLAHTU | Mengalihkan Rute...</title>
+    <script>
+        /**
+         * GitHub Pages & Static Server Clean-URL SPA Redirector
+         * Mengalihkan akses langsung seperti /siswa, /dashboard, /absensi
+         * ke index.html dengan mempertahankan path bersih di address bar.
+         */
+        (function () {
+            var path = window.location.pathname || "/";
+            var search = window.location.search || "";
+            var hash = window.location.hash || "";
+            sessionStorage.setItem("sekolahtu_initial_clean_path", path + search + hash);
+
+            // Deteksi base path (mendukung sub-folder GitHub Pages maupun root domain)
+            var segments = path.split("/").filter(Boolean);
+            var knownRoutes = [
+                "launchpad", "dashboard", "siswa", "berkas", "guru", "tendik",
+                "jadwal", "pip", "surat", "cetak", "keuangan", "lapbul",
+                "ekinerja", "ekinerja-vault", "scan-absensi", "absensi",
+                "tindak-lanjut", "pengaturan", "profil", "profile"
+            ];
+            var lastSeg = (segments[segments.length - 1] || "").toLowerCase();
+            if (lastSeg === "permohonan") {
+                window.location.replace( path.replace(/\/permohonan\/?$/i, "/permohonan.html") + search + hash );
+                return;
+            }
+            if (lastSeg === "verifikasi") {
+                window.location.replace( path.replace(/\/verifikasi\/?$/i, "/verifikasi.html") + search + hash );
+                return;
+            }
+
+            var basePath = "/";
+            if (segments.length > 1 && knownRoutes.indexOf(lastSeg) !== -1) {
+                basePath = "/" + segments.slice(0, -1).join("/") + "/";
+            }
+            window.location.replace(basePath + "index.html?route=" + encodeURIComponent(lastSeg || "dashboard") + hash);
+        })();
+    </script>
+</head>
+<body style="background:#0f172a;color:#f8fafc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+    <div>Memuat modul SEKOLAHTU...</div>
+</body>
+</html>
+

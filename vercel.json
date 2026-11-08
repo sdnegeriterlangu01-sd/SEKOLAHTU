@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/permohonan", "destination": "/permohonan.html" },
+    { "source": "/verifikasi", "destination": "/verifikasi.html" },
+    { "source": "/launchpad", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/siswa", "destination": "/index.html" },
+    { "source": "/berkas", "destination": "/index.html" },
+    { "source": "/guru", "destination": "/index.html" },
+    { "source": "/tendik", "destination": "/index.html" },
+    { "source": "/jadwal", "destination": "/index.html" },
+    { "source": "/pip", "destination": "/index.html" },
+    { "source": "/surat", "destination": "/index.html" },
+    { "source": "/cetak", "destination": "/index.html" },
+    { "source": "/keuangan", "destination": "/index.html" },
+    { "source": "/lapbul", "destination": "/index.html" },
+    { "source": "/ekinerja", "destination": "/index.html" },
+    { "source": "/ekinerja-vault", "destination": "/index.html" },
+    { "source": "/scan-absensi", "destination": "/index.html" },
+    { "source": "/absensi", "destination": "/index.html" },
+    { "source": "/tindak-lanjut", "destination": "/index.html" },
+    { "source": "/pengaturan", "destination": "/index.html" },
+    { "source": "/profil", "destination": "/index.html" },
+    { "source": "/profile", "destination": "/index.html" },
+    { "source": "/((?!assets/|shared/|modules/|views/|icons/|manifest\\.json|sw\\.js).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    }
+  ]
+}
+

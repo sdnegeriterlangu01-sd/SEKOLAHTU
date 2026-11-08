@@ -12,6 +12,15 @@
     <script>
         (function() {
             try {
+                // Silence noisy Tailwind Play CDN warning in Zero-Build architecture
+                var origWarn = console.warn;
+                console.warn = function() {
+                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
+                        return;
+                    }
+                    return origWarn.apply(console, arguments);
+                };
+
                 var theme = localStorage.getItem('sekolahtu_theme');
                 if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
@@ -57,6 +66,25 @@
     <!-- Driver.js CDN (Interactive Onboarding Tour Panduan Staf) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
+    <!-- PWA Manifest & Enterprise Offline Libraries (Dexie.js IndexedDB & SheetJS XLSX) -->
+    <script>
+        (function () {
+            if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+                var link = document.createElement("link");
+                link.rel = "manifest";
+                link.href = "manifest.json";
+                document.head.appendChild(link);
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SEKOLAHTU">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
@@ -110,6 +138,11 @@
                 <!-- Menu Utama -->
                 <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">Menu Utama</div>
 
+                <a href="#launchpad" data-route="launchpad" onclick="App.navigateTo('launchpad')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-rocket text-sm w-5 text-center text-amber-300"></i>
+                    <span>Beranda Pintar (Peran & SK)</span>
+                </a>
                 <a href="#dashboard" data-route="dashboard" onclick="App.navigateTo('dashboard')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer active bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 font-bold">
                     <i class="fa-solid fa-gauge-high text-sm w-5 text-center text-blue-300"></i>
@@ -145,6 +178,21 @@
                     <i class="fa-solid fa-file-invoice text-sm w-5 text-center text-blue-300"></i>
                     <span>Cetak Surat Otomatis</span>
                 </a>
+                <a href="#keuangan" data-route="keuangan" onclick="App.navigateTo('keuangan')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-wallet text-sm w-5 text-center text-amber-300"></i>
+                    <span>BKU, Pajak & Tabungan</span>
+                </a>
+                <a href="#lapbul" data-route="lapbul" onclick="App.navigateTo('lapbul')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-chart-pie text-sm w-5 text-center text-purple-300"></i>
+                    <span>Lapbul Brebes & Evaluasi</span>
+                </a>
+                <a href="#ekinerja-vault" data-route="ekinerja-vault" onclick="App.navigateTo('ekinerja-vault')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-vault text-sm w-5 text-center text-teal-300"></i>
+                    <span>Brankas SKP E-Kinerja</span>
+                </a>
                 <a href="#scan-absensi" data-route="scan-absensi" onclick="App.navigateTo('scan-absensi')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
                     <i class="fa-solid fa-qrcode text-indigo-400 text-sm w-5 text-center"></i>
@@ -158,6 +206,11 @@
 
                 <!-- Integrasi & Pengaturan -->
                 <div class="pt-4 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-300/80">Integrasi & Pengaturan</div>
+                <a href="#tindak-lanjut" data-route="tindak-lanjut" onclick="App.navigateTo('tindak-lanjut')"
+                    class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-headset text-sm w-5 text-center text-rose-300"></i>
+                    <span>Meja Tindak Lanjut & SUS</span>
+                </a>
                 <a href="#pengaturan" data-route="pengaturan" onclick="App.navigateTo('pengaturan')"
                     class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition cursor-pointer text-blue-100/85 hover:bg-white/10 hover:text-white">
                     <i class="fa-solid fa-sliders text-sm w-5 text-center text-blue-300"></i>
@@ -188,12 +241,12 @@
                             if (r.indexOf("guru") === 0) r = "guru";
 
                             var allowedRoutes = {
-                                admin: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
-                                kepsek: ["dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "scan-absensi", "absensi", "pengaturan"],
-                                guru: ["dashboard", "tendik", "jadwal", "berkas", "pip", "scan-absensi", "absensi"],
-                                perpustakaan: ["dashboard", "berkas", "pip", "scan-absensi", "absensi"],
-                                penjaga: ["dashboard", "scan-absensi", "absensi"]
-                            }[r] || ["dashboard", "scan-absensi", "absensi"];
+                                admin: ["launchpad", "dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "keuangan", "lapbul", "ekinerja-vault", "scan-absensi", "absensi", "tindak-lanjut", "pengaturan"],
+                                kepsek: ["launchpad", "dashboard", "tendik", "jadwal", "berkas", "pip", "surat", "cetak", "keuangan", "lapbul", "ekinerja-vault", "scan-absensi", "absensi", "tindak-lanjut", "pengaturan"],
+                                guru: ["launchpad", "dashboard", "tendik", "jadwal", "berkas", "pip", "keuangan", "ekinerja-vault", "scan-absensi", "absensi"],
+                                perpustakaan: ["launchpad", "dashboard", "berkas", "pip", "ekinerja-vault", "scan-absensi", "absensi"],
+                                penjaga: ["launchpad", "dashboard", "scan-absensi", "absensi"]
+                            }[r] || ["launchpad", "dashboard", "scan-absensi", "absensi"];
 
                             var nav = document.getElementById("vue-sidebar-nav");
                             if (nav) {
@@ -299,6 +352,21 @@
                             <!-- Populated by ModulImport.renderTASelect() -->
                         </select>
                     </div>
+
+                    <!-- 9-Dot Waffle App-Switcher & Quick Tools -->
+                    <button id="btn-app-switcher-waffle" type="button" onclick="window.AppSwitcherEngine && window.AppSwitcherEngine.openWaffleModal()"
+                        class="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[10px] sm:text-xs font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-xs transition cursor-pointer flex-shrink-0"
+                        title="Pindah Sub-Aplikasi SEKOLAHTU (App-Switcher 9-Titik)">
+                        <i class="fa-solid fa-grip text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                        <span class="hidden md:inline">Sub-Aplikasi</span>
+                    </button>
+
+                    <button id="btn-quick-signature-extractor" type="button" onclick="window.SignatureExtractorEngine && window.SignatureExtractorEngine.openExtractorModal()"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-[10px] sm:text-xs font-bold bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 shadow-xs transition cursor-pointer flex-shrink-0"
+                        title="Ekstraktor Tanda Tangan Transparan (Tanpa Scanner)">
+                        <i class="fa-solid fa-signature text-emerald-600 dark:text-emerald-400 text-[10px] sm:text-xs"></i>
+                        <span class="hidden lg:inline">TTD Digital</span>
+                    </button>
 
                     <!-- Dark / Light Mode Toggle Button (Sebelah Kiri Element Box Online) -->
                     <button id="theme-toggle-btn" type="button" onclick="App.toggleTheme()"
@@ -2716,6 +2784,41 @@
                     </div>
                 </section>
 
+                <!-- ==========================================================================
+                     VIEW FASE 1: ROLE-BASED CARD LAUNCHPAD (#view-launchpad)
+                     ========================================================================== -->
+                <section id="view-launchpad" class="app-view hidden space-y-6">
+                    <div id="launchpad-module-container"></div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW FASE 1: BKU, PAJAK BOSP, HONORARIUM & TABUNGAN SISWA (#view-keuangan)
+                     ========================================================================== -->
+                <section id="view-keuangan" class="app-view hidden space-y-6">
+                    <div id="keuangan-module-container"></div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW FASE 1: GENERATOR LAPBUL KORWILCAM BREBES & EVALUASI 000.7.2 (#view-lapbul)
+                     ========================================================================== -->
+                <section id="view-lapbul" class="app-view hidden space-y-6">
+                    <div id="lapbul-module-container"></div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW FASE 1: BRANKAS BUKTI DUKUNG SKP E-KINERJA BKN (#view-ekinerja-vault)
+                     ========================================================================== -->
+                <section id="view-ekinerja-vault" class="app-view hidden space-y-6">
+                    <div id="ekinerja-vault-container"></div>
+                </section>
+
+                <!-- ==========================================================================
+                     VIEW FASE 1: MEJA TINDAK LANJUT, SKOR SUS & TELEMETRI (#view-tindak-lanjut)
+                     ========================================================================== -->
+                <section id="view-tindak-lanjut" class="app-view hidden space-y-6">
+                    <div id="tindak-lanjut-module-container"></div>
+                </section>
+
             </main>
 
             <!-- Bottom Application Footer -->
@@ -4228,25 +4331,109 @@
     </div>
 
     <!-- ==========================================================================
+         FASE 1 SHARED ENTERPRISE LIBRARIES & CORE-TU SUB-MODULES
+         ========================================================================== -->
+    <script src="shared/glossary.js?v=4.0.1"></script>
+    <script src="shared/db-dexie.js?v=4.0.1"></script>
+    <script src="shared/api-client.js?v=4.0.1"></script>
+    <script src="shared/camera-capture.js?v=4.0.2"></script>
+    <script src="shared/signature-extractor.js?v=4.0.2"></script>
+    <script src="shared/crud-safety.js?v=4.0.2"></script>
+    <script src="shared/telemetry-engine.js?v=4.0.1"></script>
+    <script src="shared/sus-engine.js?v=4.0.1"></script>
+    <script src="shared/bug-reporter.js?v=4.0.1"></script>
+    <script src="shared/tour-guide.js?v=4.0.1"></script>
+    <script src="shared/app-switcher.js?v=4.0.1"></script>
+
+    <!-- ==========================================================================
          APPLICATION JAVASCRIPT MODULES
          ========================================================================== -->
     <script src="assets/js/config.js"></script>
-    <script src="assets/js/security.js"></script>
+    <script src="assets/js/security.js?v=4.0.1"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/data.js"></script>
     <script src="assets/js/api.js"></script>
-    <script src="assets/js/modul-berkas.js"></script>
+    <script src="assets/js/modul-berkas.js?v=4.0.1"></script>
     <script src="assets/js/modul-surat.js?v=3.3.8"></script>
     <script src="assets/js/modul-cetak.js?v=3.3.8"></script>
     <script src="assets/js/modul-jadwal.js"></script>
     <script src="assets/js/modul-pip.js"></script>
     <script src="assets/js/modul-ocr.js?v=3.3.8"></script>
     <script src="assets/js/modul-absensi.js"></script>
-    <script src="assets/js/modul-import.js"></script>
+    <script src="assets/js/modul-import.js?v=4.0.1"></script>
     <script src="assets/js/modul-presensi.js"></script>
     <script src="assets/js/modul-tendik.js"></script>
-    <script src="assets/js/modul-vue.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="modules/core-tu/surat-permendagri.js?v=4.0.1"></script>
+    <script src="modules/core-tu/lapbul.js?v=4.0.1"></script>
+    <script src="modules/core-tu/ekinerja-vault.js?v=4.0.1"></script>
+    <script src="modules/core-tu/bku-keuangan.js?v=4.0.1"></script>
+    <script src="modules/core-tu/tindak-lanjut.js?v=4.0.1"></script>
+    <script src="assets/js/modul-vue.js?v=4.0.1"></script>
+    <script src="assets/js/app.js?v=4.0.1"></script>
+
+    <!-- PWA Service Worker Registration, Persistent Storage & Install Banner -->
+    <script>
+        (function () {
+            // 1. Request Persistent IndexedDB Storage (Prevent Browser Eviction)
+            if (navigator.storage && navigator.storage.persist) {
+                navigator.storage.persist().then(function (persistent) {
+                    console.log("[SEKOLAHTU PWA] Persistent Storage:", persistent ? "Granted" : "Best-Effort");
+                }).catch(function () {});
+            }
+
+            // 2. Register Offline-First Service Worker (3-Tier Cache Strategy - HTTP/HTTPS only)
+            if ("serviceWorker" in navigator && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
+                window.addEventListener("load", function () {
+                    navigator.serviceWorker.register("./sw.js").then(function (reg) {
+                        console.log("[SEKOLAHTU PWA] Service Worker aktif:", reg.scope);
+                    }).catch(function (err) {
+                        console.warn("[SEKOLAHTU PWA] Pendaftaran Service Worker dilewati:", err);
+                    });
+                });
+            }
+
+            // 3. PWA Install Prompt Banner (Android/Desktop Chrome/Edge + iOS Guide)
+            var deferredInstallPrompt = null;
+            window.addEventListener("beforeinstallprompt", function (e) {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                if (localStorage.getItem("sekolahtu_pwa_banner_dismissed") === "1") return;
+                showPwaInstallBanner();
+            });
+
+            function showPwaInstallBanner() {
+                if (document.getElementById("pwa-install-banner")) return;
+                var banner = document.createElement("div");
+                banner.id = "pwa-install-banner";
+                banner.className = "no-print fixed bottom-4 left-4 z-50 max-w-sm bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-indigo-500/40 flex items-center gap-3";
+                banner.innerHTML =
+                    '<img src="icons/icon-72x72.png" alt="Ikon PWA" class="w-10 h-10 rounded-xl flex-shrink-0">' +
+                    '<div class="flex-1 min-w-0">' +
+                    '  <div class="font-bold text-xs text-white">Pasang Aplikasi SEKOLAHTU</div>' +
+                    '  <div class="text-[11px] text-slate-300 leading-tight">Akses cepat 1-klik dari layar utama HP/Laptop & tetap jalan saat sinyal mati.</div>' +
+                    '</div>' +
+                    '<div class="flex flex-col gap-1">' +
+                    '  <button id="btn-pwa-install-now" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-bold">Pasang</button>' +
+                    '  <button id="btn-pwa-install-close" class="px-2 py-0.5 text-slate-400 hover:text-slate-200 text-[10px]">Nanti</button>' +
+                    '</div>';
+                document.body.appendChild(banner);
+
+                document.getElementById("btn-pwa-install-now").addEventListener("click", function () {
+                    if (deferredInstallPrompt) {
+                        deferredInstallPrompt.prompt();
+                        deferredInstallPrompt.userChoice.finally(function () {
+                            deferredInstallPrompt = null;
+                            banner.remove();
+                        });
+                    }
+                });
+                document.getElementById("btn-pwa-install-close").addEventListener("click", function () {
+                    localStorage.setItem("sekolahtu_pwa_banner_dismissed", "1");
+                    banner.remove();
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

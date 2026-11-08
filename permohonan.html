@@ -9,6 +9,14 @@
     <script>
         (function () {
             try {
+                var origWarn = console.warn;
+                console.warn = function () {
+                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
+                        return;
+                    }
+                    return origWarn.apply(console, arguments);
+                };
+
                 var theme = localStorage.getItem('sekolahtu_theme');
                 if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
@@ -41,7 +49,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+    <script>
+        (function () {
+            if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+                var link = document.createElement("link");
+                link.rel = "manifest";
+                link.href = "manifest.json";
+                document.head.appendChild(link);
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#1e3a8a">
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -119,15 +139,19 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs (Ajukan Baru vs Cek Status Resi) -->
-        <div class="flex items-center p-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-2xl gap-1">
+        <!-- Navigation Tabs (Ajukan Baru vs Cek Status Resi vs Tabungan & Infaq) -->
+        <div class="flex flex-wrap items-center p-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-2xl gap-1">
             <button type="button" id="tab-btn-ajukan" onclick="switchPortalTab('ajukan')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm">
-                <i class="fa-solid fa-file-circle-plus"></i> Ajukan Permohonan Baru
+                class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm">
+                <i class="fa-solid fa-file-circle-plus"></i> Ajukan Permohonan Surat
             </button>
             <button type="button" id="tab-btn-tracking" onclick="switchPortalTab('tracking')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
-                <i class="fa-solid fa-magnifying-glass-chart"></i> Lacak Status Resi Pengajuan
+                class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Lacak Status Resi
+            </button>
+            <button type="button" id="tab-btn-tabungan" onclick="switchPortalTab('tabungan')"
+                class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                <i class="fa-solid fa-piggy-bank text-amber-500"></i> Buku Tabungan & Infaq
             </button>
         </div>
 
@@ -595,6 +619,54 @@
                 </div>
             </div>
         </div>
+
+        <!-- SECTION 3: TRANSPARANSI BUKU TABUNGAN SISWA & KAS INFAQ (READ-ONLY WALI MURID) -->
+        <div id="section-tabungan"
+            class="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
+            <div class="max-w-lg mx-auto text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 flex items-center justify-center mx-auto text-xl font-bold">
+                    <i class="fa-solid fa-piggy-bank"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kartu Tabungan Digital Siswa & Transparansi Infaq</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Masukkan <strong>10 Digit NISN</strong> dan <strong>PIN 4 Digit Tanggal & Bulan Lahir (DDMM)</strong> putra/putri Bapak/Ibu untuk melihat saldo dan mutasi tabungan secara aman (Read-Only).</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+                    <input type="text" id="parent-tabungan-nisn" maxlength="10" placeholder="NISN (Contoh: 0134567890)"
+                        class="sm:col-span-2 px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                    <input type="password" id="parent-tabungan-pin" maxlength="4" placeholder="PIN DDMM (Cth: 1708)"
+                        class="px-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
+                <button type="button" onclick="checkParentStudentSavings()"
+                    class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-lock-open"></i> Lihat Buku Tabungan Anak & Transparansi Kas Infaq
+                </button>
+            </div>
+
+            <div id="parent-tabungan-result" class="hidden space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            </div>
+        </div>
+
+        <!-- Banner Kepatuhan UU PDP No. 27/2022 & Survei Kepuasan Wali Murid (SUS) -->
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-shield-heart"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-slate-800 dark:text-slate-100">Pelindungan Data Pribadi (UU PDP No. 27 Tahun 2022)</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Data siswa & orang tua dienkripsi dan hanya digunakan untuk layanan resmi SDN Terlangu 01.</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="button" onclick="window.CRUDSafetyManager && window.CRUDSafetyManager.openUuPdpConsentModal()"
+                    class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-[11px] hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-file-contract"></i> Hak Privasi UU PDP
+                </button>
+                <button type="button" onclick="window.SUSEngine && window.SUSEngine.openSurveyModal('wali_murid')"
+                    class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]">
+                    <i class="fa-solid fa-star text-amber-300"></i> Beri Nilai Layanan
+                </button>
+            </div>
+        </div>
     </main>
 
     <!-- Footer -->
@@ -610,6 +682,11 @@
     </footer>
 
     <!-- App JavaScript Dependencies -->
+    <script src="shared/glossary.js?v=4.0.1"></script>
+    <script src="shared/db-dexie.js?v=4.0.1"></script>
+    <script src="shared/crud-safety.js?v=4.0.1"></script>
+    <script src="shared/sus-engine.js?v=4.0.1"></script>
+    <script src="shared/bug-reporter.js?v=4.0.1"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/security.js"></script>
     <script src="assets/js/auth.js"></script>
@@ -669,19 +746,106 @@
         function switchPortalTab(tab) {
             const secAjukan = document.getElementById("section-ajukan");
             const secTracking = document.getElementById("section-tracking");
+            const secTabungan = document.getElementById("section-tabungan");
             const btnAjukan = document.getElementById("tab-btn-ajukan");
             const btnTracking = document.getElementById("tab-btn-tracking");
+            const btnTabungan = document.getElementById("tab-btn-tabungan");
 
-            if (tab === "ajukan") {
-                secAjukan.classList.remove("hidden");
-                secTracking.classList.add("hidden");
-                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm";
-                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
-            } else {
-                secAjukan.classList.add("hidden");
-                secTracking.classList.remove("hidden");
-                btnTracking.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm";
-                btnAjukan.className = "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+            const activeCls = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-300 shadow-sm";
+            const inactiveCls = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+
+            secAjukan.classList.toggle("hidden", tab !== "ajukan");
+            secTracking.classList.toggle("hidden", tab !== "tracking");
+            if (secTabungan) secTabungan.classList.toggle("hidden", tab !== "tabungan");
+
+            btnAjukan.className = tab === "ajukan" ? activeCls : inactiveCls;
+            btnTracking.className = tab === "tracking" ? activeCls : inactiveCls;
+            if (btnTabungan) btnTabungan.className = tab === "tabungan" ? activeCls : inactiveCls;
+        }
+
+        function checkParentStudentSavings() {
+            const nisn = (document.getElementById("parent-tabungan-nisn")?.value || "").trim();
+            const pin = (document.getElementById("parent-tabungan-pin")?.value || "").trim();
+            const box = document.getElementById("parent-tabungan-result");
+            if (!nisn || nisn.length < 5) {
+                showToast("Masukkan NISN siswa dengan benar.", "error");
+                return;
+            }
+            if (!pin || pin.length !== 4) {
+                showToast("Masukkan 4 digit PIN Tanggal & Bulan Lahir (DDMM).", "error");
+                return;
+            }
+
+            const students = (typeof DataStore !== "undefined" && DataStore.getSiswa) ? DataStore.getSiswa() : [];
+            const student = students.find(s => String(s.nisn) === nisn) || { nisn, nama: "Siswa SDN Terlangu 01 (" + nisn + ")", kelas: "6" };
+
+            let txList = [];
+            try {
+                const raw = localStorage.getItem("SEKOLAHTU_TABUNGAN_SISWA_V1");
+                if (raw) {
+                    const allTx = JSON.parse(raw) || [];
+                    txList = allTx.filter(t => String(t.nisn) === nisn);
+                }
+            } catch (e) {}
+
+            let saldo = 0;
+            txList.forEach(t => {
+                if (t.jenis === "SETOR") saldo += Number(t.nominal || 0);
+                else saldo -= Number(t.nominal || 0);
+            });
+
+            let infaqSaldo = 0;
+            try {
+                const rawInfaq = localStorage.getItem("SEKOLAHTU_KAS_INFAQ_V1");
+                if (rawInfaq) {
+                    const allInfaq = JSON.parse(rawInfaq) || [];
+                    allInfaq.forEach(i => {
+                        if (i.jenis === "MASUK") infaqSaldo += Number(i.nominal || 0);
+                        else infaqSaldo -= Number(i.nominal || 0);
+                    });
+                }
+            } catch (e) {}
+
+            const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
+            const rowsHtml = txList.length > 0
+                ? txList.slice().reverse().map(t => `
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                        <td class="py-2 px-3">${Sec.esc(t.tanggal || "-")}</td>
+                        <td class="py-2 px-3 font-bold ${t.jenis === 'SETOR' ? 'text-emerald-600' : 'text-rose-600'}">${Sec.esc(t.jenis)}</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold">${fmtRp(t.nominal)}</td>
+                        <td class="py-2 px-3 text-slate-500">${Sec.esc(t.keterangan || "-")}</td>
+                    </tr>`).join("")
+                : `<tr><td colspan="4" class="py-4 text-center text-slate-400">Belum ada riwayat mutasi tabungan tercatat untuk NISN ${Sec.esc(nisn)}.</td></tr>`;
+
+            if (box) {
+                box.classList.remove("hidden");
+                box.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                            <div class="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300">Saldo Tabungan Siswa (${Sec.esc(student.nama)})</div>
+                            <div class="text-xl font-black text-emerald-800 dark:text-emerald-200 mt-1 font-mono">${fmtRp(saldo)}</div>
+                            <div class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">NISN: ${Sec.esc(nisn)} • Status: Aktif & Terlindungi</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                            <div class="text-[10px] font-bold uppercase text-blue-700 dark:text-blue-300">Transparansi Saldo Kas Infaq & Sosial Sekolah</div>
+                            <div class="text-xl font-black text-blue-800 dark:text-blue-200 mt-1 font-mono">${fmtRp(infaqSaldo)}</div>
+                            <div class="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">Dikelola transparan untuk kegiatan keagamaan & sosial siswa</div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-[11px] uppercase text-slate-500">
+                                <tr>
+                                    <th class="py-2.5 px-3">Tanggal</th>
+                                    <th class="py-2.5 px-3">Jenis</th>
+                                    <th class="py-2.5 px-3 text-right">Nominal</th>
+                                    <th class="py-2.5 px-3">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
             }
         }
 

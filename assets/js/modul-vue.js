@@ -111,6 +111,7 @@ const ModulVue = {
                 const guruInfo = computed(() => (Auth.getGuruInfo ? Auth.getGuruInfo() : null));
 
                 const allMenuItems = [
+                    { id: "launchpad", route: "launchpad", label: "Beranda Pintar (Peran & SK)", icon: "fa-rocket", iconColor: "text-amber-300", section: "main" },
                     { id: "dashboard", route: "dashboard", label: "Beranda & Ringkasan", icon: "fa-gauge-high", section: "main" },
                     { id: "tendik", route: "tendik", label: "Data Guru & Tendik", icon: "fa-chalkboard-user", section: "main" },
                     { id: "jadwal", route: "jadwal", label: "Jadwal Pelajaran", icon: "fa-calendar-days", section: "main" },
@@ -118,11 +119,15 @@ const ModulVue = {
                     { id: "pip", route: "pip", label: "Program PIP Siswa", icon: "fa-hand-holding-dollar", section: "main" },
                     { id: "surat", route: "surat", label: "Penomoran & Surat", icon: "fa-envelopes-bulk", section: "main" },
                     { id: "cetak", route: "cetak", label: "Cetak Surat Otomatis", icon: "fa-file-invoice", section: "main" },
-                    { id: "scan-absensi", route: "scan-absensi", label: "Scan Absensi (Datang/Pulang)", icon: "fa-qrcode", iconColor: "text-indigo-600", section: "main" },
+                    { id: "keuangan", route: "keuangan", label: "BKU, Pajak & Tabungan", icon: "fa-wallet", iconColor: "text-amber-300", section: "main" },
+                    { id: "lapbul", route: "lapbul", label: "Lapbul Brebes & Evaluasi", icon: "fa-chart-pie", iconColor: "text-purple-300", section: "main" },
+                    { id: "ekinerja-vault", route: "ekinerja-vault", label: "Brankas SKP E-Kinerja", icon: "fa-vault", iconColor: "text-teal-300", section: "main" },
+                    { id: "scan-absensi", route: "scan-absensi", label: "Scan Absensi (Datang/Pulang)", icon: "fa-qrcode", iconColor: "text-indigo-400", section: "main" },
                     { id: "absensi", route: "absensi", label: "Presensi & Absensi", icon: "fa-clipboard-user", section: "main" },
+                    { id: "tindak-lanjut", route: "tindak-lanjut", label: "Meja Tindak Lanjut & SUS", icon: "fa-headset", iconColor: "text-rose-300", section: "settings" },
                     { id: "pengaturan", route: "pengaturan", label: "Pengaturan & Backend GAS", icon: "fa-sliders", section: "settings" },
-                    { id: "permohonan", url: "permohonan.html", label: "Portal Permohonan Ortu", icon: "fa-paper-plane", iconColor: "text-blue-600", isExternal: true, section: "settings" },
-                    { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-halved", iconColor: "text-emerald-600", isExternal: true, section: "settings" }
+                    { id: "permohonan", url: "permohonan.html", label: "Portal Permohonan Ortu", icon: "fa-paper-plane", iconColor: "text-blue-400", isExternal: true, section: "settings" },
+                    { id: "verifikasi", url: "verifikasi.html", label: "Portal Verifikasi QR", icon: "fa-shield-halved", iconColor: "text-emerald-400", isExternal: true, section: "settings" }
                 ];
 
                 const canAccessRoute = (route) => {

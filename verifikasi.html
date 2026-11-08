@@ -9,6 +9,14 @@
     <script>
         (function () {
             try {
+                var origWarn = console.warn;
+                console.warn = function () {
+                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
+                        return;
+                    }
+                    return origWarn.apply(console, arguments);
+                };
+
                 var theme = localStorage.getItem('sekolahtu_theme');
                 if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');

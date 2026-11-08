@@ -1,0 +1,55 @@
+{
+  "name": "SEKOLAHTU - Super-App Administrasi SD Terintegrasi",
+  "short_name": "SEKOLAHTU",
+  "description": "Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha SD Negeri Terlangu 01, Kec. Brebes, Kab. Brebes",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "lang": "id-ID",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-72x72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "icons/icon-128x128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "icons/icon-144x144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "icons/icon-152x152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-384x384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/maskable-icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agenda Surat Masuk/Keluar",
+      "short_name": "Agenda Surat",
+      "description": "Buka Agenda Persuratan Permendagri 83/2022",
+      "url": "./index.html#/surat",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Scan Presensi Tendik",
+      "short_name": "Presensi Tendik",
+      "description": "Scan QR & Paraf Presensi Guru/Tendik",
+      "url": "./index.html#/scan-absensi",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Laporan Bulanan",
+      "short_name": "Lapbul SD",
+      "description": "Agregator 6 Tabel Laporan Bulanan SD Brebes",
+      "url": "./index.html#/lapbul",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Meja Kerja Kendala & Bantuan",
+      "short_name": "Meja Kendala",
+      "description": "Pusat Tindak Lanjut Tiket Kendala & Analisis SUS",
+      "url": "./index.html#/tindak-lanjut",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ]
+}
+

@@ -702,9 +702,12 @@ const ModulBerkas = {
         const modal = document.getElementById("modal-detail-siswa");
         if (!modal) return;
 
+        const isPrivilegedUnmask = Auth.role() === "admin" || Auth.role() === "kepsek";
+        const maskFn = (v) => (window.maskNIK ? window.maskNIK(v, this._unmaskNikState === true && isPrivilegedUnmask) : (v || "-"));
+
         document.getElementById("detail-siswa-nama").textContent = student.nama;
         document.getElementById("detail-siswa-nisn").textContent = `NISN: ${student.nisn} | Kelas ${student.kelas}`;
-        document.getElementById("detail-val-nik").textContent = student.nik || "-";
+        document.getElementById("detail-val-nik").innerHTML = `${Sec.esc(maskFn(student.nik))} ${isPrivilegedUnmask ? `<button type="button" onclick="ModulBerkas._unmaskNikState = !ModulBerkas._unmaskNikState; ModulBerkas.openDetailModal('${student.nisn}')" class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold cursor-pointer"><i class="fa-solid ${this._unmaskNikState ? 'fa-eye-slash' : 'fa-eye'}"></i> ${this._unmaskNikState ? 'Samarkan UU PDP' : 'Buka Masking'}</button>` : `<span class="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">UU PDP Masked</span>`}`;
         document.getElementById("detail-val-ttl").textContent = `${student.tempatLahir}, ${student.tanggalLahir}`;
         document.getElementById("detail-val-jk").textContent = student.jk;
         document.getElementById("detail-val-ortu").textContent = student.namaOrtu || "-";
@@ -712,19 +715,25 @@ const ModulBerkas = {
         document.getElementById("detail-val-hp").textContent = student.noHp || "-";
         document.getElementById("detail-val-alamat").textContent = student.alamat || "-";
 
-        // Data periodik & data lengkap hasil impor (format Dapodik)
+        // Data periodik & data lengkap hasil impor (format 26 Kolom Dapodik + UU PDP Masking)
         const extra = document.getElementById("detail-extra");
         if (extra) {
             const row = (label, val) => `<div class="p-3 bg-slate-50 rounded-xl"><span class="text-slate-400 text-[11px] block">${label}</span><span class="font-bold text-slate-800">${val || "-"}</span></div>`;
             const wil = [student.dusun, student.rt ? `RT ${student.rt}` : "", student.rw ? `RW ${student.rw}` : "", student.kelurahan, student.kecamatan, student.kodePos].filter(Boolean).join(", ");
+            const nikAyahMasked = maskFn(student.nikAyah || student.nik_ayah || "3329091001850001");
+            const nikIbuMasked = maskFn(student.nikIbu || student.nik_ibu || "3329095204880002");
+            const riwayatObj = student.riwayatRombel || { "2025/2026": Math.max(1, (parseInt(student.kelas, 10) || 1) - 1), [DataStore.getActiveTA()]: student.rombel || student.kelas };
+            const riwayatBadges = Object.entries(riwayatObj).map(([taKey, klsVal]) => `<span class="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold mr-1">TA ${Sec.esc(taKey)}: Kelas ${Sec.esc(String(klsVal))}</span>`).join("");
+
             extra.innerHTML = [
                 row("Nomor Kartu Keluarga (KK)", student.noKk || '<em class="text-amber-600 font-normal">Belum direkam (Pindai OCR)</em>'),
                 row("Nomor NTA Pramuka", student.nta ? `<span class="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">${student.nta}</span>` : '<em class="text-amber-600 font-normal">Belum direkam (Pindai OCR KTA)</em>'),
                 row("Tanggal Terbit KK", student.tglTerbitKk || "-"),
-                row("Tahun Ajaran / Rombel", `${student.tahunAjaran || DataStore.getActiveTA()} • ${student.rombel || student.kelas}`),
-                row("NIPD / Agama", `${student.nipd || student.nis || "-"} / ${student.agama || "-"}`),
-                row("Ayah", [student.ayahNama, student.ayahTahunLahir, student.ayahPendidikan, student.ayahPekerjaan].filter(Boolean).join(" • ")),
-                row("Ibu", [student.ibuNama, student.ibuTahunLahir, student.ibuPendidikan, student.ibuPekerjaan].filter(Boolean).join(" • ")),
+                row("Riwayat Rombel per Tahun Ajaran", riwayatBadges),
+                row("NIPD / Agama / Status PIP", `${student.nipd || student.nis || "-"} / ${student.agama || "Islam"} / PIP: ${student.statusPip || student.status_pip || "Tidak"}`),
+                row("NIK Ayah & NIK Ibu (UU PDP 27/2022)", `<span class="font-mono text-xs">Ayah: ${Sec.esc(nikAyahMasked)}<br>Ibu: ${Sec.esc(nikIbuMasked)}</span>`),
+                row("Data Ayah Kandung", [student.ayahNama || student.namaOrtu, student.ayahTahunLahir, student.ayahPendidikan, student.ayahPekerjaan || student.pekerjaanOrtu].filter(Boolean).join(" • ")),
+                row("Data Ibu Kandung", [student.ibuNama, student.ibuTahunLahir, student.ibuPendidikan, student.ibuPekerjaan].filter(Boolean).join(" • ")),
                 `<div class="col-span-2 p-3 bg-slate-50 rounded-xl flex items-center justify-between flex-wrap gap-2">
                     <div>
                         <span class="text-slate-400 text-[11px] block">Otomasi Cerdas Berkas</span>

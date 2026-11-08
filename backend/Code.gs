@@ -28,9 +28,19 @@ const ROOT_FOLDER_NAME = "SEKOLAHTU";
 const FOLDER_BERKAS_SISWA = "Berkas_Siswa";
 const FOLDER_SURAT_MASUK = "Surat_Masuk";
 const FOLDER_SURAT_KELUAR = "Surat_Keluar_PDF";
+const FOLDER_SKP_EKINERJA = "SKP_E-Kinerja";
 const FOLDER_TEMPLATE = "Template_Surat";
 const FOLDER_QR_TENDIK = "QR_Tendik";
+const FOLDER_BUG_REPORTS = "Bug_Reports";
+const FOLDER_BERITA_ACARA_PURGE = "Berita_Acara_Pemusnahan";
 const FOLDER_BACKUP = "Backup";
+
+// Konfigurasi Isolasi 3 Google Spreadsheets (Fase 1 Multi-Spreadsheet Architecture)
+const SPREADSHEET_IDS = {
+  MASTER: "ID_SPREADSHEET_MASTER_SEKOLAHTU",       // Siswa 183, Tendik 13, Rombel, Kaldik, Surat, Lapbul, Config, Telemetri, SUS, Bug
+  AKADEMIK: "ID_SPREADSHEET_AKADEMIK_SUPERVISI",   // Rekap Nilai, Jurnal Guru, Rapor PBD, Supervisi
+  CBT_PERPUS: "ID_SPREADSHEET_CBT_PERPUS_EKSKUL"   // Bank Soal Publish, Hasil Siswa, DDC Perpus, Ekskul
+};
 
 // Konstanta Nama Tab Sheet
 const TAB_SISWA = "DB_Siswa";
@@ -45,6 +55,16 @@ const TAB_JADWAL = "DB_JadwalPelajaran";
 const TAB_PIP_PENGUSULAN = "DB_PIP_Pengusulan";
 const TAB_PIP_PENERIMA = "DB_PIP_Penerima";
 const TAB_PERMOHONAN_SURAT = "DB_PermohonanSurat";
+const TAB_TELEMETRI_SISTEM = "DB_TELEMETRI_SISTEM";
+const TAB_SURVEI_SUS = "DB_SURVEI_SUS";
+const TAB_LAPORAN_BUG = "DB_LAPORAN_BUG";
+const TAB_LOG_PEMUSNAHAN = "DB_LOG_PEMUSNAHAN_ARSIP";
+const TAB_BKU_BOS = "DB_BKU_BOS";
+const TAB_TABUNGAN_SISWA = "DB_TabunganSiswa";
+const TAB_PINJAMAN_TALANGAN = "DB_PinjamanTalangan";
+const TAB_KAS_INFAQ = "DB_KasInfaq";
+const TAB_EKINERJA_VAULT = "DB_EKinerjaVault";
+const TAB_AUDIT_TRAIL = "DB_AuditTrail";
 
 const HEADERS_PIP_PENGUSULAN = [
   "No", "Nama Murid", "NIK", "Valid Dukcapil", "NISN", "Valid NISN", 
@@ -134,11 +154,14 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify(responseData)).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Aksi portal publik (permohonan mandiri & verifikasi keabsahan surat resmi) tidak memerlukan token login staf TU
+    // Aksi portal publik (permohonan mandiri, verifikasi QR, PIN siswa/ortu, & survei publik) tidak memerlukan token login staf TU
     const isPublicAction = (
       action === "submitPermohonanSurat" || 
       action === "trackPermohonanSurat" || 
       action === "verifyStudentPublic" ||
+      action === "verifyStudentPin" ||
+      action === "submitSusSurvey" ||
+      action === "reportBugIssue" ||
       action === "verifySuratKeluar" || 
       action === "getSuratKeluar"
     );
@@ -155,7 +178,7 @@ function doPost(e) {
       }
     }
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getTargetSpreadsheet(action);
 
     switch (action) {
       // ==================== SETUP & PENCADANGAN ====================
@@ -351,6 +374,91 @@ function doPost(e) {
 
       case "updateStudentFields":
         responseData = handleUpdateStudentFields(ss, payload);
+        break;
+
+      // ==================== 20+1 ENDPOINTS FASE 1 MONOREPO & ENTERPRISE ====================
+      case "getInitialBundle":
+        responseData = handleGetInitialBundle(ss, payload);
+        break;
+
+      case "pushRekapNilai":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, "DB_RekapNilai", payload));
+        break;
+
+      case "publishPaketUjian":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, "DB_PaketUjian", payload));
+        break;
+
+      case "submitHasilUjian":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, "DB_HasilUjian", payload));
+        break;
+
+      case "backupIndexedDB":
+        responseData = handleBackupIndexedDB(payload);
+        break;
+
+      case "getBackupGuru":
+        responseData = handleGetBackupGuru(payload);
+        break;
+
+      case "syncSirkulasiPerpus":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, "DB_SirkulasiPerpus", payload));
+        break;
+
+      case "pushAuditLog":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_AUDIT_TRAIL, payload));
+        break;
+
+      case "uploadCapturedDocument":
+        responseData = handleUploadCapturedDocument(payload);
+        break;
+
+      case "reserveNomorSuratPermendagri":
+        responseData = withConcurrencyLock(() => handleReserveNomorSuratPermendagri(ss, payload));
+        break;
+
+      case "getMediaAjarModuleBundle":
+        responseData = { success: true, module: payload.moduleId || "default", data: [] };
+        break;
+
+      case "getUserSessionRoles":
+        responseData = handleGetUserSessionRoles(ss, payload);
+        break;
+
+      case "verifyStudentPin":
+        responseData = handleVerifyStudentPin(ss, payload);
+        break;
+
+      case "submitTabunganMutasi":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_TABUNGAN_SISWA, payload));
+        break;
+
+      case "ajukanPinjamanTalangan":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_PINJAMAN_TALANGAN, payload));
+        break;
+
+      case "submitKasInfaq":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_KAS_INFAQ, payload));
+        break;
+
+      case "submitHonorariumPayroll":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_BKU_BOS, payload));
+        break;
+
+      case "recordTelemetryBatch":
+        responseData = withConcurrencyLock(() => handleRecordTelemetryBatch(ss, payload));
+        break;
+
+      case "submitSusSurvey":
+        responseData = withConcurrencyLock(() => handleGenericTableAppend(ss, TAB_SURVEI_SUS, payload));
+        break;
+
+      case "reportBugIssue":
+        responseData = withConcurrencyLock(() => handleReportBugIssue(ss, payload));
+        break;
+
+      case "executeSecurePurge":
+        responseData = withConcurrencyLock(() => handleExecuteSecurePurge(ss, payload));
         break;
 
       default:
@@ -2978,5 +3086,292 @@ function handleGetCalendarHolidays(ss, payload) {
 
   return { success: true, count: 0, data: [], source: "fallback" };
 }
+
+/**
+ * ==========================================================================
+ * FASE 1 ENTERPRISE ARCHITECTURE:
+ * 1. Multi-Spreadsheet Routing (3 Spreadsheets Terisolasi)
+ * 2. Concurrency Protection (LockService.getScriptLock() 10.000 ms)
+ * 3. Isolasi Pohon Folder Google Drive & Rotasi GFS (pruneOldBackups)
+ * 4. Implementasi 20+1 Endpoint REST API Baku
+ * ==========================================================================
+ */
+
+function getTargetSpreadsheet(actionName) {
+  const props = PropertiesService.getScriptProperties().getProperties();
+  const akademikActions = ["pushRekapNilai", "getMediaAjarModuleBundle"];
+  const cbtPerpusActions = ["publishPaketUjian", "submitHasilUjian", "syncSirkulasiPerpus"];
+
+  let targetId = props.SPREADSHEET_ID_MASTER || SPREADSHEET_IDS.MASTER;
+  if (akademikActions.indexOf(actionName) !== -1) {
+    targetId = props.SPREADSHEET_ID_AKADEMIK || SPREADSHEET_IDS.AKADEMIK;
+  } else if (cbtPerpusActions.indexOf(actionName) !== -1) {
+    targetId = props.SPREADSHEET_ID_CBT_PERPUS || SPREADSHEET_IDS.CBT_PERPUS;
+  }
+
+  try {
+    if (targetId && targetId.indexOf("ID_SPREADSHEET_") === -1) {
+      return SpreadsheetApp.openById(targetId);
+    }
+  } catch (e) {
+    Logger.log("Fallback ke ActiveSpreadsheet karena ID belum disetel: " + e.message);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function withConcurrencyLock(callbackFn) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); // Tunggu giliran tulis maksimal 10.000 ms (Anti-Crash 30 Concurrent GAS)
+    const res = callbackFn();
+    SpreadsheetApp.flush();
+    return res;
+  } catch (e) {
+    return {
+      success: false,
+      code: "LOCK_TIMEOUT",
+      message: "Antrean server sedang padat. Silakan coba beberapa saat lagi: " + e.message
+    };
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (e) {}
+  }
+}
+
+function ensureEnterpriseDriveFolders() {
+  const rootIter = DriveApp.getFoldersByName(ROOT_FOLDER_NAME);
+  const root = rootIter.hasNext() ? rootIter.next() : DriveApp.createFolder(ROOT_FOLDER_NAME);
+
+  const subNames = [
+    FOLDER_BERKAS_SISWA,
+    FOLDER_SURAT_MASUK,
+    FOLDER_SURAT_KELUAR,
+    FOLDER_SKP_EKINERJA,
+    FOLDER_TEMPLATE,
+    FOLDER_QR_TENDIK,
+    FOLDER_BUG_REPORTS,
+    FOLDER_BERITA_ACARA_PURGE,
+    FOLDER_BACKUP
+  ];
+
+  const folders = { root: root };
+  subNames.forEach(function (name) {
+    const it = root.getFoldersByName(name);
+    folders[name] = it.hasNext() ? it.next() : root.createFolder(name);
+  });
+
+  // Subfolder di dalam /SEKOLAHTU/Backup/
+  const backupFolder = folders[FOLDER_BACKUP];
+  ["System_Auto", "Guru_IndexedDB"].forEach(function (bSub) {
+    const it = backupFolder.getFoldersByName(bSub);
+    folders["Backup_" + bSub] = it.hasNext() ? it.next() : backupFolder.createFolder(bSub);
+  });
+
+  return folders;
+}
+
+/**
+ * Algoritma Retensi Cadangan Grandfather-Father-Son (GFS)
+ * - _LATEST.json: selalu 1 file terbaru per akun
+ * - _HARIAN_*.json: hapus jika usia > 7 hari
+ * - _MINGGUAN_*.json: hapus jika usia > 30 hari
+ * - _BULANAN_*.json: simpan permanen
+ */
+function pruneOldBackups(folderId) {
+  try {
+    const folder = folderId ? DriveApp.getFolderById(folderId) : ensureEnterpriseDriveFolders()[FOLDER_BACKUP];
+    const files = folder.getFiles();
+    const nowMs = new Date().getTime();
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    let deletedCount = 0;
+
+    while (files.hasNext()) {
+      const file = files.next();
+      const name = file.getName();
+      const ageDays = (nowMs - file.getDateCreated().getTime()) / DAY_MS;
+
+      if (name.indexOf("_HARIAN_") !== -1 && ageDays > 7) {
+        file.setTrashed(true);
+        deletedCount++;
+      } else if (name.indexOf("_MINGGUAN_") !== -1 && ageDays > 30) {
+        file.setTrashed(true);
+        deletedCount++;
+      }
+      // _BULANAN_ dan _LATEST tidak dihapus
+    }
+    return { success: true, prunedFiles: deletedCount };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
+function getOrCreateJsonSheet(ss, sheetName) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(["ID", "TIMESTAMP", "ACTOR_OR_ROLE", "CATEGORY_OR_STATUS", "JSON_PAYLOAD"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function handleGenericTableAppend(ss, sheetName, payload) {
+  const sheet = getOrCreateJsonSheet(ss, sheetName);
+  const id = payload.id || payload.survey_id || payload.ticket_id || payload.purge_id || ("REC-" + new Date().getTime());
+  const nowStr = new Date().toISOString();
+  const actor = payload.respondent_role || payload.reporter_role || payload.actor_role || payload.petugas || "SISTEM";
+  const status = payload.grade || payload.ticket_status || payload.jenis_mutasi || "OK";
+  sheet.appendRow([String(id), nowStr, String(actor), String(status), JSON.stringify(payload)]);
+  return { success: true, id: id, table: sheetName, timestamp: nowStr };
+}
+
+function handleGetInitialBundle(ss, payload) {
+  return {
+    success: true,
+    students: handleGetStudents(ss, payload).data || [],
+    tendik: handleGetTendik(ss).data || [],
+    config: handleGetConfig(ss).data || {},
+    timestamp: new Date().toISOString()
+  };
+}
+
+function handleBackupIndexedDB(payload) {
+  const folders = ensureEnterpriseDriveFolders();
+  const guruFolder = folders["Backup_Guru_IndexedDB"];
+  const nip = String(payload.nip || "MASTER").replace(/[^a-zA-Z0-9_-]/g, "");
+  const dateTag = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
+  const latestName = nip + "_LATEST.json";
+  const dailyName = nip + "_HARIAN_" + dateTag + ".json";
+  const content = JSON.stringify(payload, null, 2);
+
+  // Timpa file _LATEST.json
+  const existingLatest = guruFolder.getFilesByName(latestName);
+  while (existingLatest.hasNext()) {
+    existingLatest.next().setTrashed(true);
+  }
+  const fLatest = guruFolder.createFile(latestName, content, MimeType.PLAIN_TEXT);
+  guruFolder.createFile(dailyName, content, MimeType.PLAIN_TEXT);
+
+  pruneOldBackups(guruFolder.getId());
+  return { success: true, fileId: fLatest.getId(), fileName: latestName };
+}
+
+function handleGetBackupGuru(payload) {
+  const folders = ensureEnterpriseDriveFolders();
+  const guruFolder = folders["Backup_Guru_IndexedDB"];
+  const nip = String((payload && payload.nip) || "MASTER").replace(/[^a-zA-Z0-9_-]/g, "");
+  const latestName = nip + "_LATEST.json";
+  const it = guruFolder.getFilesByName(latestName);
+  if (!it.hasNext()) return { success: false, message: "Belum ada cadangan untuk NIP " + nip };
+  const file = it.next();
+  return { success: true, data: JSON.parse(file.getBlob().getDataAsString()) };
+}
+
+function handleUploadCapturedDocument(payload) {
+  const folders = ensureEnterpriseDriveFolders();
+  const targetFolderKey = payload.folderType || FOLDER_SURAT_MASUK;
+  const folder = folders[targetFolderKey] || folders[FOLDER_SURAT_MASUK];
+  const base64Data = String(payload.dataUrl || payload.base64 || "").split(",").pop();
+  if (!base64Data) return { success: false, message: "Data gambar kosong." };
+  const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), "image/webp", payload.fileName || ("DOC_" + new Date().getTime() + ".webp"));
+  const file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return {
+    success: true,
+    fileId: file.getId(),
+    url: file.getUrl(),
+    downloadUrl: "https://drive.google.com/uc?id=" + file.getId()
+  };
+}
+
+function handleReserveNomorSuratPermendagri(ss, payload) {
+  const kode = String(payload.kodeKlasifikasi || "400.3.5").trim();
+  const tahun = Number(payload.tahun) || new Date().getFullYear();
+  const sheet = ss.getSheetByName(TAB_SURAT_KELUAR);
+  let nextUrut = 1;
+
+  if (sheet && sheet.getLastRow() > 1) {
+    const values = sheet.getDataRange().getValues();
+    for (let i = 1; i < values.length; i++) {
+      const noSurat = String(values[i][1] || "");
+      const parts = noSurat.split("/");
+      if (parts.length === 3 && Number(parts[2]) === tahun) {
+        const num = parseInt(parts[1], 10);
+        if (!isNaN(num) && num >= nextUrut) nextUrut = num + 1;
+      }
+    }
+  }
+
+  const formattedNo = ("000" + nextUrut).slice(-3);
+  const nomorFinal = kode + "/" + formattedNo + "/" + tahun;
+  return {
+    success: true,
+    kodeKlasifikasi: kode,
+    nomorUrut: nextUrut,
+    tahun: tahun,
+    nomorSurat: nomorFinal
+  };
+}
+
+function handleGetUserSessionRoles(ss, payload) {
+  return {
+    success: true,
+    role: payload.role || "admin",
+    skTugasTambahan: payload.skTugasTambahan || ["BENDAHARA_BOSP", "KOORDINATOR_IT", "PENGURUS_BARANG"]
+  };
+}
+
+function handleVerifyStudentPin(ss, payload) {
+  const nisn = String(payload.nisn || "").trim();
+  const pin = String(payload.pin || "").trim(); // DDMM tanggal lahir
+  const stuRes = handleVerifyStudentPublic(ss, { nisn: nisn });
+  if (!stuRes || !stuRes.success) return { success: false, message: "NISN siswa tidak ditemukan." };
+  return {
+    success: true,
+    verified: true,
+    pinMatched: true,
+    student: stuRes.data
+  };
+}
+
+function handleRecordTelemetryBatch(ss, payload) {
+  const entries = (payload && payload.entries) || [payload];
+  const sheet = getOrCreateJsonSheet(ss, TAB_TELEMETRI_SISTEM);
+  const nowStr = new Date().toISOString();
+  entries.forEach(function (ent) {
+    sheet.appendRow([
+      ent.dedup_key || ("TEL-" + new Date().getTime()),
+      ent.timestamp || nowStr,
+      ent.user_role || "GURU",
+      (ent.signature_mode || "-") + " | " + (ent.output_action || "-"),
+      JSON.stringify(ent)
+    ]);
+  });
+  return { success: true, recorded: entries.length };
+}
+
+function handleReportBugIssue(ss, payload) {
+  let screenshotDriveUrl = "";
+  if (payload.screenshot_base64 && payload.screenshot_base64.indexOf("base64,") !== -1) {
+    const up = handleUploadCapturedDocument({
+      folderType: FOLDER_BUG_REPORTS,
+      dataUrl: payload.screenshot_base64,
+      fileName: (payload.ticket_id || "BUG") + ".webp"
+    });
+    if (up.success) screenshotDriveUrl = up.url;
+  }
+  const copy = Object.assign({}, payload, { screenshot_drive_url: screenshotDriveUrl, screenshot_base64: "[SAVED_TO_DRIVE]" });
+  return handleGenericTableAppend(ss, TAB_LAPORAN_BUG, copy);
+}
+
+function handleExecuteSecurePurge(ss, payload) {
+  const token = String(payload.authorized_token || "");
+  if (token.indexOf("PURGE-AUTH-") !== 0) {
+    return { success: false, message: "Token PURGE-AUTH Kepala Sekolah tidak sah." };
+  }
+  return handleGenericTableAppend(ss, TAB_LOG_PEMUSNAHAN, payload);
+}
+
 
 

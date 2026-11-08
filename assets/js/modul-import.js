@@ -19,7 +19,7 @@ const ModulImport = {
     _xlsxPromise: null,
 
     TEMPLATE_HEADERS: ["No", "Nama", "NIPD", "JK", "NISN", "Tempat Lahir", "Tanggal Lahir", "NIK", "Agama", "Alamat", "RT", "RW", "Alamat",
-        "Kelurahan", "Kecamatan", "Kode Pos", "Nama", "Tahun Lahir", "Jenjang Pendidikan", "Pekerjaan", "Nama", "Tahun Lahir", "Jenjang Pendidikan", "Pekerjaan", "Rombel Saat Ini"],
+        "Kelurahan", "Kecamatan", "Kode Pos", "Nama", "NIK Ayah", "Tahun Lahir", "Jenjang Pendidikan", "Pekerjaan", "Nama", "NIK Ibu", "Tahun Lahir", "Jenjang Pendidikan", "Pekerjaan", "Rombel Saat Ini", "Status PIP"],
 
     // alias judul kolom (sudah dinormalisasi: huruf kecil tanpa spasi/simbol) -> kunci kanonik
     ALIAS: {
@@ -30,7 +30,7 @@ const ModulImport = {
         nisn: "nisn",
         tempatlahir: "tempatLahir",
         tanggallahir: "tanggalLahir", tgllahir: "tanggalLahir",
-        nik: "nik",
+        nik: "nik", niksiswa: "nik",
         agama: "agama", agamakepercayaan: "agama",
         alamat: "alamat", alamatjalan: "alamat",
         rt: "rt", rw: "rw",
@@ -42,13 +42,15 @@ const ModulImport = {
         jenjangpendidikan: "pendidikan", pendidikan: "pendidikan",
         pekerjaan: "pekerjaan",
         rombelsaatini: "rombel", rombel: "rombel", rombonganbelajar: "rombel", kelas: "rombel",
-        namaayah: "ayahNama", tahunlahirayah: "ayahTahunLahir", jenjangpendidikanayah: "ayahPendidikan", pekerjaanayah: "ayahPekerjaan",
-        namaibu: "ibuNama", tahunlahiribu: "ibuTahunLahir", jenjangpendidikanibu: "ibuPendidikan", pekerjaanibu: "ibuPekerjaan"
+        statuspip: "statusPip", penerimaKip: "statusPip", kip: "statusPip", pip: "statusPip",
+        namaayah: "ayahNama", nikayah: "nikAyah", tahunlahirayah: "ayahTahunLahir", jenjangpendidikanayah: "ayahPendidikan", pekerjaanayah: "ayahPekerjaan",
+        namaibu: "ibuNama", nikibu: "nikIbu", tahunlahiribu: "ibuTahunLahir", jenjangpendidikanibu: "ibuPendidikan", pekerjaanibu: "ibuPekerjaan"
     },
 
-    // kolom yang berulang (Ayah lalu Ibu) dipetakan menurut urutan kemunculan
+    // kolom yang berulang (Siswa, Ayah, lalu Ibu) dipetakan menurut urutan kemunculan
     ORDERED: {
         nama: ["nama", "ayahNama", "ibuNama"],
+        nik: ["nik", "nikAyah", "nikIbu"],
         tahunlahir: ["ayahTahunLahir", "ibuTahunLahir"],
         pendidikan: ["ayahPendidikan", "ibuPendidikan"],
         pekerjaan: ["ayahPekerjaan", "ibuPekerjaan"],
@@ -403,12 +405,21 @@ const ModulImport = {
                 dusun: this.text(get("dusun")),
                 kelurahan: this.text(get("kelurahan")), kecamatan: this.text(get("kecamatan")),
                 kodePos: this.digits(get("kodePos")),
-                ayahNama: this.text(get("ayahNama")), ayahTahunLahir: this.parseYear(get("ayahTahunLahir")),
+                ayahNama: this.text(get("ayahNama")),
+                nikAyah: this.digits(get("nikAyah")),
+                nik_ayah: this.digits(get("nikAyah")),
+                ayahTahunLahir: this.parseYear(get("ayahTahunLahir")),
                 ayahPendidikan: this.text(get("ayahPendidikan")), ayahPekerjaan: this.text(get("ayahPekerjaan")),
-                ibuNama: this.text(get("ibuNama")), ibuTahunLahir: this.parseYear(get("ibuTahunLahir")),
+                ibuNama: this.text(get("ibuNama")),
+                nikIbu: this.digits(get("nikIbu")),
+                nik_ibu: this.digits(get("nikIbu")),
+                ibuTahunLahir: this.parseYear(get("ibuTahunLahir")),
                 ibuPendidikan: this.text(get("ibuPendidikan")), ibuPekerjaan: this.text(get("ibuPekerjaan")),
                 rombel,
-                kelas: kelasMatch ? kelasMatch[1] : ""
+                kelas: kelasMatch ? kelasMatch[1] : "",
+                statusPip: this.text(get("statusPip")) || "Tidak",
+                status_pip: this.text(get("statusPip")) || "Tidak",
+                riwayatRombel: { [DataStore.getActiveTA()]: rombel || (kelasMatch ? kelasMatch[1] : "") }
             };
             rec.namaOrtu = rec.ayahNama || rec.ibuNama || "";
             rec.pekerjaanOrtu = rec.ayahPekerjaan || rec.ibuPekerjaan || "";

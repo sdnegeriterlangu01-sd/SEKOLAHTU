@@ -155,6 +155,7 @@ const ACL = {
     },
 
     ROUTES: {
+        launchpad: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         dashboard: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         "scan-absensi": ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         berkas: ["admin", "kepsek", "guru", "perpustakaan"],
@@ -162,6 +163,10 @@ const ACL = {
         pip: ["admin", "kepsek", "guru", "perpustakaan"],
         surat: ["admin", "kepsek"],
         cetak: ["admin", "kepsek"],
+        keuangan: ["admin", "kepsek", "guru"],
+        lapbul: ["admin", "kepsek"],
+        "ekinerja-vault": ["admin", "kepsek", "guru", "perpustakaan"],
+        "tindak-lanjut": ["admin", "kepsek"],
         absensi: ["admin", "kepsek", "guru", "perpustakaan", "penjaga"],
         tendik: ["admin", "kepsek", "guru"],
         pengaturan: ["admin", "kepsek"],

@@ -163,7 +163,9 @@ function doPost(e) {
       action === "submitSusSurvey" ||
       action === "reportBugIssue" ||
       action === "verifySuratKeluar" || 
-      action === "getSuratKeluar"
+      action === "getSuratKeluar" ||
+      action === "updateStudentFields" ||
+      action === "submitTalentPoolResult"
     );
 
     // Verifikasi Token Supabase jika Script Properties disetel & bukan aksi publik

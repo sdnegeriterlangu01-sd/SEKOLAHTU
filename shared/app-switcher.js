@@ -159,6 +159,18 @@
         moduleBadge: 'Penjaminan Mutu',
         roles: ['kepsek', 'operator'],
         requiresSK: null
+      },
+      {
+        id: 'CARD_TALENT_SELEKSI',
+        title: 'Penjaringan Talent Pool & Calon Lomba',
+        subtitle: 'Hasil diagnostik bakat siswa: OSN, O2SN, FLS2N, MAPSI, FTBI Brebesan & Pramuka',
+        icon: 'fa-trophy',
+        color: '#f59e0b',
+        bgGradient: 'linear-gradient(135deg, rgba(245,158,11,0.16), rgba(217,119,6,0.06))',
+        targetRoute: 'berkas',
+        moduleBadge: 'Prestasi Siswa',
+        roles: ['kepsek', 'operator', 'guru_kelas', 'guru_mapel'],
+        requiresSK: 'PEMBINA_LOMBA'
       }
     ];
 
@@ -247,7 +259,8 @@
         { code: 'BENDAHARA_BOSP', label: 'SK Bendahara BOSP' },
         { code: 'OPERATOR_DAPODIK', label: 'SK Operator Dapodik' },
         { code: 'PENGURUS_BARANG', label: 'SK Pengurus Barang/Aset' },
-        { code: 'KEPALA_PERPUSTAKAAN', label: 'SK Kepala Perpustakaan' }
+        { code: 'KEPALA_PERPUSTAKAAN', label: 'SK Kepala Perpustakaan' },
+        { code: 'PEMBINA_LOMBA', label: 'SK Pembina Lomba/Bakat' }
       ];
 
       const skBadgesHtml = allSkDuties.map(function (sk) {
@@ -356,8 +369,8 @@
         { title: 'Brankas E-Kinerja', desc: 'Bukti Dukung RHK SKP BKN', icon: 'fa-vault', color: '#14b8a6', route: 'ekinerja-vault', status: 'AKTIF' },
         { title: 'Meja Tindak Lanjut', desc: 'Tiket Kendala, SUS & Paperless', icon: 'fa-headset', color: '#ef4444', route: 'tindak-lanjut', status: 'AKTIF' },
         { title: 'SI-GURU (Akademik)', desc: 'Jurnal Mengajar & Rapor Kurmer', icon: 'fa-chalkboard-user', color: '#3b82f6', route: 'jadwal', status: 'FASE 2 READY' },
-        { title: 'E-Supervisi Kepsek', desc: 'Observasi Kelas & PKG Digital', icon: 'fa-clipboard-check', color: '#f97316', route: 'esupervisi-info', status: 'FASE 2 READY' },
-        { title: 'Portal Wali Murid', desc: 'Layanan Surat, Tabungan & Infaq', icon: 'fa-people-roof', color: '#10b981', externalUrl: 'permohonan.html', status: 'AKTIF' }
+        { title: 'SiSiswa SD (Siswa)', desc: 'Portal Siswa, Talent Pool & E-Perpus', icon: 'fa-graduation-cap', color: '#a855f7', externalUrl: 'sisiswa.html', status: 'AKTIF' },
+        { title: 'Portal Wali Murid', desc: 'Layanan Mandiri, Berkas & PIP Ortu', icon: 'fa-hands-holding-child', color: '#10b981', externalUrl: 'ortu.html', status: 'AKTIF' }
       ];
 
       const gridHtml = apps.map(function (app) {

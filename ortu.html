@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Layanan Terpadu: Orang Tua Siswa & Publik — SDN TERLANGU 01 (SEKOLAHTU)</title>
+    <meta name="description"
+        content="Portal Terpadu SD Negeri Terlangu 01 Brebes: Layanan Mandiri Orang Tua Siswa (Data Anak, Tabungan, PIP) & Layanan Publik Terbuka (Permohonan Surat, Verifikasi QR, PPDB, Profil Sekolah).">
+
+    <!-- Anti-FOUC Theme Detection Script -->
+    <script>
+        (function () {
+            try {
+                var origWarn = console.warn;
+                console.warn = function () {
+                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
+                        return;
+                    }
+                    return origWarn.apply(console, arguments);
+                };
+
+                var theme = localStorage.getItem('sekolahtu_theme');
+                if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) { }
+        })();
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    screens: { 'xs': '380px' },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        },
+                        amber: {
+                            500: '#f59e0b',
+                            600: '#d97706'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Dexie.js for IndexedDB Offline Storage -->
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <style>
+        .font-tabular { font-variant-numeric: tabular-nums; }
+        .hero-mesh-ortu {
+            background-color: #1e3a8a;
+            background-image: radial-gradient(at 88% 40%, rgba(245, 158, 11, 0.28) 0px, transparent 50%),
+                              radial-gradient(at 12% 15%, rgba(59, 130, 246, 0.35) 0px, transparent 50%),
+                              radial-gradient(at 50% 90%, rgba(13, 148, 136, 0.22) 0px, transparent 55%);
+        }
+        .hero-mesh-publik {
+            background-color: #065f46;
+            background-image: radial-gradient(at 85% 30%, rgba(16, 185, 129, 0.35) 0px, transparent 50%),
+                              radial-gradient(at 15% 75%, rgba(59, 130, 246, 0.3) 0px, transparent 50%),
+                              radial-gradient(at 60% 85%, rgba(245, 158, 11, 0.2) 0px, transparent 55%);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex flex-col justify-between font-['Plus_Jakarta_Sans'] text-slate-800 dark:text-slate-100 transition-colors">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <img src="assets/img/logo-brebes.svg"
+                    onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Seal_of_Brebes_Regency.svg/330px-Seal_of_Brebes_Regency.svg.png';"
+                    alt="Logo Brebes" class="w-9 h-9 object-contain drop-shadow">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-black tracking-tight text-slate-900 dark:text-white">SDN TERLANGU 01</span>
+                        <span id="badge-portal-type" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border border-blue-300/60">
+                            PORTAL ORANG TUA
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Layanan Mandiri Wali Murid & Informasi Publik</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Theme Toggle Button -->
+                <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Ganti Mode Gelap / Terang">
+                    <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+                <!-- Switch to Student Portal -->
+                <a href="sisiswa.html" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition">
+                    <i class="fa-solid fa-graduation-cap text-purple-600"></i> Portal Siswa
+                </a>
+                <!-- Link to Staff Login -->
+                <a href="index.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition">
+                    <i class="fa-solid fa-arrow-right-to-bracket text-[11px]"></i> Masuk Staf TU
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-6 md:py-8 flex-grow space-y-6">
+
+        <!-- =================================================================== -->
+        <!-- DUAL-MODE SELECTOR: ORANG TUA SISWA vs PUBLIK / MASYARAKAT UMUM -->
+        <!-- =================================================================== -->
+        <div class="bg-white dark:bg-slate-900 p-1.5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-1.5">
+            <button type="button" id="btn-mode-ortu" onclick="setPortalMode('ortu')"
+                class="w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 bg-blue-900 text-white shadow-xs cursor-pointer">
+                <i class="fa-solid fa-hands-holding-child text-amber-300 text-sm"></i>
+                <span>Orang Tua Siswa SDN Terlangu 01</span>
+                <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-bold">Khusus Wali Murid</span>
+            </button>
+            <button type="button" id="btn-mode-publik" onclick="setPortalMode('publik')"
+                class="w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                <i class="fa-solid fa-earth-asia text-emerald-500 text-sm"></i>
+                <span>Masyarakat Umum / Publik / Alumni</span>
+                <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold">Layanan Terbuka</span>
+            </button>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- MODE 1: ORANG TUA SISWA SDN TERLANGU 01 (AKTIF) -->
+        <!-- =================================================================== -->
+        <div id="wrapper-mode-ortu" class="space-y-6 animate-fade-in">
+
+            <!-- Hero Card Orang Tua -->
+            <div class="hero-mesh-ortu text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden border border-white/10">
+                <div class="relative z-10 max-w-2xl space-y-2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md border border-white/20 text-amber-300">
+                        <i class="fa-solid fa-shield-heart"></i> Transparan • Mandiri • Bebas Antre di Sekolah
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight leading-snug">
+                        Selamat Datang di Portal Wali Murid
+                    </h1>
+                    <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
+                        Pantau putra/putri Bapak/Ibu di SDN Terlangu 01 Brebes: periksa kelengkapan berkas kesiswaan, kepastian pencairan bantuan PIP, mutasi tabungan anak, hingga pengajuan surat resmi tanpa perlu izin cuti kerja.
+                    </p>
+                </div>
+                <div class="absolute -right-6 -bottom-8 opacity-10 pointer-events-none hidden md:block">
+                    <i class="fa-solid fa-hands-holding-child text-[190px]"></i>
+                </div>
+            </div>
+
+            <!-- Student Verification Gate (Cari Data Anak) -->
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-blue-600 dark:text-blue-400"></i> Pilih & Masukkan Data Anak Anda
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Masukkan NISN 10 digit dan 4-digit PIN Tanggal Lahir (Format: HariBulan, contoh 17 Agustus = 1708)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="loadDemoChild()" class="text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 transition cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Isi Data Contoh Demo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Fields for NISN & PIN -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div class="sm:col-span-6">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Nomor Induk Siswa Nasional (NISN) <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                            <input type="text" id="parent-auth-nisn" maxlength="10" placeholder="Contoh: 0134567890"
+                                class="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-4">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            PIN Tanggal Lahir (DDMM) <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                            <input type="password" id="parent-auth-pin" maxlength="4" placeholder="Contoh: 1708"
+                                class="w-full pl-9 pr-3.5 py-2.5 text-xs font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2 flex items-end">
+                        <button type="button" onclick="handleParentAuth()" class="w-full py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-magnifying-glass"></i> Masuk
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Child Banner (After Verification) -->
+                <div id="active-child-card" class="hidden p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800/80 dark:to-slate-850/80 border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">
+                            <span id="child-avatar-initial">S</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="child-name-display" class="text-sm font-black text-slate-900 dark:text-white">Muhammad Rizky</h3>
+                                <span id="child-badge-pip" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/60">Penerima PIP</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                                NISN: <span id="child-nisn-display" class="font-mono font-semibold">0134567890</span> • Kelas: <span id="child-kelas-display" class="font-bold">5</span> • SDN Terlangu 01
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetActiveChild()" class="text-xs text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 font-semibold px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Ganti Anak
+                    </button>
+                </div>
+            </div>
+
+            <!-- 8-Module Tab Navigation Bar -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                <button type="button" onclick="switchOrtuTab('profil')" id="tab-btn-profil" class="tab-btn active px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-blue-900 text-white shadow-xs">
+                    <i class="fa-solid fa-user-graduate"></i> Profil Anak
+                </button>
+                <button type="button" onclick="switchOrtuTab('berkas')" id="tab-btn-berkas" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-cloud-arrow-up text-blue-500"></i> Berkas Digital
+                </button>
+                <button type="button" onclick="switchOrtuTab('ralat')" id="tab-btn-ralat" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-user-pen text-indigo-500"></i> Ralat Data
+                </button>
+                <button type="button" onclick="switchOrtuTab('pip')" id="tab-btn-pip" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-500"></i> Bantuan PIP
+                </button>
+                <button type="button" onclick="switchOrtuTab('surat')" id="tab-btn-surat" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-file-signature text-amber-500"></i> Permohonan Surat
+                </button>
+                <button type="button" onclick="switchOrtuTab('tabungan')" id="tab-btn-tabungan" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-piggy-bank text-teal-500"></i> Tabungan Siswa
+                </button>
+                <button type="button" onclick="switchOrtuTab('warta')" id="tab-btn-warta" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-bullhorn text-rose-500"></i> Pengumuman & Kaldik
+                </button>
+                <button type="button" onclick="switchOrtuTab('sosial')" id="tab-btn-sosial" class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-heart-circle-check text-purple-500"></i> Warta Berkah
+                </button>
+            </div>
+
+            <!-- Tab 1: Profil Anak -->
+            <div id="section-profil" class="ortu-section bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-id-badge text-blue-600"></i> Data Pokok Peserta Didik (Dapodik)
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Informasi resmi yang terdaftar pada sistem pendataan nasional Kemendikdasmen</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                        <i class="fa-solid fa-shield-halved text-blue-500"></i> Terlindungi UU PDP
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="font-bold text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-400">Biodata Pribadi Siswa</div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Nama Lengkap</span><span id="dt-nama" class="font-bold text-slate-900 dark:text-white">Muhammad Rizky</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">NISN / NIPD</span><span class="font-mono font-bold text-slate-900 dark:text-white"><span id="dt-nisn">0134567890</span> / <span id="dt-nipd">2021001</span></span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Tempat, Tanggal Lahir</span><span id="dt-ttl" class="font-semibold text-slate-900 dark:text-white">Brebes, 17 Agustus 2014</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Jenis Kelamin / Agama</span><span id="dt-jk-agama" class="font-semibold text-slate-900 dark:text-white">Laki-laki / Islam</span></div>
+                            <div class="flex justify-between py-1"><span class="text-slate-500">Rombel & Wali Kelas</span><span id="dt-rombel" class="font-bold text-blue-600 dark:text-blue-400">Kelas 5 (Ibu Maryani, S.Pd.)</span></div>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="font-bold text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-400">Data Orang Tua & Domisili (UU PDP Masked)</div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Nama Ayah</span><span id="dt-ayah" class="font-bold text-slate-900 dark:text-white">Tarkim (NIK: 332909******0001)</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Nama Ibu Kandung</span><span id="dt-ibu" class="font-bold text-slate-900 dark:text-white">Siti Aminah (NIK: 332909******0002)</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Alamat Tempat Tinggal</span><span id="dt-alamat" class="font-semibold text-slate-900 dark:text-white text-right">RT 02 / RW 01, Desa Terlangu</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Kecamatan / Kabupaten</span><span class="font-semibold text-slate-900 dark:text-white">Kec. Brebes, Kab. Brebes</span></div>
+                            <div class="flex justify-between py-1"><span class="text-slate-500">Status Keberhakan Bansos</span><span class="font-bold text-emerald-600 dark:text-emerald-400">KIP / PIP Aktif Kemendikdasmen</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Berkas Digital -->
+            <div id="section-berkas" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-folder-open text-blue-600"></i> Unggah Scan Berkas Kesiswaan</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bapak/Ibu cukup memotret berkas fisik langsung dari kamera HP. Foto otomatis dikompresi agar hemat kuota.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex flex-col justify-between space-y-3">
+                        <div><div class="flex items-center justify-between"><span class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center text-sm font-bold">1</span><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Lengkap</span></div><h3 class="text-xs font-bold text-slate-900 dark:text-white mt-2">Kartu Keluarga (KK)</h3></div>
+                        <label class="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-blue-50 text-blue-900 dark:text-blue-300 rounded-xl text-xs font-bold text-center border border-slate-300 dark:border-slate-700 cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-camera"></i> Foto Ulang<input type="file" accept="image/*" class="hidden" onchange="handleDocUpload(event, 'KK')"></label>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex flex-col justify-between space-y-3">
+                        <div><div class="flex items-center justify-between"><span class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center text-sm font-bold">2</span><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Lengkap</span></div><h3 class="text-xs font-bold text-slate-900 dark:text-white mt-2">Akta Kelahiran</h3></div>
+                        <label class="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-blue-50 text-blue-900 dark:text-blue-300 rounded-xl text-xs font-bold text-center border border-slate-300 dark:border-slate-700 cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-camera"></i> Foto Ulang<input type="file" accept="image/*" class="hidden" onchange="handleDocUpload(event, 'AKTA')"></label>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex flex-col justify-between space-y-3">
+                        <div><div class="flex items-center justify-between"><span class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center text-sm font-bold">3</span><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Lengkap</span></div><h3 class="text-xs font-bold text-slate-900 dark:text-white mt-2">Kartu KIP / PKH</h3></div>
+                        <label class="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-blue-50 text-blue-900 dark:text-blue-300 rounded-xl text-xs font-bold text-center border border-slate-300 dark:border-slate-700 cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-camera"></i> Foto Ulang<input type="file" accept="image/*" class="hidden" onchange="handleDocUpload(event, 'KIP')"></label>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-slate-850 flex flex-col justify-between space-y-3">
+                        <div><div class="flex items-center justify-between"><span class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 flex items-center justify-center text-sm font-bold">4</span><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300">Belum Ada</span></div><h3 class="text-xs font-bold text-slate-900 dark:text-white mt-2">Pas Foto Siswa (3x4)</h3></div>
+                        <label class="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-upload"></i> Unggah Sekarang<input type="file" accept="image/*" class="hidden" onchange="handleDocUpload(event, 'FOTO')"></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Ralat Data -->
+            <div id="section-ralat" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-indigo-600"></i> Usulan Ralat / Koreksi Data Siswa</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ajukan perbaikan data yang keliru agar diperbarui oleh Staf Tata Usaha pada server Dapodik.</p>
+                </div>
+                <form onsubmit="handleRalatSubmit(event)" class="space-y-4 text-xs">
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Bagian Data yang Ingin Diperbaiki <span class="text-rose-500">*</span></label><select id="ralat-kategori" required class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"><option value="NAMA">Ejaan Nama Lengkap Siswa</option><option value="TTL">Tempat atau Tanggal Lahir</option><option value="NIK">Nomor Induk Kependudukan (NIK)</option><option value="ORTU">Nama Ayah / Nama Ibu Kandung</option><option value="ALAMAT">Alamat Domisili / RT / RW</option></select></div>
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Data yang Benar Menurut Dokumen Resmi <span class="text-rose-500">*</span></label><input type="text" id="ralat-nilai-baru" required placeholder="Tuliskan data yang benar sesuai Akta/KK..." class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></div>
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Alasan Perbaikan & Catatan</label><textarea id="ralat-keterangan" rows="3" placeholder="Contoh: Nama di rapor tertulis Rizki, seharusnya Rizky sesuai Akta..." class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></textarea></div>
+                    <button type="submit" class="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-paper-plane"></i> Kirim Usulan Ralat ke Tata Usaha</button>
+                </form>
+            </div>
+
+            <!-- Tab 4: Bantuan PIP -->
+            <div id="section-pip" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800"><h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-coins text-emerald-600"></i> Pemantauan Bantuan Program Indonesia Pintar (PIP)</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Informasi resmi pencairan dana bantuan pendidikan Kemendikdasmen di Bank BRI</p></div>
+                <div class="p-5 rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white space-y-3 shadow-md">
+                    <div class="flex items-center justify-between"><span class="px-3 py-1 rounded-full text-xs font-black bg-white/20 uppercase tracking-wider">STATUS: SIAP DICAIRKAN DI BANK BRI</span><span class="font-mono text-sm font-bold text-emerald-100">TA 2026/2027</span></div>
+                    <div class="space-y-1"><div class="text-xs text-emerald-100">Besaran Dana Bantuan Disetujui:</div><div class="text-3xl font-black font-mono tracking-tight">Rp 450.000,-</div></div>
+                    <p class="text-xs text-emerald-50 leading-relaxed">Dana bantuan PIP atas nama <b>Muhammad Rizky</b> telah disalurkan ke rekening SimPel Bank BRI Unit Terlangu.</p>
+                </div>
+            </div>
+
+            <!-- Tab 5: Permohonan Surat Ortu -->
+            <div id="section-surat" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800"><h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-file-signature text-amber-500"></i> Permohonan Surat Keterangan Online</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ajukan surat dari rumah, surat diproses otomatis & siap diambil di sekolah atau unduh PDF</p></div>
+                <form onsubmit="handlePermohonanSubmit(event)" class="space-y-4 text-xs">
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Jenis Surat <span class="text-rose-500">*</span></label><select id="req-surat-jenis" required class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"><option value="AKTIF">Surat Keterangan Siswa Aktif Belajar</option><option value="PIP">Surat Rekomendasi Pencairan Bantuan PIP Bank BRI</option><option value="PINDAH">Surat Keterangan Pindah / Mutasi Keluar Sekolah</option></select></div>
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Keperluan Pembuatan Surat <span class="text-rose-500">*</span></label><input type="text" id="req-surat-keperluan" required placeholder="Contoh: Syarat pencairan PIP Bank BRI..." class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></div>
+                    <div><label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label><input type="tel" id="req-surat-wa" required placeholder="081234567890" class="w-full px-3.5 py-2.5 font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></div>
+                    <button type="submit" class="py-2.5 px-5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs"><i class="fa-solid fa-paper-plane"></i> Ajukan Permohonan Sekarang</button>
+                </form>
+            </div>
+
+            <!-- Tab 6: Tabungan Siswa -->
+            <div id="section-tabungan" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"><div><h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-piggy-bank text-teal-600"></i> Buku Tabungan Siswa Digital</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Catatan simpanan siswa terpadu yang dikelola wali kelas secara transparan</p></div><span class="px-3 py-1 rounded-full text-xs font-mono font-black bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-200">Rekening Aktif</span></div>
+                <div class="p-5 rounded-3xl bg-gradient-to-r from-teal-700 to-emerald-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+                    <div><div class="text-xs text-teal-100">Total Saldo Tabungan Anak Saat Ini:</div><div id="tabungan-saldo-display" class="text-3xl font-black font-mono tracking-tight mt-1">Rp 385.000,-</div><div class="text-[11px] text-teal-100 mt-0.5">Pemegang Rekening: <span class="font-bold">Muhammad Rizky (Kelas 5)</span></div></div>
+                </div>
+            </div>
+
+            <!-- Tab 7: Warta & Kaldik -->
+            <div id="section-warta" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800"><h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-bullhorn text-rose-500"></i> Pengumuman & Kalender Pendidikan Resmi</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Agenda kegiatan sekolah merujuk Kaldik resmi Dindikpora Kab. Brebes</p></div>
+                <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-slate-850 border border-blue-200 dark:border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white">Agenda Akademik</span><span class="text-[11px] font-mono text-slate-500">01 Des – 12 Des 2026</span></div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Pelaksanaan Asesmen Sumatif Akhir Semester (SAS) Ganjil</h3>
+                    <p class="text-xs text-slate-600 dark:text-slate-300">Dimohon Bapak/Ibu wali murid mendampingi belajar putra/putri di rumah.</p>
+                </div>
+            </div>
+
+            <!-- Tab 8: Warta Berkah (Program Sosial) -->
+            <div id="section-sosial" class="ortu-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"><div><h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-hand-holding-heart text-purple-600"></i> Warta Berkah & Senyum Siswa</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Laporan manfaat program sosial hasil kebersamaan warga sekolah</p></div><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Disahkan Komite Sekolah</span></div>
+                <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-200 leading-relaxed">
+                    Setiap program kepedulian di SDN Terlangu 01 diselenggarakan berlandaskan semangat gotong royong sukarela tanpa paksaan. Tidak ada kewajiban iuran individual demi menjaga kenyamanan seluruh anak didik.
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-850 space-y-1"><h3 class="font-bold text-slate-900 dark:text-white">Santunan Siswa Sakit</h3><p class="text-[11px] text-slate-500">Penyaluran tali asih untuk 3 siswa yang menjalani rawat inap.</p></div>
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-850 space-y-1"><h3 class="font-bold text-slate-900 dark:text-white">Seragam Siswa Dhuafa</h3><p class="text-[11px] text-slate-500">Bantuan paket seragam merah-putih untuk 4 siswa prasejahtera.</p></div>
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-850 space-y-1"><h3 class="font-bold text-slate-900 dark:text-white">Sarana Tempat Wudhu</h3><p class="text-[11px] text-slate-500">Perawatan kran air dan kebersihan perlengkapan sholat mushola.</p></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- MODE 2: MASYARAKAT UMUM / PUBLIK / ALUMNI (TERBUKA) -->
+        <!-- =================================================================== -->
+        <div id="wrapper-mode-publik" class="hidden space-y-6 animate-fade-in">
+
+            <!-- Hero Card Publik -->
+            <div class="hero-mesh-publik text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden border border-white/10">
+                <div class="relative z-10 max-w-2xl space-y-2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md border border-white/20 text-emerald-200">
+                        <i class="fa-solid fa-building-columns"></i> Layanan Informasi & Administrasi Terbuka
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight leading-snug">
+                        Layanan Publik SD Negeri Terlangu 01
+                    </h1>
+                    <p class="text-xs sm:text-sm text-emerald-100 leading-relaxed">
+                        Pintu pelayanan publik resmi untuk masyarakat umum, alumni, calon wali murid, dan instansi: permohonan surat dinas, legalisir ijazah alumni, verifikasi keaslian dokumen QR, informasi PPDB siswa baru, hingga profil keterbukaan informasi sekolah.
+                    </p>
+                </div>
+                <div class="absolute -right-6 -bottom-8 opacity-15 pointer-events-none hidden md:block">
+                    <i class="fa-solid fa-landmark text-[190px]"></i>
+                </div>
+            </div>
+
+            <!-- Public Tab Navigation -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                <button type="button" onclick="switchPublikTab('permohonan-publik')" id="pubtab-btn-permohonan-publik" class="pubtab-btn active px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-emerald-800 text-white shadow-xs">
+                    <i class="fa-solid fa-file-signature text-amber-300"></i> Permohonan Surat & Legalisir
+                </button>
+                <button type="button" onclick="switchPublikTab('verifikasi-publik')" id="pubtab-btn-verifikasi-publik" class="pubtab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-shield-halved text-emerald-500"></i> Verifikasi Keaslian QR
+                </button>
+                <button type="button" onclick="switchPublikTab('ppdb-publik')" id="pubtab-btn-ppdb-publik" class="pubtab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-school-flag text-blue-500"></i> Informasi PPDB Baru
+                </button>
+                <button type="button" onclick="switchPublikTab('profil-publik')" id="pubtab-btn-profil-publik" class="pubtab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-circle-info text-indigo-500"></i> Profil & Kontak Sekolah
+                </button>
+                <button type="button" onclick="switchPublikTab('aspirasi-publik')" id="pubtab-btn-aspirasi-publik" class="pubtab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800">
+                    <i class="fa-solid fa-bullhorn text-rose-500"></i> Saluran Aspirasi Warga
+                </button>
+            </div>
+
+            <!-- PUBLIC TAB 1: PERMOHONAN SURAT & LEGALISIR ALUMNI -->
+            <div id="pubsec-permohonan-publik" class="publik-section bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-emerald-600"></i> Permohonan Surat Umum, Mutasi & Legalisir Ijazah
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Dapat digunakan oleh Alumni, Calon Siswa Mutasi Masuk, maupun Masyarakat Umum</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                        100% Bebas Biaya
+                    </span>
+                </div>
+
+                <form onsubmit="handlePublicGeneralSubmit(event)" class="space-y-4 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap Pemohon / Alumni <span class="text-rose-500">*</span></label>
+                            <input type="text" id="pub-req-nama" required placeholder="Contoh: Budi Santoso, S.Kom." class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                            <input type="tel" id="pub-req-wa" required placeholder="Contoh: 081234567890" class="w-full px-3.5 py-2.5 font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Layanan Surat <span class="text-rose-500">*</span></label>
+                            <select id="pub-req-jenis" required class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                                <option value="LEGALISIR">Pengesahan / Legalisir Ijazah Alumni</option>
+                                <option value="MUTASI_MASUK">Surat Rekomendasi Kesiapan Menerima Siswa Pindahan (Mutasi Masuk)</option>
+                                <option value="IJAZAH_HILANG">Surat Keterangan Pengganti Ijazah Hilang / Rusak</option>
+                                <option value="RISET_KAMPUS">Surat Izin Izin Observasi / Riset Skripsi Mahasiswa</option>
+                                <option value="LAINNYA">Lainnya (Tuliskan di kolom keperluan)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tahun Lulus / Tahun Angkatan (Khusus Alumni)</label>
+                            <input type="text" id="pub-req-tahun" placeholder="Contoh: 2018 (Kosongkan jika bukan alumni)" class="w-full px-3.5 py-2.5 font-mono border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Keperluan & Keterangan Tambahan <span class="text-rose-500">*</span></label>
+                        <textarea id="pub-req-keperluan" rows="3" required placeholder="Contoh: Syarat pendaftaran CPNS / Berkas mutasi masuk dari SDN Brebes 02..." class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></textarea>
+                    </div>
+
+                    <button type="submit" class="py-2.5 px-5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Permohonan Publik (Dapatkan Nomor Resi)
+                    </button>
+                </form>
+            </div>
+
+            <!-- PUBLIC TAB 2: VERIFIKASI KEABSAHAN QR LANGSUNG -->
+            <div id="pubsec-verifikasi-publik" class="publik-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-qrcode text-emerald-600"></i> Verifikasi Keabsahan Dokumen Resmi Ber-QR
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Periksa keaslian Surat Keterangan atau Dokumen Sekolah berstandar Permendagri No. 83 Tahun 2022</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="font-bold text-slate-800 dark:text-slate-200">Ketik Nomor Surat Dinas:</div>
+                        <div class="flex gap-2">
+                            <input type="text" id="pub-verif-nomor" placeholder="Contoh: 400.3.12/045/2026" class="flex-grow px-3 py-2 font-mono font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                            <button type="button" onclick="handleDirectVerif()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition cursor-pointer">
+                                Periksa
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Nomor surat tercantum di bawah kop surat resmi sekolah.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+                        <div>
+                            <div class="font-bold text-slate-800 dark:text-slate-200">Gunakan Kamera Pemindai QR:</div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Buka kamera untuk membaca kode QR di pojok kanan bawah surat dinas.</p>
+                        </div>
+                        <a href="verifikasi.html" class="py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-center transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-camera"></i> Buka Pemindai Kamera Penuh
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hasil Cek Dokumen Langsung -->
+                <div id="pub-verif-result" class="hidden p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 space-y-2 text-xs animate-fade-in">
+                    <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold">
+                        <i class="fa-solid fa-circle-check text-base"></i> Dokumen Terdaftar Sah di Arsip SDN Terlangu 01
+                    </div>
+                    <div class="text-slate-700 dark:text-slate-300 space-y-1">
+                        <div>Nomor Surat: <span id="res-verif-no" class="font-mono font-bold">400.3.12/045/2026</span></div>
+                        <div>Perihal: <span id="res-verif-perihal" class="font-bold">Surat Keterangan Siswa Aktif Belajar</span></div>
+                        <div>Penandatangan: <span class="font-semibold">Kepala Sekolah (Aisah Suciati, S.Pd.SD., M.Pd.)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PUBLIC TAB 3: INFORMASI PPDB BARU -->
+            <div id="pubsec-ppdb-publik" class="publik-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-school-flag text-blue-600"></i> Penerimaan Peserta Didik Baru (PPDB) TA 2026/2027
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Panduan resmi pendaftaran siswa baru Kelas 1 SD Negeri Terlangu 01</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-slate-850 border border-blue-200 dark:border-slate-800 space-y-1.5">
+                        <div class="font-black text-blue-900 dark:text-blue-300 uppercase text-[11px]">1. Syarat Usia Calon Siswa</div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Prioritas usia <b>7 tahun</b> (atau paling rendah 6 tahun per 1 Juli tahun berjalan). Calon siswa usia 5 tahun 6 bulan wajib melampirkan rekomendasi psikolog.
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-slate-850 border border-emerald-200 dark:border-slate-800 space-y-1.5">
+                        <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase text-[11px]">2. Jalur Zonasi & Afirmasi</div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Memprioritaskan warga <b>Desa Terlangu, Kecamatan Brebes</b> dan desa sekitarnya, serta anak dari keluarga prasejahtera pemegang KIP/KKS/PKH.
+                        </p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-slate-850 border border-amber-200 dark:border-slate-800 space-y-1.5">
+                        <div class="font-black text-amber-900 dark:text-amber-300 uppercase text-[11px]">3. Berkas Pendaftaran</div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Fotokopi Akta Kelahiran, Fotokopi Kartu Keluarga (KK), Kartu Identitas Anak (KIA jika ada), dan Pas Foto Berwarna 3x4 (2 lembar).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                        <div class="font-bold text-slate-800 dark:text-slate-200">Daya Tampung Siswa Baru:</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">1 Rombongan Belajar (Maksimal 28 Siswa). Pendaftaran tidak dipungut biaya apapun (Gratis Rp 0).</p>
+                    </div>
+                    <a href="assets/img/logo-sekolahtu-banner.png" download class="py-2 px-3.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Unduh Brosur PPDB
+                    </a>
+                </div>
+            </div>
+
+            <!-- PUBLIC TAB 4: PROFIL & KONTAK SEKOLAH -->
+            <div id="pubsec-profil-publik" class="publik-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns text-indigo-600"></i> Profil Satuan Pendidikan SDN Terlangu 01
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Identitas resmi sekolah di bawah naungan Dinas Pendidikan Pemuda dan Olahraga Kab. Brebes</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="font-bold text-blue-700 dark:text-blue-400 uppercase text-[11px]">Identitas Satuan Pendidikan</div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Nama Sekolah</span><span class="font-bold">SD Negeri Terlangu 01</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">NPSN / NSS</span><span class="font-mono font-bold">20326713 / 101032901001</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Kepala Sekolah</span><span class="font-semibold">Aisah Suciati, S.Pd.SD., M.Pd.</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Jumlah Siswa Aktif</span><span class="font-bold font-mono">183 Siswa (6 Rombel)</span></div>
+                            <div class="flex justify-between py-1"><span class="text-slate-500">Pendidik & Tendik</span><span class="font-semibold">13 Orang Guru & Staf</span></div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div class="font-bold text-blue-700 dark:text-blue-400 uppercase text-[11px]">Lokasi & Kontak Layanan</div>
+                        <div class="space-y-1.5">
+                            <div class="py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500 block">Alamat Sekolah:</span><span class="font-semibold">Jl. Raya Terlangu No. 01, Desa Terlangu, Kec. Brebes, Kab. Brebes, Jawa Tengah (Kode Pos: 52219)</span></div>
+                            <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-700/60"><span class="text-slate-500">Jam Layanan TU:</span><span class="font-semibold">Senin – Sabtu (07.00 – 13.00 WIB)</span></div>
+                            <div class="flex justify-between py-1"><span class="text-slate-500">Surel Resmi:</span><span class="font-mono text-blue-600">sdnegeriterlangu01@gmail.com</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PUBLIC TAB 5: SALURAN ASPIRASI WARGA (WBS) -->
+            <div id="pubsec-aspirasi-publik" class="publik-section hidden bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+                <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn text-rose-500"></i> Saluran Aspirasi, Saran & Pengaduan Warga
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sampaikan masukan konstruktif untuk peningkatan mutu pembelajaran dan layanan sekolah</p>
+                </div>
+
+                <form onsubmit="handleAspirasiSubmit(event)" class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Pengirim (Boleh Anonim / Inisial)</label>
+                        <input type="text" id="asp-nama" placeholder="Tuliskan nama atau 'Warga Terlangu'..." class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Kategori Aspirasi <span class="text-rose-500">*</span></label>
+                        <select id="asp-kategori" required class="w-full px-3.5 py-2.5 font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                            <option value="SARAN_PEMBELAJARAN">Saran Program Pembelajaran / Ekskul</option>
+                            <option value="KEBERSIHAN_SARPRAS">Masukan Kebersihan & Sarana Prasarana Sekolah</option>
+                            <option value="RAMAH_ANAK">Laporan Keamanan Lingkungan / Anti-Perundungan (TPPK)</option>
+                            <option value="APRESIASI">Apresiasi & Ucapan Terima Kasih</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pesan Aspirasi / Masukan <span class="text-rose-500">*</span></label>
+                        <textarea id="asp-pesan" rows="4" required placeholder="Tuliskan masukan Anda dengan bahasa yang santun dan jelas..." class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></textarea>
+                    </div>
+                    <button type="submit" class="py-2.5 px-5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Masukan ke Kepala Sekolah
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Bottom Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 transition-colors text-xs text-slate-500 dark:text-slate-400">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div>
+                <p class="font-bold text-slate-700 dark:text-slate-300">SD NEGERI TERLANGU 01 BREBES</p>
+                <p class="text-[11px] mt-0.5">Jl. Raya Terlangu No. 01, Kec. Brebes, Kab. Brebes • NPSN: 20326713</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <a href="sisiswa.html" class="hover:text-blue-600 transition">Portal Siswa</a>
+                <span>•</span>
+                <a href="verifikasi.html" class="hover:text-blue-600 transition">Verifikasi QR</a>
+                <span>•</span>
+                <a href="index.html" class="hover:text-blue-600 transition">Lobi Staf TU</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client-Side Business Logic & Reactive Dual-Mode Engine -->
+    <script>
+        // State Global Aplikasi
+        let currentMode = "ortu"; // 'ortu' | 'publik'
+        let currentChild = null;
+
+        // Inisialisasi Saat Halaman Dimuat
+        document.addEventListener("DOMContentLoaded", function () {
+            // Cek apakah ada query param ?mode=publik
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mode") === "publik") {
+                setPortalMode("publik");
+            } else {
+                setPortalMode("ortu");
+            }
+
+            // Cek sesi anak tersimpan
+            const savedChild = sessionStorage.getItem("sekolahtu_parent_child");
+            if (savedChild) {
+                try {
+                    currentChild = JSON.parse(savedChild);
+                    renderChildData(currentChild);
+                } catch (e) {}
+            }
+        });
+
+        // Alihkan Mode Utama: Orang Tua Siswa vs Publik
+        function setPortalMode(mode) {
+            currentMode = mode;
+            const wrapOrtu = document.getElementById("wrapper-mode-ortu");
+            const wrapPublik = document.getElementById("wrapper-mode-publik");
+            const btnOrtu = document.getElementById("btn-mode-ortu");
+            const btnPublik = document.getElementById("btn-mode-publik");
+            const badgeType = document.getElementById("badge-portal-type");
+
+            if (mode === "ortu") {
+                wrapOrtu.classList.remove("hidden");
+                wrapPublik.classList.add("hidden");
+
+                btnOrtu.className = "w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 bg-blue-900 text-white shadow-xs cursor-pointer";
+                btnPublik.className = "w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer";
+
+                if (badgeType) {
+                    badgeType.textContent = "PORTAL ORANG TUA";
+                    badgeType.className = "px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border border-blue-300/60";
+                }
+            } else {
+                wrapOrtu.classList.add("hidden");
+                wrapPublik.classList.remove("hidden");
+
+                btnPublik.className = "w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 bg-emerald-800 text-white shadow-xs cursor-pointer";
+                btnOrtu.className = "w-full sm:flex-1 py-3 px-4 rounded-2xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer";
+
+                if (badgeType) {
+                    badgeType.textContent = "LAYANAN PUBLIK & UMUM";
+                    badgeType.className = "px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/60";
+                }
+            }
+        }
+
+        // Alihkan Tab Navigasi Khusus Orang Tua
+        function switchOrtuTab(tabName) {
+            document.querySelectorAll(".ortu-section").forEach(el => el.classList.add("hidden"));
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                btn.className = "tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800";
+            });
+
+            const targetSec = document.getElementById("section-" + tabName);
+            const targetBtn = document.getElementById("tab-btn-" + tabName);
+
+            if (targetSec) targetSec.classList.remove("hidden");
+            if (targetBtn) {
+                targetBtn.className = "tab-btn active px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-blue-900 text-white shadow-xs";
+            }
+        }
+
+        // Alihkan Tab Navigasi Khusus Publik
+        function switchPublikTab(tabName) {
+            document.querySelectorAll(".publik-section").forEach(el => el.classList.add("hidden"));
+            document.querySelectorAll(".pubtab-btn").forEach(btn => {
+                btn.className = "pubtab-btn px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800";
+            });
+
+            const targetSec = document.getElementById("pubsec-" + tabName);
+            const targetBtn = document.getElementById("pubtab-btn-" + tabName);
+
+            if (targetSec) targetSec.classList.remove("hidden");
+            if (targetBtn) {
+                targetBtn.className = "pubtab-btn active px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 bg-emerald-800 text-white shadow-xs";
+            }
+        }
+
+        // Tampilkan Contoh Demo Anak
+        function loadDemoChild() {
+            document.getElementById("parent-auth-nisn").value = "0134567890";
+            document.getElementById("parent-auth-pin").value = "1708";
+            handleParentAuth();
+        }
+
+        // Verifikasi Autentikasi Orang Tua via NISN + PIN
+        function handleParentAuth() {
+            const nisn = (document.getElementById("parent-auth-nisn")?.value || "").trim();
+            const pin = (document.getElementById("parent-auth-pin")?.value || "").trim();
+
+            if (nisn.length < 5) {
+                showToast("Masukkan NISN siswa dengan benar (10 digit).", "error");
+                return;
+            }
+            if (pin.length !== 4) {
+                showToast("Masukkan 4 digit PIN Tanggal Lahir (DDMM).", "error");
+                return;
+            }
+
+            // Simulasi Data Terdaftar
+            currentChild = {
+                nisn: nisn,
+                nipd: "2021001",
+                nama: "Muhammad Rizky",
+                kelas: "5",
+                rombel: "Kelas 5",
+                waliKelas: "Ibu Maryani, S.Pd.",
+                ttl: "Brebes, 17 Agustus 2014",
+                jk: "Laki-laki",
+                agama: "Islam",
+                ayah: "Tarkim",
+                ibu: "Siti Aminah",
+                alamat: "RT 02 / RW 01, Desa Terlangu, Kec. Brebes",
+                statusPip: "SIAP_CAIR",
+                nominalPip: 450000,
+                saldoTabungan: 385000
+            };
+
+            sessionStorage.setItem("sekolahtu_parent_child", JSON.stringify(currentChild));
+            renderChildData(currentChild);
+            showToast("Identitas anak berhasil diverifikasi!", "success");
+        }
+
+        // Tampilkan Data Anak ke Antarmuka
+        function renderChildData(c) {
+            const card = document.getElementById("active-child-card");
+            if (card) card.classList.remove("hidden");
+
+            document.getElementById("child-avatar-initial").textContent = (c.nama || "S").charAt(0);
+            document.getElementById("child-name-display").textContent = c.nama || "-";
+            document.getElementById("child-nisn-display").textContent = c.nisn || "-";
+            document.getElementById("child-kelas-display").textContent = c.kelas || "-";
+
+            const dtNama = document.getElementById("dt-nama");
+            if (dtNama) dtNama.textContent = c.nama;
+            const dtNisn = document.getElementById("dt-nisn");
+            if (dtNisn) dtNisn.textContent = c.nisn;
+            const dtNipd = document.getElementById("dt-nipd");
+            if (dtNipd) dtNipd.textContent = c.nipd || "-";
+            const dtTtl = document.getElementById("dt-ttl");
+            if (dtTtl) dtTtl.textContent = c.ttl;
+            const dtJkAgama = document.getElementById("dt-jk-agama");
+            if (dtJkAgama) dtJkAgama.textContent = `${c.jk} / ${c.agama}`;
+            const dtRombel = document.getElementById("dt-rombel");
+            if (dtRombel) dtRombel.textContent = `Kelas ${c.kelas} (${c.waliKelas || "Wali Kelas"})`;
+            const dtAlamat = document.getElementById("dt-alamat");
+            if (dtAlamat) dtAlamat.textContent = c.alamat;
+
+            const tabDisplay = document.getElementById("tabungan-saldo-display");
+            if (tabDisplay) tabDisplay.textContent = "Rp " + Number(c.saldoTabungan || 0).toLocaleString("id-ID") + ",-";
+        }
+
+        function resetActiveChild() {
+            sessionStorage.removeItem("sekolahtu_parent_child");
+            currentChild = null;
+            document.getElementById("active-child-card").classList.add("hidden");
+            document.getElementById("parent-auth-nisn").value = "";
+            document.getElementById("parent-auth-pin").value = "";
+            showToast("Silakan masukkan NISN anak yang lain.", "info");
+        }
+
+        function handleDocUpload(e, docType) {
+            const file = e.target.files[0];
+            if (!file) return;
+            showToast(`Mengompresi dan mengunggah ${docType}...`, "info");
+            setTimeout(() => {
+                showToast(`Berkas ${docType} berhasil disimpan ke arsip sekolah!`, "success");
+            }, 1200);
+        }
+
+        function handleRalatSubmit(e) {
+            e.preventDefault();
+            showToast("Usulan ralat berhasil dikirim ke antrean verifikasi Tata Usaha!", "success");
+            e.target.reset();
+        }
+
+        function handlePermohonanSubmit(e) {
+            e.preventDefault();
+            const resi = "REG-" + new Date().getFullYear() + Math.floor(1000 + Math.random() * 9000);
+            showToast(`Permohonan terkirim! Nomor Resi Anda: ${resi}. Konfirmasi dikirim via WhatsApp.`, "success");
+            e.target.reset();
+        }
+
+        // Tangani Permohonan Surat Publik / Alumni
+        function handlePublicGeneralSubmit(e) {
+            e.preventDefault();
+            const resi = "PUB-" + new Date().getFullYear() + Math.floor(1000 + Math.random() * 9000);
+            showToast(`Permohonan publik berhasil diajukan! Resi: ${resi}. Silakan pantau WhatsApp Anda.`, "success");
+            e.target.reset();
+        }
+
+        // Verifikasi Surat Langsung
+        function handleDirectVerif() {
+            const no = (document.getElementById("pub-verif-nomor")?.value || "").trim();
+            if (!no) {
+                showToast("Masukkan nomor surat terlebih dahulu.", "error");
+                return;
+            }
+            document.getElementById("pub-verif-result").classList.remove("hidden");
+            document.getElementById("res-verif-no").textContent = no;
+            showToast("Surat resmi ditemukan dan terverifikasi sah!", "success");
+        }
+
+        // Tangani Aspirasi Publik
+        function handleAspirasiSubmit(e) {
+            e.preventDefault();
+            showToast("Terima kasih! Aspirasi Anda telah diterima oleh Kepala Sekolah & Staf TU.", "success");
+            e.target.reset();
+        }
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            if (!container) return;
+
+            const toast = document.createElement("div");
+            const bgClass = type === "success" ? "bg-emerald-600 text-white" :
+                            type === "error" ? "bg-rose-600 text-white" :
+                            "bg-slate-900 text-white";
+
+            toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 pointer-events-auto flex items-center gap-2 ${bgClass}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add("opacity-0", "translate-y-2");
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle("dark");
+            localStorage.setItem("sekolahtu_theme", isDark ? "dark" : "light");
+            const icon = document.getElementById("theme-icon");
+            if (icon) {
+                icon.className = isDark ? "fa-solid fa-sun text-amber-300 text-sm" : "fa-solid fa-moon text-sm";
+            }
+        }
+    </script>
+</body>
+</html>

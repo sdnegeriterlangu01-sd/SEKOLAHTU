@@ -421,10 +421,14 @@ const ModulAbsensi = {
         // 1. Simpan langsung ke cache lokal DataStore agar instan & status DB langsung 'Tersimpan'
         const currentAbs = DataStore.getAbsensi();
         const absMap = new Map();
-        currentAbs.forEach(item => absMap.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+        currentAbs.forEach(item => {
+            const cleanKey = item.kategori === "Siswa" ? String(item.nisnNip || "").replace(/\D/g, "") : String(item.nisnNip || "").replace(/\s+/g, "");
+            absMap.set(`${item.tanggal}_${item.kategori}_${cleanKey}`, item);
+        });
         records.forEach(rec => {
-            absMap.set(`${rec.tanggal}_${rec.kategori}_${rec.nisnNip}`, {
-                id: `ABS-${rec.tanggal}-${rec.kategori}-${String(rec.nisnNip).replace(/\s+/g, "")}`,
+            const cleanKey = rec.kategori === "Siswa" ? String(rec.nisnNip || "").replace(/\D/g, "") : String(rec.nisnNip || "").replace(/\s+/g, "");
+            absMap.set(`${rec.tanggal}_${rec.kategori}_${cleanKey}`, {
+                id: `ABS-${rec.tanggal}-${rec.kategori}-${cleanKey}`,
                 ...rec,
                 timestamp: `${Util.today()} ${Util.nowTime()}`
             });
@@ -509,15 +513,25 @@ const ModulAbsensi = {
         }
         const absensiList = DataStore.getAbsensi();
         const today = this.selectedDate;
-        const currentData = absensiList.filter(a => a.tanggal === today);
+        const currentData = absensiList.filter(a => a.tanggal === today && a.kategori === "Siswa");
 
-        const total = currentData.length;
-        const hadir = currentData.filter(a => a.status === "Hadir").length;
-        const sakit = currentData.filter(a => a.status === "Sakit").length;
-        const izin = currentData.filter(a => a.status === "Izin").length;
-        const alpa = currentData.filter(a => a.status === "Alpa").length;
+        // De-duplikasi NISN siswa unik
+        const uniqueStudentMap = new Map();
+        currentData.forEach(a => {
+            const cleanKey = String(a.nisnNip || "").replace(/\D/g, "");
+            if (cleanKey) uniqueStudentMap.set(cleanKey, a.status);
+        });
 
-        const persenHadir = total > 0 ? ((hadir / total) * 100).toFixed(1) : 0;
+        const total = uniqueStudentMap.size;
+        let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+        uniqueStudentMap.forEach(status => {
+            if (status === "Hadir") hadir++;
+            else if (status === "Sakit") sakit++;
+            else if (status === "Izin") izin++;
+            else if (status === "Alpa") alpa++;
+        });
+
+        const persenHadir = total > 0 ? Math.min(100, Math.max(0, (hadir / total) * 100)).toFixed(1) : 0;
 
         // Update Stat Cards
         const statPersen = document.getElementById("absen-stat-persen");

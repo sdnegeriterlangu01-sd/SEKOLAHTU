@@ -1321,7 +1321,26 @@ const ModulPresensi = {
             });
         }
 
-        let html = `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
+        let noticeHtml = "";
+        if (isGuruMapel) {
+            const mapelNama = Sec.esc(gInfo.namaMapel || "Mapel");
+            const teachingDaysStr = Array.from(mapelTeachingDays).join(", ") || "-";
+            noticeHtml = `
+                <div class="mb-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-3 text-xs text-blue-900 dark:text-blue-200">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="fa-solid fa-circle-info text-blue-600 dark:text-blue-400 text-sm flex-shrink-0"></i>
+                        <span class="leading-relaxed">
+                            <strong>Status Rekap Terintegrasi (Data Induk Wali Kelas):</strong> Rekap bulanan siswa ini bersumber dari absensi harian Guru Kelas. Sebagai Guru Mapel <strong>${mapelNama}</strong>, Anda hanya dapat menandai kehadiran pada hari mengajar Anda: <span class="font-bold underline">${teachingDaysStr}</span>. Tanggal di luar jadwal mengajar dinonaktifkan (arsir abu-abu).
+                        </span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 flex-shrink-0 border border-blue-300 dark:border-blue-700">
+                        Induk: Wali Kelas
+                    </span>
+                </div>
+            `;
+        }
+
+        let html = noticeHtml + `<div class="abs-grid-wrapper"><table class="abs-grid"><thead>
             <tr><th rowspan="2" class="sticky-col sticky-no">NO</th><th rowspan="2" class="sticky-col sticky-nama" style="min-width:180px">NAMA</th><th rowspan="2">NISN</th><th colspan="${hari.length}">TANGGAL</th><th rowspan="2">S</th><th rowspan="2">I</th><th rowspan="2">A</th><th rowspan="2">JML</th></tr>
             <tr>${hari.map(h => `<th class="${h.off ? "off" : ""}" title="${Sec.esc(h.ket)}">${h.dd}</th>`).join("")}</tr></thead><tbody>`;
 

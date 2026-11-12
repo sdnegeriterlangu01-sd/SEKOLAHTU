@@ -742,18 +742,14 @@ const ModulPIP = {
 
     quickPrintSurat(nisn, templateType = "pip_pencairan") {
         App.navigateTo("cetak");
-        const selSiswa = document.getElementById("cetak-select-siswa");
-        if (selSiswa) {
-            selSiswa.value = nisn;
-        }
         if (window.ModulCetak) {
+            ModulCetak.currentTemplateType = templateType;
+            const selectTemplate = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
+            if (selectTemplate) selectTemplate.value = templateType;
+            
             ModulCetak.loadStudentData(nisn);
-            if (ModulCetak.onSelectTemplate) {
-                ModulCetak.onSelectTemplate(templateType);
-            } else {
-                ModulCetak.currentTemplateType = templateType;
-                ModulCetak.generatePreview();
-            }
+            ModulCetak.updateFormFieldsByTemplate();
+            ModulCetak.generatePreview();
         }
     },
 

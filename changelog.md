@@ -1,6 +1,25 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.9] - 2026-11-13
+
+### Resolusi Akurasi Presensi Harian (Anti-Duplikasi NISN & Batas 100%), Harmonisasi Presensi Guru Kelas vs Guru Mapel, dan Fitur Pencarian Cerdas Siswa pada Cetak Surat
+- **Pembersihan Duplikasi Data Presensi & Anti Persentase > 100% (`assets/js/app.js`, `assets/js/modul-absensi.js`, `assets/js/api.js`, `backend/Code.gs`):**
+  - Mengimplementasikan de-duplikasi berbasis NISN unik (`uniqueTodayMap` & `normId`) pada perhitungan statistik dasbor harian, mencegah akumulasi baris antar-hari atau multi-pengabsen yang sebelumnya menyebabkan jumlah siswa diabsen membengkak menjadi 212 siswa (115% dari total 183 siswa).
+  - Menambahkan pembatasan persentase kehadiran `Math.min(100, Math.max(0, ...))` sehingga persentase tidak dapat melebihi 100%.
+  - Menyelaraskan kunci peta `mergedMap` di backend `handleGetAbsensi` (`${tgl}_${kategori.toLowerCase()}_${cleanKey}`) agar rekonsiliasi data dari `DB_AbsensiSiswaBulan` dan `DB_Absensi` tidak menghasilkan entri ganda untuk siswa yang sama pada hari yang sama.
+- **Harmonisasi Sistem Presensi Guru Kelas & Guru Mapel (Master-Subordinate Attendance) (`assets/js/modul-presensi.js`):**
+  - Menetapkan Guru Kelas sebagai sumber utama presensi harian sekolah (*Single Source of Truth*).
+  - Menambahkan banner informasi integrasi pada akun Guru Mapel yang menegaskan bahwa rekap bulanan bersumber dari absensi Guru Kelas, serta mengunci pengeditan sel hanya pada tanggal yang bertepatan dengan jadwal mengajar Guru Mapel.
+- **Auto-Sync Cetak Rekomendasi / Aktif Belajar dari Modul PIP ke Modul Cetak Surat (`assets/js/modul-pip.js`, `assets/js/modul-cetak.js`):**
+  - Memperbaiki alur navigasi cepat `quickPrintSurat`: jenis surat diatur terlebih dahulu sebelum `loadStudentData(nisn)`, sehingga lembar pratinjau kertas (*paper preview*) langsung merender data siswa yang diklik secara otomatis dan akurat.
+  - Menambahkan fallback pencarian siswa lintas tahun ajaran dan data PIP jika NISN belum terindeks di filter tahun ajaran aktif.
+- **Pencarian Cerdas Data Siswa pada Modul Cetak Surat (Mode NISN / Nama Siswa) (`index.html`, `assets/js/modul-cetak.js`):**
+  - Menggantikan dropdown statis tanpa filter dengan field pencarian interaktif real-time (`#cetak-search-siswa`) yang dapat mencari berdasarkan NISN (angka) maupun Nama Siswa (teks) dari 183 siswa Dapodik.
+  - Dilengkapi kotak saran live (*suggestion dropdown*), tombol hapus pencarian, dan badge visual siswa aktif terpilih.
+
+---
+
 ## [v3.3.8] - 2026-11-04
 
 ### Optimisasi Arsitektur Grid & Penyimpanan Google Sheets (Zero-10M-Limit Architecture) (`backend/Code.gs`)

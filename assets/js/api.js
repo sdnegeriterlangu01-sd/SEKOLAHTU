@@ -581,10 +581,14 @@ const ApiClient = {
                 const stamp = `${Util.today()} ${Util.nowTime()}`;
 
                 const map = new Map();
-                currentList.forEach(item => map.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+                currentList.forEach(item => {
+                    const cleanKey = item.kategori === "Siswa" ? String(item.nisnNip || "").replace(/\D/g, "") : String(item.nisnNip || "").replace(/\s+/g, "");
+                    map.set(`${item.tanggal}_${item.kategori}_${cleanKey}`, item);
+                });
                 newRecords.forEach(rec => {
-                    map.set(`${rec.tanggal}_${rec.kategori}_${rec.nisnNip}`, {
-                        id: `ABS-${rec.tanggal}-${rec.kategori}-${String(rec.nisnNip).replace(/\s+/g, "")}`,
+                    const cleanKey = rec.kategori === "Siswa" ? String(rec.nisnNip || "").replace(/\D/g, "") : String(rec.nisnNip || "").replace(/\s+/g, "");
+                    map.set(`${rec.tanggal}_${rec.kategori}_${cleanKey}`, {
+                        id: `ABS-${rec.tanggal}-${rec.kategori}-${cleanKey}`,
                         ...rec,
                         timestamp: stamp
                     });
@@ -1050,8 +1054,14 @@ const Sync = {
                 if (!Array.isArray(d)) return;
                 const current = DataStore.getAbsensi();
                 const map = new Map();
-                current.forEach(item => map.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
-                d.forEach(item => map.set(`${item.tanggal}_${item.kategori}_${item.nisnNip}`, item));
+                current.forEach(item => {
+                    const cleanKey = item.kategori === "Siswa" ? String(item.nisnNip || "").replace(/\D/g, "") : String(item.nisnNip || "").replace(/\s+/g, "");
+                    map.set(`${item.tanggal}_${item.kategori}_${cleanKey}`, item);
+                });
+                d.forEach(item => {
+                    const cleanKey = item.kategori === "Siswa" ? String(item.nisnNip || "").replace(/\D/g, "") : String(item.nisnNip || "").replace(/\s+/g, "");
+                    map.set(`${item.tanggal}_${item.kategori}_${cleanKey}`, item);
+                });
                 DataStore.saveAbsensi(Array.from(map.values()));
             } 
         },

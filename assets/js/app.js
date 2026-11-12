@@ -220,9 +220,7 @@ const App = {
 
     pindahKeCetakSurat(nisn) {
         this.navigateTo("cetak");
-        const selectSiswa = document.getElementById("cetak-select-siswa");
-        if (selectSiswa) {
-            selectSiswa.value = nisn;
+        if (window.ModulCetak) {
             ModulCetak.loadStudentData(nisn);
         }
     },
@@ -342,17 +340,33 @@ const App = {
             if (statSM) statSM.textContent = suratMasuk.length;
         }
 
-        // 3. Presensi Hari Ini (Rincian Hadir, Sakit, Izin, Alpa)
-        const targetNisns = new Set(targetStudents.map(s => s.nisn));
-        const todayAbsensi = absensiList.filter(a => a.tanggal === today && a.kategori === "Siswa" && (isFilteredKelas ? targetNisns.has(a.nisnNip) : true));
+        // 3. Presensi Hari Ini (Rincian Hadir, Sakit, Izin, Alpa) - De-duplikasi NISN Unik
+        const normId = (id) => String(id || "").replace(/\D/g, "");
+        const targetNisns = new Set(targetStudents.map(s => normId(s.nisn)));
+        const todayAbsensi = absensiList.filter(a => {
+            if (a.tanggal !== today || a.kategori !== "Siswa") return false;
+            const aNisn = normId(a.nisnNip);
+            return isFilteredKelas ? targetNisns.has(aNisn) : true;
+        });
 
-        const countHadir = todayAbsensi.filter(a => a.status === "Hadir").length;
-        const countSakit = todayAbsensi.filter(a => a.status === "Sakit").length;
-        const countIzin = todayAbsensi.filter(a => a.status === "Izin").length;
-        const countAlpa = todayAbsensi.filter(a => a.status === "Alpa").length;
-        const totalDiabsen = todayAbsensi.length;
+        // De-duplikasi: hanya 1 status per siswa unik untuk tanggal hari ini
+        const uniqueTodayMap = new Map();
+        todayAbsensi.forEach(a => {
+            const cleanKey = normId(a.nisnNip);
+            if (cleanKey) uniqueTodayMap.set(cleanKey, a.status);
+        });
+
+        let countHadir = 0, countSakit = 0, countIzin = 0, countAlpa = 0;
+        uniqueTodayMap.forEach(status => {
+            if (status === "Hadir") countHadir++;
+            else if (status === "Sakit") countSakit++;
+            else if (status === "Izin") countIzin++;
+            else if (status === "Alpa") countAlpa++;
+        });
+
+        const totalDiabsen = uniqueTodayMap.size;
         const basisTotal = totalSiswa > 0 ? totalSiswa : totalDiabsen;
-        const persenHadir = basisTotal > 0 ? ((countHadir / basisTotal) * 100).toFixed(1) : "0.0";
+        const persenHadir = basisTotal > 0 ? Math.min(100, Math.max(0, (countHadir / basisTotal) * 100)).toFixed(1) : "0.0";
 
         const statPresensiTitle = document.getElementById("stat-presensi-title");
         if (statPresensiTitle) {
@@ -492,15 +506,25 @@ const App = {
             const absensiList = DataStore.getAbsensi();
             const currentData = absensiList.filter(a => a.tanggal === today && a.kategori === "Siswa");
 
-            hadir = currentData.filter(a => a.status === "Hadir").length;
-            sakit = currentData.filter(a => a.status === "Sakit").length;
-            izin = currentData.filter(a => a.status === "Izin").length;
-            alpa = currentData.filter(a => a.status === "Alpa").length;
+            // De-duplikasi NISN siswa unik untuk tanggal hari ini
+            const uniqueStudentMap = new Map();
+            currentData.forEach(a => {
+                const cleanKey = String(a.nisnNip || "").replace(/\D/g, "");
+                if (cleanKey) uniqueStudentMap.set(cleanKey, a.status);
+            });
 
-            total = students.length > 0 ? students.length : (hadir + sakit + izin + alpa);
-            const recordedCount = (hadir + sakit + izin + alpa);
+            hadir = 0; sakit = 0; izin = 0; alpa = 0;
+            uniqueStudentMap.forEach(status => {
+                if (status === "Hadir") hadir++;
+                else if (status === "Sakit") sakit++;
+                else if (status === "Izin") izin++;
+                else if (status === "Alpa") alpa++;
+            });
+
+            total = students.length > 0 ? students.length : uniqueStudentMap.size;
+            const recordedCount = uniqueStudentMap.size;
             const basisCount = total > 0 ? total : recordedCount;
-            persenHadir = basisCount > 0 ? ((hadir / basisCount) * 100).toFixed(1) : "0.0";
+            persenHadir = basisCount > 0 ? Math.min(100, Math.max(0, (hadir / basisCount) * 100)).toFixed(1) : "0.0";
 
             const histori = DataStore.getHistoriBulanan();
             trendLabels = histori.map(h => h.bulan);

@@ -48,6 +48,25 @@ const ModulCetak = {
             });
         }
 
+        const searchInput = document.getElementById("cetak-search-siswa");
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                this.renderStudentSearchResults(e.target.value);
+            });
+            searchInput.addEventListener("focus", (e) => {
+                this.renderStudentSearchResults(e.target.value);
+            });
+        }
+
+        // Tutup dropdown pencarian saat klik di luar area
+        document.addEventListener("click", (e) => {
+            const wrapper = document.getElementById("cetak-wrapper-select-siswa");
+            const resultsBox = document.getElementById("cetak-search-results");
+            if (wrapper && resultsBox && !wrapper.contains(e.target)) {
+                resultsBox.classList.add("hidden");
+            }
+        });
+
         const selectType = document.getElementById("cetak-jenis-surat");
         if (selectType) {
             selectType.addEventListener("change", (e) => {
@@ -161,19 +180,120 @@ const ModulCetak = {
 
     populateStudentSelect() {
         const select = document.getElementById("cetak-select-siswa");
-        if (!select) return;
+        const students = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        if (select) {
+            select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
+                students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.rombel || s.kelas})</option>`).join("");
+        }
 
-        const students = DataStore.getSiswa();
-        select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
-            students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.rombel || s.kelas})</option>`).join("");
+        if (this.selectedStudent) {
+            this.updateSearchStudentInput(this.selectedStudent);
+        }
     },
 
     selectDefaultStudent() {
-        const students = DataStore.getSiswa();
+        const students = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
         if (students.length > 0) {
             this.loadStudentData(students[0].nisn);
-            const select = document.getElementById("cetak-select-siswa");
-            if (select) select.value = students[0].nisn;
+        }
+    },
+
+    renderStudentSearchResults(query = "") {
+        const resultsBox = document.getElementById("cetak-search-results");
+        const clearBtn = document.getElementById("cetak-search-clear");
+        if (!resultsBox) return;
+
+        const q = String(query || "").trim().toLowerCase();
+        const qDigits = q.replace(/\D/g, "");
+
+        if (clearBtn) {
+            clearBtn.classList.toggle("hidden", q.length === 0);
+        }
+
+        const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        
+        let filtered = allStudents;
+        if (q.length > 0) {
+            filtered = allStudents.filter(s => {
+                const sNama = String(s.nama || "").toLowerCase();
+                const sNisn = String(s.nisn || "").replace(/\D/g, "");
+                const sKelas = String(s.rombel || s.kelas || "").toLowerCase();
+                
+                const matchNama = sNama.includes(q);
+                const matchNisn = qDigits ? sNisn.includes(qDigits) : false;
+                const matchKelas = sKelas.includes(q) || `kelas ${sKelas}`.includes(q);
+
+                return matchNama || matchNisn || matchKelas;
+            });
+        }
+
+        if (filtered.length === 0) {
+            resultsBox.innerHTML = `
+                <div class="p-3 text-center text-xs text-slate-400">
+                    <i class="fa-solid fa-user-xmark text-lg mb-1 text-slate-300"></i>
+                    <p>Tidak ada siswa yang cocok dengan "<b>${Sec.esc(query)}</b>"</p>
+                </div>
+            `;
+            resultsBox.classList.remove("hidden");
+            return;
+        }
+
+        const itemsHtml = filtered.slice(0, 30).map(s => {
+            const displayKelas = String(s.rombel || s.kelas || "-").replace(/^kelas\s*/i, "");
+            const isSelected = this.selectedStudent && String(this.selectedStudent.nisn).trim() === String(s.nisn).trim();
+            return `
+                <div onclick="ModulCetak.selectStudentFromSearch('${Sec.esc(s.nisn)}')"
+                    class="p-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer transition flex items-center justify-between gap-2 text-xs ${isSelected ? 'bg-blue-50/70 dark:bg-blue-950/40 font-bold' : ''}">
+                    <div class="min-w-0">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${Sec.esc(s.nama)}</div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">NISN: <span class="text-blue-600 dark:text-blue-400 font-bold">${Sec.esc(s.nisn)}</span> • Kelas ${displayKelas}</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                        Kelas ${displayKelas}
+                    </span>
+                </div>
+            `;
+        }).join("");
+
+        const footerCount = filtered.length > 30 ? `<div class="p-2 text-center text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-850">Menampilkan 30 dari ${filtered.length} siswa (ketik lebih spesifik)</div>` : '';
+
+        resultsBox.innerHTML = itemsHtml + footerCount;
+        resultsBox.classList.remove("hidden");
+    },
+
+    selectStudentFromSearch(nisn) {
+        const resultsBox = document.getElementById("cetak-search-results");
+        if (resultsBox) resultsBox.classList.add("hidden");
+        this.loadStudentData(nisn);
+    },
+
+    clearStudentSearch() {
+        const input = document.getElementById("cetak-search-siswa");
+        const clearBtn = document.getElementById("cetak-search-clear");
+        if (input) {
+            input.value = "";
+            input.focus();
+        }
+        if (clearBtn) clearBtn.classList.add("hidden");
+        this.renderStudentSearchResults("");
+    },
+
+    updateSearchStudentInput(student) {
+        const input = document.getElementById("cetak-search-siswa");
+        const badge = document.getElementById("cetak-selected-student-badge");
+        const badgeText = document.getElementById("cetak-selected-student-text");
+        const clearBtn = document.getElementById("cetak-search-clear");
+
+        if (input && student) {
+            input.value = `${student.nama} (NISN: ${student.nisn})`;
+        }
+        if (clearBtn && student) {
+            clearBtn.classList.remove("hidden");
+        }
+        if (badge && badgeText && student) {
+            const k = String(student.rombel || student.kelas || "-").replace(/^kelas\s*/i, "");
+            badgeText.textContent = `${student.nama} • NISN: ${student.nisn} • Kelas ${k}`;
+            badge.classList.remove("hidden");
         }
     },
 
@@ -182,12 +302,53 @@ const ModulCetak = {
             this.selectedStudent = null;
             return;
         }
-        const students = DataStore.getSiswa();
-        this.selectedStudent = students.find(s => s.nisn === nisn);
+
+        const norm = (id) => String(id || "").replace(/\D/g, "");
+        const targetClean = norm(nisn);
+        const targetClean10 = targetClean.padStart(10, "0");
+
+        // Cari di seluruh master siswa
+        const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        let found = allStudents.find(s => {
+            const sN = norm(s.nisn);
+            return sN === targetClean || sN === targetClean10 || String(s.nisn).trim() === String(nisn).trim();
+        });
+
+        // Fallback cerdas ke database PIP jika siswa baru ada di PIP_PENERIMA atau PIP_PENGUSULAN
+        if (!found) {
+            const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
+            const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
+            const pipItem = pipPenerima.find(p => norm(p.nisn) === targetClean || norm(p.nisn) === targetClean10)
+                || pipPengusulan.find(p => norm(p.nisn) === targetClean || norm(p.nisn) === targetClean10);
+
+            if (pipItem) {
+                found = {
+                    nisn: String(pipItem.nisn || targetClean10),
+                    nama: pipItem.nama || "Siswa",
+                    kelas: pipItem.kelas || pipItem.rombel || "1",
+                    rombel: pipItem.rombel || pipItem.kelas || "1",
+                    tempatLahir: pipItem.tempatLahir || "Brebes",
+                    tanggalLahir: pipItem.tanggalLahir || "2015-01-01",
+                    jk: pipItem.jk || "Laki-laki",
+                    namaOrtu: pipItem.namaAyah || pipItem.namaIbu || pipItem.namaOrtu || "-",
+                    alamat: pipItem.alamat || "-"
+                };
+            }
+        }
+
+        this.selectedStudent = found || null;
+
+        if (this.selectedStudent) {
+            const select = document.getElementById("cetak-select-siswa");
+            if (select) select.value = this.selectedStudent.nisn;
+            this.updateSearchStudentInput(this.selectedStudent);
+        }
+
         const selectTA = document.getElementById("cetak-select-ta");
         if (selectTA && this.selectedStudent && this.selectedStudent.tahunAjaran) {
             selectTA.value = this.selectedStudent.tahunAjaran;
         }
+
         this.updateFormFieldsByTemplate();
         this.generatePreview();
     },

@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.8
+ * Backend REST API - Google Apps Script (GAS) v3.3.9
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.8",
+    version: "3.3.9",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.8 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
+    message: "Google Apps Script Backend v3.3.9 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -671,7 +671,7 @@ function handleBackupDatabase(ss) {
 
   const dump = {
     _app: "SEKOLAHTU",
-    _version: "3.3.8",
+    _version: "3.3.9",
     _created: now.toISOString(),
     spreadsheetId: ss.getId(),
     tables: {}
@@ -1606,9 +1606,10 @@ function handleGetAbsensi(ss, payload) {
         else if (code === "A") status = "Alpa";
         else if (code !== "H") return;
 
-        const cleanNisn = nisn.replace(/\s+/g, "");
+        const cleanNisn = String(nisn || "").replace(/\D/g, "");
+        const mapKey = `${tgl}_siswa_${cleanNisn}`.toLowerCase();
         const id = `ABS-${tgl}-Siswa-${cleanNisn}`;
-        mergedMap[id] = {
+        mergedMap[mapKey] = {
           id: id,
           tanggal: tgl,
           kategori: "Siswa",
@@ -1635,9 +1636,10 @@ function handleGetAbsensi(ss, payload) {
       const status = String(row[4] || "Hadir");
       const ket = String(row[7] || "");
       const updatedAt = row[8] instanceof Date ? Utilities.formatDate(row[8], tz, "yyyy-MM-dd HH:mm:ss") : String(row[8] || "");
-      const cleanNip = nip.replace(/\s+/g, "");
+      const cleanNip = String(nip || "").replace(/\s+/g, "");
+      const mapKey = `${tgl}_tendik_${cleanNip}`.toLowerCase();
       const id = `ABS-${tgl}-Tendik-${cleanNip}`;
-      mergedMap[id] = {
+      mergedMap[mapKey] = {
         id: id,
         tanggal: tgl,
         kategori: "Tendik",
@@ -1660,9 +1662,10 @@ function handleGetAbsensi(ss, payload) {
       if (!tgl || (payload.tanggal && tgl !== payload.tanggal)) return;
       const kategori = String(row[2] || "Siswa");
       const nisnNip = String(row[4] || "");
-      const cleanKey = nisnNip.replace(/\s+/g, "");
+      const cleanKey = kategori === "Siswa" ? String(nisnNip || "").replace(/\D/g, "") : String(nisnNip || "").replace(/\s+/g, "");
+      const mapKey = `${tgl}_${kategori.toLowerCase()}_${cleanKey}`.toLowerCase();
       const id = String(row[0] || `ABS-${tgl}-${kategori}-${cleanKey}`);
-      mergedMap[id] = {
+      mergedMap[mapKey] = {
         id: id,
         tanggal: tgl,
         kategori: kategori,

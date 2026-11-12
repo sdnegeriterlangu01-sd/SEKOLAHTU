@@ -1,5 +1,5 @@
 # Panduan Deploy Backend Google Apps Script (Zero-Cost & Free)
-## SEKOLAHTU (Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha) v3.3.8
+## SEKOLAHTU (Solusi Elektronik Kelola Administrasi & Harmonisasi Tata Usaha) v3.3.9
 > **"Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"**
 
 Dokumen ini memandu Anda dalam melakukan setup backend Google Apps Script (GAS), Google Sheets, dan Google Drive secara 100% gratis tanpa biaya server/domain apapun.

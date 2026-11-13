@@ -363,7 +363,7 @@ const ModulBerkas = {
                             <button onclick="ModulBerkas.openDetailModal('${s.nisn}')" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition" title="Lihat Profil Lengkap">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <button onclick="App.pindahKeCetakSurat('${s.nisn}')" class="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 rounded-lg transition" title="Cetak Surat Keterangan Siswa">
+                            <button onclick="App.pindahKeCetakSurat('${s.nisn}', 'aktif')" class="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 rounded-lg transition" title="Cetak Surat Keterangan Siswa">
                                 <i class="fa-solid fa-file-invoice"></i>
                             </button>
                         </div>

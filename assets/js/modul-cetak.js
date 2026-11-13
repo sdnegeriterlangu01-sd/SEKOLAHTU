@@ -12,6 +12,7 @@ const ModulCetak = {
     manualNomorSurat: "",
     activePermohonanId: null,
     activePermohonan: null,
+    _pendingCetak: null,
 
     init() {
         this.populateStudentSelect();
@@ -178,21 +179,101 @@ const ModulCetak = {
         this.generatePreview();
     },
 
+    bukaCetakSurat(studentOrNisn, templateType = "aktif") {
+        const type = templateType || "aktif";
+        this.currentTemplateType = type;
+        this._pendingCetak = { studentOrNisn, templateType: type };
+
+        // 1. Pindah route ke view cetak
+        if (window.App && App.navigateTo) {
+            App.navigateTo("cetak");
+        }
+
+        this._pendingCetak = null;
+
+        // 2. Set jenis surat pada dropdown select dan state internal
+        const selectTemplate = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
+        if (selectTemplate) {
+            selectTemplate.value = type;
+        }
+        this.currentTemplateType = type;
+
+        // 3. Muat siswa target
+        if (studentOrNisn) {
+            this.loadStudentData(studentOrNisn);
+        }
+
+        // 4. Update form fields dan render preview resmi
+        this.updateFormFieldsByTemplate();
+        this.generatePreview();
+
+        // 5. Scroll ke atas view cetak dengan mulus
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    getAllSearchableStudents() {
+        const master = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
+        const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
+
+        const seen = new Set();
+        const norm = (id) => String(id || "").replace(/\D/g, "");
+        const strip0 = (id) => norm(id).replace(/^0+/, "");
+
+        const list = [];
+        master.forEach(s => {
+            const key = strip0(s.nisn) || String(s.nama || "").trim().toLowerCase();
+            if (key) seen.add(key);
+            list.push(s);
+        });
+
+        [...pipPenerima, ...pipPengusulan].forEach(p => {
+            const key = strip0(p.nisn) || String(p.nama || "").trim().toLowerCase();
+            if (key && !seen.has(key)) {
+                seen.add(key);
+                list.push({
+                    nisn: String(p.nisn || ""),
+                    nama: p.nama || "Siswa PIP",
+                    kelas: p.kelas || p.rombel || "1",
+                    rombel: p.rombel || p.kelas || "1",
+                    tempatLahir: p.tempatLahir || "Brebes",
+                    tanggalLahir: p.tanggalLahir || "2015-01-01",
+                    jk: p.jk === 'P' ? 'Perempuan' : (p.jk === 'L' ? 'Laki-laki' : (p.jk || "Laki-laki")),
+                    namaOrtu: p.namaAyah || p.namaIbu || p.namaOrtu || "-",
+                    alamat: p.alamat || "-"
+                });
+            }
+        });
+
+        return list;
+    },
+
     populateStudentSelect() {
         const select = document.getElementById("cetak-select-siswa");
-        const students = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        const students = this.getAllSearchableStudents();
         if (select) {
             select.innerHTML = `<option value="">-- Pilih Siswa dari Database --</option>` +
                 students.map(s => `<option value="${s.nisn}">${s.nama} (NISN: ${s.nisn} - Kelas ${s.rombel || s.kelas})</option>`).join("");
         }
 
         if (this.selectedStudent) {
+            if (select) {
+                select.value = this.selectedStudent.nisn;
+                if (!select.value) {
+                    const opt = document.createElement("option");
+                    opt.value = this.selectedStudent.nisn;
+                    opt.textContent = `${this.selectedStudent.nama} (NISN: ${this.selectedStudent.nisn} - Kelas ${this.selectedStudent.rombel || this.selectedStudent.kelas || '-'})`;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                    select.value = this.selectedStudent.nisn;
+                }
+            }
             this.updateSearchStudentInput(this.selectedStudent);
         }
     },
 
     selectDefaultStudent() {
-        const students = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        const students = this.getAllSearchableStudents();
         if (students.length > 0) {
             this.loadStudentData(students[0].nisn);
         }
@@ -210,7 +291,7 @@ const ModulCetak = {
             clearBtn.classList.toggle("hidden", q.length === 0);
         }
 
-        const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+        const allStudents = this.getAllSearchableStudents();
         
         let filtered = allStudents;
         if (q.length > 0) {
@@ -284,55 +365,121 @@ const ModulCetak = {
         const badgeText = document.getElementById("cetak-selected-student-text");
         const clearBtn = document.getElementById("cetak-search-clear");
 
-        if (input && student) {
+        if (!student) {
+            if (input) input.value = "";
+            if (clearBtn) clearBtn.classList.add("hidden");
+            if (badge) badge.classList.add("hidden");
+            return;
+        }
+
+        if (input) {
             input.value = `${student.nama} (NISN: ${student.nisn})`;
         }
-        if (clearBtn && student) {
+        if (clearBtn) {
             clearBtn.classList.remove("hidden");
         }
-        if (badge && badgeText && student) {
+        if (badge && badgeText) {
             const k = String(student.rombel || student.kelas || "-").replace(/^kelas\s*/i, "");
             badgeText.textContent = `${student.nama} • NISN: ${student.nisn} • Kelas ${k}`;
             badge.classList.remove("hidden");
         }
     },
 
-    loadStudentData(nisn) {
-        if (!nisn) {
+    getPipRecord(student) {
+        if (!student) return {};
+        const norm = (id) => String(id || "").replace(/\D/g, "");
+        const strip0 = (id) => norm(id).replace(/^0+/, "");
+        const sClean = norm(student.nisn);
+        const sStrip = strip0(student.nisn);
+        const sNama = String(student.nama || "").trim().toLowerCase();
+
+        const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
+        const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
+        const allPip = [...pipPenerima, ...pipPengusulan];
+
+        return allPip.find(p => {
+            const pClean = norm(p.nisn);
+            const pStrip = strip0(p.nisn);
+            if (sClean && pClean && (pClean === sClean || (sStrip && pStrip === sStrip))) return true;
+            if (sNama && p.nama && p.nama.trim().toLowerCase() === sNama) return true;
+            return false;
+        }) || {};
+    },
+
+    loadStudentData(nisnOrStudent) {
+        if (!nisnOrStudent) {
             this.selectedStudent = null;
+            this.updateSearchStudentInput(null);
             return;
         }
 
-        const norm = (id) => String(id || "").replace(/\D/g, "");
-        const targetClean = norm(nisn);
-        const targetClean10 = targetClean.padStart(10, "0");
+        let found = null;
 
-        // Cari di seluruh master siswa
-        const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
-        let found = allStudents.find(s => {
-            const sN = norm(s.nisn);
-            return sN === targetClean || sN === targetClean10 || String(s.nisn).trim() === String(nisn).trim();
-        });
+        if (typeof nisnOrStudent === "object" && nisnOrStudent !== null && nisnOrStudent.nama) {
+            found = nisnOrStudent;
+        } else {
+            const raw = String(nisnOrStudent || "").trim();
+            const norm = (id) => String(id || "").replace(/\D/g, "");
+            const strip0 = (id) => norm(id).replace(/^0+/, "");
+            const targetClean = norm(raw);
+            const targetClean10 = targetClean.padStart(10, "0");
+            const targetStrip = strip0(raw);
+            const targetLower = raw.toLowerCase();
 
-        // Fallback cerdas ke database PIP jika siswa baru ada di PIP_PENERIMA atau PIP_PENGUSULAN
-        if (!found) {
-            const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
-            const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
-            const pipItem = pipPenerima.find(p => norm(p.nisn) === targetClean || norm(p.nisn) === targetClean10)
-                || pipPengusulan.find(p => norm(p.nisn) === targetClean || norm(p.nisn) === targetClean10);
+            // 1. Cari di master siswa
+            const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+            found = allStudents.find(s => {
+                const sN = norm(s.nisn);
+                const sStrip = strip0(s.nisn);
+                const sExact = String(s.nisn || "").trim();
+                const sNik = norm(s.nik);
+                const sNama = String(s.nama || "").trim().toLowerCase();
 
-            if (pipItem) {
-                found = {
-                    nisn: String(pipItem.nisn || targetClean10),
-                    nama: pipItem.nama || "Siswa",
-                    kelas: pipItem.kelas || pipItem.rombel || "1",
-                    rombel: pipItem.rombel || pipItem.kelas || "1",
-                    tempatLahir: pipItem.tempatLahir || "Brebes",
-                    tanggalLahir: pipItem.tanggalLahir || "2015-01-01",
-                    jk: pipItem.jk || "Laki-laki",
-                    namaOrtu: pipItem.namaAyah || pipItem.namaIbu || pipItem.namaOrtu || "-",
-                    alamat: pipItem.alamat || "-"
-                };
+                return (
+                    (raw && sExact === raw) ||
+                    (targetClean && (sN === targetClean || sN === targetClean10)) ||
+                    (targetStrip && sStrip === targetStrip) ||
+                    (targetClean && sNik && sNik === targetClean) ||
+                    (targetLower && sNama === targetLower) ||
+                    (s.id && String(s.id).trim() === raw)
+                );
+            });
+
+            // 2. Fallback cerdas ke database PIP jika siswa baru ada di PIP_PENERIMA atau PIP_PENGUSULAN
+            if (!found) {
+                const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
+                const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
+                const allPip = [...pipPenerima, ...pipPengusulan];
+
+                const pipItem = allPip.find(p => {
+                    const pN = norm(p.nisn);
+                    const pStrip = strip0(p.nisn);
+                    const pExact = String(p.nisn || "").trim();
+                    const pNik = norm(p.nik);
+                    const pNama = String(p.nama || "").trim().toLowerCase();
+
+                    return (
+                        (raw && pExact === raw) ||
+                        (targetClean && (pN === targetClean || pN === targetClean10)) ||
+                        (targetStrip && pStrip === targetStrip) ||
+                        (targetClean && pNik && pNik === targetClean) ||
+                        (targetLower && pNama === targetLower)
+                    );
+                });
+
+                if (pipItem) {
+                    found = {
+                        nisn: String(pipItem.nisn || targetClean10 || targetClean || raw),
+                        nama: pipItem.nama || "Siswa",
+                        kelas: pipItem.kelas || pipItem.rombel || "1",
+                        rombel: pipItem.rombel || pipItem.kelas || "1",
+                        tempatLahir: pipItem.tempatLahir || "Brebes",
+                        tanggalLahir: pipItem.tanggalLahir || "2015-01-01",
+                        jk: pipItem.jk === 'P' ? 'Perempuan' : (pipItem.jk === 'L' ? 'Laki-laki' : (pipItem.jk || "Laki-laki")),
+                        namaOrtu: pipItem.namaAyah || pipItem.namaIbu || pipItem.namaOrtu || "-",
+                        alamat: pipItem.alamat || "-"
+                    };
+                }
             }
         }
 
@@ -340,8 +487,20 @@ const ModulCetak = {
 
         if (this.selectedStudent) {
             const select = document.getElementById("cetak-select-siswa");
-            if (select) select.value = this.selectedStudent.nisn;
+            if (select) {
+                select.value = this.selectedStudent.nisn;
+                if (!select.value) {
+                    const opt = document.createElement("option");
+                    opt.value = this.selectedStudent.nisn;
+                    opt.textContent = `${this.selectedStudent.nama} (NISN: ${this.selectedStudent.nisn} - Kelas ${this.selectedStudent.rombel || this.selectedStudent.kelas || '-'})`;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                    select.value = this.selectedStudent.nisn;
+                }
+            }
             this.updateSearchStudentInput(this.selectedStudent);
+        } else {
+            this.updateSearchStudentInput(null);
         }
 
         const selectTA = document.getElementById("cetak-select-ta");
@@ -691,7 +850,7 @@ const ModulCetak = {
         } else if (type === "pip_pencairan") {
             if (keperluanInput) keperluanInput.value = "Aktivasi Rekening / Pencairan Dana Bantuan Program Indonesia Pintar (PIP)";
             if (extraFieldContainer && this.selectedStudent) {
-                const pipRec = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []).find(p => p.nisn === this.selectedStudent.nisn) || {};
+                const pipRec = this.getPipRecord(this.selectedStudent);
                 extraFieldContainer.innerHTML = `
                     <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl mt-3 text-xs space-y-1.5">
                         <div class="font-bold text-blue-900 flex items-center gap-1.5">
@@ -793,7 +952,7 @@ const ModulCetak = {
         if (type === "pip_pencairan") {
             // Revisi Item 4: Judul Surat & Injeksi Data PIP Lengkap
             judulSurat = "SURAT KETERANGAN AKTIF BELAJAR DAN REKOMENDASI PENCAIRAN DANA PIP";
-            const pipRec = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []).find(p => p.nisn === student.nisn) || {};
+            const pipRec = this.getPipRecord(student);
             const noRek = pipRec.nomorRekening || student.noRekSimpel || "0109-01-029384-50-8";
             const noSK = pipRec.nomorSK || "0345/P3KE/PIP/2026";
             const tglSK = pipRec.tanggalSK ? this.formatFullDateIndo(pipRec.tanggalSK) : "15 Januari 2026";

@@ -1,6 +1,22 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.11] - 2026-11-13
+
+### Sinkronisasi Navigasi Cetak Cepat dari Pangkalan Data Siswa & Modul PIP, Pencarian Multi-Sumber Siswa, dan Resolusi Otomatis Tipe Surat
+- **Penyelarasan Komprehensif Tombol Cetak Cepat (`assets/js/modul-cetak.js`, `assets/js/app.js`, `assets/js/modul-pip.js`, `assets/js/modul-berkas.js`):**
+  - Mengimplementasikan `ModulCetak.bukaCetakSurat(studentOrNisn, templateType)` sebagai gerbang terpadu untuk pencetakan langsung dari modul eksternal.
+  - Memperbaiki race condition / preview prematur saat transisi `App.navigateTo("cetak")` menggunakan penguncian state `_pendingCetak`, sehingga data siswa dan tipe surat yang diklik tidak lagi ditimpa oleh data siswa sebelumnya.
+  - Tombol pada **Pangkalan Data Siswa** secara otomatis memuat tipe surat `aktif` (Surat Keterangan Aktif Belajar (Umum)) dan menginjeksi siswa terpilih ke input pencarian, badge status, dan canvas surat A4 secara instan.
+  - Tombol **Aktif Belajar** dan **Cetak Rekomendasi** pada **Modul PIP** langsung menyinkronkan tipe surat (`aktif` atau `pip_pencairan`), memperbarui dropdown `#cetak-jenis-surat`, menampilkan box detail SK PIP, serta menyusun tabel nomor rekening, SK, tahap, dan bank penyalur pada lembar preview.
+- **Pencarian Cerdas Multi-Sumber (`DataStore.getSiswaAll()`, `DataStore.getPIPPenerima()`, `DataStore.getPIPPengusulan()`):**
+  - Menambahkan metode `getAllSearchableStudents()` yang menggabungkan seluruh siswa Dapodik dan basis data penerima/pengusulan PIP dengan de-duplikasi otomatis berdasarkan NISN (termasuk normalisasi variasi leading-zero) dan nama.
+  - Menjamin siswa PIP yang belum ada di master siswa tetap dapat dicari, dipilih, dan dicetak suratnya.
+- **Normalisasi Pencocokan Identitas Siswa (`loadStudentData`):**
+  - Mendukung pencarian siswa multi-kriteria: perbandingan angka murni, string terpotong 0 di awal, panjang 10 digit, NIK, ID, dan nama lengkap.
+- **Resolusi Data Rekening & SK PIP Siswa (`getPipRecord`):**
+  - Ekstraksi otomatis data SK, tahap, nomor rekening, dan VA siswa secara live dari database PIP lokal/cloud tanpa fallback ke data statis tiruan.
+
 ## [v3.3.10] - 2026-11-13
 
 ### Agregasi Live Tren Kehadiran Bulanan (Anti-Hardcode), Dekomposisi Peran Akun Admin, dan Resolusi Cerdas Guru Kelas Per Rombel

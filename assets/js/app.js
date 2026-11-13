@@ -201,7 +201,15 @@ const App = {
             ModulSurat.renderSubTab();
         } else if (route === "cetak") {
             ModulCetak.populateStudentSelect();
-            ModulCetak.generatePreview();
+            if (!ModulCetak._pendingCetak) {
+                if (!ModulCetak.selectedStudent) {
+                    ModulCetak.selectDefaultStudent();
+                } else {
+                    ModulCetak.updateSearchStudentInput(ModulCetak.selectedStudent);
+                    ModulCetak.updateFormFieldsByTemplate();
+                    ModulCetak.generatePreview();
+                }
+            }
         } else if (route === "absensi") {
             ModulAbsensi.populateKelasOptions();
             ModulPresensi.onShow();
@@ -218,14 +226,18 @@ const App = {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    pindahKeCetakSurat(nisn) {
-        this.navigateTo("cetak");
-        if (window.ModulCetak) {
-            ModulCetak.loadStudentData(nisn);
+    pindahKeCetakSurat(nisn, templateType = "aktif") {
+        if (window.ModulCetak && ModulCetak.bukaCetakSurat) {
+            ModulCetak.bukaCetakSurat(nisn, templateType);
+        } else {
+            this.navigateTo("cetak");
+            if (window.ModulCetak) {
+                ModulCetak.loadStudentData(nisn);
+            }
         }
     },
 
-    VERSION: "3.3.3",
+    VERSION: "3.3.11",
 
     formatJamMenit(w) {
         if (!w) return "";

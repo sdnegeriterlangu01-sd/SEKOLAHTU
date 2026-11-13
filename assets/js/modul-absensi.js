@@ -604,7 +604,7 @@ const ModulAbsensi = {
             }
 
             try {
-                const histori = DataStore.getHistoriBulanan();
+                const histori = DataStore.getHistoriBulanan("siswa", 6);
                 const labels = histori.map(h => h.bulan);
                 const hadirValues = histori.map(h => h.hadir);
 
@@ -632,7 +632,7 @@ const ModulAbsensi = {
                         },
                         scales: {
                             y: {
-                                min: 80,
+                                min: (hadirValues.some(v => v > 0) && Math.min(...hadirValues.filter(v => v > 0)) >= 70) ? 60 : 0,
                                 max: 100,
                                 ticks: {
                                     callback: val => `${val}%`,

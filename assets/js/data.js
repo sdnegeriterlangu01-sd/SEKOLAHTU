@@ -1045,8 +1045,129 @@ const DataStore = {
         localStorage.setItem(this.KEYS.ABSENSI, JSON.stringify(list));
     },
 
-    getHistoriBulanan() {
-        return JSON.parse(localStorage.getItem(this.KEYS.HISTORI_BULANAN)) || SEED_HISTORI_BULANAN;
+    // Perhitungan Tren Kehadiran Bulanan Live (Real-Time dari DB_Absensi & DB_AbsensiSiswaBulan)
+    getHistoriBulanan(kategori = "siswa", count = 6) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+        const now = new Date();
+        const results = [];
+
+        if (kategori === "tendik") {
+            const absensiTendik = this.getAbsensiTendik();
+            for (let i = count - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const year = d.getFullYear();
+                const mKey = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const label = `${monthNames[d.getMonth()]} ${year}`;
+
+                const mRecs = absensiTendik.filter(a => a.tanggal && a.tanggal.startsWith(mKey));
+                // Gabungkan sessionLog hari ini jika bulan berjalan
+                if (i === 0 && window.ModulPresensi && ModulPresensi.sessionLog) {
+                    ModulPresensi.sessionLog.forEach(sl => {
+                        const cleanNip = (typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(sl.nip) : String(sl.nip || "");
+                        if (!mRecs.some(r => ((typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(r.nip) : String(r.nip || "")) === cleanNip)) {
+                            mRecs.push({ nip: sl.nip, nama: sl.nama, tanggal: sl.tanggal || mKey, jamDatang: sl.jam, status: "Hadir" });
+                        }
+                    });
+                }
+
+                // De-duplikasi berdasarkan (tanggal, cleanNip)
+                const uniqueEntries = new Map();
+                mRecs.forEach(r => {
+                    const cleanNip = (typeof Util !== "undefined" && Util.cleanId) ? Util.cleanId(r.nip) : String(r.nip || "");
+                    const tgl = r.tanggal || mKey;
+                    if (cleanNip) uniqueEntries.set(`${tgl}_${cleanNip}`, r.status || (r.jamDatang ? "Hadir" : "Hadir"));
+                });
+
+                let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+                uniqueEntries.forEach(st => {
+                    if (st === "Hadir") hadir++;
+                    else if (st === "Sakit") sakit++;
+                    else if (st === "Izin") izin++;
+                    else if (st === "Alpa") alpa++;
+                    else hadir++;
+                });
+
+                const total = uniqueEntries.size;
+                const persenHadir = total > 0 ? Number(Math.min(100, Math.max(0, (hadir / total) * 100)).toFixed(1)) : 0;
+                results.push({
+                    bulan: label,
+                    mKey: mKey,
+                    hadir: persenHadir,
+                    sakit: total > 0 ? Number(((sakit / total) * 100).toFixed(1)) : 0,
+                    izin: total > 0 ? Number(((izin / total) * 100).toFixed(1)) : 0,
+                    alpa: total > 0 ? Number(((alpa / total) * 100).toFixed(1)) : 0,
+                    totalRecords: total
+                });
+            }
+        } else {
+            // Mode Siswa: Agregasi real-time dari DataStore.getAbsensi() & DataStore.getAbsensiSiswaBulan()
+            const dailyAbs = this.getAbsensi().filter(a => a.kategori === "Siswa");
+            const monthlyAbs = this.getAbsensiSiswaBulan();
+
+            for (let i = count - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const year = d.getFullYear();
+                const mKey = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const label = `${monthNames[d.getMonth()]} ${year}`;
+
+                // Kumpulkan semua presensi siswa unik per (tanggal, cleanNisn)
+                const uniqueEntries = new Map();
+
+                // 1. Dari log harian DB_Absensi
+                dailyAbs.forEach(a => {
+                    if (a.tanggal && a.tanggal.startsWith(mKey)) {
+                        const cleanNisn = String(a.nisnNip || "").replace(/\D/g, "");
+                        if (cleanNisn) {
+                            uniqueEntries.set(`${a.tanggal}_${cleanNisn}`, a.status || "Hadir");
+                        }
+                    }
+                });
+
+                // 2. Dari matriks bulanan DB_AbsensiSiswaBulan
+                monthlyAbs.forEach(r => {
+                    if (r.bulan === mKey && r.marks) {
+                        const cleanNisn = String(r.nisn || "").replace(/\D/g, "");
+                        if (cleanNisn) {
+                            Object.entries(r.marks).forEach(([dayNum, mark]) => {
+                                const padDay = String(dayNum).padStart(2, '0');
+                                const tglKey = `${mKey}-${padDay}`;
+                                const entryKey = `${tglKey}_${cleanNisn}`;
+                                if (!uniqueEntries.has(entryKey)) {
+                                    let st = "Hadir";
+                                    if (mark === "S") st = "Sakit";
+                                    else if (mark === "I") st = "Izin";
+                                    else if (mark === "A") st = "Alpa";
+                                    else if (mark === "H") st = "Hadir";
+                                    uniqueEntries.set(entryKey, st);
+                                }
+                            });
+                        }
+                    }
+                });
+
+                let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+                uniqueEntries.forEach(st => {
+                    if (st === "Hadir") hadir++;
+                    else if (st === "Sakit") sakit++;
+                    else if (st === "Izin") izin++;
+                    else if (st === "Alpa") alpa++;
+                });
+
+                const total = uniqueEntries.size;
+                const persenHadir = total > 0 ? Number(Math.min(100, Math.max(0, (hadir / total) * 100)).toFixed(1)) : 0;
+                results.push({
+                    bulan: label,
+                    mKey: mKey,
+                    hadir: persenHadir,
+                    sakit: total > 0 ? Number(((sakit / total) * 100).toFixed(1)) : 0,
+                    izin: total > 0 ? Number(((izin / total) * 100).toFixed(1)) : 0,
+                    alpa: total > 0 ? Number(((alpa / total) * 100).toFixed(1)) : 0,
+                    totalRecords: total
+                });
+            }
+        }
+
+        return results;
     },
 
     // ================= MODUL JADWAL PELAJARAN =================

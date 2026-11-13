@@ -1,6 +1,26 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.10] - 2026-11-13
+
+### Agregasi Live Tren Kehadiran Bulanan (Anti-Hardcode), Dekomposisi Peran Akun Admin, dan Resolusi Cerdas Guru Kelas Per Rombel
+- **Agregasi Live Tren Kehadiran Siswa & Tendik Bulanan (`assets/js/data.js`, `assets/js/app.js`, `assets/js/modul-absensi.js`):**
+  - Mengganti pembacaan array statis `SEED_HISTORI_BULANAN` dan array demo default `defaults = [96, 98, ...]` dengan agregator dinamis `DataStore.getHistoriBulanan(kategori, count)`.
+  - Agregasi menghitung secara live kehadiran 6 bulan terakhir dari log harian `DB_Absensi` dan matriks bulanan `DB_AbsensiSiswaBulan` (untuk Siswa) serta `DB_AbsensiTendik` (untuk GTK), dide-duplikasi per tanggal dan ID/NISN.
+  - Skala sumbu Y Chart.js disesuaikan secara dinamis (`min: 0%` atau `60%` s.d. `100%`) agar kurva fluktuasi kehadiran riil tidak terpotong.
+- **Dekomposisi Penugasan Akun Non-Guru / Admin (`assets/js/auth.js`):**
+  - Menambahkan pembatasan `isGuruRole` saat inisialisasi sesi dan penyimpanan profil akun: peran `admin`, `kepsek`, `tu`, dan `operator` tidak lagi diberi penugasan default `tipeGuru: 'kelas'` dan `kelasGuru: '1'`.
+  - Mencegah kebocoran identitas akun admin masuk ke dalam dropdown penandatangan/guru kelas saat membuka modul presensi.
+- **Resolusi Multi-Tier Guru Kelas / Wali Kelas Per Rombel (`assets/js/modul-presensi.js`):**
+  - Memperbarui `getTeacherForClass(kelasName)` dengan algoritma 4 tingkat:
+    1. Pencarian di master Tendik fleksibel mendukung angka arab (`2`), angka romawi (`II`), serta memeriksa `jabatan`, `tugasTambahan` (Wali Kelas), dan `golJabatan`.
+    2. Deteksi otomatis dari jadwal pelajaran (`DB_JadwalPelajaran`), menentukan guru pengampu mata pelajaran pokok terbanyak di rombel tersebut.
+    3. Verifikasi mapping pengguna terdaftar dengan filter ketat `m.role === "guru"`.
+    4. Fallback ke baseline master GTK SDN Terlangu 01 (Kelas 1 s.d. 6 lengkap beserta nama dan NIP).
+  - Menghilangkan bug guru kelas kosong saat beralih ke Kelas 2, 3, dst.
+- **Interaktivitas Filter Guru Kelas vs Guru Mapel pada Rekap Bulanan Siswa (`assets/js/modul-presensi.js`):**
+  - Menambahkan event listener `change` pada elemen `#rs-guru-penandatangan` sehingga saat admin beralih antara Guru Kelas, PJOK, atau PAI, grid rekap bulanan langsung merespons dan menampilkan jadwal jam mengajar mapel terkait secara live.
+
 ## [v3.3.9] - 2026-11-13
 
 ### Resolusi Akurasi Presensi Harian (Anti-Duplikasi NISN & Batas 100%), Harmonisasi Presensi Guru Kelas vs Guru Mapel, dan Fitur Pencarian Cerdas Siswa pada Cetak Surat

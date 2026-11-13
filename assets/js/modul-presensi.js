@@ -1018,31 +1018,110 @@ const ModulPresensi = {
 
 
     getTeacherForClass(kelasName) {
-        const cleanK = String(kelasName || "").replace(/kelas\s*/i, "").trim();
-        const tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
-        
-        // 1. Cari di master tendik berdasarkan jabatan 'Guru Kelas {cleanK}'
-        const found = tendikList.find(t => {
-            const j = String(t.jabatan || "").toLowerCase();
-            return j.includes("kelas") && (
-                j.includes(`kelas ${cleanK}`) ||
-                (cleanK && j.match(new RegExp(`kelas\\s*${cleanK}\\b`, 'i')))
-            );
-        });
-        if (found) return { nama: found.nama, nip: found.nip, jabatan: found.jabatan || `Guru Kelas ${cleanK}` };
+        const raw = String(kelasName || "").trim();
+        const cleanK = raw.replace(/^kelas\s*/i, "").trim();
+        const digitMatch = cleanK.match(/\d+/);
+        const digit = digitMatch ? digitMatch[0] : "";
+        const romanMap = { "1": "i", "2": "ii", "3": "iii", "4": "iv", "5": "v", "6": "vi" };
+        const roman = digit ? (romanMap[digit] || "") : "";
 
-        // 2. Cari di pemetaan akun pengguna (sim_tas_user_mappings)
+        const tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
+
+        // Helper untuk mengecek apakah sebuah string jabatan/tugas merujuk ke kelas ini
+        const isMatchClass = (str) => {
+            if (!str) return false;
+            const s = String(str).toLowerCase();
+            // Abaikan non-guru kelas
+            if (s.includes("kepala") || s.includes("penjaga") || s.includes("administrasi") || s.includes("operator") || s.includes("perpustakaan") || s.includes("pjok") || s.includes("penjas") || s.includes("pai") || s.includes("agama")) {
+                return false;
+            }
+            if (digit && (s.includes(`kelas ${digit}`) || s.includes(`kelas ${roman}`))) return true;
+            if (digit && s.match(new RegExp(`\\bkelas\\s*${digit}\\b`, 'i'))) return true;
+            if (roman && s.match(new RegExp(`\\bkelas\\s*${roman}\\b`, 'i'))) return true;
+            if (cleanK && s.includes(cleanK.toLowerCase())) return true;
+            return false;
+        };
+
+        // 1. Cari di master tendik berdasarkan jabatan, tugasTambahan, atau golJabatan
+        const found = tendikList.find(t => {
+            if (t.aktif === false) return false;
+            return isMatchClass(t.jabatan) || isMatchClass(t.tugasTambahan) || isMatchClass(t.golJabatan);
+        });
+        if (found) {
+            return {
+                nama: found.nama,
+                nip: found.nip || "",
+                jabatan: found.jabatan || `Guru Kelas ${cleanK || digit}`
+            };
+        }
+
+        // 2. Cari dari DB_JadwalPelajaran (DataStore.getJadwalAll()):
+        // Di SD, guru yang paling banyak mengajar mata pelajaran utama di rombel tersebut adalah Guru Kelas / Wali Kelas
+        try {
+            const allJadwal = (typeof DataStore !== "undefined" && DataStore.getJadwalAll) ? DataStore.getJadwalAll() : [];
+            const teacherCounts = new Map();
+            allJadwal.forEach(j => {
+                const jK = String(j.kelas || j.rombel || "").replace(/^kelas\s*/i, "").trim().toLowerCase();
+                const jDigit = jK.match(/\d+/)?.[0] || "";
+                if ((digit && jDigit === digit) || (cleanK && jK === cleanK.toLowerCase())) {
+                    const mapel = String(j.mapel || "").toLowerCase();
+                    if (!mapel.includes("pjok") && !mapel.includes("penjas") && !mapel.includes("agama") && !mapel.includes("pai")) {
+                        const gName = (j.guru || j.namaGuru || "").trim();
+                        if (gName) {
+                            const cur = teacherCounts.get(gName) || { count: 0, nip: j.nip || "", nama: gName };
+                            cur.count++;
+                            if (j.nip && !cur.nip) cur.nip = j.nip;
+                            teacherCounts.set(gName, cur);
+                        }
+                    }
+                }
+            });
+
+            if (teacherCounts.size > 0) {
+                const sorted = Array.from(teacherCounts.values()).sort((a, b) => b.count - a.count);
+                if (sorted[0] && sorted[0].nama) {
+                    return {
+                        nama: sorted[0].nama,
+                        nip: sorted[0].nip || "",
+                        jabatan: `Guru Kelas ${cleanK || digit}`
+                    };
+                }
+            }
+        } catch (eJadwal) {}
+
+        // 3. Cari di pemetaan akun pengguna (HANYA role guru, TOLAK admin/kepsek/tu)
         try {
             const mappings = JSON.parse(localStorage.getItem(Auth.USER_MAPPINGS_KEY)) || {};
             for (const key in mappings) {
                 const m = mappings[key];
-                if (m && (m.tipeGuru === "kelas" || m.tipe_guru === "kelas") && String(m.kelasGuru || m.kelas_guru) === cleanK) {
-                    return { nama: m.nama, nip: m.nip || "", jabatan: `Guru Kelas ${cleanK}` };
+                const isGuru = m && (m.role === "guru" || m.rawRole === "guru" || m.rawRole === "guru_kelas");
+                if (isGuru && (m.tipeGuru === "kelas" || m.tipe_guru === "kelas")) {
+                    const mK = String(m.kelasGuru || m.kelas_guru || "").replace(/\D/g, "");
+                    if (digit && mK === digit) {
+                        return { nama: m.nama, nip: m.nip || "", jabatan: `Guru Kelas ${cleanK || digit}` };
+                    }
                 }
             }
-        } catch (e) {}
+        } catch (eMap) {}
 
-        return { nama: "", nip: "", jabatan: `Guru Kelas ${cleanK}` };
+        // 4. Baseline Guru SDN Terlangu 01 (fallback terpercaya jika belum diisi di database)
+        const baselineMap = {
+            "1": { nama: "Dewi Kurniasih, S.Pd.", nip: "19960719 202301 2 009" },
+            "2": { nama: "Rizky Fauzan, S.Pd.", nip: "19941128 202203 1 003" },
+            "3": { nama: "Nurul Aini, S.Pd.", nip: "19920409 201902 2 005" },
+            "4": { nama: "Endang Susilowati, S.Pd.", nip: "19890115 201101 2 012" },
+            "5": { nama: "Budi Hartono, S.Pd.", nip: "19820820 200604 1 008" },
+            "6": { nama: "Sri Wahyuni, S.Pd.SD", nip: "19750314 199802 2 001" }
+        };
+        if (digit && baselineMap[digit]) {
+            return {
+                nama: baselineMap[digit].nama,
+                nip: baselineMap[digit].nip,
+                jabatan: `Guru Kelas ${cleanK || digit}`
+            };
+        }
+
+        return { nama: "", nip: "", jabatan: `Guru Kelas ${cleanK || digit}` };
     },
 
     getPenandatanganInfo() {
@@ -1076,22 +1155,24 @@ const ModulPresensi = {
         const val = selGuru ? selGuru.value : "kelas";
 
         if (val === "pjok") {
+            const opt = selGuru ? selGuru.options[selGuru.selectedIndex] : null;
             const tendik = ((typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [])
                 .find(t => String(t.jabatan || "").toLowerCase().includes("pjok") || String(t.jabatan || "").toLowerCase().includes("penjas"));
             return {
                 headerJudul: "ABSENSI GURU MAPEL PJOK",
                 roleTitle: "Guru Mapel PJOK",
-                nama: tendik ? tendik.nama : "Agus Triyono, S.Pd.Jas",
-                nip: tendik ? tendik.nip : ""
+                nama: opt?.dataset?.nama || (tendik ? tendik.nama : "Agus Triyono, S.Pd.Jas"),
+                nip: opt?.dataset?.nip || (tendik ? tendik.nip : "19850904 201001 1 015")
             };
         } else if (val === "pai") {
+            const opt = selGuru ? selGuru.options[selGuru.selectedIndex] : null;
             const tendik = ((typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [])
                 .find(t => String(t.jabatan || "").toLowerCase().includes("pai") || String(t.jabatan || "").toLowerCase().includes("agama"));
             return {
                 headerJudul: "ABSENSI GURU MAPEL PAI",
                 roleTitle: "Guru Mapel PAI",
-                nama: tendik ? tendik.nama : "Siti Fatimah, S.Pd.I",
-                nip: tendik ? tendik.nip : ""
+                nama: opt?.dataset?.nama || (tendik ? tendik.nama : "Siti Fatimah, S.Pd.I"),
+                nip: opt?.dataset?.nip || (tendik ? tendik.nip : "19910214 201708 2 004")
             };
         } else if (val && val.startsWith("mapel_")) {
             const mapelName = val.replace("mapel_", "").toUpperCase();
@@ -1130,38 +1211,38 @@ const ModulPresensi = {
         }
 
         sel.disabled = false;
+        const prevVal = sel.value || "kelas";
         const cleanK = String(this.kelasSiswa || "").replace(/kelas\s*/i, "").trim();
         const gk = this.getTeacherForClass(this.kelasSiswa);
         const gkLabel = gk.nama ? `Guru Kelas ${cleanK} (${gk.nama})` : `Guru Kelas ${cleanK}`;
 
         const tendikList = (typeof DataStore !== "undefined" && DataStore.getTendik) ? DataStore.getTendik() : [];
-        const pjok = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pjok") || String(t.jabatan || "").toLowerCase().includes("penjas"));
-        const pai = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pai") || String(t.jabatan || "").toLowerCase().includes("agama"));
+        const pjok = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pjok") || String(t.jabatan || "").toLowerCase().includes("penjas"))
+            || { nama: "Agus Triyono, S.Pd.Jas", nip: "19850904 201001 1 015" };
+        const pai = tendikList.find(t => String(t.jabatan || "").toLowerCase().includes("pai") || String(t.jabatan || "").toLowerCase().includes("agama"))
+            || { nama: "Siti Fatimah, S.Pd.I", nip: "19910214 201708 2 004" };
 
-        let optsHtml = `<option value="kelas" selected>${Sec.esc(gkLabel)}</option>`;
-        if (pjok) {
-            optsHtml += `<option value="pjok" data-nama="${Sec.esc(pjok.nama)}" data-nip="${Sec.esc(pjok.nip)}">Guru Mapel PJOK (${Sec.esc(pjok.nama)})</option>`;
-        } else {
-            optsHtml += `<option value="pjok">Guru Mapel PJOK</option>`;
-        }
-        if (pai) {
-            optsHtml += `<option value="pai" data-nama="${Sec.esc(pai.nama)}" data-nip="${Sec.esc(pai.nip)}">Guru Mapel PAI (${Sec.esc(pai.nama)})</option>`;
-        } else {
-            optsHtml += `<option value="pai">Guru Mapel PAI</option>`;
-        }
+        let optsHtml = `<option value="kelas" data-nama="${Sec.esc(gk.nama)}" data-nip="${Sec.esc(gk.nip)}">${Sec.esc(gkLabel)}</option>`;
+        optsHtml += `<option value="pjok" data-nama="${Sec.esc(pjok.nama)}" data-nip="${Sec.esc(pjok.nip)}">Guru Mapel PJOK (${Sec.esc(pjok.nama)})</option>`;
+        optsHtml += `<option value="pai" data-nama="${Sec.esc(pai.nama)}" data-nip="${Sec.esc(pai.nip)}">Guru Mapel PAI (${Sec.esc(pai.nama)})</option>`;
 
         // Tambahkan guru mapel lain dari data akun pengguna jika ada
         try {
             const mappings = JSON.parse(localStorage.getItem(Auth.USER_MAPPINGS_KEY)) || {};
             for (const key in mappings) {
                 const m = mappings[key];
-                if (m && m.tipeGuru === "mapel" && m.namaMapel && !["pjok", "pai"].includes(m.namaMapel.toLowerCase())) {
+                if (m && m.role === "guru" && m.tipeGuru === "mapel" && m.namaMapel && !["pjok", "pai"].includes(m.namaMapel.toLowerCase())) {
                     optsHtml += `<option value="mapel_${Sec.esc(m.namaMapel.toLowerCase())}" data-nama="${Sec.esc(m.nama)}" data-nip="${Sec.esc(m.nip || "")}">Guru Mapel ${Sec.esc(m.namaMapel)} (${Sec.esc(m.nama)})</option>`;
                 }
             }
         } catch (e) {}
 
         sel.innerHTML = optsHtml;
+        if (Array.from(sel.options).some(o => o.value === prevVal)) {
+            sel.value = prevVal;
+        } else {
+            sel.value = "kelas";
+        }
     },
 
     async renderSiswa() {
@@ -1239,6 +1320,12 @@ const ModulPresensi = {
             el.querySelector("#rs-bulan").addEventListener("change", (e) => {
                 if (e.target.value) { this.bulanSiswa = e.target.value; this.renderSiswa(); }
             });
+            el.querySelector("#rs-guru-penandatangan")?.addEventListener("change", () => {
+                const grid = document.getElementById("rs-grid");
+                if (grid && !grid.innerHTML.includes("fa-spinner")) {
+                    grid.innerHTML = this.buildSiswaTable();
+                }
+            });
         }
         const sel = document.getElementById("rs-kelas");
         sel.innerHTML = opts.map(k => {
@@ -1294,18 +1381,53 @@ const ModulPresensi = {
         const role = Auth.role();
         const gInfo = Auth.getGuruInfo ? Auth.getGuruInfo() : null;
         const u = Auth.user();
-        const isGuruMapel = role === "guru" && gInfo && gInfo.isGuruMapel;
+        const isGuru = role === "guru";
         const cleanK = String(this.kelasSiswa || "").replace(/\D/g, "");
+
+        const selGuru = document.getElementById("rs-guru-penandatangan");
+        const filterVal = selGuru ? selGuru.value : (isGuru && gInfo?.isGuruMapel ? "mapel" : "kelas");
+
+        let isGuruMapel = false;
+        let mapelNama = "";
+        let mapelTeacherName = "";
+        let mapelTeacherNip = "";
+
+        if (isGuru && gInfo && gInfo.isGuruMapel) {
+            isGuruMapel = true;
+            mapelNama = gInfo.namaMapel || "Mapel";
+            mapelTeacherName = gInfo.nama || u?.nama || "";
+            mapelTeacherNip = gInfo.nip || u?.nip || "";
+        } else if (!isGuru && filterVal && filterVal !== "kelas") {
+            // Admin / Kepsek / TU memfilter berdasarkan Guru Mapel
+            isGuruMapel = true;
+            if (filterVal === "pjok") {
+                mapelNama = "PJOK";
+                const opt = selGuru?.querySelector('option[value="pjok"]');
+                mapelTeacherName = opt?.dataset?.nama || "Agus Triyono, S.Pd.Jas";
+                mapelTeacherNip = opt?.dataset?.nip || "";
+            } else if (filterVal === "pai") {
+                mapelNama = "PAI";
+                const opt = selGuru?.querySelector('option[value="pai"]');
+                mapelTeacherName = opt?.dataset?.nama || "Siti Fatimah, S.Pd.I";
+                mapelTeacherNip = opt?.dataset?.nip || "";
+            } else if (filterVal.startsWith("mapel_")) {
+                mapelNama = filterVal.replace("mapel_", "").toUpperCase();
+                const opt = selGuru?.querySelector(`option[value="${filterVal}"]`);
+                mapelTeacherName = opt?.dataset?.nama || `Guru Mapel ${mapelNama}`;
+                mapelTeacherNip = opt?.dataset?.nip || "";
+            }
+        }
 
         // Periksa hari apa saja guru mapel mengajar kelas yang sedang dibuka
         const allJadwal = (typeof DataStore !== "undefined" && DataStore.getJadwalAll) ? DataStore.getJadwalAll() : [];
         const cleanName = (str) => String(str || "").toLowerCase().replace(/\b(s\.pd\.sd|s\.pd|m\.pd|s\.kom|s\.ag|s\.pd\.i|s\.sos|drs|dra|h|hj|prof|dr|s\.pd\.jas)\b/gi, "").replace(/[^a-z0-9]/gi, "").trim();
-        const uName = cleanName(u?.nama);
-        const uNip = Util.cleanId(u?.nip || "");
-        const myMapel = (gInfo?.namaMapel || "").toLowerCase();
 
         const mapelTeachingDays = new Set();
         if (isGuruMapel) {
+            const cleanTargetMapel = mapelNama.toLowerCase();
+            const targetGuruClean = cleanName(mapelTeacherName);
+            const targetNipClean = Util.cleanId(mapelTeacherNip);
+
             allJadwal.forEach(j => {
                 const jK = String(j.kelas || j.rombel || "").replace(/\D/g, "");
                 if (cleanK && jK && cleanK !== jK) return;
@@ -1313,8 +1435,14 @@ const ModulPresensi = {
                 const jGuru = cleanName(j.guru || j.namaGuru);
                 const jNip = Util.cleanId(j.nip || "");
                 const jMapel = String(j.mapel || "").toLowerCase();
-                const matchGuru = (uNip && jNip && uNip === jNip) || (uName && jGuru && (uName.includes(jGuru) || jGuru.includes(uName)));
-                const matchMapel = myMapel && jMapel && (jMapel.includes(myMapel) || (myMapel === "pjok" && (jMapel.includes("penjas") || jMapel.includes("olahraga"))));
+
+                const matchGuru = (targetNipClean && jNip && targetNipClean === jNip) || (targetGuruClean && jGuru && (targetGuruClean.includes(jGuru) || jGuru.includes(targetGuruClean)));
+                const matchMapel = cleanTargetMapel && jMapel && (
+                    jMapel.includes(cleanTargetMapel) || 
+                    (cleanTargetMapel === "pjok" && (jMapel.includes("penjas") || jMapel.includes("olahraga"))) ||
+                    (cleanTargetMapel === "pai" && (jMapel.includes("agama") || jMapel.includes("budi pekerti")))
+                );
+
                 if (matchGuru || matchMapel) {
                     if (j.hari) mapelTeachingDays.add(j.hari);
                 }
@@ -1323,18 +1451,18 @@ const ModulPresensi = {
 
         let noticeHtml = "";
         if (isGuruMapel) {
-            const mapelNama = Sec.esc(gInfo.namaMapel || "Mapel");
             const teachingDaysStr = Array.from(mapelTeachingDays).join(", ") || "-";
+            const roleDesc = isGuru ? "Sebagai Guru Mapel" : "Mode Filter Guru Mapel";
             noticeHtml = `
                 <div class="mb-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-3 text-xs text-blue-900 dark:text-blue-200">
                     <div class="flex items-center gap-2 min-w-0">
                         <i class="fa-solid fa-circle-info text-blue-600 dark:text-blue-400 text-sm flex-shrink-0"></i>
                         <span class="leading-relaxed">
-                            <strong>Status Rekap Terintegrasi (Data Induk Wali Kelas):</strong> Rekap bulanan siswa ini bersumber dari absensi harian Guru Kelas. Sebagai Guru Mapel <strong>${mapelNama}</strong>, Anda hanya dapat menandai kehadiran pada hari mengajar Anda: <span class="font-bold underline">${teachingDaysStr}</span>. Tanggal di luar jadwal mengajar dinonaktifkan (arsir abu-abu).
+                            <strong>Status Rekap Terintegrasi:</strong> Rekap bulanan siswa ini bersumber dari absensi harian Guru Kelas. ${roleDesc} <strong>${Sec.esc(mapelNama)}</strong> (${Sec.esc(mapelTeacherName || 'Guru Mapel')}), jadwal jam mengajar di Kelas ${cleanK}: <span class="font-bold underline">${teachingDaysStr}</span>. Tanggal di luar jadwal mengajar diarsir abu-abu.
                         </span>
                     </div>
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 flex-shrink-0 border border-blue-300 dark:border-blue-700">
-                        Induk: Wali Kelas
+                        Mapel: ${Sec.esc(mapelNama)}
                     </span>
                 </div>
             `;

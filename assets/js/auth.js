@@ -331,8 +331,9 @@ const Auth = {
         const localMapping = this.getUserMapping(this.session.user.email || uid) || {};
         this.session.user.nama = Sec.clean(p.nama || localMapping.nama || this.session.user.email);
         this.session.user.role = p.role;
-        this.session.user.tipeGuru = p.tipe_guru || localMapping.tipeGuru || localMapping.tipe_guru || "";
-        this.session.user.kelasGuru = p.kelas_guru || localMapping.kelasGuru || localMapping.kelas_guru || "";
+        const isGuruRole = p.role === "guru" || p.role === "guru_kelas" || p.role === "guru_mapel";
+        this.session.user.tipeGuru = isGuruRole ? (p.tipe_guru || localMapping.tipeGuru || localMapping.tipe_guru || "") : "";
+        this.session.user.kelasGuru = isGuruRole ? (p.kelas_guru || localMapping.kelasGuru || localMapping.kelas_guru || "") : "";
         this.saveUserMapping(this.session.user.email, {
             nama: this.session.user.nama,
             role: this.session.user.role,

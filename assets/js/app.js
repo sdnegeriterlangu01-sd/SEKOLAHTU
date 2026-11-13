@@ -526,7 +526,7 @@ const App = {
             const basisCount = total > 0 ? total : recordedCount;
             persenHadir = basisCount > 0 ? Math.min(100, Math.max(0, (hadir / basisCount) * 100)).toFixed(1) : "0.0";
 
-            const histori = DataStore.getHistoriBulanan();
+            const histori = DataStore.getHistoriBulanan("siswa", 6);
             trendLabels = histori.map(h => h.bulan);
             trendValues = histori.map(h => h.hadir);
         } else {
@@ -564,25 +564,10 @@ const App = {
             if (total === 0) total = 10;
             persenHadir = total > 0 ? ((hadir / total) * 100).toFixed(1) : "0.0";
 
-            // Hitung tren 6 bulan untuk tendik
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
-            const d = new Date();
-            trendLabels = [];
-            trendValues = [];
-            const defaults = [96, 98, 97, 99, 98, 100];
-            for (let i = 5; i >= 0; i--) {
-                const past = new Date(d.getFullYear(), d.getMonth() - i, 1);
-                const mKey = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}`;
-                trendLabels.push(monthNames[past.getMonth()]);
-                const mRecs = absensiTendik.filter(a => a.tanggal && a.tanggal.startsWith(mKey));
-                if (mRecs.length > 0) {
-                    const mHadir = mRecs.filter(a => a.status === "Hadir" || a.jamDatang).length;
-                    const p = Math.round((mHadir / mRecs.length) * 100);
-                    trendValues.push(Math.max(85, Math.min(100, p)));
-                } else {
-                    trendValues.push(defaults[5 - i] || 98);
-                }
-            }
+            // Hitung tren 6 bulan untuk tendik secara live dari database
+            const historiTendik = DataStore.getHistoriBulanan("tendik", 6);
+            trendLabels = historiTendik.map(h => h.bulan);
+            trendValues = historiTendik.map(h => h.hadir);
         }
 
         if (statPersen) statPersen.textContent = `${persenHadir}%`;
@@ -691,7 +676,7 @@ const App = {
                         },
                         scales: {
                             y: {
-                                min: 75,
+                                min: (trendValues.some(v => v > 0) && Math.min(...trendValues.filter(v => v > 0)) >= 70) ? 60 : 0,
                                 max: 100,
                                 ticks: {
                                     callback: val => `${val}%`,

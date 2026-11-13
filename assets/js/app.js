@@ -226,18 +226,19 @@ const App = {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    pindahKeCetakSurat(nisn, templateType = "aktif") {
+    pindahKeCetakSurat(nisn, templateType = "aktif", encodedNama = "") {
+        const nama = encodedNama ? decodeURIComponent(encodedNama) : "";
         if (window.ModulCetak && ModulCetak.bukaCetakSurat) {
-            ModulCetak.bukaCetakSurat(nisn, templateType);
+            ModulCetak.bukaCetakSurat(nisn, templateType, nama);
         } else {
             this.navigateTo("cetak");
             if (window.ModulCetak) {
-                ModulCetak.loadStudentData(nisn);
+                ModulCetak.loadStudentData(nisn, nama);
             }
         }
     },
 
-    VERSION: "3.3.11",
+    VERSION: "3.3.12",
 
     formatJamMenit(w) {
         if (!w) return "";

@@ -1,6 +1,21 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.12] - 2026-11-13
+
+### Injeksi Pre-Navigasi Siswa Terpilih, Fallback Identitas Nama Lengkap, dan Pembaruan Total Cache-Busting Modul (`index.html`)
+- **Injeksi Pre-Navigasi Siswa Terpilih (`assets/js/modul-cetak.js`, `assets/js/app.js`):**
+  - Mengubah alur eksekusi `ModulCetak.bukaCetakSurat` agar memuat data siswa (`this.loadStudentData`) **sebelum** routing `App.navigateTo("cetak")` berjalan.
+  - Memastikan state internal `this.selectedStudent` sudah langsung berganti ke siswa yang diklik sehingga dropdown, badge hijau, dan canvas preview surat resmi tidak lagi terlambat atau tertimpa oleh siswa default (siswa pertama).
+- **Fallback Identitas Nama Lengkap dari Baris Tabel (`assets/js/modul-berkas.js`, `assets/js/modul-pip.js`):**
+  - Menambahkan parameter nama siswa terenkode URL (`encodeURIComponent(s.nama)`) pada seluruh tombol cetak cepat:
+    - Tombol Cetak Surat Keterangan Siswa pada **Pangkalan Data Siswa**.
+    - Tombol **Aktif Belajar** dan **Cetak Rekomendasi** pada **Modul PIP**.
+  - Menyediakan fallback cerdas di mana jika pencocokan NISN gagal karena perbedaan format leading zero atau database terpisah, sistem secara otomatis mencocokkan nama siswa secara fuzzy atau merekonstruksi objek siswa seketika tanpa nilai `null`.
+- **Pembaruan Total Cache-Busting Seluruh Modul (`index.html`):**
+  - Mengganti seluruh query parameter versi script JS (`v=3.3.10` &rarr; `v=3.3.12`) serta menambahkan parameter versi pada modul yang sebelumnya belum memiliki cache buster (`modul-berkas.js`, `modul-jadwal.js`, `modul-import.js`, `modul-tendik.js`, `modul-vue.js`).
+  - Memperbarui badge versi di header dan footer aplikasi menjadi `v3.3.12` untuk memverifikasi pemuatan kode terbaru secara visual di peramban pengguna.
+
 ## [v3.3.11] - 2026-11-13
 
 ### Sinkronisasi Navigasi Cetak Cepat dari Pangkalan Data Siswa & Modul PIP, Pencarian Multi-Sumber Siswa, dan Resolusi Otomatis Tipe Surat

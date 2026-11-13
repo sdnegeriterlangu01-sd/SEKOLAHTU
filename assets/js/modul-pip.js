@@ -525,7 +525,7 @@ const ModulPIP = {
                         <div class="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[120px]" title="${Sec.esc(item.skAtasNama || item.nama)}">${Sec.esc(item.skAtasNama || item.nama)}</div>
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'aktif')" 
+                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'aktif', '${encodeURIComponent(item.nama || '')}')" 
                             class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:hover:bg-teal-900 dark:text-teal-300 dark:border dark:border-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Aktif Belajar Siswa">
                             <i class="fa-solid fa-print"></i> Aktif Belajar
                         </button>
@@ -638,7 +638,7 @@ const ModulPIP = {
                         ${item.tanggalCair && item.tanggalCair !== '-' ? `<div class="text-[9px] text-slate-400 mt-0.5 font-mono">${item.tanggalCair}</div>` : ''}
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_pencairan')" 
+                        <button onclick="ModulPIP.quickPrintSurat('${item.nisn}', 'pip_pencairan', '${encodeURIComponent(item.nama || '')}')" 
                             class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition inline-flex items-center gap-1 shadow-xs cursor-pointer" title="Cetak Surat Keterangan Aktif Belajar & Rekomendasi Pencairan BRI">
                             <i class="fa-solid fa-print"></i> Cetak Rekomendasi
                         </button>
@@ -740,11 +740,12 @@ const ModulPIP = {
         if (window.App && App.updateDashboardStats) App.updateDashboardStats();
     },
 
-    quickPrintSurat(nisn, templateType = "pip_pencairan") {
+    quickPrintSurat(nisn, templateType = "pip_pencairan", encodedNama = "") {
+        const nama = encodedNama ? decodeURIComponent(encodedNama) : "";
         if (window.ModulCetak && ModulCetak.bukaCetakSurat) {
-            ModulCetak.bukaCetakSurat(nisn, templateType);
+            ModulCetak.bukaCetakSurat(nisn, templateType, nama);
         } else if (window.App && App.pindahKeCetakSurat) {
-            App.pindahKeCetakSurat(nisn, templateType);
+            App.pindahKeCetakSurat(nisn, templateType, encodedNama);
         } else {
             App.navigateTo("cetak");
         }

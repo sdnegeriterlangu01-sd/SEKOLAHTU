@@ -179,35 +179,52 @@ const ModulCetak = {
         this.generatePreview();
     },
 
-    bukaCetakSurat(studentOrNisn, templateType = "aktif") {
+    bukaCetakSurat(studentOrNisn, templateType = "aktif", fallbackNama = "") {
         const type = templateType || "aktif";
         this.currentTemplateType = type;
+
+        // 1. Muat siswa target terlebih dahulu ke state internal agar this.selectedStudent langsung bernilai siswa yang dipilih!
+        this.loadStudentData(studentOrNisn, fallbackNama);
+
+        // 2. Kunci state _pendingCetak agar App.navigateTo tidak menimpa / me-reset preview
         this._pendingCetak = { studentOrNisn, templateType: type };
 
-        // 1. Pindah route ke view cetak
+        // 3. Pindah route ke view cetak
         if (window.App && App.navigateTo) {
             App.navigateTo("cetak");
         }
 
         this._pendingCetak = null;
 
-        // 2. Set jenis surat pada dropdown select dan state internal
+        // 4. Sinkronkan kontrol dropdown jenis surat
         const selectTemplate = document.getElementById("cetak-jenis-surat") || document.getElementById("cetak-select-template");
         if (selectTemplate) {
             selectTemplate.value = type;
         }
         this.currentTemplateType = type;
 
-        // 3. Muat siswa target
-        if (studentOrNisn) {
-            this.loadStudentData(studentOrNisn);
+        // 5. Pastikan kontrol DOM siswa terpilih diperbarui (input search, badge, hidden select)
+        if (this.selectedStudent) {
+            this.updateSearchStudentInput(this.selectedStudent);
+            const select = document.getElementById("cetak-select-siswa");
+            if (select) {
+                select.value = this.selectedStudent.nisn;
+                if (!select.value) {
+                    const opt = document.createElement("option");
+                    opt.value = this.selectedStudent.nisn;
+                    opt.textContent = `${this.selectedStudent.nama} (NISN: ${this.selectedStudent.nisn} - Kelas ${this.selectedStudent.rombel || this.selectedStudent.kelas || '-'})`;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                    select.value = this.selectedStudent.nisn;
+                }
+            }
         }
 
-        // 4. Update form fields dan render preview resmi
+        // 6. Update form fields dan render preview resmi
         this.updateFormFieldsByTemplate();
         this.generatePreview();
 
-        // 5. Scroll ke atas view cetak dengan mulus
+        // 7. Scroll ke atas view cetak dengan mulus
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
@@ -406,8 +423,8 @@ const ModulCetak = {
         }) || {};
     },
 
-    loadStudentData(nisnOrStudent) {
-        if (!nisnOrStudent) {
+    loadStudentData(nisnOrStudent, fallbackNama = "") {
+        if (!nisnOrStudent && !fallbackNama) {
             this.selectedStudent = null;
             this.updateSearchStudentInput(null);
             return;
@@ -419,6 +436,7 @@ const ModulCetak = {
             found = nisnOrStudent;
         } else {
             const raw = String(nisnOrStudent || "").trim();
+            const rawNama = String(fallbackNama || "").trim().toLowerCase();
             const norm = (id) => String(id || "").replace(/\D/g, "");
             const strip0 = (id) => norm(id).replace(/^0+/, "");
             const targetClean = norm(raw);
@@ -426,8 +444,8 @@ const ModulCetak = {
             const targetStrip = strip0(raw);
             const targetLower = raw.toLowerCase();
 
-            // 1. Cari di master siswa
-            const allStudents = (DataStore.getSiswaAll ? DataStore.getSiswaAll() : DataStore.getSiswa()) || [];
+            // 1. Cari di seluruh master siswa gabungan (Dapodik + Usulan/Penerima PIP)
+            const allStudents = this.getAllSearchableStudents();
             found = allStudents.find(s => {
                 const sN = norm(s.nisn);
                 const sStrip = strip0(s.nisn);
@@ -440,46 +458,26 @@ const ModulCetak = {
                     (targetClean && (sN === targetClean || sN === targetClean10)) ||
                     (targetStrip && sStrip === targetStrip) ||
                     (targetClean && sNik && sNik === targetClean) ||
-                    (targetLower && sNama === targetLower) ||
+                    (targetLower && (sNama === targetLower || sNama.includes(targetLower))) ||
+                    (rawNama && (sNama === rawNama || sNama.includes(rawNama))) ||
                     (s.id && String(s.id).trim() === raw)
                 );
             });
 
-            // 2. Fallback cerdas ke database PIP jika siswa baru ada di PIP_PENERIMA atau PIP_PENGUSULAN
-            if (!found) {
-                const pipPenerima = (DataStore.getPIPPenerima ? DataStore.getPIPPenerima() : []) || [];
-                const pipPengusulan = (DataStore.getPIPPengusulan ? DataStore.getPIPPengusulan() : []) || [];
-                const allPip = [...pipPenerima, ...pipPengusulan];
-
-                const pipItem = allPip.find(p => {
-                    const pN = norm(p.nisn);
-                    const pStrip = strip0(p.nisn);
-                    const pExact = String(p.nisn || "").trim();
-                    const pNik = norm(p.nik);
-                    const pNama = String(p.nama || "").trim().toLowerCase();
-
-                    return (
-                        (raw && pExact === raw) ||
-                        (targetClean && (pN === targetClean || pN === targetClean10)) ||
-                        (targetStrip && pStrip === targetStrip) ||
-                        (targetClean && pNik && pNik === targetClean) ||
-                        (targetLower && pNama === targetLower)
-                    );
-                });
-
-                if (pipItem) {
-                    found = {
-                        nisn: String(pipItem.nisn || targetClean10 || targetClean || raw),
-                        nama: pipItem.nama || "Siswa",
-                        kelas: pipItem.kelas || pipItem.rombel || "1",
-                        rombel: pipItem.rombel || pipItem.kelas || "1",
-                        tempatLahir: pipItem.tempatLahir || "Brebes",
-                        tanggalLahir: pipItem.tanggalLahir || "2015-01-01",
-                        jk: pipItem.jk === 'P' ? 'Perempuan' : (pipItem.jk === 'L' ? 'Laki-laki' : (pipItem.jk || "Laki-laki")),
-                        namaOrtu: pipItem.namaAyah || pipItem.namaIbu || pipItem.namaOrtu || "-",
-                        alamat: pipItem.alamat || "-"
-                    };
-                }
+            // 2. Fallback jika tidak ditemukan di master, periksa record PIP langsung
+            if (!found && (raw || fallbackNama)) {
+                const pipRec = this.getPipRecord({ nisn: raw, nama: fallbackNama });
+                found = {
+                    nisn: raw || (pipRec.nisn ? String(pipRec.nisn) : (targetClean10 || "0000000000")),
+                    nama: fallbackNama || pipRec.nama || "Siswa Terpilih",
+                    kelas: pipRec.kelas || pipRec.rombel || "1",
+                    rombel: pipRec.rombel || pipRec.kelas || "1",
+                    tempatLahir: pipRec.tempatLahir || "Brebes",
+                    tanggalLahir: pipRec.tanggalLahir || "2015-01-01",
+                    jk: pipRec.jk === 'P' ? 'Perempuan' : (pipRec.jk === 'L' ? 'Laki-laki' : (pipRec.jk || "Laki-laki")),
+                    namaOrtu: pipRec.namaAyah || pipRec.namaIbu || pipRec.namaOrtu || "-",
+                    alamat: pipRec.alamat || "-"
+                };
             }
         }
 

@@ -420,7 +420,7 @@
     <!-- Footer -->
     <footer
         class="text-center py-6 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        &copy; 2026 SEKOLAHTU v3.3.7 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi &
+        &copy; 2026 SEKOLAHTU v3.3.13 • SD Negeri Terlangu 01 Brebes • Solusi Elektronik Kelola Administrasi &
         Harmonisasi Tata Usaha
     </footer>
 
@@ -438,6 +438,21 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function maskNik(nikString) {
+            if (nikString === null || nikString === undefined) return "-";
+            const cleaned = String(nikString).trim();
+            if (!cleaned || cleaned === "-") return "-";
+            if (cleaned.includes("*")) return cleaned;
+            const digits = cleaned.replace(/\s+/g, "");
+            if (digits.length >= 10) {
+                return digits.slice(0, 6) + "*".repeat(Math.max(4, digits.length - 10)) + digits.slice(-4);
+            }
+            if (digits.length > 4) {
+                return digits.slice(0, 2) + "*".repeat(digits.length - 4) + digits.slice(-2);
+            }
+            return "****";
         }
 
         function resolveStudentInfo(raw) {
@@ -545,7 +560,7 @@
                 isSiswa: true,
                 nama: nama || raw.nama || "-",
                 nisn: nisn || "-",
-                nik: nik || "-",
+                nik: maskNik(nik),
                 kelas: kelas || "-",
                 keperluan: keperluan
             };
@@ -581,7 +596,8 @@
                 // Tampilan untuk Surat Keterangan Siswa
                 const nama = escapeHtml(sInfo ? sInfo.nama : (data.nama || "-"));
                 const nisn = escapeHtml(sInfo ? sInfo.nisn : (data.nisn || "-"));
-                const nik = escapeHtml(sInfo ? sInfo.nik : (data.nik || "-"));
+                const rawNik = sInfo ? sInfo.nik : (data.nik || "-");
+                const nik = escapeHtml(maskNik(rawNik));
                 const rawKelas = (sInfo && sInfo.kelas && sInfo.kelas !== "-") ? sInfo.kelas : ((data.kelas && data.kelas !== "-") ? data.kelas : "");
                 let kelas = "-";
                 if (rawKelas) {
@@ -819,7 +835,7 @@
                                 perihal: embeddedPayload.perihal || embeddedPayload.jenis || "Surat Keterangan Siswa",
                                 namaSiswa: embeddedPayload.nama,
                                 nisn: embeddedPayload.nisn,
-                                nik: embeddedPayload.nik,
+                                nik: maskNik(embeddedPayload.nik),
                                 kelas: embeddedPayload.kelas,
                                 isSiswa: !!embeddedPayload.nama,
                                 penandatangan: embeddedPayload.kepsek || embeddedPayload.penandatangan
@@ -925,7 +941,7 @@
                 if (sInfo && (!sk.namaSiswa || !sk.nisn || !sk.nik || !sk.kelas || sk.nisn === "-" || sk.nik === "-")) {
                     if (sInfo.nama && sInfo.nama !== "-") sk.namaSiswa = sInfo.nama;
                     if (sInfo.nisn && sInfo.nisn !== "-") sk.nisn = sInfo.nisn;
-                    if (sInfo.nik && sInfo.nik !== "-") sk.nik = sInfo.nik;
+                    if (sInfo.nik && sInfo.nik !== "-") sk.nik = maskNik(sInfo.nik);
                     if (sInfo.kelas && sInfo.kelas !== "-") sk.kelas = sInfo.kelas;
                     sk.isSiswa = true;
                     try {
@@ -1023,6 +1039,7 @@
                         if (json && json.success && json.verified && json.data) {
                             const cloudSk = json.data;
                             const cloudCfg = json.config || config || {};
+                            if (cloudSk.nik) cloudSk.nik = maskNik(cloudSk.nik);
 
                             // Simpan ke local cache DataStore di HP agar pencarian berikutnya instan
                             try {
@@ -1041,7 +1058,7 @@
                             if (sInfo) {
                                 if (sInfo.nama && sInfo.nama !== "-") cloudSk.namaSiswa = sInfo.nama;
                                 if (sInfo.nisn && sInfo.nisn !== "-") cloudSk.nisn = sInfo.nisn;
-                                if (sInfo.nik && sInfo.nik !== "-") cloudSk.nik = sInfo.nik;
+                                if (sInfo.nik && sInfo.nik !== "-") cloudSk.nik = maskNik(sInfo.nik);
                                 if (sInfo.kelas && sInfo.kelas !== "-") cloudSk.kelas = sInfo.kelas;
                                 cloudSk.isSiswa = true;
                             }

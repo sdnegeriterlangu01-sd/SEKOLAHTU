@@ -238,7 +238,7 @@ const App = {
         }
     },
 
-    VERSION: "3.3.12",
+    VERSION: "3.3.13",
 
     formatJamMenit(w) {
         if (!w) return "";

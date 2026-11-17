@@ -2,7 +2,7 @@
  * ==========================================================================
  * SEKOLAHTU: SOLUSI ELEKTRONIK KELOLA ADMINISTRASI & HARMONISASI TATA USAHA
  * Tagline: "Kemudahan Pengelolaan Tata Usaha Sekolah dalam Satu Sentuhan"
- * Backend REST API - Google Apps Script (GAS) v3.3.10
+ * Backend REST API - Google Apps Script (GAS) v3.3.13
  * Riwayat Versi & Catatan Rilis: lihat changelog.md
  * ==========================================================================
  * 
@@ -104,12 +104,12 @@ function doGet(e) {
   const result = {
     status: "ok",
     app: "SEKOLAHTU Backend API",
-    version: "3.3.10",
+    version: "3.3.13",
     timestamp: new Date().toISOString(),
     supabaseConnected: !!backendCfg.supabaseUrl,
     supabaseUrl: backendCfg.supabaseUrl,
     gasApiUrl: backendCfg.gasApiUrl,
-    message: "Google Apps Script Backend v3.3.10 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
+    message: "Google Apps Script Backend v3.3.13 berjalan normal. Portal permohonan, verifikasi keabsahan, & integrasi aktif."
   };
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -671,7 +671,7 @@ function handleBackupDatabase(ss) {
 
   const dump = {
     _app: "SEKOLAHTU",
-    _version: "3.3.10",
+    _version: "3.3.13",
     _created: now.toISOString(),
     spreadsheetId: ss.getId(),
     tables: {}
@@ -1074,6 +1074,24 @@ function handleSaveQrFiles(payload) {
  */
 
 /**
+ * Penyamaran otomatis NIK pada endpoint verifikasi publik (format 332909******0001)
+ */
+function maskNik_(nikString) {
+  if (nikString === null || nikString === undefined) return "-";
+  const cleaned = String(nikString).trim();
+  if (!cleaned || cleaned === "-") return "-";
+  if (cleaned.indexOf("*") !== -1) return cleaned;
+  const digits = cleaned.replace(/\s+/g, "");
+  if (digits.length >= 10) {
+    return digits.slice(0, 6) + "*".repeat(Math.max(4, digits.length - 10)) + digits.slice(-4);
+  }
+  if (digits.length > 4) {
+    return digits.slice(0, 2) + "*".repeat(digits.length - 4) + digits.slice(-2);
+  }
+  return "****";
+}
+
+/**
  * Verifikasi Keabsahan Surat Keluar (Publik tanpa login TU)
  */
 function handleVerifySuratKeluar(ss, payload) {
@@ -1140,7 +1158,7 @@ function handleVerifySuratKeluar(ss, payload) {
 
     found.namaSiswa = nama;
     found.nisn = nisn || "-";
-    found.nik = found.nik || "-";
+    found.nik = maskNik_(found.nik);
     found.kelas = found.kelas || "-";
 
     try {
@@ -1154,7 +1172,7 @@ function handleVerifySuratKeluar(ss, payload) {
           if ((nisn && rNisn === nisn) || (nama && rNama === nama.toLowerCase())) {
             found.namaSiswa = String(sRow[2] || nama);
             found.nisn = String(sRow[0] || nisn);
-            found.nik = String(sRow[3] || "-");
+            found.nik = maskNik_(sRow[3]);
             found.kelas = String(sRow[7] || "-");
             break;
           }

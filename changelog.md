@@ -1,6 +1,17 @@
 # Changelog & Riwayat Versi SEKOLAHTU
 Semua catatan perubahan dan pembaruan sistem administrasi tata usaha sekolah dasar (SEKOLAHTU).
 
+## [v3.3.13] - 2026-11-17
+
+### Data Masking NIK Verifikasi Surat Siswa (`verifikasi.html`, `backend/Code.gs`) & Penyelarasan Versi Sistem (`v3.3.13`)
+- **Data Masking NIK pada Portal Verifikasi Surat Siswa (`verifikasi.html`):**
+  - Menambahkan fungsi helper `maskNik(nikString)` (format `332909******0001` sesuai prinsip pelindungan data pribadi UU PDP No. 27/2022) untuk menyamarkan NIK saat memverifikasi surat keterangan siswa.
+  - Menerapkan `maskNik(...)` pada `resolveStudentInfo`, `renderVerifiedData`, serta saat menyimpan cache lokal surat keluar di `processUrlParams()` dan `searchByNomorManual()` agar NIK mentah tidak tampil maupun tersimpan terbuka pada portal verifikasi publik.
+- **Data Masking NIK pada Endpoint Publik Verifikasi Surat Keluar (`backend/Code.gs`):**
+  - Menambahkan fungsi helper `maskNik_(nikString)` pada handler `handleVerifySuratKeluar` sehingga respons JSON publik `verifySuratKeluar` langsung menyamarkan NIK siswa dari server Google Apps Script.
+- **Penyelarasan Versi & Cache-Busting (`v3.3.13`):**
+  - Memperbarui versi sistem ke `v3.3.13` pada `index.html` (badge header/footer dan query parameter cache-busting `?v=3.3.13`), `verifikasi.html`, `permohonan.html`, `assets/js/app.js`, `backend/Code.gs`, dan `backend/Panduan_Deploy_GAS.md`.
+
 ## [v3.3.12] - 2026-11-13
 
 ### Injeksi Pre-Navigasi Siswa Terpilih, Fallback Identitas Nama Lengkap, dan Pembaruan Total Cache-Busting Modul (`index.html`)
